@@ -27,7 +27,7 @@ class image_feature:
         #### direct conversion to CV2 ####
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        print(image_np.shape)
+        print(image_np[384,512,:])
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("DepthCamera", 1024, 758)
         cv2.imshow('DepthCamera', image_np)
