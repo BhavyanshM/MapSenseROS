@@ -13,7 +13,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   message_generation
+  image_transport
+  cv_bridge
 )
+
+find_package(OpenCV REQUIRED)
 
 
 add_message_files(
@@ -43,7 +47,7 @@ include_directories(
 )
 
 add_executable(planar_region_publisher src/PlanarRegionPublisher.cpp)
-target_link_libraries(planar_region_publisher ${catkin_LIBRARIES})
+target_link_libraries(planar_region_publisher ${OpenCV_LIBS} ${catkin_LIBRARIES})
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 
 

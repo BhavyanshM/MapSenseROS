@@ -3,18 +3,42 @@
 #include "map_sense/PlanarRegion.h"
 #include "geometry_msgs/PoseStamped.h"
 
+#include "image_transport/image_transport.h"
+#include "opencv2/highgui/highgui.hpp"
+#include "cv_bridge/cv_bridge.h"
+
 
 #include "math.h"
-
 #include <sstream>
+
+void depthCallback(const sensor_msgs::CompressedImageConstPtr& msg){
+	try{
+		cv::Mat image = cv::imdecode(cv::Mat(msg->data),1);
+		cv::imshow("DepthCallback", image);
+		cv::waitKey(1);
+
+	}catch(cv_bridge::Exception& e){
+		ROS_ERROR("Could not convert to image!");
+	}
+}
 
 int main (int argc, char** argv){
 	ros::init(argc, argv, "PlanarRegionPublisher");
 
 	ros::NodeHandle n;
 
+	cv::namedWindow("DepthCallback");
+	ros::Subscriber sub = n.subscribe("/depth_image/compressed", 1, depthCallback);
+
+
+	// image_transport::ImageTransport it(n);
+	// image_transport::TransportHints hints("compressed");
+	// image_transport::Subscriber sub = it.subscribe("/depth_image", 1, depthCallback, ros::VoidPtr(), hints);
+
+
 	ros::Publisher RGBDPosePub = n.advertise<geometry_msgs::PoseStamped>("rgbd_pose", 1000);
 	ros::Publisher planarRegionPub = n.advertise<map_sense::PlanarRegion>("planar_regions", 1000);
+
 
 
 	ros::Rate loop_rate(100);
@@ -55,7 +79,10 @@ int main (int argc, char** argv){
 
 		loop_rate.sleep();
 		++count;
+
+
 	}
+	cv::destroyWindow("DepthCallback");
 
 	return 0;
 }
