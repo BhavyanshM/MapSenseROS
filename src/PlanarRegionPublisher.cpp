@@ -11,9 +11,27 @@
 #include "math.h"
 #include <sstream>
 
+ros::Publisher RGBDPosePub;
+ros::Publisher planarRegionPub;
+
 void depthCallback(const sensor_msgs::CompressedImageConstPtr& msg){
 	try{
 		cv::Mat image = cv::imdecode(cv::Mat(msg->data),1);
+
+		// map_sense::PlanarRegion planeMsg;
+		// planeMsg.header.stamp = ros::Time::now();
+		// planeMsg.header.frame_id = "/world_of_planes";
+		// planeMsg.polygon.polygon.points.reserve(10);
+		// for(int i = 0; i<10; i++){
+		// 	geometry_msgs::Point32 point;
+		// 	point.x = 2.0*i;
+		// 	point.y = i;
+		// 	point.z = 3*i;
+		// 	planeMsg.polygon.polygon.points.push_back(point);
+		// }
+
+		// planarRegionPub.publish(planeMsg);
+
 		cv::imshow("DepthCallback", image);
 		cv::waitKey(1);
 
@@ -26,6 +44,8 @@ int main (int argc, char** argv){
 	ros::init(argc, argv, "PlanarRegionPublisher");
 
 	ros::NodeHandle n;
+	RGBDPosePub = n.advertise<geometry_msgs::PoseStamped>("rgbd_pose", 1000);
+	planarRegionPub = n.advertise<map_sense::PlanarRegion>("planar_regions", 1000);
 
 	cv::namedWindow("DepthCallback");
 	ros::Subscriber sub = n.subscribe("/depth_image/compressed", 1, depthCallback);
@@ -36,12 +56,10 @@ int main (int argc, char** argv){
 	// image_transport::Subscriber sub = it.subscribe("/depth_image", 1, depthCallback, ros::VoidPtr(), hints);
 
 
-	ros::Publisher RGBDPosePub = n.advertise<geometry_msgs::PoseStamped>("rgbd_pose", 1000);
-	ros::Publisher planarRegionPub = n.advertise<map_sense::PlanarRegion>("planar_regions", 1000);
 
 
 
-	ros::Rate loop_rate(100);
+	ros::Rate loop_rate(200);
 
 	int count = 0;
 	int r = 3;
@@ -61,19 +79,6 @@ int main (int argc, char** argv){
 		msg.pose.orientation.w = 0.9238795;
 		RGBDPosePub.publish(msg);
 
-		map_sense::PlanarRegion planeMsg;
-		planeMsg.header.stamp = ros::Time::now();
-		planeMsg.header.frame_id = "/world_of_planes";
-		planeMsg.polygon.polygon.points.reserve(10);
-		for(int i = 0; i<10; i++){
-			geometry_msgs::Point32 point;
-			point.x = 2.0*i;
-			point.y = i;
-			point.z = 3*i;
-			planeMsg.polygon.polygon.points.push_back(point);
-		}
-
-		planarRegionPub.publish(planeMsg);
 
 		ros::spinOnce();
 
