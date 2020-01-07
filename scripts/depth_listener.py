@@ -4,9 +4,19 @@ import cv2
 import roslib
 import rospy
 from sensor_msgs.msg import CompressedImage
+import pyopencl as cl
+
 # from cv_bridge import CvBridge, CvBridgeError
 
 VERBOSE=False
+
+context = cl.Context([cl.get_platforms()[0].get_devices()[0]])
+queue = cl.CommandQueue(context)
+program = cl.Program(context, open('kernel.cl').read()).build()
+kernel = cl.Kernel(program, 'depthKernel')
+
+
+
 
 class image_feature:
 
@@ -28,27 +38,47 @@ class image_feature:
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-
-        kernel = np.array([ [0,-1,2],
-                            [0,-1,2],
-                            [0,-1,2]])
-
-        output = cv2.filter2D(image_np, -1, kernel)
-
-        # output = np.square(output)*10
-
-        output[:,:,0] = output[:,:,2]*2
-        output[:,:,1] = output[:,:,2]*3
-
-        output = output % 255
+        shape = image_np.T.shape
+        imgOut = np.empty_like(image_np)
 
 
+        imgInBuf = cl.Image(context, cl.mem_flags.READ_ONLY, cl.ImageFormat(cl.channel_order.RGB, cl.channel_type.UNORM_INT8), shape=shape)
+        imgOutBuf = cl.Image(context, cl.mem_flags.WRITE_ONLY, cl.ImageFormat(cl.channel_order.LUMINANCE, cl.channel_type.UNORM_INT8), shape=shape)
 
-        print(image_np[384,512,:])
+
+        kernel.set_arg(0, imgInBuf)
+        kernel.set_arg(1, imgOutBuf)
+
+        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0, 0), region=shape, is_blocking=False)
+        cl.enqueue_nd_range_kernel(queue, kernel, shape, None)
+        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0, 0), region=shape, is_blocking=True)
+
+
+
+
+
+
+
+        # linFilter = np.array([ [0,-1,2],
+        #                     [0,-1,2],
+        #                     [0,-1,2]])
+
+        # output = cv2.filter2D(image_np, -1, linFilter)
+
+        # # output = np.square(output)*10
+
+        # output[:,:,0] = output[:,:,2]*2
+        # output[:,:,1] = output[:,:,2]*3
+
+        # output = output % 255
+
+
+
+        # print(image_np[384,512,:])
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("DepthCamera", 1024, 758)
-        cv2.imshow('DepthCamera', image_np)
-        cv2.waitKey(2)
+        cv2.imshow('DepthCamera', imgOut)
+        cv2.waitKey(0)
 
 
 
