@@ -12,7 +12,7 @@ class image_feature:
 
     def __init__(self):
         # subscribed Topic
-        self.subscriber = rospy.Subscriber("/depth_image",
+        self.subscriber = rospy.Subscriber("/depth_image/compressed",
             CompressedImage, self.callback,  queue_size = 1)
         if VERBOSE :
             print( "subscribed to /camera/image/compressed")
@@ -27,6 +27,23 @@ class image_feature:
         #### direct conversion to CV2 ####
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+
+        kernel = np.array([ [0,-1,2],
+                            [0,-1,2],
+                            [0,-1,2]])
+
+        output = cv2.filter2D(image_np, -1, kernel)
+
+        # output = np.square(output)*10
+
+        output[:,:,0] = output[:,:,2]*2
+        output[:,:,1] = output[:,:,2]*3
+
+        output = output % 255
+
+
+
         print(image_np[384,512,:])
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("DepthCamera", 1024, 758)

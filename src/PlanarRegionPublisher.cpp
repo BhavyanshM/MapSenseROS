@@ -5,25 +5,40 @@
 
 #include "image_transport/image_transport.h"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
 
 
 #include "math.h"
 #include <sstream>
 
-ros::Publisher RGBDPosePub;
-ros::Publisher planarRegionPub;
+using namespace ros;
+using namespace std;
+using namespace cv;
+using namespace sensor_msgs;
+using namespace geometry_msgs;
+using namespace map_sense;
 
-void depthCallback(const sensor_msgs::CompressedImageConstPtr& msg){
+#define DEPTH_WIDTH 1024
+#define DEPTH_HEIGHT 786
+
+
+Publisher RGBDPosePub;
+Publisher planarRegionPub;
+
+void depthCallback(const CompressedImageConstPtr& msg){
 	try{
-		cv::Mat image = cv::imdecode(cv::Mat(msg->data),1);
+		Mat image = imdecode(Mat(msg->data),1);
+		circle(image, cv::Point(384,512), 12, cv::Scalar(0,0,255),1);	
+		Point3f point = image.at<Point3f>(cv::Point(384,512));
+		printf("%d\t%d\t%d\n", image.size().height, image.size().width, image.depth());
 
-		// map_sense::PlanarRegion planeMsg;
-		// planeMsg.header.stamp = ros::Time::now();
+		// PlanarRegion planeMsg;
+		// planeMsg.header.stamp = Time::now();
 		// planeMsg.header.frame_id = "/world_of_planes";
 		// planeMsg.polygon.polygon.points.reserve(10);
 		// for(int i = 0; i<10; i++){
-		// 	geometry_msgs::Point32 point;
+		// 	Point32 point;
 		// 	point.x = 2.0*i;
 		// 	point.y = i;
 		// 	point.z = 3*i;
@@ -32,8 +47,8 @@ void depthCallback(const sensor_msgs::CompressedImageConstPtr& msg){
 
 		// planarRegionPub.publish(planeMsg);
 
-		cv::imshow("DepthCallback", image);
-		cv::waitKey(1);
+		imshow("DepthCallback", image);
+		waitKey(1);
 
 	}catch(cv_bridge::Exception& e){
 		ROS_ERROR("Could not convert to image!");
@@ -41,34 +56,34 @@ void depthCallback(const sensor_msgs::CompressedImageConstPtr& msg){
 }
 
 int main (int argc, char** argv){
-	ros::init(argc, argv, "PlanarRegionPublisher");
+	init(argc, argv, "PlanarRegionPublisher");
 
-	ros::NodeHandle n;
-	RGBDPosePub = n.advertise<geometry_msgs::PoseStamped>("rgbd_pose", 1000);
-	planarRegionPub = n.advertise<map_sense::PlanarRegion>("planar_regions", 1000);
+	NodeHandle n;
+	RGBDPosePub = n.advertise<PoseStamped>("rgbd_pose", 1000);
+	planarRegionPub = n.advertise<PlanarRegion>("planar_regions", 1000);
 
-	cv::namedWindow("DepthCallback");
-	ros::Subscriber sub = n.subscribe("/depth_image/compressed", 1, depthCallback);
+	namedWindow("DepthCallback");
+	Subscriber sub = n.subscribe("/depth_image/compressed", 1, depthCallback);
 
 
 	// image_transport::ImageTransport it(n);
 	// image_transport::TransportHints hints("compressed");
-	// image_transport::Subscriber sub = it.subscribe("/depth_image", 1, depthCallback, ros::VoidPtr(), hints);
+	// image_transport::Subscriber sub = it.subscribe("/depth_image", 1, depthCallback, VoidPtr(), hints);
 
 
 
 
 
-	ros::Rate loop_rate(200);
+	Rate loop_rate(200);
 
 	int count = 0;
 	int r = 3;
 
-	while (ros::ok()){
+	while (ok()){
 
 
-		geometry_msgs::PoseStamped msg;
-		msg.header.stamp = ros::Time::now();
+		PoseStamped msg;
+		msg.header.stamp = Time::now();
 		msg.header.frame_id = "/world";
 		msg.pose.position.x = r*cos(count*0.01);
 		msg.pose.position.y = r*sin(count*0.01);
@@ -80,14 +95,14 @@ int main (int argc, char** argv){
 		RGBDPosePub.publish(msg);
 
 
-		ros::spinOnce();
+		spinOnce();
 
 		loop_rate.sleep();
 		++count;
 
 
 	}
-	cv::destroyWindow("DepthCallback");
+	destroyWindow("DepthCallback");
 
 	return 0;
 }
