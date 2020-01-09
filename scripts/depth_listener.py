@@ -38,20 +38,27 @@ class image_feature:
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-        shape = image_np.T.shape
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
+        shape = image_np.shape
+
+        print(shape)
+
         imgOut = np.empty_like(image_np)
 
-
-        imgInBuf = cl.Image(context, cl.mem_flags.READ_ONLY, cl.ImageFormat(cl.channel_order.RGB, cl.channel_type.UNORM_INT8), shape=shape)
-        imgOutBuf = cl.Image(context, cl.mem_flags.WRITE_ONLY, cl.ImageFormat(cl.channel_order.LUMINANCE, cl.channel_type.UNORM_INT8), shape=shape)
+        h, w, d = shape
 
 
-        kernel.set_arg(0, imgInBuf)
-        kernel.set_arg(1, imgOutBuf)
+        imgInBuf = cl.Image(context, cl.mem_flags.READ_ONLY, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+        imgOutBuf = cl.Image(context, cl.mem_flags.WRITE_ONLY, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
 
-        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0, 0), region=shape, is_blocking=False)
-        cl.enqueue_nd_range_kernel(queue, kernel, shape, None)
-        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0, 0), region=shape, is_blocking=True)
+        kernel.set_arg(0,imgInBuf)
+        kernel.set_arg(1,imgOutBuf)
+
+        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))
+        
+        cl.enqueue_nd_range_kernel(queue, kernel, (w,h), None)
+
+        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0), region=(w,h))
 
 
 
@@ -78,7 +85,7 @@ class image_feature:
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("DepthCamera", 1024, 758)
         cv2.imshow('DepthCamera', imgOut)
-        cv2.waitKey(0)
+        cv2.waitKey(1)
 
 
 
