@@ -5,7 +5,7 @@ import roslib
 import rospy
 from sensor_msgs.msg import CompressedImage
 import pyopencl as cl
-
+import time
 # from cv_bridge import CvBridge, CvBridgeError
 
 VERBOSE=False
@@ -15,8 +15,9 @@ queue = cl.CommandQueue(context)
 program = cl.Program(context, open('kernel.cl').read()).build()
 kernel = cl.Kernel(program, 'depthKernel')
 
-
-
+prev_time = time.time()
+fps = 0
+time_diff = 0
 
 class image_feature:
 
@@ -29,6 +30,7 @@ class image_feature:
 
 
     def callback(self, ros_data):
+        global prev_time, fps, time_diff
         '''Callback function of subscribed topic. 
         Here images get converted and features detected'''
         if VERBOSE :
@@ -41,7 +43,6 @@ class image_feature:
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
         shape = image_np.shape
 
-        print(shape)
 
         imgOut = np.empty_like(image_np)
 
@@ -53,6 +54,8 @@ class image_feature:
 
         kernel.set_arg(0,imgInBuf)
         kernel.set_arg(1,imgOutBuf)
+        kernel.set_arg(2,np.int32(h))
+        kernel.set_arg(3,np.int32(w))
 
         cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))
         
@@ -63,6 +66,13 @@ class image_feature:
 
 
 
+        fps += 1
+        time_now = time.time()
+        time_diff += time_now -  prev_time
+        if (time_diff) > 1:
+            print("FPS:{}".format(fps))
+            time_diff = fps = 0
+        prev_time = time_now
 
 
 
