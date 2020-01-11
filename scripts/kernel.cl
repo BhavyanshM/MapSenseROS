@@ -38,11 +38,12 @@ __kernel void depthKernel(
 		float4 vc = (float4)(c*pos.x, c*pos.y, c, 0);
 
 		float4 xp = cross((vc-vb),(vb-va));
-		//xp = normalize(xp)*255;
-		xp /= 255;
+		float dp = dot(xp, vb)/200000;
+		float4 normXp = normalize(xp)*255;
+		normXp *= dp;
 
-		pix = (uint4)(xp.x, xp.y, xp.z, 0);
-
+		//pix = (uint4)(xp.x, xp.y, xp.z, 0);
+		pix = (uint4)(normXp.x, normXp.y, normXp.z, 0);
 
 	}else{
 		pix = (uint4)(0,0,0,0);
