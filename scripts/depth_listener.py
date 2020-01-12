@@ -13,11 +13,13 @@ VERBOSE=False
 context = cl.Context([cl.get_platforms()[0].get_devices()[0]])
 queue = cl.CommandQueue(context)
 program = cl.Program(context, open('kernel.cl').read()).build()
-kernel = cl.Kernel(program, 'depthKernel')
+depthKernel = cl.Kernel(program, 'depthKernel')
+segmentKernel = cl.Kernel(program, 'segmentKernel')
 
 prev_time = time.time()
 fps = 0
 time_diff = 0
+disp = 0
 
 class image_feature:
 
@@ -30,7 +32,7 @@ class image_feature:
 
 
     def callback(self, ros_data):
-        global prev_time, fps, time_diff
+        global prev_time, fps, time_diff, disp
         '''Callback function of subscribed topic. 
         Here images get converted and features detected'''
         if VERBOSE :
@@ -49,21 +51,26 @@ class image_feature:
         h, w, d = shape
 
 
-        imgInBuf = cl.Image(context, cl.mem_flags.READ_ONLY, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
-        imgOutBuf = cl.Image(context, cl.mem_flags.WRITE_ONLY, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+        imgInBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+        imgOutBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
 
-        kernel.set_arg(0,imgInBuf)
-        kernel.set_arg(1,imgOutBuf)
-        kernel.set_arg(2,np.int32(h))
-        kernel.set_arg(3,np.int32(w))
 
         cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))
         
-        cl.enqueue_nd_range_kernel(queue, kernel, (w,h), None)
+        depthKernel.set_arg(0,imgInBuf)
+        depthKernel.set_arg(1,imgOutBuf)
+        depthKernel.set_arg(2,np.int32(h))
+        depthKernel.set_arg(3,np.int32(w))
+        cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
 
-        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0), region=(w,h))
 
+        segmentKernel.set_arg(0,imgOutBuf)
+        segmentKernel.set_arg(1,imgInBuf)
+        segmentKernel.set_arg(2,np.int32(h))
+        segmentKernel.set_arg(3,np.int32(w))
+        cl.enqueue_nd_range_kernel(queue, segmentKernel, (w,h), None)
 
+        cl.enqueue_copy(queue, imgOut, imgInBuf, origin=(0, 0), region=(w,h))
 
 
         fps += 1
@@ -75,27 +82,15 @@ class image_feature:
         prev_time = time_now
 
 
-
-        # linFilter = np.array([ [0,-1,2],
-        #                     [0,-1,2],
-        #                     [0,-1,2]])
-
-        # output = cv2.filter2D(image_np, -1, linFilter)
-
-        # # output = np.square(output)*10
-
-        # output[:,:,0] = output[:,:,2]*2
-        # output[:,:,1] = output[:,:,2]*3
-
-        # output = output % 255
-
-
-
-        # print(image_np[384,512,:])
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("DepthCamera", 1024, 758)
-        cv2.imshow('DepthCamera', imgOut)
-        cv2.waitKey(1)
+        if disp == 0:
+            cv2.imshow('DepthCamera', image_np[:,:,2])
+        if disp == 1:
+            cv2.imshow('DepthCamera', imgOut)
+        code = cv2.waitKeyEx(1)
+        if code == 1113937 or code == 1113939:
+            disp = 1 - disp
 
 
 
