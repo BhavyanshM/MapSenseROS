@@ -21,20 +21,23 @@ fps = 0
 time_diff = 0
 disp = 0
 h, w, d = 768,1024,4
+subH, subW, subD = 48,64,4
 
 
 imgInBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
-imgOutBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+imgMedBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+imgOutBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(subW, subH))
+
 
 depthKernel.set_arg(0,imgInBuf)
-depthKernel.set_arg(1,imgOutBuf)
+depthKernel.set_arg(1,imgMedBuf)
 depthKernel.set_arg(2,np.int32(h))
 depthKernel.set_arg(3,np.int32(w))
 
-segmentKernel.set_arg(0,imgOutBuf)
-segmentKernel.set_arg(1,imgInBuf)
-segmentKernel.set_arg(2,np.int32(h))
-segmentKernel.set_arg(3,np.int32(w))
+segmentKernel.set_arg(0,imgMedBuf)
+segmentKernel.set_arg(1,imgOutBuf)
+segmentKernel.set_arg(2,np.int32(subH))
+segmentKernel.set_arg(3,np.int32(subW))
 
 class image_feature:
 
@@ -57,14 +60,16 @@ class image_feature:
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
-        imgOut = np.empty_like(image_np)
-
+        imgMed = np.empty_like(image_np)
+        imgOut = np.empty((48,64,4), dtype='uint8')
 
         cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))        
         cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
-        cl.enqueue_nd_range_kernel(queue, segmentKernel, (w,h), None)
-        cl.enqueue_copy(queue, imgOut, imgInBuf, origin=(0, 0), region=(w,h))
+        cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h))
+        cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
+        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0), region=(subW,subH))
 
+        # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
 
         fps += 1
         time_now = time.time()
@@ -80,10 +85,15 @@ class image_feature:
         if disp == 0:
             cv2.imshow('DepthCamera', image_np[:,:,2])
         if disp == 1:
+            cv2.imshow('DepthCamera', imgMed)
+        if disp == 2:
             cv2.imshow('DepthCamera', imgOut)
         code = cv2.waitKeyEx(1)
-        if code == 1113937 or code == 1113939:
-            disp = 1 - disp
+        # print(code)
+        if code == 1113937 or code == 65361:
+            disp = (disp - 1) % 3
+        if code == 1113939  or code == 65363 :
+            disp = (disp + 1) % 3
 
 
 
