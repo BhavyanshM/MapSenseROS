@@ -20,6 +20,21 @@ prev_time = time.time()
 fps = 0
 time_diff = 0
 disp = 0
+h, w, d = 768,1024,4
+
+
+imgInBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+imgOutBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+
+depthKernel.set_arg(0,imgInBuf)
+depthKernel.set_arg(1,imgOutBuf)
+depthKernel.set_arg(2,np.int32(h))
+depthKernel.set_arg(3,np.int32(w))
+
+segmentKernel.set_arg(0,imgOutBuf)
+segmentKernel.set_arg(1,imgInBuf)
+segmentKernel.set_arg(2,np.int32(h))
+segmentKernel.set_arg(3,np.int32(w))
 
 class image_feature:
 
@@ -32,7 +47,7 @@ class image_feature:
 
 
     def callback(self, ros_data):
-        global prev_time, fps, time_diff, disp
+        global prev_time, fps, time_diff, disp, imgInBuf, imgOutBuf, depthKernel, segmentKernel
         '''Callback function of subscribed topic. 
         Here images get converted and features detected'''
         if VERBOSE :
@@ -41,35 +56,13 @@ class image_feature:
         #### direct conversion to CV2 ####
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
-        shape = image_np.shape
-
-
         imgOut = np.empty_like(image_np)
 
-        h, w, d = shape
 
-
-        imgInBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
-        imgOutBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
-
-
-        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))
-        
-        depthKernel.set_arg(0,imgInBuf)
-        depthKernel.set_arg(1,imgOutBuf)
-        depthKernel.set_arg(2,np.int32(h))
-        depthKernel.set_arg(3,np.int32(w))
+        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))        
         cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
-
-
-        segmentKernel.set_arg(0,imgOutBuf)
-        segmentKernel.set_arg(1,imgInBuf)
-        segmentKernel.set_arg(2,np.int32(h))
-        segmentKernel.set_arg(3,np.int32(w))
         cl.enqueue_nd_range_kernel(queue, segmentKernel, (w,h), None)
-
         cl.enqueue_copy(queue, imgOut, imgInBuf, origin=(0, 0), region=(w,h))
 
 
