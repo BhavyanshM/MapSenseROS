@@ -4,6 +4,7 @@ import cv2
 import roslib
 import rospy
 from sensor_msgs.msg import CompressedImage
+from map_sense.msg import PlanarRegion
 import pyopencl as cl
 import time
 # from cv_bridge import CvBridge, CvBridgeError
@@ -34,7 +35,7 @@ depthKernel.set_arg(1,imgMedBuf)
 depthKernel.set_arg(2,np.int32(h))
 depthKernel.set_arg(3,np.int32(w))
 
-segmentKernel.set_arg(0,imgMedBuf)
+segmentKernel.set_arg(0,imgInBuf)
 segmentKernel.set_arg(1,imgOutBuf)
 segmentKernel.set_arg(2,np.int32(subH))
 segmentKernel.set_arg(3,np.int32(subW))
@@ -45,6 +46,9 @@ class image_feature:
         # subscribed Topic
         self.subscriber = rospy.Subscriber("/depth_image/compressed",
             CompressedImage, self.callback,  queue_size = 1)
+        
+        self.publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
+        
         if VERBOSE :
             print( "subscribed to /camera/image/compressed")
 
@@ -79,6 +83,13 @@ class image_feature:
             time_diff = fps = 0
         prev_time = time_now
 
+        # print(imgOut[24,32,:])
+
+        msg = CompressedImage()
+        msg.header.stamp = rospy.Time.now()
+        msg.format = "jpeg"
+        msg.data = np.array(cv2.imencode('.jpg', imgOut)[1]).tostring()
+        self.publisher.publish(msg)
 
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("DepthCamera", 1024, 758)

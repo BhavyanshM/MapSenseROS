@@ -63,12 +63,14 @@ __kernel void segmentKernel(
 )
 
 {
-	int2 xpos = (int2)(get_global_id(0), get_global_id(1));
+	int2 pos = (int2)(get_global_id(0), get_global_id(1));
 
 	__const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_FILTER_NEAREST | CLK_ADDRESS_CLAMP_TO_EDGE;
 
-	uint4 pixa = read_imageui(in, sampler, xpos*16);
+	uint4 pix = read_imageui(in, sampler, pos*16);
+	//uint dp = pix.z*256 + pix.y;
+	uint4 vc = (uint4)(pos.x, pos.y, pix.z, pix.y);
 		
-	write_imageui(out, xpos, pixa);
+	write_imageui(out, pos, vc);
 
 }
