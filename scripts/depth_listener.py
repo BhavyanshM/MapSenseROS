@@ -87,8 +87,9 @@ class image_feature:
 
         msg = CompressedImage()
         msg.header.stamp = rospy.Time.now()
-        msg.format = "jpeg"
-        msg.data = np.array(cv2.imencode('.jpg', imgOut)[1]).tostring()
+        msg.format = "png"
+        msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
+        print(len(msg.data))
         self.publisher.publish(msg)
 
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
