@@ -2,7 +2,7 @@ import numpy as np
 from mayavi import mlab
 
 degree = 3
-lx = 16, ly = 16
+lx, ly = 16, 16
 xy_min, xy_max = -5, 5
 
 x_line = np.linspace(xy_min, xy_max, 16)
@@ -13,11 +13,6 @@ u_line = np.linspace(xy_min, xy_max, 30)
 v_line = np.linspace(xy_min, xy_max, 30)
 U, V = np.meshgrid(u_line, v_line)
 
-W = cubic(U,V)
-# W_n = W + np.random.normal(0,5,W.shape)
-
-Z = cubic(X,Y)
-Z_n = Z + np.random.normal(0,5,Z.shape)
 
 def biquad(X,Y):
 	return X**4 + 3*Y**3 + X**2 + Y**2 + 10
@@ -35,35 +30,55 @@ def residual(Z, P):
 	total = 0
 	for i in range(lx):
 		for j in range(ly):
-			total += poly(P,X[i,j],Y[i,j]) - Z[i,j]
+			total += (poly(P,X[i,j],Y[i,j]) - Z[i,j])**2
 	return total
 
-def gradient(P):
-	for i in range(degree):
-		# calc gradient
+def grad(f, Z, P, gdel):
+	gd = np.zeros_like(P)
+	for i in range(len(P)):
+		dp = np.zeros_like(P)
+		dp[i] = gdel 
+		pos, neg = P + dp, P - dp
+		# print(pos, neg)
+		gd[i] = (f(Z, pos) - f(Z, neg))/(2*gdel)
+	return gd
 
+
+W = cubic(U,V)
+# W_n = W + np.random.normal(0,5,W.shape)
+
+Z = cubic(X,Y)
+Z_n = Z + np.random.normal(0,5,Z.shape)
 
 # View it.
-sW = mlab.points3d(X, Y, Z_n/100, scale_factor=0.1, color=(1,1,1))
-sWN = mlab.mesh(U, V, W/100)
-mlab.show()
 
 P = np.array([0.0,0.0,0.0,0.0,0.0,0.0,0.0])
+alpha = 0.000001
+gdel = 0.01
 while True:
 
 	# Compute the residual
 	r = residual(Z,P)
 
 	# if residual exceeds threshold
-	if r > 0.1:
+	print(r)
+	if r > 10000:
 		# compute gradient
-		grad = gradient(P)
+		g = grad(residual, Z, P, gdel)
 
 		# move parameters along gradient
-		P += alpha*grad
+		P -= alpha*g
 
 	# else
 	else:
 		# stop
 		break
+print(P)
 
+G = P[0]*U**3 + P[1]*U**2 + P[2]*U**1 + P[3]*V**3 + P[0]*V**2 + P[0]*V**1 + P[0]*V**0
+
+print(G.shape)
+
+sW = mlab.points3d(X, Y, Z_n/100, scale_factor=0.1, color=(1,1,1))
+sWN = mlab.mesh(U, V, G/100)
+mlab.show()
