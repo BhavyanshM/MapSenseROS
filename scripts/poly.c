@@ -7,7 +7,7 @@
 FILE* fp;
 
 double poly(double x, double y){
-	return pow(x,3) - 10*pow(x,2) - pow(x,2) + 1;
+	return pow(y,3) - 10*pow(x,2) - pow(y,2) + 1;
 }
 
 int main(int argc, char** argv){
@@ -17,13 +17,16 @@ int main(int argc, char** argv){
 
 	double xy_min = -5.0;
 	double xy_max = 5.0;
-	double n = 16;
-
+	double n = 15;
+	double result = 0;
 
 	for (int i = 0; i<rows; i++){
 		for(int j = 0;j<cols; j++){
-			printf("%.2lf\t", poly( ((double)(xy_min + i*n/(xy_max-xy_min))),((double) (xy_min + j*n/(xy_max-xy_min)))));
+			result = poly( ((double)(xy_min + i*(xy_max-xy_min)/n)),((double) (xy_min + j*(xy_max-xy_min)/n)));
+			// printf("%.2lf\t%.2lf\n", (xy_min + i*(xy_max-xy_min)/n), (xy_min + j*(xy_max-xy_min)/n));
+			printf("%.2lf\t",result);
 		}
+		printf("\n");
 	}
 
 

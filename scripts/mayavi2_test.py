@@ -1,4 +1,5 @@
 import numpy as np
+np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)},linewidth=np.inf)
 from subprocess import call
 from mayavi import mlab
 
@@ -49,19 +50,20 @@ W = cubic(U,V)
 # W_n = W + np.random.normal(0,5,W.shape)
 
 Z = cubic(X,Y)
+print(Z.T)
 Z_n = Z + np.random.normal(0,5,Z.shape)
 
 # View it.
+
 
 P = np.array([0.0,0.0,0.0,0.0,0.0,0.0,0.0])
 alpha = 0.000001
 gdel = 0.01
 
-np.savetxt("data.txt", Z_n)
 
 print("Running poly.c")
 call(["gcc", "-o", "poly", "poly.c", "-lm"])
-call(["./poly", "args"])
+call(["./poly"])
 
 while True:
 
