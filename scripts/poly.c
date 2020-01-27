@@ -93,20 +93,20 @@ int main(int argc, char** argv){
 	while(1){
 		r = residual(P);
 		// printf("%.2lf\n",r);
-		if(r > 10000){
+		if(r > 6500){
 			update_grad(P, g, gdel);
 			update_params(P, g, alpha);
 		}else{
-			print(P);
 			break;
 		}
 	}
+	print(P);
 
 	clock_t end = clock();
 
 	time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
 
-	printf("Time elpased is %.2lf ms\n", time_spent*1000);
+	printf("C: Time Elpased - \t%.2lf ms\n", time_spent*1000);
 
 	return 0;
 }

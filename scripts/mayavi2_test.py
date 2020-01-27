@@ -1,3 +1,4 @@
+import time
 import numpy as np
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)},linewidth=np.inf)
 from subprocess import call
@@ -60,16 +61,16 @@ P = np.array([0.0,0.0,0.0,0.0,0.0,0.0,0.0])
 alpha = 0.000001
 gdel = 0.01
 
-
-
+begin = time.time()
 while True:
 
 	# Compute the residual
 	r = residual(Z_n,P)
 
 	# if residual exceeds threshold
-	print(r)
-	if r > 1000000:
+	# print(r)
+
+	if r > 6500:
 		# compute gradient
 		g = grad(residual, Z_n, P, gdel)
 
@@ -80,9 +81,12 @@ while True:
 	else:
 		# stop
 		break
-# print(P)
+end = time.time()
 
-print("Running poly.c")
+print(P)
+print("Python: Time Elapsed - \t\t" + str(round((end-begin)*1000,2)) + "ms")
+
+# print("Running poly.c")
 call(["gcc", "-o", "poly", "poly.c", "-lm"])
 call(["./poly"])
 

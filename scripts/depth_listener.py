@@ -79,7 +79,7 @@ class image_feature:
         time_now = time.time()
         time_diff += time_now -  prev_time
         if (time_diff) > 1:
-            print("FPS:{}".format(fps))
+            # print("FPS:{}".format(fps))
             time_diff = fps = 0
         prev_time = time_now
 
@@ -89,7 +89,7 @@ class image_feature:
         msg.header.stamp = rospy.Time.now()
         msg.format = "png"
         msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
-        print(len(msg.data))
+        # print(len(msg.data))
         self.publisher.publish(msg)
 
         cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
@@ -101,11 +101,13 @@ class image_feature:
         if disp == 2:
             cv2.imshow('DepthCamera', imgOut)
         code = cv2.waitKeyEx(1)
-        # print(code)
+        print(image_np.shape)
         if code == 1113937 or code == 65361:
             disp = (disp - 1) % 3
         if code == 1113939  or code == 65363 :
             disp = (disp + 1) % 3
+        if code == 115  or code == 6536 :
+            np.save("depth",image_np)
 
 
 
