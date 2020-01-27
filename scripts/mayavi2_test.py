@@ -50,7 +50,7 @@ W = cubic(U,V)
 # W_n = W + np.random.normal(0,5,W.shape)
 
 Z = cubic(X,Y)
-print(Z.T)
+# print(Z.T)
 Z_n = Z + np.random.normal(0,5,Z.shape)
 
 # View it.
@@ -61,18 +61,15 @@ alpha = 0.000001
 gdel = 0.01
 
 
-print("Running poly.c")
-call(["gcc", "-o", "poly", "poly.c", "-lm"])
-call(["./poly"])
 
 while True:
 
 	# Compute the residual
-	r = residual(Z,P)
+	r = residual(Z_n,P)
 
 	# if residual exceeds threshold
-	# print(r)
-	if r > 10000:
+	print(r)
+	if r > 1000000:
 		# compute gradient
 		g = grad(residual, Z_n, P, gdel)
 
@@ -85,11 +82,15 @@ while True:
 		break
 # print(P)
 
+print("Running poly.c")
+call(["gcc", "-o", "poly", "poly.c", "-lm"])
+call(["./poly"])
+
 G = P[0]*U**3 + P[1]*U**2 + P[2]*U**1 + P[3]*V**3 + P[0]*V**2 + P[0]*V**1 + P[0]*V**0
 
-print(G.shape)
+# print(G.shape)
 
 
-sW = mlab.points3d(X, Y, Z_n/100, scale_factor=0.1, color=(1,1,1))
-sWN = mlab.mesh(U, V, G/100)
+# sW = mlab.points3d(X, Y, Z_n/100, scale_factor=0.1, color=(1,1,1))
+# sWN = mlab.mesh(U, V, G/100)
 # mlab.show()
