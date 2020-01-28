@@ -55,6 +55,32 @@ __kernel void depthKernel(
 
 }
 
+
+float poly(float8 P, float x, float y){
+	return (P.s0*pow(x,3)+P.s1*pow(x,2)+P.s2*x+P.s3*pow(y,3)+P.s4*pow(y,2)+P.s5*y+P.s6*1);
+	
+}
+
+float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, int b){
+	float total = 0;
+	float X = 0;
+	float Y = 0;
+	int2 pos = (int2)(a,b);
+	for (int i = 0; i<16; i++){
+		for (int j = 0; j<16; j++){
+			X = xy_min + i*(xy_max-xy_min)/n;
+			Y = xy_min + j*(xy_max-xy_min)/n;
+			Z = uint4 pix = read_imageui(in, sampler, pos*16);
+			total += pow((poly(P,X,Y) - Z),2);
+		}
+	}
+	return total;
+}
+
+
+
+
+
 __kernel void segmentKernel(
 	read_only image2d_t in, 
 	write_only image2d_t out,
@@ -69,8 +95,24 @@ __kernel void segmentKernel(
 
 	uint4 pix = read_imageui(in, sampler, pos*16);
 	//uint dp = pix.z*256 + pix.y;
-	uint4 vc = (uint4)(pos.x, pos.y, pix.z, pix.y);
+
+	uint r = 10000;
+	float8 P = (float8)(1,2,3,4,5,6,7,8);
+	while(1){
+
+		if(r > 65){
+			//update_grad(P, g, gdel);
+			//update_params(P, g, alpha);
+			r--;
+		}else{
+			break;
+		}
+	}
+	uint4 res = residual(P, in, sampler, pos.x, pos.y);
+	uint4 vc = (uint4)(res.x, res.y, res.z, res.w);
 		
 	write_imageui(out, pos, vc);
+	
 
 }
+

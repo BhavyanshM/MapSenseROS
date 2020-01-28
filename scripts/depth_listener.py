@@ -13,7 +13,7 @@ VERBOSE=False
 
 context = cl.Context([cl.get_platforms()[0].get_devices()[0]])
 queue = cl.CommandQueue(context)
-program = cl.Program(context, open('kernel.cl').read()).build()
+program = cl.Program(context, open('fitting_kernel.cl').read()).build()
 depthKernel = cl.Kernel(program, 'depthKernel')
 segmentKernel = cl.Kernel(program, 'segmentKernel')
 
@@ -101,7 +101,7 @@ class image_feature:
         if disp == 2:
             cv2.imshow('DepthCamera', imgOut)
         code = cv2.waitKeyEx(1)
-        print(image_np.shape)
+        print(imgOut[0,0,:])
         if code == 1113937 or code == 65361:
             disp = (disp - 1) % 3
         if code == 1113939  or code == 65363 :
