@@ -44,15 +44,16 @@ def grad(f, Z, P, gdel):
 		gd[i] = (f(Z, pos) - f(Z, neg))/(2*gdel)
 	return gd
 
-for i in range(48):
-	for j in range(6):
-		X,Y,Z = fragment(i,j)
+# for i in range(48):
+# 	for j in range(6):
+# 		X,Y,Z = fragment(i,j)
 
 
 		# print(X.shape)
 		# print(Y.shape)
 		# print(Z.shape)
 
-		sW = mlab.mesh(X, Y, Z, scale_factor=0.1, color=(1,1,1))
+noise = np.random.normal(0,0.5,(768,1024))
+sW = mlab.points3d(A,B,D+noise, scale_factor=0.1, color=(1,1,1))
 
 mlab.show()

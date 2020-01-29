@@ -95,6 +95,6 @@ G = P[0]*U**3 + P[1]*U**2 + P[2]*U**1 + P[3]*V**3 + P[0]*V**2 + P[0]*V**1 + P[0]
 # print(G.shape)
 
 
-# sW = mlab.points3d(X, Y, Z_n/100, scale_factor=0.1, color=(1,1,1))
-# sWN = mlab.mesh(U, V, G/100)
-# mlab.show()
+sW = mlab.points3d(X, Y, Z_n/100, scale_factor=0.1, color=(1,1,1))
+sWN = mlab.mesh(U, V, G/100)
+mlab.show()

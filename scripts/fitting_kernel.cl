@@ -77,13 +77,15 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 	float xy_max = 1;
 	float n = 15;
 
+	float8 params = (float8)(0.0, -10.0, 0.0, 1.0, -1.0, 0.0, 1.0, 0.0);
 	int2 pos = (int2)(a,b);
 	for (int i = 0; i<16; i++){
 		for (int j = 0; j<16; j++){
 			X = xy_min + i*(xy_max-xy_min)/n;
 			Y = xy_min + j*(xy_max-xy_min)/n;
 			uint4 pix = read_imageui(in, sam, pos*16 + (int2)(i,j));
-			Z = (float)(pix.z*216 + pix.y);
+			Z = poly(params,X,Y);
+			//Z = (float)(pix.z*216 + pix.y);
 			total += pow((poly(P,X,Y) - Z),2);
 		}
 	}
@@ -92,6 +94,26 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+float8 calc_grad(float8 P, float gdel, read_only image2d_t in, __const sampler_t sam,int a,int b){
+	float8 gd = (float8)(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
+	for (int i = 0; i<7; i++){
+		float8 dp = (float8)(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
+		//dp[i] = gdel;
+		//printf("%f\n",gdel);
+		//gd[i] = (residual(P+dp, in, sam, a, b)-residual(P-dp, in, sam, a, b))/(2*gdel);
+	}
+	return gd;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+float8 update_params(float8 P, float8 grad, float alpha){
+	return P - alpha*grad;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 __kernel void segmentKernel(
@@ -109,20 +131,26 @@ __kernel void segmentKernel(
 	uint4 pix = read_imageui(in, sampler, pos*16);
 	//uint dp = pix.z*256 + pix.y;
 
-	uint r = 10000;
-	float8 P = (float8)(1,2,3,4,5,6,7,8);
-	while(1){
+	int count = 0;
+	float r = 100000;
+	float alpha = 0.000001;
+	float gdel = 0.01;
+	float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
-		if(r > 65){
-			//update_grad(P, g, gdel);
-			//update_params(P, g, alpha);
-			r--;
+	while(count < 50){
+		r = residual(P, in, sampler, pos.x, pos.y);
+		count++;
+		printf("Residual:%f\n",r);
+		if(r > 1000){
+			printf("(%d,%d)\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",pos.x,pos.y,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6);
+			grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y);
+			P = update_params(P, grad, alpha);
 		}else{
 			break;
 		}
 	}
-	uint4 res = residual(P, in, sampler, pos.x, pos.y);
-	uint4 vc = (uint4)(res.x, res.y, res.z, res.w);
+	uint4 vc = (uint4)(r/100, r/1000, r/10000, r/100000);
 		
 	write_imageui(out, pos, vc);
 	
