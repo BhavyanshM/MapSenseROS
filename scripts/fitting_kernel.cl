@@ -56,21 +56,34 @@ __kernel void depthKernel(
 }
 
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
 float poly(float8 P, float x, float y){
 	return (P.s0*pow(x,3)+P.s1*pow(x,2)+P.s2*x+P.s3*pow(y,3)+P.s4*pow(y,2)+P.s5*y+P.s6*1);
 	
 }
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, int b){
 	float total = 0;
 	float X = 0;
 	float Y = 0;
+	float Z = 0;
+
+	float xy_min = 0;
+	float xy_max = 1;
+	float n = 15;
+
 	int2 pos = (int2)(a,b);
 	for (int i = 0; i<16; i++){
 		for (int j = 0; j<16; j++){
 			X = xy_min + i*(xy_max-xy_min)/n;
 			Y = xy_min + j*(xy_max-xy_min)/n;
-			Z = uint4 pix = read_imageui(in, sampler, pos*16);
+			uint4 pix = read_imageui(in, sam, pos*16 + (int2)(i,j));
+			Z = (float)(pix.z*216 + pix.y);
 			total += pow((poly(P,X,Y) - Z),2);
 		}
 	}
@@ -78,7 +91,7 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 }
 
 
-
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 __kernel void segmentKernel(
@@ -116,3 +129,4 @@ __kernel void segmentKernel(
 
 }
 
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
