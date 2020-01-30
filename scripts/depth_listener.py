@@ -92,16 +92,16 @@ class image_feature:
         # print(len(msg.data))
         self.publisher.publish(msg)
 
-        cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("DepthCamera", 1024, 758)
-        if disp == 0:
-            cv2.imshow('DepthCamera', image_np[:,:,2])
-        if disp == 1:
-            cv2.imshow('DepthCamera', imgMed)
-        if disp == 2:
-            cv2.imshow('DepthCamera', imgOut)
+        # cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
+        # cv2.resizeWindow("DepthCamera", 1024, 758)
+        # if disp == 0:
+        #     cv2.imshow('DepthCamera', image_np[:,:,2])
+        # if disp == 1:
+        #     cv2.imshow('DepthCamera', imgMed)
+        # if disp == 2:
+        #     cv2.imshow('DepthCamera', imgOut)
         code = cv2.waitKeyEx(1)
-        print(imgOut[0,0,:])
+        # print(imgOut[0,0,:])
         if code == 1113937 or code == 65361:
             disp = (disp - 1) % 3
         if code == 1113939  or code == 65363 :

@@ -73,8 +73,8 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 	float Y = 0;
 	float Z = 0;
 
-	float xy_min = 0;
-	float xy_max = 1;
+	float xy_min = -5;
+	float xy_max = 5;
 	float n = 15;
 
 	float8 params = (float8)(0.0, -10.0, 0.0, 1.0, -1.0, 0.0, 1.0, 0.0);
@@ -97,14 +97,15 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 
 
 float8 calc_grad(float8 P, float gdel, read_only image2d_t in, __const sampler_t sam,int a,int b){
-	float8 gd = (float8)(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
+	float grad[] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 	for (int i = 0; i<7; i++){
-		float8 dp = (float8)(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
-		//dp[i] = gdel;
-		//printf("%f\n",gdel);
-		//gd[i] = (residual(P+dp, in, sam, a, b)-residual(P-dp, in, sam, a, b))/(2*gdel);
+		float dp[] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+		dp[i] = gdel;
+		float8 dps = vload8(0,dp); 
+		grad[i] = (residual(P+dps, in, sam, a, b)-residual(P-dps, in, sam, a, b))/(2*gdel);
 	}
-	return gd;
+
+	return vload8(0,grad);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -128,29 +129,29 @@ __kernel void segmentKernel(
 
 	__const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_FILTER_NEAREST | CLK_ADDRESS_CLAMP_TO_EDGE;
 
-	uint4 pix = read_imageui(in, sampler, pos*16);
-	//uint dp = pix.z*256 + pix.y;
-
 	int count = 0;
 	float r = 100000;
 	float alpha = 0.000001;
-	float gdel = 0.01;
+	float gdel = 0.001;
 	float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	
+	float decay = 0.9;
 
 	while(count < 50){
 		r = residual(P, in, sampler, pos.x, pos.y);
 		count++;
-		printf("Residual:%f\n",r);
-		if(r > 1000){
-			printf("(%d,%d)\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",pos.x,pos.y,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6);
+		//if(r > 1000){
+			if(pos.x == 24 && pos.y == 24 && count == 19){printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);}
+			
 			grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y);
 			P = update_params(P, grad, alpha);
-		}else{
-			break;
-		}
+			alpha *= decay;
+		//}else{
+		//	break;
+		//}
 	}
-	uint4 vc = (uint4)(r/100, r/1000, r/10000, r/100000);
+	uint4 vc = (uint4)(100, 100, 100, 100);
 		
 	write_imageui(out, pos, vc);
 	
