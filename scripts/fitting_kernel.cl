@@ -131,20 +131,26 @@ __kernel void segmentKernel(
 
 	int count = 0;
 	float r = 100000;
-	float alpha = 0.000001;
+	float alpha = 16;
 	float gdel = 0.001;
 	float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	
-	float decay = 0.9;
-
-	while(count < 50){
+	float decay = 1.0;
+	float8 prod = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	float8 epsilon = ((float8)(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))*0.000001f;
+	while(count < 8){
 		r = residual(P, in, sampler, pos.x, pos.y);
 		count++;
 		//if(r > 1000){
-			if(pos.x == 24 && pos.y == 24 && count == 19){printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);}
+			//if(pos.x == 24 && pos.y == 24){	
+			//	printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
+			//	printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6);
+			//	printf("Residual:%lf\n",r);}
 			
 			grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y);
+			prod += grad*grad;
+			grad /= sqrt(prod + epsilon);
 			P = update_params(P, grad, alpha);
 			alpha *= decay;
 		//}else{
