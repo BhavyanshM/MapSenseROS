@@ -8,6 +8,7 @@ from map_sense.msg import PlanarRegion
 import pyopencl as cl
 import time
 # from cv_bridge import CvBridge, CvBridgeError
+np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
 VERBOSE=False
 
@@ -26,8 +27,11 @@ subH, subW, subD = 48,64,4
 
 
 imgInBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
+
 imgMedBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
-imgOutBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(subW, subH))
+
+imgOutBuf1 = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT), shape=(subW, subH))
+imgOutBuf2 = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT), shape=(subW, subH))
 
 
 depthKernel.set_arg(0,imgInBuf)
@@ -36,9 +40,10 @@ depthKernel.set_arg(2,np.int32(h))
 depthKernel.set_arg(3,np.int32(w))
 
 segmentKernel.set_arg(0,imgInBuf)
-segmentKernel.set_arg(1,imgOutBuf)
-segmentKernel.set_arg(2,np.int32(subH))
-segmentKernel.set_arg(3,np.int32(subW))
+segmentKernel.set_arg(1,imgOutBuf1)
+segmentKernel.set_arg(2,imgOutBuf2)
+segmentKernel.set_arg(3,np.int32(subH))
+segmentKernel.set_arg(4,np.int32(subW))
 
 class image_feature:
 
@@ -54,17 +59,19 @@ class image_feature:
 
 
     def fit(self, image_np):
-        global imgInBuf, imgOutBuf, depthKernel, segmentKernel
+        global imgInBuf, imgOutBuf1, imgOutBuf2, depthKernel, segmentKernel
         imgMed = np.empty_like(image_np)
-        imgOut = np.empty((48,64,4), dtype='uint8')
+        imgOut1 = np.empty((48,64,4), dtype='float32')
+        imgOut2 = np.empty((48,64,4), dtype='float32')
 
         cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))        
         cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
         cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h))
         cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
-        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0), region=(subW,subH))
+        cl.enqueue_copy(queue, imgOut1, imgOutBuf1, origin=(0, 0), region=(subW,subH))
+        cl.enqueue_copy(queue, imgOut2, imgOutBuf2, origin=(0, 0), region=(subW,subH))
 
-        return imgOut
+        return imgOut1, imgOut2
 
 
 
@@ -81,7 +88,7 @@ class image_feature:
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
         
-        imgOut = self.fit(image_np)
+        imgOut1, imgOut2 = self.fit(image_np)
 
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
 
@@ -93,12 +100,13 @@ class image_feature:
             time_diff = fps = 0
         prev_time = time_now
 
-        # print(imgOut[24,32,:])
+        print(imgOut1[24,32,:])
+        print(imgOut2[24,32,:])
 
         msg = CompressedImage()
         msg.header.stamp = rospy.Time.now()
         msg.format = "png"
-        msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
+        msg.data = list(np.array(cv2.imencode('.png', imgOut1)[1]))
         # print(len(msg.data))
         self.publisher.publish(msg)
 

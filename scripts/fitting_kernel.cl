@@ -119,7 +119,8 @@ float8 update_params(float8 P, float8 grad, float alpha){
 
 __kernel void segmentKernel(
 	read_only image2d_t in, 
-	write_only image2d_t out,
+	write_only image2d_t out1,
+	write_only image2d_t out2,
 	const int h,
 	const int w
 )
@@ -157,9 +158,12 @@ __kernel void segmentKernel(
 		//	break;
 		//}
 	}
-	uint4 vc = (uint4)(100, 100, 100, 100);
-		
-	write_imageui(out, pos, vc);
+	
+	float4 f1 = P.s0123;
+	float4 f2 = P.s4567;
+
+	write_imagef(out1, pos, f1);
+	write_imagef(out2, pos, f2);
 	
 
 }
