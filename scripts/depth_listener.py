@@ -53,8 +53,24 @@ class image_feature:
             print( "subscribed to /camera/image/compressed")
 
 
+    def fit(self, image_np):
+        global imgInBuf, imgOutBuf, depthKernel, segmentKernel
+        imgMed = np.empty_like(image_np)
+        imgOut = np.empty((48,64,4), dtype='uint8')
+
+        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))        
+        cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
+        cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h))
+        cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
+        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0), region=(subW,subH))
+
+        return imgOut
+
+
+
+
     def callback(self, ros_data):
-        global prev_time, fps, time_diff, disp, imgInBuf, imgOutBuf, depthKernel, segmentKernel
+        global prev_time, fps, time_diff, disp 
         '''Callback function of subscribed topic. 
         Here images get converted and features detected'''
         if VERBOSE :
@@ -64,14 +80,8 @@ class image_feature:
         np_arr = np.fromstring(ros_data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
-        imgMed = np.empty_like(image_np)
-        imgOut = np.empty((48,64,4), dtype='uint8')
-
-        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))        
-        cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
-        cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h))
-        cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
-        cl.enqueue_copy(queue, imgOut, imgOutBuf, origin=(0, 0), region=(subW,subH))
+        
+        imgOut = self.fit(image_np)
 
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
 
