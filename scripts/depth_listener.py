@@ -64,17 +64,47 @@ class image_feature:
         imgOut1 = np.empty((48,64,4), dtype='float32')
         imgOut2 = np.empty((48,64,4), dtype='float32')
 
-        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h))        
+        cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h), is_blocking=False)        
         cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
-        cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h))
+        # cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h), is_blocking=False)
         cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
-        cl.enqueue_copy(queue, imgOut1, imgOutBuf1, origin=(0, 0), region=(subW,subH))
-        cl.enqueue_copy(queue, imgOut2, imgOutBuf2, origin=(0, 0), region=(subW,subH))
+        cl.enqueue_copy(queue, imgOut1, imgOutBuf1, origin=(0, 0), region=(subW,subH), is_blocking=False)
+        cl.enqueue_copy(queue, imgOut2, imgOutBuf2, origin=(0, 0), region=(subW,subH), is_blocking=False)
 
-        return imgOut1, imgOut2
+        cl.enqueue_barrier(queue)
+
+        return imgOut1, imgOut2, imgMed
+
+    def display(self, disp, image_np, imgMed, imgOut):
+        cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow("DepthCamera", 1024, 758)
+        if disp == 0:
+            cv2.imshow('DepthCamera', image_np[:,:,2])
+        if disp == 1:
+            cv2.imshow('DepthCamera', imgMed)
+        if disp == 2:
+            cv2.imshow('DepthCamera', imgOut)
 
 
+    def publish(self, imgOut):
+        msg = CompressedImage()
+        msg.header.stamp = rospy.Time.now()
+        msg.format = "png"
+        msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
+        # print(len(msg.data))
+        self.publisher.publish(msg)
 
+    def capture(self, disp):
+        code = cv2.waitKeyEx(1)
+        # print(imgOut[0,0,:])
+        if code == 1113937 or code == 65361:
+            disp = (disp - 1) % 3
+        if code == 1113939  or code == 65363 :
+            disp = (disp + 1) % 3
+        if code == 115  or code == 6536 :
+            np.save("depth",image_np)
+
+        return disp
 
     def callback(self, ros_data):
         global prev_time, fps, time_diff, disp 
@@ -88,44 +118,28 @@ class image_feature:
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
         
-        imgOut1, imgOut2 = self.fit(image_np)
+        imgOut1, imgOut2, imgMed = self.fit(image_np)
 
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
+
+        self.publish(imgOut1)
+        disp = self.capture(disp)
+
 
         fps += 1
         time_now = time.time()
         time_diff += time_now -  prev_time
         if (time_diff) > 1:
-            # print("FPS:{}".format(fps))
+            print("FPS:{}".format(fps))
             time_diff = fps = 0
         prev_time = time_now
 
-        print(imgOut1[24,32,:])
-        print(imgOut2[24,32,:])
+        # print(imgOut1[24,32,:])
+        # print(imgOut2[24,32,:])
 
-        msg = CompressedImage()
-        msg.header.stamp = rospy.Time.now()
-        msg.format = "png"
-        msg.data = list(np.array(cv2.imencode('.png', imgOut1)[1]))
-        # print(len(msg.data))
-        self.publisher.publish(msg)
 
-        # cv2.namedWindow("DepthCamera", cv2.WINDOW_NORMAL)
-        # cv2.resizeWindow("DepthCamera", 1024, 758)
-        # if disp == 0:
-        #     cv2.imshow('DepthCamera', image_np[:,:,2])
-        # if disp == 1:
-        #     cv2.imshow('DepthCamera', imgMed)
-        # if disp == 2:
-        #     cv2.imshow('DepthCamera', imgOut)
-        code = cv2.waitKeyEx(1)
-        # print(imgOut[0,0,:])
-        if code == 1113937 or code == 65361:
-            disp = (disp - 1) % 3
-        if code == 1113939  or code == 65363 :
-            disp = (disp + 1) % 3
-        if code == 115  or code == 6536 :
-            np.save("depth",image_np)
+        self.display(disp, image_np, imgMed, imgOut1)
+
 
 
 

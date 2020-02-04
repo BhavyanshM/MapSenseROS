@@ -67,7 +67,9 @@ float poly(float8 P, float x, float y){
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
 float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, int b){
+
 	float total = 0;
 	float X = 0;
 	float Y = 0;
@@ -76,11 +78,12 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 	float xy_min = -5;
 	float xy_max = 5;
 	float n = 15;
-
 	float8 params = (float8)(0.0, -10.0, 0.0, 1.0, -1.0, 0.0, 1.0, 0.0);
+	
 	int2 pos = (int2)(a,b);
-	for (int i = 0; i<16; i++){
-		for (int j = 0; j<16; j++){
+
+	for (int i = 0; i<16; i+=2){
+		for (int j = 0; j<16; j+=2){
 			X = xy_min + i*(xy_max-xy_min)/n;
 			Y = xy_min + j*(xy_max-xy_min)/n;
 			uint4 pix = read_imageui(in, sam, pos*16 + (int2)(i,j));
@@ -132,7 +135,7 @@ __kernel void segmentKernel(
 
 	int count = 0;
 	float r = 100000;
-	float alpha = 16;
+	float alpha = 7;
 	float gdel = 0.001;
 	float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -140,30 +143,31 @@ __kernel void segmentKernel(
 	float decay = 1.0;
 	float8 prod = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	float8 epsilon = ((float8)(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))*0.000001f;
+
+
 	while(count < 8){
 		r = residual(P, in, sampler, pos.x, pos.y);
 		count++;
-		//if(r > 1000){
-			//if(pos.x == 24 && pos.y == 24){	
-			//	printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
-			//	printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6);
-			//	printf("Residual:%lf\n",r);}
-			
-			grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y);
-			prod += grad*grad;
-			grad /= sqrt(prod + epsilon);
-			P = update_params(P, grad, alpha);
-			alpha *= decay;
-		//}else{
-		//	break;
-		//}
+		grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y);
+		prod += grad*grad;
+		grad /= sqrt(prod + epsilon);
+		P = update_params(P, grad, alpha);
+		alpha *= decay;
+
+		if(pos.x == 24 && pos.y == 24){	
+			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
+			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6);
+		}
 	}
 	
 	float4 f1 = P.s0123;
 	float4 f2 = P.s4567;
 
-	write_imagef(out1, pos, f1);
-	write_imagef(out2, pos, f2);
+	uint4 pix = read_imageui(in, sampler, (int2)(384,512));
+	float4 temp = (float4)(pix.x, pix.y, pix.z, pix.w);
+
+	write_imagef(out1, pos, temp);
+	write_imagef(out2, pos, temp);
 	
 
 }
