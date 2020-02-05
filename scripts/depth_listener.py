@@ -13,7 +13,7 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 VERBOSE=False
 
 context = cl.Context([cl.get_platforms()[0].get_devices()[0]])
-queue = cl.CommandQueue(context)
+queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
 program = cl.Program(context, open('fitting_kernel.cl').read()).build()
 depthKernel = cl.Kernel(program, 'depthKernel')
 segmentKernel = cl.Kernel(program, 'segmentKernel')
@@ -67,7 +67,9 @@ class image_feature:
         cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h), is_blocking=False)        
         cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)
         # cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h), is_blocking=False)
-        cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
+        event = cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
+        event.wait()
+        print ((event.profile.end-event.profile.start)*(1e-6))
         cl.enqueue_copy(queue, imgOut1, imgOutBuf1, origin=(0, 0), region=(subW,subH), is_blocking=False)
         cl.enqueue_copy(queue, imgOut2, imgOutBuf2, origin=(0, 0), region=(subW,subH), is_blocking=False)
 
@@ -130,7 +132,7 @@ class image_feature:
         time_now = time.time()
         time_diff += time_now -  prev_time
         if (time_diff) > 1:
-            print("FPS:{}".format(fps))
+            # print("FPS:{}".format(fps))
             time_diff = fps = 0
         prev_time = time_now
 

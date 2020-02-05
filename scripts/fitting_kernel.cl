@@ -68,7 +68,7 @@ float poly(float8 P, float x, float y){
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, int b){
+float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, int b, bool odd){
 
 	float total = 0;
 	float X = 0;
@@ -82,13 +82,14 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 	
 	int2 pos = (int2)(a,b);
 
-	for (int i = 0; i<16; i+=2){
-		for (int j = 0; j<16; j+=2){
+	for (int i = (int)odd; i<16; i+=2){
+		for (int j = (int)!odd; j<16; j+=2){
 			X = xy_min + i*(xy_max-xy_min)/n;
 			Y = xy_min + j*(xy_max-xy_min)/n;
 			uint4 pix = read_imageui(in, sam, pos*16 + (int2)(i,j));
 			Z = poly(params,X,Y);
 			//Z = (float)(pix.z*216 + pix.y);
+			//Z = (Z - (float)65536)/(float)10000;
 			total += pow((poly(P,X,Y) - Z),2);
 		}
 	}
@@ -99,13 +100,13 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-float8 calc_grad(float8 P, float gdel, read_only image2d_t in, __const sampler_t sam,int a,int b){
+float8 calc_grad(float8 P, float gdel, read_only image2d_t in, __const sampler_t sam,int a,int b,bool odd){
 	float grad[] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 	for (int i = 0; i<7; i++){
 		float dp[] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 		dp[i] = gdel;
 		float8 dps = vload8(0,dp); 
-		grad[i] = (residual(P+dps, in, sam, a, b)-residual(P-dps, in, sam, a, b))/(2*gdel);
+		grad[i] = (residual(P+dps, in, sam, a, b,odd)-residual(P-dps, in, sam, a, b,odd))/(2*gdel);
 	}
 
 	return vload8(0,grad);
@@ -135,29 +136,33 @@ __kernel void segmentKernel(
 
 	int count = 0;
 	float r = 100000;
-	float alpha = 7;
-	float gdel = 0.001;
+	float alpha = 7.5;
+	float gdel = 0.0001;
 	float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	
-	float decay = 1.0;
 	float8 prod = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	float8 epsilon = ((float8)(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))*0.000001f;
 
+	bool odd = 1;
 
-	while(count < 8){
-		r = residual(P, in, sampler, pos.x, pos.y);
-		count++;
-		grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y);
+	grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
+	prod += grad*grad;
+	grad /= sqrt(prod + epsilon);
+	P = update_params(P, grad, alpha);
+	float orig = residual(P, in, sampler, pos.x, pos.y, odd);
+	while(count < 12){
+		//r = residual(P, in, sampler, pos.x, pos.y, odd);
+		count++;odd = !odd;
+		grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
 		prod += grad*grad;
 		grad /= sqrt(prod + epsilon);
 		P = update_params(P, grad, alpha);
-		alpha *= decay;
 
-		if(pos.x == 24 && pos.y == 24){	
-			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
-			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6);
-		}
+		//if(pos.x == 24 && pos.y == 24){	
+		//	printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
+		//	printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
+		//}
 	}
 	
 	float4 f1 = P.s0123;
