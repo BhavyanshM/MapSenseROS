@@ -121,11 +121,11 @@ class image_feature:
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
         
         imgOut1, imgOut2, imgMed = self.fit(image_np)
+        outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
 
-        # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
-
-        self.publish(imgOut1)
+        self.publish(outputStacked)
         disp = self.capture(disp)
+        # self.display(disp, image_np, imgMed, imgOut1)
 
 
         fps += 1
@@ -136,11 +136,13 @@ class image_feature:
             time_diff = fps = 0
         prev_time = time_now
 
+        # print(imgOut1.shape, imgOut1.shape,outputStacked.shape)
+        print(outputStacked.shape)
         # print(imgOut1[24,32,:])
         # print(imgOut2[24,32,:])
+        # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
 
 
-        self.display(disp, image_np, imgMed, imgOut1)
 
 
 
