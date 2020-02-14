@@ -125,7 +125,7 @@ class image_feature:
 
         self.publish(outputStacked)
         disp = self.capture(disp)
-        # self.display(disp, image_np, imgMed, imgOut1)
+        self.display(disp, image_np, imgMed, imgOut1)
 
 
         fps += 1
@@ -137,7 +137,7 @@ class image_feature:
         prev_time = time_now
 
         # print(imgOut1.shape, imgOut1.shape,outputStacked.shape)
-        print(outputStacked.shape)
+        print(outputStacked[48,0,:])
         # print(imgOut1[24,32,:])
         # print(imgOut2[24,32,:])
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
