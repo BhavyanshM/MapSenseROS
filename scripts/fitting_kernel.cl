@@ -87,10 +87,10 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 			X = xy_min + i*(xy_max-xy_min)/n;
 			Y = xy_min + j*(xy_max-xy_min)/n;
 			uint4 pix = read_imageui(in, sam, pos*16 + (int2)(i,j));
-			//Z = poly(params,X,Y);
+			Z = poly(params,X,Y);
 			
-			Z = (float)(pix.z*216 + pix.y);
-			Z = (Z - (float)65536)/(float)10000;
+			//Z = (float)(pix.z*216 + pix.y);
+			//Z = (Z - (float)65536)/(float)10000;
 			
 			total += pow((poly(P,X,Y) - Z),2);
 		}
@@ -153,7 +153,10 @@ __kernel void segmentKernel(
 	grad /= sqrt(prod + epsilon);
 	P = update_params(P, grad, alpha);
 	float orig = residual(P, in, sampler, pos.x, pos.y, odd);
-	while(count < 12){
+
+
+	int n_iterations = 32;
+	while(count < n_iterations){
 		//r = residual(P, in, sampler, pos.x, pos.y, odd);
 		count++;odd = !odd;
 		grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
@@ -161,7 +164,7 @@ __kernel void segmentKernel(
 		grad /= sqrt(prod + epsilon);
 		P = update_params(P, grad, alpha);
 
-		if(pos.x == 24 && pos.y == 24){	
+		if(pos.x == 63 && pos.y == 47 && count == n_iterations-1){	
 			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
 			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
 		}

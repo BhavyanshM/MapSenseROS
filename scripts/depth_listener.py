@@ -45,17 +45,18 @@ segmentKernel.set_arg(2,imgOutBuf2)
 segmentKernel.set_arg(3,np.int32(subH))
 segmentKernel.set_arg(4,np.int32(subW))
 
-class image_feature:
+
+
+class depth_proc:
 
     def __init__(self):
-        # subscribed Topic
-        self.subscriber = rospy.Subscriber("/depth_image/compressed",
-            CompressedImage, self.callback,  queue_size = 1)
-        
-        self.publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
-        
-        if VERBOSE :
-            print( "subscribed to /camera/image/compressed")
+        image_np = np.load('depth.npy')
+        imgOut1, imgOut2, imgMed = self.fit(image_np)
+        outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
+
+        self.publish(outputStacked)
+
+        print('Done!',outputStacked.shape)
 
 
     def fit(self, image_np):
@@ -94,7 +95,8 @@ class image_feature:
         msg.format = "png"
         msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
         # print(len(msg.data))
-        self.publisher.publish(msg)
+        publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
+        publisher.publish(msg)
 
     def capture(self, disp):
         code = cv2.waitKeyEx(1)
@@ -108,6 +110,29 @@ class image_feature:
 
         return disp
 
+    def fit_data(self, image_np):
+        imgOut1, imgOut2, imgMed = self.fit(image_np)
+        outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
+
+        self.publish(outputStacked)
+
+
+
+
+
+
+class image_feature:
+
+    def __init__(self):
+        # subscribed Topic
+        if len(sys.argv) == 1:
+            self.subscriber = rospy.Subscriber("/depth_image/compressed", CompressedImage, self.callback,  queue_size = 1)
+        
+        self.publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
+        
+        if VERBOSE :
+            print( "subscribed to /camera/image/compressed")
+
     def callback(self, ros_data):
         global prev_time, fps, time_diff, disp 
         '''Callback function of subscribed topic. 
@@ -120,12 +145,12 @@ class image_feature:
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2RGBA)
         
-        imgOut1, imgOut2, imgMed = self.fit(image_np)
+        imgOut1, imgOut2, imgMed = self.dp.fit(image_np)
         outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
 
-        self.publish(outputStacked)
-        disp = self.capture(disp)
-        self.display(disp, image_np, imgMed, imgOut1)
+        self.dp.publish(outputStacked)
+        disp = self.dp.capture(disp)
+        self.dp.display(disp, image_np, imgMed, imgOut1)
 
 
         fps += 1
@@ -146,13 +171,13 @@ class image_feature:
 
 
 
-
 def main(args):
     '''Initializes and cleanup ros node'''
     ic = image_feature()
-    rospy.init_node('image_feature', anonymous=True)
+    node = rospy.init_node('image_feature', anonymous=True)
     try:
-        rospy.spin()
+        # rospy.spin()
+        depth_proc()
     except KeyboardInterrupt:
         print( "Shutting down ROS depth subscriber")
     cv2.destroyAllWindows()
