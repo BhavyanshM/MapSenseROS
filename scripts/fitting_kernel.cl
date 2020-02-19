@@ -155,7 +155,7 @@ __kernel void segmentKernel(
 	float orig = residual(P, in, sampler, pos.x, pos.y, odd);
 
 
-	int n_iterations = 32;
+	int n_iterations = 10;
 	while(count < n_iterations){
 		//r = residual(P, in, sampler, pos.x, pos.y, odd);
 		count++;odd = !odd;
@@ -170,8 +170,8 @@ __kernel void segmentKernel(
 		}
 	}
 	
-	write_imagef(out1, pos, P.s0123);
-	write_imagef(out2, pos, P.s4567);
+	write_imagef(out1, pos, (float4)(0,1,2,3));
+	write_imagef(out2, pos, (float4)(4,5,6,7));
 	
 
 }
