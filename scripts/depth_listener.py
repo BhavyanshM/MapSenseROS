@@ -7,6 +7,10 @@ from sensor_msgs.msg import CompressedImage
 from map_sense.msg import PlanarRegion
 import pyopencl as cl
 import time
+
+
+
+
 # from cv_bridge import CvBridge, CvBridgeError
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
@@ -44,34 +48,6 @@ segmentKernel.set_arg(1,imgOutBuf1)
 segmentKernel.set_arg(2,imgOutBuf2)
 segmentKernel.set_arg(3,np.int32(subH))
 segmentKernel.set_arg(4,np.int32(subW))
-
-
-
-# class depth_proc:
-
-#     def __init__(self):
-        
-#         imgOut1, imgOut2, imgMed = self.fit(image_np)
-#         outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
-
-
-#         print(outputStacked)
-#         self.publish(outputStacked)
-
-#         # self.display(0, image_np, imgMed, imgOut1)
-#         # cv2.waitKey(0)
-
-#         print('Done!',outputStacked.shape)
-#         exit()
-
-
-#     def fit_data(self, image_np):
-#         imgOut1, imgOut2, imgMed = self.fit(image_np)
-#         outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
-
-#         self.publish(outputStacked)
-
-
 
 
 
@@ -174,9 +150,6 @@ class image_feature:
         # print(imgOut1[24,32,:])
         # print(imgOut2[24,32,:])
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
-
-
-
 
 
 def main(args):
