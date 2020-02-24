@@ -22,12 +22,11 @@ find_package(OpenCV REQUIRED)
 
 add_message_files(
 	FILES
-	PlanarRegion.msg
+	PlanarRegions.msg
 )
 
 generate_messages(
 	DEPENDENCIES
-	geometry_msgs
 	std_msgs
 )
 
@@ -44,10 +43,11 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  /usr/include/CL/
 )
 
 add_executable(planar_region_publisher src/PlanarRegionPublisher.cpp)
-target_link_libraries(planar_region_publisher ${OpenCV_LIBS} ${catkin_LIBRARIES})
+target_link_libraries(planar_region_publisher ${OpenCV_LIBS} ${catkin_LIBRARIES} /usr/lib/x86_64-linux-gnu/libOpenCL.so)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 
 

@@ -19,19 +19,33 @@ using namespace sensor_msgs;
 using namespace geometry_msgs;
 using namespace map_sense;
 
-#define DEPTH_WIDTH 1024
-#define DEPTH_HEIGHT 786
+#define WIDTH 1024
+#define HEIGHT 786
 
 
 Publisher RGBDPosePub;
 Publisher planarRegionPub;
 
+
+void printMat(const Mat& image_cv){
+		Vec4b point = image_cv.at<Vec4b>(cv::Point(384,512));
+		cout << point << endl;
+		printf("%d\t%d\t%d\n", image_cv.size().height, image_cv.size().width, image_cv.channels());
+}
+
+void fit(const Mat& image_cv){
+	printMat(image_cv);
+}
+
+
 void depthCallback(const CompressedImageConstPtr& msg){
 	try{
 		Mat image = imdecode(Mat(msg->data),1);
-		circle(image, cv::Point(384,512), 12, cv::Scalar(0,0,255),1);	
-		Point3f point = image.at<Point3f>(cv::Point(384,512));
-		printf("%d\t%d\t%d\n", image.size().height, image.size().width, image.depth());
+		Mat image_cv;
+		cvtColor(image, image_cv, COLOR_RGB2RGBA);
+		// circle(image, cv::Point(384,512), 12, cv::Scalar(0,0,255),1);	
+
+
 
 		// PlanarRegion planeMsg;
 		// planeMsg.header.stamp = Time::now();
@@ -47,6 +61,9 @@ void depthCallback(const CompressedImageConstPtr& msg){
 
 		// planarRegionPub.publish(planeMsg);
 
+		fit(image_cv);
+
+		printMat(image_cv);
 		imshow("DepthCallback", image);
 		waitKey(1);
 
@@ -60,49 +77,21 @@ int main (int argc, char** argv){
 
 	NodeHandle n;
 	RGBDPosePub = n.advertise<PoseStamped>("rgbd_pose", 1000);
-	planarRegionPub = n.advertise<PlanarRegion>("planar_regions", 1000);
+	planarRegionPub = n.advertise<PlanarRegion>("/map/regions/test", 1000);
 
 	namedWindow("DepthCallback");
 	Subscriber sub = n.subscribe("/depth_image/compressed", 1, depthCallback);
 
 
-	// image_transport::ImageTransport it(n);
-	// image_transport::TransportHints hints("compressed");
-	// image_transport::Subscriber sub = it.subscribe("/depth_image", 1, depthCallback, VoidPtr(), hints);
-
-
-
-
-
 	Rate loop_rate(200);
-
 	int count = 0;
 	int r = 3;
 
 	while (ok()){
-
-
-		PoseStamped msg;
-		msg.header.stamp = Time::now();
-		msg.header.frame_id = "/world";
-		msg.pose.position.x = r*cos(count*0.01);
-		msg.pose.position.y = r*sin(count*0.01);
-		msg.pose.position.z = 3.0;
-		msg.pose.orientation.x = 0.0;
-		msg.pose.orientation.y = 0.3826834;
-		msg.pose.orientation.z = 0.0;
-		msg.pose.orientation.w = 0.9238795;
-		RGBDPosePub.publish(msg);
-
-
 		spinOnce();
-
 		loop_rate.sleep();
 		++count;
-
-
 	}
 	destroyWindow("DepthCallback");
-
 	return 0;
 }

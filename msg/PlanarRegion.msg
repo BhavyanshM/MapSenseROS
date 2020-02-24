@@ -1,3 +1,0 @@
-std_msgs/Header header
-geometry_msgs/PolygonStamped polygon
-geometry_msgs/Point32 normal

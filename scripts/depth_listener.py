@@ -4,10 +4,10 @@ import cv2
 import roslib
 import rospy
 from sensor_msgs.msg import CompressedImage
-from map_sense.msg import PlanarRegion
+from map_sense.msg import PlanarRegions
 import pyopencl as cl
 import time
-
+from std_msgs.msg import Float32
 
 
 
@@ -58,7 +58,7 @@ class image_feature:
         # subscribed Topic
         self.subscriber = rospy.Subscriber("/depth_image/compressed", CompressedImage, self.callback,  queue_size = 1)
         
-        self.publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
+        self.publisher = rospy.Publisher("/map/regions/temp", PlanarRegions, queue_size=10)
         
         if VERBOSE :
             print( "subscribed to /camera/image/compressed")
@@ -94,13 +94,19 @@ class image_feature:
 
 
     def publish(self, imgOut):
-        msg = CompressedImage()
+        
+        msg = PlanarRegions()
         msg.header.stamp = rospy.Time.now()
-        msg.format = "png"
-        msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
-        print("Publishing")
-        publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
-        publisher.publish(msg)
+        msg.param = Float32(1.0 )
+        self.publisher.publish(msg)
+
+        # msg = CompressedImage()
+        # msg.header.stamp = rospy.Time.now()
+        # msg.format = "png"
+        # msg.data = list(np.array(cv2.imencode('.png', imgOut)[1]))
+        # print("Publishing")
+        # publisher = rospy.Publisher("/map/regions", CompressedImage, queue_size=10)
+        # publisher.publish(msg)
 
     def capture(self, disp):
         code = cv2.waitKeyEx(1)
