@@ -31,8 +31,13 @@ Publisher RGBDPosePub;
 Publisher planarRegionPub;
 
 cl::Kernel kern;
+cl::Context context;
 cl::CommandQueue queue;
 cl::Buffer imgInBuf, imgOutBuf1, imgOutBuf2;
+cl::ImageFormat uint8_img;
+cl::ImageFormat float_img;
+cl::size_t<3> origin;
+cl::size_t<3> size;
 
 
 void printMat(const Mat& image_cv){
@@ -42,19 +47,18 @@ void printMat(const Mat& image_cv){
 }
 
 void fit(const Mat& image_cv){
-    queue.enqueueWriteBuffer(imgInBuf,CL_TRUE,0,sizeof(int)*10,A);
+    cl::Image2D imgInBuf(context, CL_MEM_READ_WRITE, uint8_img, WIDTH, HEIGHT, 0, &image_cv.data[0]);
+	cl::Image2D imgOutBuf1(context, CL_MEM_READ_WRITE, float_img, SUB_W, SUB_H, 0, NULL);
+    cl::Image2D imgOutBuf2(context, CL_MEM_READ_WRITE, float_img, SUB_W, SUB_H, 0, NULL);
  
     queue.enqueueNDRangeKernel(kern,cl::NullRange,cl::NDRange(10),cl::NullRange);
     queue.finish();
- 
-    queue.enqueueWriteBuffer(imgOutBuf1,CL_TRUE,0,sizeof(int)*10,B);
-    queue.enqueueReadBuffer(imgOutBuf2,CL_TRUE,0,sizeof(int)*10,C);
- 
-    cout<<" result: ";
-    for(int i=0;i<10;i++){
-        cout<<C[i]<<" ";
-    }
-    cout << endl;
+
+    // cout << "Fitting" << endl;
+
+
+    queue.enqueueReadImage(out, CL_TRUE, origin, size, 0, 0, tmp);
+
 }
 
 
@@ -113,11 +117,32 @@ int main (int argc, char** argv){
     cl::Platform default_platform=all_platforms[0];
     vector<cl::Device> all_devices;
     default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-    cl::Device default_device=all_devices[0];
-    cl::Context context({default_device});
+    cl::Device default_device = all_devices[0];
+    context = cl::Context({default_device});
    
     cl::Program::Sources sources;
     // calculates for each element; C = A + B
+
+    FILE *fp;
+	char *source_str;
+	size_t source_size, program_size;
+
+	fp = fopen("fitting_kernel.cl", "rb");
+	if (!fp) {
+	    printf("Failed to load kernel\n");
+	    return 1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	program_size = ftell(fp);
+	rewind(fp);
+	source_str = (char*)malloc(program_size + 1);
+	source_str[program_size] = '\0';
+	fread(source_str, sizeof(char), program_size, fp);
+	cout << source_str << endl;
+	fclose(fp);
+
+
 	std::string kernel_code=
             "   void kernel simple_add(global const int* A, global const int* B, global int* C){       "
             "       C[get_global_id(0)]=A[get_global_id(0)]+B[get_global_id(0)];                 "
@@ -130,16 +155,21 @@ int main (int argc, char** argv){
         exit(1);
     }
  
-    imgInBuf = cl::Image(context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), WIDTH, HEIGHT, 0, (void*));
-	imgOutBuf1 = cl::Image(context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT), SUB_W, SUB_H, 0, (void*));
-	imgOutBuf2 = cl::Image(context,CL_MEM_READ_WRITE,cl::ImageFormat(CL_RGBA, CL_FLOAT), SUB_W, SUB_H, 0, (void*)); 
+    cl::ImageFormat uint8_img = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
+	cl::ImageFormat float_img = cl::ImageFormat(CL_RGBA, CL_FLOAT); 
  
     queue = cl::CommandQueue(context,default_device); 
-    kern = cl::Kernel(program,"simple_add");
+    kern = cl::Kernel(program,"fitting_kernel");
     kern.setArg(0,imgInBuf);
     kern.setArg(1,imgOutBuf1);
     kern.setArg(2,imgOutBuf2);
 
+    origin[0] = 0;
+	origin[1] = 0;
+	origin[2] = 0;
+	size[0] = WIDTH;
+	size[1] = HEIGHT;
+	size[2] = 4;
 
 	namedWindow("DepthCallback");
 	Subscriber sub = nh.subscribe("/depth_image/compressed", 1, depthCallback);
