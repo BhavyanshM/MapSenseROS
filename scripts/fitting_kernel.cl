@@ -171,8 +171,8 @@ __kernel void segmentKernel(
 		//}
 	}
 	
-	write_imagef(out1, pos, (float4)(0,1,2,3));
-	write_imagef(out2, pos, (float4)(4,5,6,7));
+	write_imagef(out1, pos, (float4)(0.123,1.432,2.34543,3.34));
+	write_imagef(out2, pos, (float4)(4.73,5.567,6.76,7.347));
 	
 
 }
