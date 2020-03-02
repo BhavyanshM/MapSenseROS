@@ -1,2 +1,2 @@
 std_msgs/Header header
-std_msgs/Float32 param
+float32[] data

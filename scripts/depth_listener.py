@@ -46,8 +46,8 @@ depthKernel.set_arg(3,np.int32(w))
 segmentKernel.set_arg(0,imgInBuf)
 segmentKernel.set_arg(1,imgOutBuf1)
 segmentKernel.set_arg(2,imgOutBuf2)
-segmentKernel.set_arg(3,np.int32(subH))
-segmentKernel.set_arg(4,np.int32(subW))
+# segmentKernel.set_arg(3,np.int32(subH))
+# segmentKernel.set_arg(4,np.int32(subW))
 
 
 
@@ -97,7 +97,7 @@ class image_feature:
         
         msg = PlanarRegions()
         msg.header.stamp = rospy.Time.now()
-        msg.param = Float32(1.0 )
+        msg.data = imgOut.flatten().tolist()
         self.publisher.publish(msg)
 
         # msg = CompressedImage()
@@ -138,7 +138,7 @@ class image_feature:
         outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
 
         self.publish(outputStacked)
-        print(outputStacked)
+        # print(outputStacked)
         disp = self.capture(disp)
         self.display(disp, image_np, imgMed, imgOut1)
 
@@ -152,7 +152,7 @@ class image_feature:
         prev_time = time_now
 
         # print(imgOut1.shape, imgOut1.shape,outputStacked.shape)
-        print(outputStacked[48,0,:])
+        print(outputStacked[16,0,:])
         # print(imgOut1[24,32,:])
         # print(imgOut2[24,32,:])
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)

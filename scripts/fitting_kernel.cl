@@ -163,7 +163,7 @@ __kernel void segmentKernel(
 		grad /= sqrt(prod + epsilon);
 		P = update_params(P, grad, alpha);
 		
-		printf("(%d,%d)\n",pos.x,pos.y);
+		//printf("(%d,%d)\n",pos.x,pos.y);
 		//if(pos.x == 47 && pos.y == 50){
 			//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
 			//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
