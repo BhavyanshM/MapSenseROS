@@ -140,7 +140,7 @@ class image_feature:
         self.publish(outputStacked)
         # print(outputStacked)
         disp = self.capture(disp)
-        self.display(disp, image_np, imgMed, imgOut1)
+        # self.display(disp, image_np, imgMed, imgOut1)
 
 
         fps += 1
