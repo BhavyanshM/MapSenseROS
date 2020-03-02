@@ -27,7 +27,7 @@ fps = 0
 time_diff = 0
 disp = 0
 h, w, d = 768,1024,4
-subH, subW, subD = 48,64,4
+subH, subW, subD = 12,16,4
 
 
 imgInBuf = cl.Image(context, cl.mem_flags.READ_WRITE, cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.UNSIGNED_INT8), shape=(w,h))
@@ -66,8 +66,8 @@ class image_feature:
     def fit(self, image_np):
         global imgInBuf, imgOutBuf1, imgOutBuf2, depthKernel, segmentKernel
         imgMed = np.empty_like(image_np)
-        imgOut1 = np.empty((48,64,4), dtype='float32')
-        imgOut2 = np.empty((48,64,4), dtype='float32')
+        imgOut1 = np.empty((subW,subH,4), dtype='float32')
+        imgOut2 = np.empty((subW,subH,4), dtype='float32')
 
         cl.enqueue_copy(queue, imgInBuf, image_np, origin=(0, 0), region=(w,h), is_blocking=False)        
         cl.enqueue_nd_range_kernel(queue, depthKernel, (w,h), None)

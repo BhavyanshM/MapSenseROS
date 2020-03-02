@@ -126,12 +126,11 @@ float8 update_params(float8 P, float8 grad, float alpha){
 __kernel void segmentKernel(
 	read_only image2d_t in, 
 	write_only image2d_t out1,
-	write_only image2d_t out2,
-	const int h,
-	const int w
+	write_only image2d_t out2
 )
 
 {
+	//printf("HelloWorld!\n");
 	int2 pos = (int2)(get_global_id(0), get_global_id(1));
 
 	__const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_FILTER_NEAREST | CLK_ADDRESS_CLAMP_TO_EDGE;
@@ -155,19 +154,21 @@ __kernel void segmentKernel(
 	float orig = residual(P, in, sampler, pos.x, pos.y, odd);
 
 
-	int n_iterations = 10;
+	int n_iterations = 16;
 	while(count < n_iterations){
-		//r = residual(P, in, sampler, pos.x, pos.y, odd);
+		r = residual(P, in, sampler, pos.x, pos.y, odd);
 		count++;odd = !odd;
 		grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
 		prod += grad*grad;
 		grad /= sqrt(prod + epsilon);
 		P = update_params(P, grad, alpha);
+		
+		printf("(%d,%d)\n",pos.x,pos.y);
+		//if(pos.x == 47 && pos.y == 50){
+			//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
+			//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
 
-		if(pos.x == 63 && pos.y == 47 && count == n_iterations-1){	
-			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
-			printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
-		}
+		//}
 	}
 	
 	write_imagef(out1, pos, (float4)(0,1,2,3));

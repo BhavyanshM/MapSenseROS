@@ -46,7 +46,7 @@ include_directories(
   /usr/include/CL/
 )
 
-add_executable(planar_region_publisher src/PlanarRegionPublisher.cpp)
+add_executable(planar_region_publisher src/CUDA_PlanarRegionPublisher.cpp)
 target_link_libraries(planar_region_publisher ${OpenCV_LIBS} ${catkin_LIBRARIES} /usr/lib/x86_64-linux-gnu/libOpenCL.so)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 
