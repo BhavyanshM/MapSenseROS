@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "std_msgs/String.h"
-#include "map_sense/PlanarRegion.h"
+#include "map_sense/PlanarRegions.h"
 #include "geometry_msgs/PoseStamped.h"
 
 #include "image_transport/image_transport.h"
@@ -134,7 +134,7 @@ int main (int argc, char** argv){
 
 	NodeHandle nh;
 	RGBDPosePub = nh.advertise<PoseStamped>("rgbd_pose", 1000);
-	planarRegionPub = nh.advertise<PlanarRegion>("/map/regions/test", 1000);
+	planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 1000);
 
 	vector<cl::Platform> all_platforms;
 	cl::Platform::get(&all_platforms);

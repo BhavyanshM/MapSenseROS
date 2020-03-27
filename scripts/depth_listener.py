@@ -58,7 +58,7 @@ class image_feature:
         # subscribed Topic
         self.subscriber = rospy.Subscriber("/depth_image/compressed", CompressedImage, self.callback,  queue_size = 1)
         
-        self.publisher = rospy.Publisher("/map/regions/temp", PlanarRegions, queue_size=10)
+        self.publisher = rospy.Publisher("/map/regions", PlanarRegions, queue_size=10)
         
         if VERBOSE :
             print( "subscribed to /camera/image/compressed")
@@ -74,7 +74,7 @@ class image_feature:
         # cl.enqueue_copy(queue, imgMed, imgMedBuf, origin=(0, 0), region=(w,h), is_blocking=False)
         event = cl.enqueue_nd_range_kernel(queue, segmentKernel, (subW,subH), None)
         event.wait()
-        print ((event.profile.end-event.profile.start)*(1e-6))
+        # print ((event.profile.end-event.profile.start)*(1e-6))
         cl.enqueue_copy(queue, imgOut1, imgOutBuf1, origin=(0, 0), region=(subW,subH), is_blocking=False)
         cl.enqueue_copy(queue, imgOut2, imgOutBuf2, origin=(0, 0), region=(subW,subH), is_blocking=False)
 
@@ -98,6 +98,7 @@ class image_feature:
         msg = PlanarRegions()
         msg.header.stamp = rospy.Time.now()
         msg.data = imgOut.flatten().tolist()
+        print("Publishing")
         self.publisher.publish(msg)
 
         # msg = CompressedImage()
@@ -152,7 +153,7 @@ class image_feature:
         prev_time = time_now
 
         # print(imgOut1.shape, imgOut1.shape,outputStacked.shape)
-        print(outputStacked[16,0,:])
+        # print(outputStacked[16,0,:])
         # print(imgOut1[24,32,:])
         # print(imgOut2[24,32,:])
         # print(image_np[0,0,2], imgOut[0,0,2], imgMed.dtype, imgOut.dtype)
