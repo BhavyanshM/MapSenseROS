@@ -49,7 +49,7 @@ segmentKernel.set_arg(2,imgOutBuf2)
 # segmentKernel.set_arg(3,np.int32(subH))
 # segmentKernel.set_arg(4,np.int32(subW))
 
-
+count = 0
 
 
 class image_feature:
@@ -94,10 +94,17 @@ class image_feature:
 
 
     def publish(self, imgOut):
-        
+        global count
         msg = PlanarRegions()
         msg.header.stamp = rospy.Time.now()
-        msg.data = imgOut.flatten().tolist()
+        imgOut = imgOut.flatten()
+        imgOut[0] = count
+        if count < 100:
+            count += 1
+        else:
+            count = 0
+        print(imgOut)
+        msg.data = imgOut.tolist()
         print("Publishing")
         self.publisher.publish(msg)
 
