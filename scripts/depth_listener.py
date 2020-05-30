@@ -94,16 +94,10 @@ class image_feature:
 
 
     def publish(self, imgOut):
-        global count
         msg = PlanarRegions()
         msg.header.stamp = rospy.Time.now()
         imgOut = imgOut.flatten()
-        imgOut[0] = count
-        if count < 100:
-            count += 1
-        else:
-            count = 0
-        print(imgOut)
+        print(imgOut[:8])
         msg.data = imgOut.tolist()
         print("Publishing")
         self.publisher.publish(msg)
@@ -143,8 +137,7 @@ class image_feature:
         # image_np = np.load('depth.npy')
         
         imgOut1, imgOut2, imgMed = self.fit(image_np)
-        outputStacked = np.concatenate((imgOut1, imgOut2),axis=0)
-
+        outputStacked = np.concatenate((imgOut1, imgOut2),axis=2)
         self.publish(outputStacked)
         # print(outputStacked)
         disp = self.capture(disp)
