@@ -87,10 +87,10 @@ float residual(float8 P, read_only image2d_t in, __const sampler_t sam,	int a, i
 			X = xy_min + i*(xy_max-xy_min)/n;
 			Y = xy_min + j*(xy_max-xy_min)/n;
 			uint4 pix = read_imageui(in, sam, pos*16 + (int2)(i,j));
-			Z = poly(params,X,Y);
+			//Z = poly(params,X,Y);
 			
-			//Z = (float)(pix.z*216 + pix.y);
-			//Z = (Z - (float)65536)/(float)10000;
+			Z = (float)(pix.y*256 + pix.x);
+			Z = (Z)/((float)10000);
 			
 			total += pow((poly(P,X,Y) - Z),2);
 		}
@@ -173,6 +173,9 @@ __kernel void segmentKernel(
 	
 	write_imagef(out1, pos, (float4)(P.s0,P.s1,P.s2,P.s3));
 	write_imagef(out2, pos, (float4)(P.s4,P.s5,P.s6,P.s7));
+
+	//write_imagef(out1, pos, (float4)(1,2,3,4));
+	//write_imagef(out2, pos, (float4)(5,6,7,8));
 	
 
 }

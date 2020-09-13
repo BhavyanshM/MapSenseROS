@@ -139,7 +139,9 @@ class image_feature:
         imgOut1, imgOut2, imgMed = self.fit(image_np)
         outputStacked = np.concatenate((imgOut1, imgOut2),axis=2)
         self.publish(outputStacked)
-        # print(outputStacked)
+        
+        print("outputStacked")
+        
         disp = self.capture(disp)
         # self.display(disp, image_np, imgMed, imgOut1)
 
