@@ -81,55 +81,44 @@ void fit(const Mat& image_cv){
 }
 
 
-void depthCallback(const ImageConstPtr& msg){
+void depthCallback(const ImageConstPtr& depthMsg){
     cv_bridge::CvImagePtr img_ptr_depth;
 
     try{
-        img_ptr_depth = cv_bridge::toCvCopy(*msg, image_encodings::TYPE_16UC1);
+        img_ptr_depth = cv_bridge::toCvCopy(*depthMsg, image_encodings::TYPE_16UC1);
 
-        Mat img = img_ptr_depth->image;
-        img.convertTo(img, -1, 10, 100);
+        Mat depthImg = img_ptr_depth->image;
+        depthImg.convertTo(depthImg, -1, 10, 100);
 
 
-        imshow("DepthCallback", img);
+        imshow("Depth Image", depthImg);
         int code = waitKeyEx(32);
         cout << "Code: " << code << endl;
         if (code == 1048689) exit(1);
 
 
-		// cvtColor(image, image_cv, COLOR_RGB2RGBA);
-		// circle(image, cv::Point(384,512), 12, cv::Scalar(0,0,255),1);	
 
+    }catch(cv_bridge::Exception& e){
+        ROS_ERROR("Could not convert to image!");
+    }
 
-
-		// PlanarRegion planeMsg;
-		// planeMsg.header.stamp = Time::now();
-		// planeMsg.header.frame_id = "/world_of_planes";
-		// planeMsg.polygon.polygon.points.reserve(10);
-		// for(int i = 0; i<10; i++){
-		// 	Point32 point;
-		// 	point.x = 2.0*i;
-		// 	point.y = i;
-		// 	point.z = 3*i;
-		// 	planeMsg.polygon.polygon.points.push_back(point);
-		// }
-
-		// planarRegionPub.publish(planeMsg);
-
-		// fit(image_cv);
-
-		// printMat(image_cv);
-
-
-		// imshow("DepthCallback", image);
-		// waitKey(1);
-
-	}catch(cv_bridge::Exception& e){
-		ROS_ERROR("Could not convert to image!");
-	}
 }
 
+void colorCallback(const sensor_msgs::ImageConstPtr& colorMsg){
+    cv_bridge::CvImagePtr img_ptr_color;
+    try{
+        img_ptr_color = cv_bridge::toCvCopy(*colorMsg, image_encodings::TYPE_8UC3);
+        Mat colorImg = img_ptr_color->image;
 
+        imshow("Color Image", colorImg);
+        int code = waitKeyEx(32);
+        cout << "Code: " << code << endl;
+        if (code == 1048689) exit(1);
+
+    }catch(cv_bridge::Exception& e){
+        ROS_ERROR("Could not convert to image!");
+    }
+}
 
 int main (int argc, char** argv){
     origin[0] = 0;
@@ -204,8 +193,9 @@ int main (int argc, char** argv){
     int e2 = kern.setArg(2,imgOutBuf2);
     // cout <<  e1 << e2 << endl;
 
-	namedWindow("DepthCallback");
-	Subscriber sub = nh.subscribe("/camera/depth/image_rect_raw", 1, depthCallback);
+	// namedWindow("DepthCallback");
+	Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 1, depthCallback);
+    Subscriber subColor = nh.subscribe("/camera/color/image_raw", 1, colorCallback);
 
 
 	Rate loop_rate(200);
