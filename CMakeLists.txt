@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(map_sense)
 
+find_package(VTK 7 REQUIRED)
+find_package(gflags REQUIRED)
+find_package( OpenCV 4.2 REQUIRED )
+find_package(OpenCL REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -46,12 +51,12 @@ include_directories(
   /usr/include/CL/
 )
 
-#add_executable(planar_region_publisher src/PlanarRegionPublisher.cpp)
-#target_link_libraries(planar_region_publisher 
-#  ${OpenCV_LIBS} 
-#  ${catkin_LIBRARIES} 
-#  /usr/lib/x86_64-linux-gnu/libOpenCL.so
-#)
+add_executable(planar_region_publisher src/PlanarRegionPublisher.cpp)
+target_link_libraries(planar_region_publisher
+  ${OpenCV_LIBS}
+  ${catkin_LIBRARIES}
+  /usr/lib/x86_64-linux-gnu/libOpenCL.so
+)
 
 #add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 

@@ -81,11 +81,23 @@ void fit(const Mat& image_cv){
 }
 
 
-void depthCallback(const CompressedImageConstPtr& msg){
-	try{
-		Mat image = imdecode(Mat(msg->data),1);
-		Mat image_cv;
-		cvtColor(image, image_cv, COLOR_RGB2RGBA);
+void depthCallback(const ImageConstPtr& msg){
+    cv_bridge::CvImagePtr img_ptr_depth;
+
+    try{
+        img_ptr_depth = cv_bridge::toCvCopy(*msg, image_encodings::TYPE_16UC1);
+
+        Mat img = img_ptr_depth->image;
+        img.convertTo(img, -1, 10, 100);
+
+
+        imshow("DepthCallback", img);
+        int code = waitKeyEx(32);
+        cout << "Code: " << code << endl;
+        if (code == 1048689) exit(1);
+
+
+		// cvtColor(image, image_cv, COLOR_RGB2RGBA);
 		// circle(image, cv::Point(384,512), 12, cv::Scalar(0,0,255),1);	
 
 
@@ -104,7 +116,7 @@ void depthCallback(const CompressedImageConstPtr& msg){
 
 		// planarRegionPub.publish(planeMsg);
 
-		fit(image_cv);
+		// fit(image_cv);
 
 		// printMat(image_cv);
 
@@ -193,7 +205,7 @@ int main (int argc, char** argv){
     // cout <<  e1 << e2 << endl;
 
 	namedWindow("DepthCallback");
-	Subscriber sub = nh.subscribe("/depth_image/compressed", 1, depthCallback);
+	Subscriber sub = nh.subscribe("/camera/depth/image_rect_raw", 1, depthCallback);
 
 
 	Rate loop_rate(200);
