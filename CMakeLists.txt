@@ -45,17 +45,28 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+
+set(SOURCE_FILES
+		src/PlanarRegionPublisher.cpp
+		src/RegionFinder.cpp
+		src/GPU.cpp)
+
+set (HEADERS
+		include/RegionFinder.h
+		include/GPU.h)
+
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
   /usr/include/CL/
 )
 
-add_executable(planar_region_publisher src/PlanarRegionPublisher.cpp)
+add_executable(planar_region_publisher ${SOURCE_FILES} ${HEADERS})
 target_link_libraries(planar_region_publisher
-  ${OpenCV_LIBS}
-  ${catkin_LIBRARIES}
-  /usr/lib/x86_64-linux-gnu/libOpenCL.so
+	tbb
+	${OpenCV_LIBS}
+	${catkin_LIBRARIES}
+	/usr/lib/x86_64-linux-gnu/libOpenCL.so
 )
 
 #add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)

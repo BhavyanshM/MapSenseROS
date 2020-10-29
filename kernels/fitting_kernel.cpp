@@ -1,4 +1,5 @@
-__kernel void depthKernel(
+
+ void kernel depthKernel(
 	read_only image2d_t in, 
 	write_only image2d_t out,
 	const int h,
@@ -123,56 +124,56 @@ float8 update_params(float8 P, float8 grad, float alpha){
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-__kernel void segmentKernel(
-	read_only image2d_t in, 
-	write_only image2d_t out1,
-	write_only image2d_t out2
+void kernel segmentKernel(  read_only image2d_t in,
+	                        write_only image2d_t out1
 )
-
 {
-	//printf("HelloWorld!\n");
-	int2 pos = (int2)(get_global_id(0), get_global_id(1));
+	int r = get_global_id(0);
+    int c = get_global_id(1);
+    if(c == 0 && r == 0){
+        printf("%d,%d\n", r,c);
+        float4 depth = read_imagef(in, (int2)(0,0));
+        printf("HelloWorld! \n");
+    }
 
-	__const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_FILTER_NEAREST | CLK_ADDRESS_CLAMP_TO_EDGE;
-
-	int count = 0;
-	float r = 100000;
-	float alpha = 7.5;
-	float gdel = 0.0001;
-	float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-	float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	// int count = 0;
+	// float r = 100000;
+	// float alpha = 7.5;
+	// float gdel = 0.0001;
+	// float8 P = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	// float8 grad = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	//
+	// float8 prod = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	// float8 epsilon = ((float8)(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))*0.000001f;
+    //
+	// bool odd = 1;
+    //
+	// grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
+	// prod += grad*grad;
+	// grad /= sqrt(prod + epsilon);
+	// P = update_params(P, grad, alpha);
+	// float orig = residual(P, in, sampler, pos.x, pos.y, odd);
+    //
+    //
+	// int n_iterations = 16;
+	// while(count < n_iterations){
+	// 	r = residual(P, in, sampler, pos.x, pos.y, odd);
+	// 	count++;odd = !odd;
+	// 	grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
+	// 	prod += grad*grad;
+	// 	grad /= sqrt(prod + epsilon);
+	// 	P = update_params(P, grad, alpha);
+	//
+	// 	//printf("(%d,%d)\n",pos.x,pos.y);
+	// 	//if(pos.x == 47 && pos.y == 50){
+	// 		//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
+	// 		//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
+    //
+	// 	//}
+	// }
 	
-	float8 prod = (float8)(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-	float8 epsilon = ((float8)(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))*0.000001f;
-
-	bool odd = 1;
-
-	grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
-	prod += grad*grad;
-	grad /= sqrt(prod + epsilon);
-	P = update_params(P, grad, alpha);
-	float orig = residual(P, in, sampler, pos.x, pos.y, odd);
-
-
-	int n_iterations = 16;
-	while(count < n_iterations){
-		r = residual(P, in, sampler, pos.x, pos.y, odd);
-		count++;odd = !odd;
-		grad = calc_grad(P, gdel, in, sampler, pos.x, pos.y, odd);
-		prod += grad*grad;
-		grad /= sqrt(prod + epsilon);
-		P = update_params(P, grad, alpha);
-		
-		//printf("(%d,%d)\n",pos.x,pos.y);
-		//if(pos.x == 47 && pos.y == 50){
-			//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",pos.x,pos.y,count,r,P.s0,P.s1,P.s2,P.s3,P.s4,P.s5,P.s6);
-			//printf("(%d,%d,%d,%.2f)\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n-----%d\n",pos.x,pos.y,count,r/orig*100,grad.s0,grad.s1,grad.s2,grad.s3,grad.s4,grad.s5,grad.s6,(int)odd);
-
-		//}
-	}
-	
-	write_imagef(out1, pos, (float4)(P.s0,P.s1,P.s2,P.s3));
-	write_imagef(out2, pos, (float4)(P.s4,P.s5,P.s6,P.s7));
+	// write_imagef(out1, pos, (float4)(P.s0,P.s1,P.s2,P.s3));
+	// write_imagef(out2, pos, (float4)(P.s4,P.s5,P.s6,P.s7));
 
 	//write_imagef(out1, pos, (float4)(1,2,3,4));
 	//write_imagef(out2, pos, (float4)(5,6,7,8));

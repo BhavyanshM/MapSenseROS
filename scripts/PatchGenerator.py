@@ -18,7 +18,7 @@ VERBOSE=False
 
 context = cl.Context([cl.get_platforms()[0].get_devices()[0]])
 queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
-program = cl.Program(context, open('fitting_kernel.cl').read()).build()
+program = cl.Program(context, open('../kernels/fitting_kernel.cpp').read()).build()
 depthKernel = cl.Kernel(program, 'depthKernel')
 segmentKernel = cl.Kernel(program, 'segmentKernel')
 

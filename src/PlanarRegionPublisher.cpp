@@ -31,96 +31,78 @@ using namespace map_sense;
 Publisher RGBDPosePub;
 Publisher planarRegionPub;
 
-cl::Kernel kern;
+cl::Kernel kernel;
 cl::Context context;
 cl::CommandQueue queue;
 cl::Image2D imgInBuf, imgOutBuf1, imgOutBuf2;
 cl::ImageFormat uint8_img, float_img;
 cl::size_t<3> origin, size;
-
 cl::Event event;
 
-void printMat(const Mat& image_cv){
-		Vec4b point = image_cv.at<Vec4b>(cv::Point(384,512));
-		cout << point << endl;
-		printf("%d\t%d\t%d\n", image_cv.size().height, image_cv.size().width, image_cv.channels());
-}
+ImageConstPtr colorMessage;
+ImageConstPtr depthMessage;
 
-void fit(const Mat& image_cv){
-    imgInBuf = cl::Image2D(context, CL_MEM_READ_ONLY, uint8_img, WIDTH, HEIGHT, 0, NULL);
-    int e0 = kern.setArg(0,imgInBuf);
-    cout << "E0:"<< e0 << endl;
-    
+void get_sample_depth(Mat mat);
 
-    unsigned char *input = (unsigned char*)(image_cv.data);
+void get_sample_color(Mat mat);
 
-    cl_uchar4* img = (cl_uchar4*)malloc(HEIGHT*WIDTH*4*8*4);
-    cl::Event writeEvt;
-    int status = queue.enqueueWriteImage(imgInBuf,CL_FALSE,origin,size,0,0,img);
-    cout << "EnqueueWrite:" << status << endl;
-    // printf("%d\t%d\t%d\n", image_cv.size().height, image_cv.size().width, image_cv.channels());
+void fit(const Mat& color, const Mat& depth){
 
-    queue.flush();
+    float *prevDepthBuffer = reinterpret_cast<float *>(depth.data);
+    cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_FLOAT), WIDTH, HEIGHT , 0, prevDepthBuffer);
+    cl::Image2D clOutput(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), WIDTH, HEIGHT);
+    Mat output;
 
- 	cl::Event temp;
-    
-    // cout << "Fitting" << endl;
-    int err = queue.enqueueNDRangeKernel(kern, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NDRange(1,1), NULL, &temp);
-    cout << "EnqueueNDRangeKernel:" << err << endl;
+    kernel.setArg(0, clDepth);
+    kernel.setArg(1, clOutput);
 
-
-    event = temp;
-    event.wait();
-    queue.flush();
+    queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
+    // queue.enqueueReadImage(clDepth, CL_TRUE, origin, jacSize, 0, 0, output.data);
     queue.finish();
 
-
-
     // queue.enqueueReadImage(out, CL_TRUE, origin, size, 0, 0, tmp);
-
 }
 
-
 void depthCallback(const ImageConstPtr& depthMsg){
-    cv_bridge::CvImagePtr img_ptr_depth;
-
-    try{
-        img_ptr_depth = cv_bridge::toCvCopy(*depthMsg, image_encodings::TYPE_16UC1);
-
-        Mat depthImg = img_ptr_depth->image;
-        depthImg.convertTo(depthImg, -1, 10, 100);
-
-
-        imshow("Depth Image", depthImg);
-        int code = waitKeyEx(32);
-        cout << "Code: " << code << endl;
-        if (code == 1048689) exit(1);
-
-
-
-    }catch(cv_bridge::Exception& e){
-        ROS_ERROR("Could not convert to image!");
-    }
-
+    depthMessage = depthMsg;
 }
 
 void colorCallback(const sensor_msgs::ImageConstPtr& colorMsg){
+    colorMessage = colorMsg;
+}
+
+void processDataCallback(const TimerEvent&){
+    cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
-    try{
-        img_ptr_color = cv_bridge::toCvCopy(*colorMsg, image_encodings::TYPE_8UC3);
-        Mat colorImg = img_ptr_color->image;
+    if(colorMessage != nullptr && depthMessage != nullptr){
+        try {
+            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
 
-        imshow("Color Image", colorImg);
-        int code = waitKeyEx(32);
-        cout << "Code: " << code << endl;
-        if (code == 1048689) exit(1);
+            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
+            Mat colorImg = img_ptr_color->image;
 
-    }catch(cv_bridge::Exception& e){
-        ROS_ERROR("Could not convert to image!");
+            img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
+            Mat depthImg = img_ptr_depth->image;
+            depthImg.convertTo(depthImg, -1, 10, 100);
+
+            fit(colorImg, depthImg);
+
+            imshow("RealSense L515 Depth", depthImg);
+            imshow("RealSense L515 Color", colorImg);
+            int code = waitKeyEx(32);
+            if (code == 1048689) exit(1);
+
+        } catch(cv_bridge::Exception& e){
+            ROS_ERROR("Could not convert to image!");
+        }
     }
 }
 
 int main (int argc, char** argv){
+
+    // export ROSCONSOLE_FORMAT='${time:format string}'
+    // export ROSCONSOLE_FORMAT='[${severity}] [${time}][${node}:${line}]: ${message}'
+
     origin[0] = 0;
 	origin[1] = 0;
 	origin[2] = 0;
@@ -128,11 +110,7 @@ int main (int argc, char** argv){
 	size[1] = HEIGHT;
 	size[2] = 1;
 
-    uint8_img = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
-	float_img = cl::ImageFormat(CL_RGBA, CL_FLOAT); 
-
 	init(argc, argv, "PlanarRegionPublisher");
-
 	NodeHandle nh;
 	RGBDPosePub = nh.advertise<PoseStamped>("rgbd_pose", 1000);
 	planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 1000);
@@ -157,10 +135,10 @@ int main (int argc, char** argv){
 	char *source_str;
 	size_t source_size, program_size;
 
-	fp = fopen((ros::package::getPath("map_sense") + "/scripts/fitting_kernel.cl").c_str(), "rb");
+	fp = fopen((ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp").c_str(), "rb");
 	if (!fp) {
 	    printf("Failed to load kernel\n");
-	    cout << ros::package::getPath("map_sense") + "/scripts/fitting_kernel.cl" << endl;
+	    cout << ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp" << endl;
 	    return 1;
 	}
 
@@ -172,41 +150,36 @@ int main (int argc, char** argv){
 	fread(source_str, sizeof(char), program_size, fp);
 	fclose(fp);
 
-
 	std::string kernel_code(source_str);
-    
     sources.push_back({kernel_code.c_str(),kernel_code.length()});
- 
     cl::Program program(context,sources);
     if(program.build({default_device})!=CL_SUCCESS){
         cout<<" Error building: "<<program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device)<<"\n";
         exit(1);
     }
- 
- 
-    queue = cl::CommandQueue(context,default_device); 
-    kern = cl::Kernel(program,"segmentKernel");
 
-	imgOutBuf1 = cl::Image2D(context, CL_MEM_READ_WRITE, float_img, SUB_W, SUB_H, 0, NULL);
-    imgOutBuf2 = cl::Image2D(context, CL_MEM_READ_WRITE, float_img, SUB_W, SUB_H, 0, NULL);
-    int e1 = kern.setArg(1,imgOutBuf1);
-    int e2 = kern.setArg(2,imgOutBuf2);
-    // cout <<  e1 << e2 << endl;
+    queue = cl::CommandQueue(context,default_device);
+    kernel = cl::Kernel(program, "segmentKernel");
 
-	// namedWindow("DepthCallback");
-	Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 1, depthCallback);
-    Subscriber subColor = nh.subscribe("/camera/color/image_raw", 1, colorCallback);
+    Mat inputDepth(HEIGHT, WIDTH, CV_32FC1);
+    Mat inputColor(HEIGHT, WIDTH, CV_8UC3);
+    get_sample_depth(inputDepth);
+    get_sample_color(inputColor);
+    fit()
 
 
-	Rate loop_rate(200);
-	int count = 0;
-	int r = 3;
+	// Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
+    // Subscriber subColor = nh.subscribe("/camera/color/image_raw", 3, colorCallback);
+    // Timer timer1 = nh.createTimer(Duration(0.1), processDataCallback);
+	// spin();
 
-	while (ok()){
-		spinOnce();
-		loop_rate.sleep();
-		++count;
-	}
-	destroyWindow("DepthCallback");
 	return 0;
+}
+
+void get_sample_color(Mat color) {
+
+}
+
+void get_sample_depth(Mat depth) {
+
 }
