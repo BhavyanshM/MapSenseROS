@@ -110,10 +110,10 @@ int main (int argc, char** argv){
 	size[1] = HEIGHT;
 	size[2] = 1;
 
-	init(argc, argv, "PlanarRegionPublisher");
-	NodeHandle nh;
-	RGBDPosePub = nh.advertise<PoseStamped>("rgbd_pose", 1000);
-	planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 1000);
+	// init(argc, argv, "PlanarRegionPublisher");
+	// NodeHandle nh;
+	// RGBDPosePub = nh.advertise<PoseStamped>("rgbd_pose", 100);
+	// planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 10);
 
 	vector<cl::Platform> all_platforms;
 	cl::Platform::get(&all_platforms);
@@ -161,11 +161,17 @@ int main (int argc, char** argv){
     queue = cl::CommandQueue(context,default_device);
     kernel = cl::Kernel(program, "segmentKernel");
 
-    Mat inputDepth(HEIGHT, WIDTH, CV_32FC1);
+    Mat inputDepth(HEIGHT, WIDTH, CV_16UC1);
     Mat inputColor(HEIGHT, WIDTH, CV_8UC3);
     get_sample_depth(inputDepth);
     get_sample_color(inputColor);
-    fit()
+
+    imshow("RealSense L515 Color", inputColor);
+    imshow("RealSense L515 Depth", inputDepth);
+    int code = waitKeyEx(0);
+    if (code == 1048689) exit(1);
+
+    fit(inputColor, inputDepth);
 
 
 	// Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
@@ -177,9 +183,17 @@ int main (int argc, char** argv){
 }
 
 void get_sample_color(Mat color) {
-
+    for (int i = 0; i<color.rows; i++){
+        for(int j = 0; j<color.cols; j++){
+            color.at<Vec3b>(i,j) = Vec3b(0, 0, 255);
+        }
+    }
 }
 
 void get_sample_depth(Mat depth) {
-
+    for (int i = 0; i<depth.rows; i++){
+        for(int j = 0; j<depth.cols; j++){
+            depth.at<Vec2b>(i,j) = Vec2b(0,255);
+        }
+    }
 }
