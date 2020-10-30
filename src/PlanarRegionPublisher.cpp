@@ -11,19 +11,19 @@
 
 #include <iostream>
 #include <CL/cl.hpp>
-
 #include "math.h"
 #include <sstream>
 
 using namespace ros;
 using namespace std;
+using namespace chrono;
 using namespace cv;
 using namespace sensor_msgs;
 using namespace geometry_msgs;
 using namespace map_sense;
 
-#define WIDTH 1024
-#define HEIGHT 786
+#define WIDTH 640
+#define HEIGHT 480
 #define SUB_W 16
 #define SUB_H 12
 
@@ -33,7 +33,7 @@ Publisher planarRegionPub;
 
 cl::Kernel kernel;
 cl::Context context;
-cl::CommandQueue queue;
+cl::CommandQueue commandQueue;
 cl::Image2D imgInBuf, imgOutBuf1, imgOutBuf2;
 cl::ImageFormat uint8_img, float_img;
 cl::size_t<3> origin, size;
@@ -48,17 +48,17 @@ void get_sample_color(Mat mat);
 
 void fit(const Mat& color, const Mat& depth){
 
-    float *prevDepthBuffer = reinterpret_cast<float *>(depth.data);
-    cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_FLOAT), WIDTH, HEIGHT , 0, prevDepthBuffer);
+    uint16_t *prevDepthBuffer = reinterpret_cast<uint16_t *>(depth.data);
+    cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT , 0, prevDepthBuffer);
     cl::Image2D clOutput(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), WIDTH, HEIGHT);
     Mat output;
 
     kernel.setArg(0, clDepth);
     kernel.setArg(1, clOutput);
 
-    queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
     // queue.enqueueReadImage(clDepth, CL_TRUE, origin, jacSize, 0, 0, output.data);
-    queue.finish();
+    commandQueue.finish();
 
     // queue.enqueueReadImage(out, CL_TRUE, origin, size, 0, 0, tmp);
 }
@@ -101,7 +101,7 @@ void processDataCallback(const TimerEvent&){
 int main (int argc, char** argv){
 
     // export ROSCONSOLE_FORMAT='${time:format string}'
-    // export ROSCONSOLE_FORMAT='[${severity}] [${time}][${node}:${line}]: ${message}'
+    // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
 
     origin[0] = 0;
 	origin[1] = 0;
@@ -158,7 +158,7 @@ int main (int argc, char** argv){
         exit(1);
     }
 
-    queue = cl::CommandQueue(context,default_device);
+    commandQueue = cl::CommandQueue(context, default_device);
     kernel = cl::Kernel(program, "segmentKernel");
 
     Mat inputDepth(HEIGHT, WIDTH, CV_16UC1);
@@ -166,12 +166,17 @@ int main (int argc, char** argv){
     get_sample_depth(inputDepth);
     get_sample_color(inputColor);
 
+    auto start = high_resolution_clock::now();
+    fit(inputColor, inputDepth);
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>( end - start ).count();
+    ROS_INFO("Plane Fitting Took: %.2f ms\n", duration/(float)1000);
+
+    inputDepth.convertTo(inputDepth, -1, 4, 100);
     imshow("RealSense L515 Color", inputColor);
     imshow("RealSense L515 Depth", inputDepth);
     int code = waitKeyEx(0);
-    if (code == 1048689) exit(1);
-
-    fit(inputColor, inputDepth);
+    // if (code == 1048689) exit(1);
 
 
 	// Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
@@ -193,7 +198,13 @@ void get_sample_color(Mat color) {
 void get_sample_depth(Mat depth) {
     for (int i = 0; i<depth.rows; i++){
         for(int j = 0; j<depth.cols; j++){
-            depth.at<Vec2b>(i,j) = Vec2b(0,255);
+            float d = 10.04;
+            if(150 < i && i < 350 && 160 < j && j < 380){
+                d = 0.008*i + 0.014*j + 0.12;
+                depth.at<short>(i,j) = d*1000;
+            }else{
+                depth.at<short>(i,j) = d*1000;
+            }
         }
     }
 }

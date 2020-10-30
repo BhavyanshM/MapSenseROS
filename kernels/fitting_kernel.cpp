@@ -132,8 +132,8 @@ void kernel segmentKernel(  read_only image2d_t in,
     int c = get_global_id(1);
     if(c == 0 && r == 0){
         printf("%d,%d\n", r,c);
-        float4 depth = read_imagef(in, (int2)(0,0));
-        printf("HelloWorld! \n");
+        uint4 depth = read_imageui(in, (int2)(0,0));
+        printf("HelloWorld! %.2f\n", (float)depth.x/(float)1000);
     }
 
 	// int count = 0;
