@@ -123,18 +123,58 @@ float8 update_params(float8 P, float8 grad, float alpha){
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
+    float3 grad = (float3)(0,0,0);
+    float Z = 0;
+    if(y >= 0 && y < 60 && x >= 0 && x < 80){
+
+        for(int i = 0; i<SIZE_X; i++){
+            for(int j = 0; j<SIZE_Y; j++){
+                int gx = x*SIZE_X + i;
+                int gy = y*SIZE_Y + j;
+                Z = ((float)read_imageui(in, (int2)(gx,gy)).x)/(float)1000;
+
+                float3 X = (float3)(gx*Z, gy*Z, 1);
+                grad += (1/(float)(SIZE_X*SIZE_Y)) * 2*(dot(p,X) - Z) * X;
+                // printf("(%.2lf, %.2lf, %.2lf)\n", grad.x, grad.y, grad.z);
+
+            }
+        }
+    }
+    return grad;
+}
 
 void kernel segmentKernel(  read_only image2d_t in,
-	                        write_only image2d_t out1
-)
+	                        write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2
+                            // write_only image2d_t debug
+ )
 {
-	int r = get_global_id(0);
-    int c = get_global_id(1);
-    if(c == 0 && r == 0){
-        printf("%d,%d\n", r,c);
-        uint4 depth = read_imageui(in, (int2)(0,0));
-        printf("HelloWorld! %.2f\n", (float)depth.x/(float)1000);
+	int y = get_global_id(0);
+    int x = get_global_id(1);
+
+    // if(x == 0 && y == 0) printf("(%hu)\n", read_imageui(in, (int2)(0,0)).x);
+
+    if(y >= 0 && y < 60 && x >= 0 && x < 80){
+        // for(int i = 0; i<SIZE_X; i++){
+        //     for(int j = 0; j<SIZE_Y; j++){
+        //         int gx = x*SIZE_X + i;
+        //         int gy = y*SIZE_Y + j;
+        //         uint d = read_imageui(in, (int2)(gx,gy)).x;
+        //         uint depth = 20000;
+        //         write_imageui(debug, (int2)(gx,gy), (uint4)(d, 0, 0, 0));
+        //     }
+        // }
+        float3 p = (float3)(0.1,0.1,0.1);
+        float lr = 0.001;
+        for(int i = 0; i<4; i++){
+            p = p - lr * plane_grad(in, p, x, y);
+            if(x==0 && y==0) printf("Params(%.4lf, %.4lf, %.4lf)\n",p.x, p.y, p.z);
+        }
+        write_imagef(out0, (int2)(x,y), (float4)(p.x,0,0,0));
+        write_imagef(out1, (int2)(x,y), (float4)(p.y,0,0,0));
+        write_imagef(out2, (int2)(x,y), (float4)(p.z,0,0,0));
     }
+
 
 	// int count = 0;
 	// float r = 100000;
