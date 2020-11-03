@@ -1,54 +1,6 @@
-#include "ros/ros.h"
-#include "ros/package.h"
-#include "std_msgs/String.h"
-#include "map_sense/PlanarRegions.h"
-#include "geometry_msgs/PoseStamped.h"
-
-#include "image_transport/image_transport.h"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/core/core.hpp"
-#include "cv_bridge/cv_bridge.h"
-
-#include <iostream>
-#include <CL/cl.hpp>
-#include "math.h"
-#include <sstream>
-#include <random>
-
-using namespace ros;
-using namespace std;
-using namespace chrono;
-using namespace cv;
-using namespace sensor_msgs;
-using namespace geometry_msgs;
-using namespace map_sense;
-
-#define WIDTH 640
-#define HEIGHT 480
-#define GRID_X 8
-#define GRID_Y 8
-#define SUB_W 80
-#define SUB_H 60
+#include "PlanarRegionCalculator.h"
 
 
-
-Publisher RGBDPosePub;
-Publisher planarRegionPub;
-
-cl::Kernel packKernel, mergeKernel;
-cl::Context context;
-cl::CommandQueue commandQueue;
-cl::Image2D imgInBuf, imgOutBuf1, imgOutBuf2;
-cl::ImageFormat uint8_img, float_img;
-cl::size_t<3> origin, size;
-cl::Event event;
-
-ImageConstPtr colorMessage;
-ImageConstPtr depthMessage;
-
-void get_sample_depth(Mat mat);
-
-void get_sample_color(Mat mat);
 
 /*
  * The following are the intrinsic parameters of the depth camera as recorded from L515 RealSense
@@ -60,13 +12,13 @@ void get_sample_color(Mat mat);
     R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
     P: [459.97265625, 0.0, 341.83984375, 0.0, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 0.0, 1.0, 0.0]
  * */
-void fit(const Mat &color, const Mat &depth, Mat &regionOutput) {
-    ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", color.cols, color.rows, depth.cols, depth.rows,
+void PlanarRegionCalculator::fit() {
+    ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              regionOutput.cols, regionOutput.rows);
 
     // Mat debug(HEIGHT, WIDTH, CV_16UC1);
 
-    uint16_t *prevDepthBuffer = reinterpret_cast<uint16_t *>(depth.data);
+    uint16_t *prevDepthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
     cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16),
                         WIDTH, HEIGHT, 0, prevDepthBuffer);
     // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
@@ -125,58 +77,13 @@ void fit(const Mat &color, const Mat &depth, Mat &regionOutput) {
     cout << regionOutput.at<Vec3f>(2, 2) << endl;
 }
 
-void depthCallback(const ImageConstPtr &depthMsg) {
-    depthMessage = depthMsg;
-}
-
-void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
-    colorMessage = colorMsg;
-}
-
-void processDataCallback(const TimerEvent &) {
-    cv_bridge::CvImagePtr img_ptr_depth;
-    cv_bridge::CvImagePtr img_ptr_color;
-    if (colorMessage != nullptr && depthMessage != nullptr) {
-        try {
-            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
-
-            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
-            Mat colorImg = img_ptr_color->image;
-
-            img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
-            Mat depthImg = img_ptr_depth->image;
-            depthImg.convertTo(depthImg, -1, 10, 100);
-
-            Mat output(depthImg.rows, depthImg.cols, CV_16UC1);
-            fit(colorImg, depthImg, output);
-
-            imshow("RealSense L515 Depth", depthImg);
-            imshow("RealSense L515 Color", colorImg);
-            int code = waitKeyEx(32);
-            if (code == 1048689) exit(1);
-
-        } catch (cv_bridge::Exception &e) {
-            ROS_ERROR("Could not convert to image!");
-        }
-    }
-}
 
 
-void launch_ros_node(int argc, char **argv) {
-    init(argc, argv, "PlanarRegionPublisher");
-    NodeHandle nh;
-    RGBDPosePub = nh.advertise<PoseStamped>("rgbd_pose", 100);
-    planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 10);
-    Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
-    Subscriber subColor = nh.subscribe("/camera/color/image_raw", 3, colorCallback);
-    Timer timer1 = nh.createTimer(Duration(0.1), processDataCallback);
-    spin();
-}
-
-void init_opencl() {
+void PlanarRegionCalculator::init_opencl() {
     origin[0] = 0;
     origin[1] = 0;
     origin[2] = 0;
+
     size[0] = WIDTH;
     size[1] = HEIGHT;
     size[2] = 1;
@@ -230,7 +137,7 @@ void init_opencl() {
     packKernel = cl::Kernel(program, "segmentKernel");
 }
 
-void onMouse(int event, int x, int y, int flags, void *userdata) {
+static void onMouse(int event, int x, int y, int flags, void *userdata) {
     Mat out = *((Mat *) userdata);
     if (event == EVENT_MOUSEMOVE) {
         printf("[%d,%d]:", y / 8, x / 8);
@@ -238,17 +145,18 @@ void onMouse(int event, int x, int y, int flags, void *userdata) {
     }
 }
 
-void launch_tester() {
-    Mat inputDepth(HEIGHT, WIDTH, CV_16UC1);
-    Mat inputColor(HEIGHT, WIDTH, CV_8UC3);
-    Mat regionOutput(SUB_H, SUB_W, CV_32FC(6));
+void PlanarRegionCalculator::launch_tester() {
 
 
-    get_sample_depth(inputDepth);
-    get_sample_color(inputColor);
+
+    SensorDataReceiver dataReceiver;
+    dataReceiver.get_sample_depth(inputDepth);
+    dataReceiver.get_sample_color(inputColor);
 
     auto start = high_resolution_clock::now();
-    fit(inputColor, inputDepth, regionOutput);
+
+    this->fit(); // Generate planar regions from depth map and color image.
+
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
@@ -267,45 +175,9 @@ void launch_tester() {
     namedWindow("RealSense L515 Depth", 1);
     setMouseCallback("RealSense L515 Depth", onMouse, (void *) &regionOutput);
 
-    imshow("RealSense L515 Depth", inputDepth);
+    // imshow("RealSense L515 Depth", inputDepth);
+    // int code = waitKeyEx(0);
 
 
-    int code = waitKeyEx(0);
     // if (code == 1048689) exit(1);
 }
-
-void get_sample_depth(Mat depth) {
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.0, 0.01);
-    for (int i = 0; i < depth.cols; i++) {
-        for (int j = 0; j < depth.rows; j++) {
-            float d = 10.04;
-            d += distribution(generator);
-            if (160 < i && i < 350 && 160 < j && j < 350) {
-                d = 0.008 * i + 0.014 * j + 0.12;
-                depth.at<short>(j, i) = d * 1000;
-            } else {
-                depth.at<short>(j, i) = d * 1000;
-            }
-        }
-    }
-}
-
-void get_sample_color(Mat color) {
-    for (int i = 0; i < color.rows; i++) {
-        for (int j = 0; j < color.cols; j++) {
-            color.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
-        }
-    }
-}
-
-// int main (int argc, char** argv){
-//
-//     // export ROSCONSOLE_FORMAT='${time:format string}'
-//     // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
-//
-//     init_opencl();
-//     // launch_ros_node(argc, argv);
-//     launch_tester();
-//     return 0;
-// }

@@ -64,11 +64,15 @@ set(SOURCE_FILES
 		src/PlanarRegionPublisher.cpp
 		src/RegionFinder.cpp
 		src/GPU.cpp
+		src/PlanarRegionCalculator.cpp
+		src/SensorDataReceiver.cpp
 		src/ScenePrimitives.cpp)
 
 set (HEADERS
 		include/RegionFinder.h
-		include/GPU.h)
+		include/GPU.h
+		src/PlanarRegionCalculator.h
+		src/SensorDataReceiver.h)
 
 include_directories(
   include

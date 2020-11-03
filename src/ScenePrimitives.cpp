@@ -14,6 +14,7 @@
 #include <Magnum/MeshTools/Interleave.h>
 #include <iostream>
 #include <Magnum/GL/Renderer.h>
+#include "PlanarRegionCalculator.h"
 
 using namespace Magnum;
 
@@ -41,6 +42,9 @@ private:
     Object3D *_cameraVPObject;
     SceneGraph::Camera3D *_camera;
     SceneGraph::DrawableGroup3D _drawables;
+
+    PlanarRegionCalculator* regionCalculator;
+
     int count = 0;
 };
 
@@ -84,10 +88,22 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
             Matrix4::perspectiveProjection(35.0_degf,
                                            1.33f, 0.001f, 100.0f));
 
+
+    regionCalculator = new PlanarRegionCalculator();
+    regionCalculator->init_opencl();
+    regionCalculator->launch_tester();
+
     /* TODO: Prepare your objects here and add them to the scene */
-    auto &cube = _scene.addChild<Object3D>();
-    cube.scale({0.01, 0.01, 0.0001});
-    new RedCubeDrawable{cube, &_drawables};;
+    for(int i = 0; i<regionCalculator->regionOutput.rows; i++){
+        for(int j = 0; j<regionCalculator->regionOutput.cols; j++){
+            Vec6f patch = regionCalculator->regionOutput.at<Vec6f>(i,j);
+            auto &cube = _scene.addChild<Object3D>();
+            cube.scale({0.01,0.01,0.001});
+            // printf("(%.2lf,%.2lf,%.2lf)\n", patch[3], patch[4], patch[5]);
+            cube.translate({0.01f* patch[4], 0.01f* patch[3], 0.01f* patch[5]});
+            new RedCubeDrawable{cube, &_drawables};
+        }
+    }
 
 }
 
@@ -139,5 +155,6 @@ void MyApplication::drawEvent() {
 int main(int argc, char **argv) {
     MyApplication app({argc, argv});
     return app.exec();
+
 }
 
