@@ -134,7 +134,10 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
                 int gy = y*SIZE_Y + j;
                 Z = ((float)read_imageui(in, (int2)(gx,gy)).x)/(float)1000;
 
-                float3 X = (float3)(gx*Z, gy*Z, 1);
+                float px = (gx - 341.84)/459.97 * Z;
+                float py = (gy - 249.17)/459.80 * Z;
+
+                float3 X = (float3)(px, py, 1);
                 grad += (1/(float)(SIZE_X*SIZE_Y)) * 2*(dot(p,X) - Z) * X;
                 // printf("(%.2lf, %.2lf, %.2lf)\n", grad.x, grad.y, grad.z);
 
@@ -144,13 +147,103 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
     return grad;
 }
 
+ float plane_residual(read_only image2d_t in, float3 p, int x, int y){
+    float residual = 0;
+    float Z = 0;
+    if(y >= 0 && y < 60 && x >= 0 && x < 80){
+
+        for(int i = 0; i<SIZE_X; i++){
+            for(int j = 0; j<SIZE_Y; j++){
+                int gx = x*SIZE_X + i;
+                int gy = y*SIZE_Y + j;
+                Z = ((float)read_imageui(in, (int2)(gx,gy)).x)/(float)1000;
+
+                float px = (gx - 341.84)/459.97 * Z;
+                float py = (gy - 249.17)/459.80 * Z;
+
+                // if(x==0&&y==0) printf("(%.2lf,%.2lf,%.2lf)\n", px, py, Z);
+
+                float3 X = (float3)(px, py, 1);
+                residual += pow((dot(p,X) - Z), 2);
+                // printf("(%.2lf, %.2lf, %.2lf)\n", grad.x, grad.y, grad.z);
+            }
+        }
+    }
+    return residual;
+ }
+
+ float4 back_project(int2 pos, float Z){
+     float px = (pos.x - 341.84)/459.97 * Z;
+     float py = (pos.y - 249.17)/459.80 * Z;
+     float4 X = (float4)(px*Z, py*Z, Z, 0);
+     return X;
+}
+
+ float3 estimate_normal(read_only image2d_t in, int x, int y){
+    float residual = 0;
+    float Z = 0;
+    int m = 2;
+    int count = 0;
+    float4 normal = (float4)(0,0,0,0);
+    if(y >= 0 && y < 60 && x >= 0 && x < 80){
+
+        for(int i = m; i<SIZE_X-m; i++){
+            for(int j = m; j<SIZE_Y-m; j++){
+                count++;
+                int gx = x*SIZE_X + i;
+                int gy = y*SIZE_Y + j;
+                int2 pos = (int2)(gx,gy);
+
+                pos = pos + (int2)(-m,-m);
+                Z = ((float)read_imageui(in, pos).x)/(float)1000;
+                float4 va = back_project(pos,Z);
+
+                pos = pos + (int2)(m,-m);
+                Z = ((float)read_imageui(in, pos).x)/(float)1000;
+                float4 vb = back_project(pos,Z);
+
+                pos = pos + (int2)(m,m);
+                Z = ((float)read_imageui(in, pos).x)/(float)1000;
+                float4 vc = back_project(pos,Z);
+
+                normal += cross((vc-vb),(vb-va));
+
+            }
+        }
+    }
+    return (1/(float)(count)) * normal.xyz;
+}
+
+ float3 estimate_centroid(read_only image2d_t in, int x, int y){
+     float Z = 0;
+     int count = 0;
+     float3 centroid = (float3)(0,0,0);
+    if(y >= 0 && y < 60 && x >= 0 && x < 80){
+        for(int i = 0; i<SIZE_X; i++){
+            for(int j = 0; j<SIZE_Y; j++){
+                count++;
+                int gx = x*SIZE_X + i;
+                int gy = y*SIZE_Y + j;
+                int2 pos = (int2)(gx,gy);
+                Z = ((float)read_imageui(in, pos).x)/(float)1000;
+                float4 P = back_project(pos,Z);
+                centroid += P.xyz;
+            }
+        }
+    }
+    return (1/(float)(count)) * centroid;
+ }
+
+/*K: [459.97265625, 0.0, 341.83984375, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 1.0]*/
 void kernel segmentKernel(  read_only image2d_t in,
-	                        write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2
+	                        write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2,
+                            write_only image2d_t out3, write_only image2d_t out4, write_only image2d_t out5
                             // write_only image2d_t debug
  )
 {
 	int y = get_global_id(0);
     int x = get_global_id(1);
+
 
     // if(x == 0 && y == 0) printf("(%hu)\n", read_imageui(in, (int2)(0,0)).x);
 
@@ -164,15 +257,30 @@ void kernel segmentKernel(  read_only image2d_t in,
         //         write_imageui(debug, (int2)(gx,gy), (uint4)(d, 0, 0, 0));
         //     }
         // }
-        float3 p = (float3)(0.1,0.1,0.1);
-        float lr = 0.001;
-        for(int i = 0; i<4; i++){
-            p = p - lr * plane_grad(in, p, x, y);
-            if(x==0 && y==0) printf("Params(%.4lf, %.4lf, %.4lf)\n",p.x, p.y, p.z);
-        }
-        write_imagef(out0, (int2)(x,y), (float4)(p.x,0,0,0));
-        write_imagef(out1, (int2)(x,y), (float4)(p.y,0,0,0));
-        write_imagef(out2, (int2)(x,y), (float4)(p.z,0,0,0));
+
+
+        // float3 p = (float3)(0,0,0);
+        // float lr = 0.04;
+        // float residual = 0;
+        // for(int i = 0; i<16; i++){
+        //     p = p - lr * plane_grad(in, p, x, y);
+        //     residual = plane_residual(in, p, x, y);
+        //     if(x==20 && y==23) printf("Params(%.4lf, %.4lf, %.4lf): [%.4lf]\n",p.x, p.y, p.z, residual);
+        // }
+
+
+        float3 normal = estimate_normal(in, x, y);
+        float3 centroid = estimate_centroid(in, x, y);
+
+        if(x==24 && y==50) printf("Normal:(%.4lf, %.4lf, %.4lf)\n", normal.x, normal.y, normal.z);
+
+        write_imagef(out0, (int2)(x,y), (float4)(normal.x,0,0,0));
+        write_imagef(out1, (int2)(x,y), (float4)(normal.y,0,0,0));
+        write_imagef(out2, (int2)(x,y), (float4)(normal.z,0,0,0));
+        write_imagef(out3, (int2)(x,y), (float4)(centroid.x,0,0,0));
+        write_imagef(out4, (int2)(x,y), (float4)(centroid.y,0,0,0));
+        write_imagef(out5, (int2)(x,y), (float4)(centroid.z,0,0,0));
+
     }
 
 

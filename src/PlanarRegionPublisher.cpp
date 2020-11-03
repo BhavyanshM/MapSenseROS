@@ -13,6 +13,7 @@
 #include <CL/cl.hpp>
 #include "math.h"
 #include <sstream>
+#include <random>
 
 using namespace ros;
 using namespace std;
@@ -33,7 +34,7 @@ using namespace map_sense;
 Publisher RGBDPosePub;
 Publisher planarRegionPub;
 
-cl::Kernel kernel;
+cl::Kernel packKernel, mergeKernel;
 cl::Context context;
 cl::CommandQueue commandQueue;
 cl::Image2D imgInBuf, imgOutBuf1, imgOutBuf2;
@@ -48,6 +49,16 @@ void get_sample_depth(Mat mat);
 
 void get_sample_color(Mat mat);
 
+/*
+ * The following are the intrinsic parameters of the depth camera as recorded from L515 RealSense
+    height: 480
+    width: 640
+    distortion_model: "plumb_bob"
+    D: [0.0, 0.0, 0.0, 0.0, 0.0]
+    K: [459.97265625, 0.0, 341.83984375, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 1.0]
+    R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+    P: [459.97265625, 0.0, 341.83984375, 0.0, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 0.0, 1.0, 0.0]
+ * */
 void fit(const Mat& color, const Mat& depth, Mat& regionOutput){
     ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", color.cols, color.rows, depth.cols, depth.rows, regionOutput.cols, regionOutput.rows);
 
@@ -60,11 +71,17 @@ void fit(const Mat& color, const Mat& depth, Mat& regionOutput){
     cl::Image2D clOutput_0(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_1(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_2(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
+    cl::Image2D clOutput_3(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
+    cl::Image2D clOutput_4(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
+    cl::Image2D clOutput_5(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
 
-    kernel.setArg(0, clDepth);
-    kernel.setArg(1, clOutput_0);
-    kernel.setArg(2, clOutput_1);
-    kernel.setArg(3, clOutput_2);
+    packKernel.setArg(0, clDepth);
+    packKernel.setArg(1, clOutput_0);
+    packKernel.setArg(2, clOutput_1);
+    packKernel.setArg(3, clOutput_2);
+    packKernel.setArg(4, clOutput_3);
+    packKernel.setArg(5, clOutput_4);
+    packKernel.setArg(6, clOutput_5);
     // kernel.setArg(4, clDebug);
 
     cl::size_t<3> regionOutputSize;
@@ -75,13 +92,20 @@ void fit(const Mat& color, const Mat& depth, Mat& regionOutput){
     Mat output_0(SUB_H, SUB_W, CV_32FC1);
     Mat output_1(SUB_H, SUB_W, CV_32FC1);
     Mat output_2(SUB_H, SUB_W, CV_32FC1);
+    Mat output_3(SUB_H, SUB_W, CV_32FC1);
+    Mat output_4(SUB_H, SUB_W, CV_32FC1);
+    Mat output_5(SUB_H, SUB_W, CV_32FC1);
 
-    commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
+    // commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
 
     // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
     commandQueue.enqueueReadImage(clOutput_0, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
     commandQueue.enqueueReadImage(clOutput_1, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
     commandQueue.enqueueReadImage(clOutput_2, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
+    commandQueue.enqueueReadImage(clOutput_3, CL_TRUE, origin, regionOutputSize, 0, 0, output_3.data);
+    commandQueue.enqueueReadImage(clOutput_4, CL_TRUE, origin, regionOutputSize, 0, 0, output_4.data);
+    commandQueue.enqueueReadImage(clOutput_5, CL_TRUE, origin, regionOutputSize, 0, 0, output_5.data);
 
 
     commandQueue.finish();
@@ -89,13 +113,13 @@ void fit(const Mat& color, const Mat& depth, Mat& regionOutput){
     // debug.convertTo(debug, -1, 4, 100);
     // imshow("Output", debug);
 
-    Mat in[] = { output_0, output_1, output_2};
-    int from_to[] = { 0,0, 1,1, 2,2 };
-    mixChannels( in, 3, &regionOutput, 1, from_to, 3 );
+    Mat in[] = { output_0, output_1, output_2, output_3, output_4, output_5};
+    int from_to[] = { 0,0, 1,1, 2,2, 3,3, 4,4, 5,5};
+    mixChannels( in, 6, &regionOutput, 1, from_to, 6 );
 
     int i = 0;
     int j = 0;
-    cout << regionOutput.at<Vec3f>(0,0) << endl;
+    cout << regionOutput.at<Vec3f>(2,2) << endl;
 }
 
 void depthCallback(const ImageConstPtr& depthMsg){
@@ -200,13 +224,25 @@ void init_opencl(){
         exit(1);
     }
     commandQueue = cl::CommandQueue(context, default_device);
-    kernel = cl::Kernel(program, "segmentKernel");
+    packKernel = cl::Kernel(program, "segmentKernel");
+}
+
+void onMouse(int event, int x, int y, int flags, void* userdata){
+    Mat out = *((Mat*)userdata);
+    if ( event == EVENT_MOUSEMOVE )
+    {
+        printf("[%d,%d]:", y/8,x/8);
+        cout << out.at<Vec6f>(y/8,x/8) << endl;
+    }
 }
 
 void launch_tester(){
     Mat inputDepth(HEIGHT, WIDTH, CV_16UC1);
     Mat inputColor(HEIGHT, WIDTH, CV_8UC3);
-    Mat regionOutput(SUB_H, SUB_W, CV_32FC3);
+    Mat regionOutput(SUB_H, SUB_W, CV_32FC(6));
+
+
+
     get_sample_depth(inputDepth);
     get_sample_color(inputColor);
 
@@ -219,6 +255,17 @@ void launch_tester(){
     // imshow("RealSense L515 Color", inputColor);
 
     inputDepth.convertTo(inputDepth, -1, 4, 100);
+
+    for(int i = 0; i<SUB_H; i++){
+        line(inputDepth, cv::Point(0,i*8), cv::Point(WIDTH,i*8), Scalar(255,255,0),1);
+    }
+    for(int i = 0; i<SUB_W; i++){
+        line(inputDepth, cv::Point(i*8,0), cv::Point(i*8,HEIGHT), Scalar(255,255,0),1);
+    }
+
+    namedWindow("RealSense L515 Depth", 1);
+    setMouseCallback("RealSense L515 Depth", onMouse, (void*) &regionOutput);
+
     imshow("RealSense L515 Depth", inputDepth);
 
 
@@ -227,10 +274,13 @@ void launch_tester(){
 }
 
 void get_sample_depth(Mat depth) {
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0,0.01);
     for (int i = 0; i<depth.cols; i++){
         for(int j = 0; j<depth.rows; j++){
             float d = 10.04;
-            if(300 < i && i < 350 && 160 < j && j < 380){
+            d += distribution(generator);
+            if(160 < i && i < 350 && 160 < j && j < 350){
                 d = 0.008*i + 0.014*j + 0.12;
                 depth.at<short>(j,i) = d*1000;
             }else{
@@ -248,13 +298,13 @@ void get_sample_color(Mat color) {
     }
 }
 
-int main (int argc, char** argv){
-
-    // export ROSCONSOLE_FORMAT='${time:format string}'
-    // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
-
-    init_opencl();
-    // launch_ros_node(argc, argv);
-    launch_tester();
-    return 0;
-}
+// int main (int argc, char** argv){
+//
+//     // export ROSCONSOLE_FORMAT='${time:format string}'
+//     // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
+//
+//     init_opencl();
+//     // launch_ros_node(argc, argv);
+//     launch_tester();
+//     return 0;
+// }
