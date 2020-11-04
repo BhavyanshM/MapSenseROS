@@ -150,7 +150,7 @@ void PlanarRegionCalculator::launch_tester() {
 
 
     SensorDataReceiver dataReceiver;
-    dataReceiver.get_sample_depth(inputDepth);
+    dataReceiver.get_sample_depth(inputDepth, 0, 0.1);
     dataReceiver.get_sample_color(inputColor);
 
     auto start = high_resolution_clock::now();
@@ -175,8 +175,8 @@ void PlanarRegionCalculator::launch_tester() {
     namedWindow("RealSense L515 Depth", 1);
     setMouseCallback("RealSense L515 Depth", onMouse, (void *) &regionOutput);
 
-    // imshow("RealSense L515 Depth", inputDepth);
-    // int code = waitKeyEx(0);
+    imshow("RealSense L515 Depth", inputDepth);
+    int code = waitKeyEx(0);
 
 
     // if (code == 1048689) exit(1);

@@ -148,7 +148,7 @@ void processDataCallback(const TimerEvent &) {
             depthImg.convertTo(depthImg, -1, 10, 100);
 
             Mat output(depthImg.rows, depthImg.cols, CV_16UC1);
-            fit(colorImg, depthImg, output);
+            // fit(colorImg, depthImg, output);
 
             imshow("RealSense L515 Depth", depthImg);
             imshow("RealSense L515 Color", colorImg);
@@ -299,13 +299,13 @@ void get_sample_color(Mat color) {
     }
 }
 
-// int main (int argc, char** argv){
-//
-//     // export ROSCONSOLE_FORMAT='${time:format string}'
-//     // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
-//
-//     init_opencl();
-//     // launch_ros_node(argc, argv);
-//     launch_tester();
-//     return 0;
-// }
+int main (int argc, char** argv){
+
+    // export ROSCONSOLE_FORMAT='${time:format string}'
+    // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
+
+    init_opencl();
+    launch_ros_node(argc, argv);
+    // launch_tester();
+    return 0;
+}

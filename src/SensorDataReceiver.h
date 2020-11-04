@@ -33,7 +33,7 @@ public:
 
     void depthCallback(const ImageConstPtr &depthMsg);
     void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg);
-    void get_sample_depth(Mat depth);
+    void get_sample_depth(Mat depth, float mean, float stddev);
     void get_sample_color(Mat color);
 
 

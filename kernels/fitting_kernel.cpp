@@ -175,7 +175,7 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
  float4 back_project(int2 pos, float Z){
      float px = (pos.x - 341.84)/459.97 * Z;
      float py = (pos.y - 249.17)/459.80 * Z;
-     float4 X = (float4)(px*Z, py*Z, Z, 0);
+     float4 X = (float4)(px, py, Z, 0);
      return X;
 }
 
