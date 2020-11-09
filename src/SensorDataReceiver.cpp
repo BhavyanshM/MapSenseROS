@@ -8,6 +8,10 @@ void SensorDataReceiver::colorCallback(const sensor_msgs::ImageConstPtr &colorMs
     sensorColorMessage = colorMsg;
 }
 
+void SensorDataReceiver::load_sample_depth(String filename, Mat& depth){
+    depth = imread(filename, IMREAD_ANYDEPTH);
+}
+
 void SensorDataReceiver::get_sample_depth(Mat depth, float mean, float stddev) {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(mean, stddev);

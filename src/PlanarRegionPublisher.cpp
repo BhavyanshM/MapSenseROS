@@ -46,10 +46,34 @@ cl::Event event;
 ImageConstPtr colorMessage;
 ImageConstPtr depthMessage;
 
-void get_sample_depth(Mat mat);
+void get_sample_depth(Mat depth) {
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0, 0.01);
+    for (int i = 0; i < depth.cols; i++) {
+        for (int j = 0; j < depth.rows; j++) {
+            float d = 10.04;
+            d += distribution(generator);
+            if (160 < i && i < 350 && 160 < j && j < 350) {
+                d = 0.008 * i + 0.014 * j + 0.12;
+                depth.at<short>(j, i) = d * 1000;
+            } else {
+                depth.at<short>(j, i) = d * 1000;
+            }
+        }
+    }
+}
 
-void get_sample_color(Mat mat);
+void get_sample_color(Mat color) {
+    for (int i = 0; i < color.rows; i++) {
+        for (int j = 0; j < color.cols; j++) {
+            color.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
+        }
+    }
+}
 
+void load_sample_depth(String filename, Mat& depth){
+    depth = imread(filename, IMREAD_ANYDEPTH);
+}
 /*
  * The following are the intrinsic parameters of the depth camera as recorded from L515 RealSense
     height: 480
@@ -145,7 +169,7 @@ void processDataCallback(const TimerEvent &) {
 
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             Mat depthImg = img_ptr_depth->image;
-            depthImg.convertTo(depthImg, -1, 10, 100);
+            // depthImg.convertTo(depthImg, -1, 10, 100);
 
             Mat output(depthImg.rows, depthImg.cols, CV_16UC1);
             // fit(colorImg, depthImg, output);
@@ -154,6 +178,11 @@ void processDataCallback(const TimerEvent &) {
             imshow("RealSense L515 Color", colorImg);
             int code = waitKeyEx(32);
             if (code == 1048689) exit(1);
+            if (code == 1048691) {
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depthImg);
+                ROS_INFO("Pressed S %d", code);
+            }
+            // ROS_INFO("Pressed: %d", code);
 
         } catch (cv_bridge::Exception &e) {
             ROS_ERROR("Could not convert to image!");
@@ -244,7 +273,8 @@ void launch_tester() {
     Mat regionOutput(SUB_H, SUB_W, CV_32FC(6));
 
 
-    get_sample_depth(inputDepth);
+    // get_sample_depth(inputDepth);
+    load_sample_depth("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", inputDepth);
     get_sample_color(inputColor);
 
     auto start = high_resolution_clock::now();
@@ -274,38 +304,15 @@ void launch_tester() {
     // if (code == 1048689) exit(1);
 }
 
-void get_sample_depth(Mat depth) {
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.0, 0.01);
-    for (int i = 0; i < depth.cols; i++) {
-        for (int j = 0; j < depth.rows; j++) {
-            float d = 10.04;
-            d += distribution(generator);
-            if (160 < i && i < 350 && 160 < j && j < 350) {
-                d = 0.008 * i + 0.014 * j + 0.12;
-                depth.at<short>(j, i) = d * 1000;
-            } else {
-                depth.at<short>(j, i) = d * 1000;
-            }
-        }
-    }
-}
 
-void get_sample_color(Mat color) {
-    for (int i = 0; i < color.rows; i++) {
-        for (int j = 0; j < color.cols; j++) {
-            color.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
-        }
-    }
-}
 
-int main (int argc, char** argv){
-
-    // export ROSCONSOLE_FORMAT='${time:format string}'
-    // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
-
-    init_opencl();
-    launch_ros_node(argc, argv);
-    // launch_tester();
-    return 0;
-}
+// int main (int argc, char** argv){
+//
+//     // export ROSCONSOLE_FORMAT='${time:format string}'
+//     // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
+//
+//     init_opencl();
+//     // launch_ros_node(argc, argv);
+//     launch_tester();
+//     return 0;
+// }

@@ -8,6 +8,7 @@
 #include <Magnum/Primitives/Plane.h>
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Primitives/Circle.h>
+#include <Magnum/Primitives/Axis.h>
 
 #include <Magnum/Trade/MeshData.h>
 #include <Magnum/Shaders/Phong.h>
@@ -15,6 +16,7 @@
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix4.h>
+#include <Magnum/Math/Quaternion.h>
 #include <Magnum/MeshTools/Interleave.h>
 #include <iostream>
 #include <Magnum/GL/Renderer.h>
@@ -46,6 +48,8 @@ private:
     Object3D *_camParent;
     Object3D *_camObject;
     Object3D *_camOriginCube;
+    Object3D *_sensor;
+    Object3D *_sensorAxes;
     SceneGraph::Camera3D *_camera;
 
     SceneGraph::DrawableGroup3D _drawables;
@@ -56,22 +60,24 @@ private:
 
 class RedCubeDrawable : public SceneGraph::Drawable3D {
 public:
-    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData) :
+    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData, Vector3 color) :
             SceneGraph::Drawable3D{object, group} {
+        _color = color;
         _mesh = MeshTools::compile(meshData);
     }
 
 private:
     GL::Mesh _mesh;
     Shaders::Phong _shader;
+    Vector3 _color;
 
     void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override {
         using namespace Math::Literals;
 
         _shader.setDiffuseColor(0xa5c9ea_rgbf)
                 .setLightColor(Color3{1.0f})
-                .setLightPosition({0.0f, 3.0f, -1.0f})
-                .setAmbientColor({0.2, 0.0f, 0.3f})
+                .setLightPosition({0.0f, 2.0f, 0.0f})
+                .setAmbientColor(_color)
                 .setTransformationMatrix(transformationMatrix)
                 .setNormalMatrix(transformationMatrix.normalMatrix())
                 .setProjectionMatrix(camera.projectionMatrix())
@@ -93,28 +99,44 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
     /* TODO: Configure Camera in Scene Graph*/
     _camGrandParent = new Object3D{&_scene};
+    _sensor = new Object3D{&_scene};
     _camParent = new Object3D{_camGrandParent};
     _camObject = new Object3D{_camParent};
     _camera = new SceneGraph::Camera3D(*_camObject);
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf,1.33f, 0.001f, 100.0f));
 
-    _camObject->translate({0,0,0.4f});
 
     /* TODO: Prepare your objects here and add them to the scene */
+    _sensorAxes = new Object3D{_sensor};
+    _sensorAxes->scale({0.01,0.01,0.01});
+    new RedCubeDrawable{*_sensorAxes, &_drawables, Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
+
+    _camObject->translate({0,0,0.4f});
+    _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
 
     _camOriginCube = new Object3D{_camGrandParent};
     _camOriginCube->scale({0.0004f, 0.0004f, 0.0004f});
-    new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid()};
+    new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
     for(int i = 0; i < _regionCalculator->regionOutput.rows; i++){
         for(int j = 0; j < _regionCalculator->regionOutput.cols; j++){
             Vec6f patch = _regionCalculator->regionOutput.at<Vec6f>(i, j);
-            auto &plane = _scene.addChild<Object3D>();
+            // cout << patch << endl;
+            Vector3 up = {0,0,1};
+            Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
+            Vector3 axis = Math::cross(up, dir).normalized();
+            Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+
+            auto &plane = _sensor->addChild<Object3D>();
             plane.scale({0.001,0.001,0.001});
             // printf("(%.2lf,%.2lf,%.2lf)\n", patch[3], patch[4], patch[5]);
-            plane.translate({0.01f* patch[3], -0.01f* patch[5], 0.01f * patch[4]});
-            plane.transformLocal(Matrix4::rotationX(-Rad{90.0_degf}));
-            new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid()};
+            plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
+            plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+            if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
+                Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+                plane.transformLocal(Matrix4(quat.toMatrix()));
+            }
+            new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.2, 0.0f, 0.3f}};
         }
     }
 
@@ -122,8 +144,6 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 }
 
 void MyApplication::tickEvent() {
-
-
     // auto &cube = _scene.addChild<Object3D>();
     // cube.translate({0.01, 0.01, 0.01});
     // printf("%f,%f,%f\n",0.01,0.01,0.01);
@@ -155,8 +175,6 @@ void MyApplication::mouseMoveEvent(MouseMoveEvent &event) {
         _camGrandParent->translateLocal({0, 0.1f*delta.y(), 0});
         _camOriginCube->translateLocal({0, 0.1f*delta.y(), 0});
     }
-
-
     event.setAccepted();
 }
 
@@ -173,13 +191,13 @@ void MyApplication::drawEvent() {
     redraw();
 }
 
-// int main(int argc, char **argv) {
-//     MyApplication app({argc, argv});
-//     return app.exec();
-//
-//     // PlanarRegionCalculator regionCalculator;
-//     // regionCalculator.init_opencl();
-//     // regionCalculator.launch_tester();
-//
-// }
+int main(int argc, char **argv) {
+    MyApplication app({argc, argv});
+    return app.exec();
+
+    // PlanarRegionCalculator regionCalculator;
+    // regionCalculator.init_opencl();
+    // regionCalculator.launch_tester();
+
+}
 

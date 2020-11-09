@@ -36,6 +36,8 @@ public:
     void get_sample_depth(Mat depth, float mean, float stddev);
     void get_sample_color(Mat color);
 
+    void load_sample_depth(String filename, Mat& depth);
+
 
 };
 

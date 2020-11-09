@@ -37,7 +37,7 @@ using namespace map_sense;
 
 class PlanarRegionCalculator {
 public:
-    cl::Kernel packKernel, mergeKernel;
+    cl::Kernel filterKernel, packKernel, mergeKernel;
     cl::Context context;
     cl::CommandQueue commandQueue;
     cl::Image2D imgInBuf, imgOutBuf1, imgOutBuf2;
@@ -51,6 +51,7 @@ public:
     Mat inputDepth = Mat(HEIGHT, WIDTH, CV_16UC1);
     Mat inputColor = Mat(HEIGHT, WIDTH, CV_8UC3);
     Mat regionOutput = Mat(SUB_H, SUB_W, CV_32FC(6));
+    Mat patchData = Mat(SUB_H, SUB_W, CV_8UC1);
 
     void fit();
     void init_opencl();

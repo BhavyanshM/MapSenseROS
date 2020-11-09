@@ -16,65 +16,95 @@ void PlanarRegionCalculator::fit() {
     ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              regionOutput.cols, regionOutput.rows);
 
-    // Mat debug(HEIGHT, WIDTH, CV_16UC1);
-
+    /* Input Data OpenCL Buffers */
     uint16_t *prevDepthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
     cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16),
                         WIDTH, HEIGHT, 0, prevDepthBuffer);
-    // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
 
+    /* Output Data OpenCL Buffers */
+    // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
+    cl::Image2D clFilterDepth(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
     cl::Image2D clOutput_0(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_1(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_2(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_3(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_4(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
     cl::Image2D clOutput_5(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
+    cl::Image2D clOutput_6(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), SUB_W, SUB_H);
 
-    packKernel.setArg(0, clDepth);
+    /* Setting Kernel arguments for patch-packing kernel */
+    filterKernel.setArg(0, clDepth);
+    filterKernel.setArg(1, clFilterDepth);
+
+    packKernel.setArg(0, clFilterDepth);
     packKernel.setArg(1, clOutput_0);
     packKernel.setArg(2, clOutput_1);
     packKernel.setArg(3, clOutput_2);
     packKernel.setArg(4, clOutput_3);
     packKernel.setArg(5, clOutput_4);
     packKernel.setArg(6, clOutput_5);
+    packKernel.setArg(7, clOutput_6);
+
+    mergeKernel.setArg(0, clOutput_0);
+    mergeKernel.setArg(1, clOutput_1);
+    mergeKernel.setArg(2, clOutput_2);
+    mergeKernel.setArg(3, clOutput_3);
+    mergeKernel.setArg(4, clOutput_4);
+    mergeKernel.setArg(5, clOutput_5);
+    mergeKernel.setArg(6, clOutput_6);
+
     // kernel.setArg(4, clDebug);
 
+    /* Setup size for reading patch-wise kernel maps from GPU */
     cl::size_t<3> regionOutputSize;
     regionOutputSize[0] = SUB_W;
     regionOutputSize[1] = SUB_H;
     regionOutputSize[2] = 1;
 
+    /* Output Data Buffers on CPU */
+    Mat debug(HEIGHT, WIDTH, CV_16UC1);
     Mat output_0(SUB_H, SUB_W, CV_32FC1);
     Mat output_1(SUB_H, SUB_W, CV_32FC1);
     Mat output_2(SUB_H, SUB_W, CV_32FC1);
     Mat output_3(SUB_H, SUB_W, CV_32FC1);
     Mat output_4(SUB_H, SUB_W, CV_32FC1);
     Mat output_5(SUB_H, SUB_W, CV_32FC1);
+    Mat output_6(SUB_H, SUB_W, CV_8UC1);
 
+    /* Deploy the patch-packing and patch-merging kernels patch-wise */
+    commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
     commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
-    // commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
 
+    /* Read the output data from OpenCL buffers into CPU buffers */
     // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
+    commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, debug.data);
     commandQueue.enqueueReadImage(clOutput_0, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
     commandQueue.enqueueReadImage(clOutput_1, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
     commandQueue.enqueueReadImage(clOutput_2, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
     commandQueue.enqueueReadImage(clOutput_3, CL_TRUE, origin, regionOutputSize, 0, 0, output_3.data);
     commandQueue.enqueueReadImage(clOutput_4, CL_TRUE, origin, regionOutputSize, 0, 0, output_4.data);
     commandQueue.enqueueReadImage(clOutput_5, CL_TRUE, origin, regionOutputSize, 0, 0, output_5.data);
+    commandQueue.enqueueReadImage(clOutput_6, CL_TRUE, origin, regionOutputSize, 0, 0, output_6.data);
 
-
+    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
     commandQueue.finish();
 
     // debug.convertTo(debug, -1, 4, 100);
     // imshow("Output", debug);
+    // waitKey(0);
 
+    /* Combine the CPU buffers into single image with multiple channels */
     Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
     int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
     mixChannels(in, 6, &regionOutput, 1, from_to, 6);
 
+    patchData = output_6;
+    // cout << patchData << endl;
+
     int i = 0;
     int j = 0;
-    cout << regionOutput.at<Vec3f>(2, 2) << endl;
+    printf("{%hu}", patchData.at<uint8_t>(2, 2));
 }
 
 
@@ -134,24 +164,27 @@ void PlanarRegionCalculator::init_opencl() {
         exit(1);
     }
     commandQueue = cl::CommandQueue(context, default_device);
-    packKernel = cl::Kernel(program, "segmentKernel");
+    filterKernel = cl::Kernel(program, "filterKernel");
+    packKernel = cl::Kernel(program, "packKernel");
+    mergeKernel = cl::Kernel(program, "mergeKernel");
 }
 
 static void onMouse(int event, int x, int y, int flags, void *userdata) {
     Mat out = *((Mat *) userdata);
     if (event == EVENT_MOUSEMOVE) {
         printf("[%d,%d]:", y / 8, x / 8);
-        cout << out.at<Vec6f>(y / 8, x / 8) << endl;
+        printf("%hu\n", out.at<uint8_t>(y / 8, x / 8) );
     }
 }
 
 void PlanarRegionCalculator::launch_tester() {
 
-
-
     SensorDataReceiver dataReceiver;
-    dataReceiver.get_sample_depth(inputDepth, 0, 0.1);
+    // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
+    dataReceiver.load_sample_depth("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", inputDepth);
     dataReceiver.get_sample_color(inputColor);
+
+    // medianBlur(inputDepth, inputDepth, 5);
 
     auto start = high_resolution_clock::now();
 
@@ -160,8 +193,6 @@ void PlanarRegionCalculator::launch_tester() {
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
-
-    // imshow("RealSense L515 Color", inputColor);
 
     inputDepth.convertTo(inputDepth, -1, 4, 100);
 
@@ -173,10 +204,11 @@ void PlanarRegionCalculator::launch_tester() {
     }
 
     namedWindow("RealSense L515 Depth", 1);
-    setMouseCallback("RealSense L515 Depth", onMouse, (void *) &regionOutput);
+    setMouseCallback("RealSense L515 Depth", onMouse, (void *) &patchData);
+    // imshow("RealSense L515 Color", inputColor);
 
-    imshow("RealSense L515 Depth", inputDepth);
-    int code = waitKeyEx(0);
+    // imshow("RealSense L515 Depth", inputDepth);
+    // int code = waitKeyEx(0);
 
 
     // if (code == 1048689) exit(1);
