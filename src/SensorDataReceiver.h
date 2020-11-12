@@ -37,6 +37,7 @@ public:
     void get_sample_color(Mat color);
 
     void load_sample_depth(String filename, Mat& depth);
+    void load_sample_color(String filename, Mat& color);
 
 
 };

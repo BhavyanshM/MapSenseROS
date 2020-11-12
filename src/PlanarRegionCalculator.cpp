@@ -17,9 +17,10 @@ void PlanarRegionCalculator::fit() {
              regionOutput.cols, regionOutput.rows);
 
     /* Input Data OpenCL Buffers */
-    uint16_t *prevDepthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
-    cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16),
-                        WIDTH, HEIGHT, 0, prevDepthBuffer);
+    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
+    uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(inputColor.data);
+    cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT, 0, depthBuffer);
+    cl::Image2D clColor(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), WIDTH, HEIGHT, 0, colorBuffer);
 
     /* Output Data OpenCL Buffers */
     // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
@@ -34,7 +35,8 @@ void PlanarRegionCalculator::fit() {
 
     /* Setting Kernel arguments for patch-packing kernel */
     filterKernel.setArg(0, clDepth);
-    filterKernel.setArg(1, clFilterDepth);
+    filterKernel.setArg(1, clColor);
+    filterKernel.setArg(2, clFilterDepth);
 
     packKernel.setArg(0, clFilterDepth);
     packKernel.setArg(1, clOutput_0);
@@ -182,7 +184,7 @@ void PlanarRegionCalculator::launch_tester() {
     SensorDataReceiver dataReceiver;
     // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
     dataReceiver.load_sample_depth("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", inputDepth);
-    dataReceiver.get_sample_color(inputColor);
+    dataReceiver.load_sample_color("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", inputColor);
 
     // medianBlur(inputDepth, inputDepth, 5);
 
@@ -194,7 +196,6 @@ void PlanarRegionCalculator::launch_tester() {
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
 
-    inputDepth.convertTo(inputDepth, -1, 4, 100);
 
     for (int i = 0; i < SUB_H; i++) {
         line(inputDepth, cv::Point(0, i * 8), cv::Point(WIDTH, i * 8), Scalar(255, 255, 0), 1);
@@ -205,10 +206,13 @@ void PlanarRegionCalculator::launch_tester() {
 
     namedWindow("RealSense L515 Depth", 1);
     setMouseCallback("RealSense L515 Depth", onMouse, (void *) &patchData);
-    // imshow("RealSense L515 Color", inputColor);
 
-    // imshow("RealSense L515 Depth", inputDepth);
-    // int code = waitKeyEx(0);
+    inputDepth.convertTo(inputDepth, -1, 10, 200);
+    namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
+    resizeWindow("RealSense L515 Depth", inputDepth.cols, inputDepth.rows);
+    imshow("RealSense L515 Depth", inputDepth);
+    imshow("RealSense L515 Color", inputColor);
+    int code = waitKeyEx(0);
 
 
     // if (code == 1048689) exit(1);

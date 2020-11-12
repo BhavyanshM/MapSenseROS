@@ -291,11 +291,27 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
     return (1/(float)(count)) * centroid;
  }
 
-void kernel filterKernel(read_only image2d_t in, write_only image2d_t out0){
+bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
+    float3 vec = ag - bg;
+    float dist = length(vec);
+    if (dist < 0.1){
+        return true;
+    }else {
+        return false;
+    }
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++ OPEN_CL KERNELS BEGIN HERE ++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+/* OpenCL Kernels Begin Here. All utilities above this point. */
+
+/* Filter Kernel: Filters all pixels within a patch on depth map. Removes outliers, flying points, dead pixels and measurement
+ * noise. */
+ void kernel filterKernel(read_only image2d_t in, read_only image2d_t in_color, write_only image2d_t out0){
     int y = get_global_id(0);
     int x = get_global_id(1);
 
     if(y >= 0 && y < 60 && x >= 0 && x < 80){
+
         uint Z = 0;
         int count = 0;
         for(int i = 0; i<SIZE_X; i++){
@@ -303,6 +319,7 @@ void kernel filterKernel(read_only image2d_t in, write_only image2d_t out0){
                 count++;
                 int gx = x*SIZE_X + i;
                 int gy = y*SIZE_Y + j;
+
                 int2 pos = (int2)(gx,gy);
                 Z = read_imageui(in, pos).x;
                 // if (x == 10 && y == 10) printf("Depth:%hu\n",Z);
@@ -313,7 +330,10 @@ void kernel filterKernel(read_only image2d_t in, write_only image2d_t out0){
     }
 }
 
-/*K: [459.97265625, 0.0, 341.83984375, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 1.0]*/
+/* Pack Kernel: Generates the patches by packing the centroid, surface normal and metadata related to
+ * patches on a sub-sampled grid of the depth map. The following intrinsic parameters are used to convert to Point Cloud.
+ * K: [459.97265625, 0.0, 341.83984375, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 1.0]
+ * */
 void kernel packKernel(  read_only image2d_t in,
 	                        write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2, /* float3 maps for normal*/
                             write_only image2d_t out3, write_only image2d_t out4, write_only image2d_t out5 /* float3 maps for centroids */
@@ -338,16 +358,10 @@ void kernel packKernel(  read_only image2d_t in,
     }
 }
 
-bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
-    float3 vec = ag - bg;
-    float dist = length(vec);
-    if (dist < 0.3){
-        return true;
-    }else {
-        return false;
-    }
-}
 
+/* Merge Kernel: Creates the graph-based structure by adding connections between the neighboring
+ * patches based on similarity.
+ */
 void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2, /* float3 maps for normal*/
                           write_only image2d_t out3, write_only image2d_t out4, write_only image2d_t out5, /* float3 maps for centroids */
                           write_only image2d_t out6 /* uint8 map for patch metadata*/

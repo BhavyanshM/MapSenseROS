@@ -12,6 +12,10 @@ void SensorDataReceiver::load_sample_depth(String filename, Mat& depth){
     depth = imread(filename, IMREAD_ANYDEPTH);
 }
 
+void SensorDataReceiver::load_sample_color(String filename, Mat& color){
+    color = imread(filename, IMREAD_ANYCOLOR);
+}
+
 void SensorDataReceiver::get_sample_depth(Mat depth, float mean, float stddev) {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(mean, stddev);

@@ -180,6 +180,7 @@ void processDataCallback(const TimerEvent &) {
             if (code == 1048689) exit(1);
             if (code == 1048691) {
                 imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depthImg);
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", colorImg);
                 ROS_INFO("Pressed S %d", code);
             }
             // ROS_INFO("Pressed: %d", code);
@@ -312,7 +313,7 @@ void launch_tester() {
 //     // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
 //
 //     init_opencl();
-//     // launch_ros_node(argc, argv);
-//     launch_tester();
+//     launch_ros_node(argc, argv);
+//     // launch_tester();
 //     return 0;
 // }

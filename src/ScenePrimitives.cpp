@@ -5,6 +5,8 @@
 #include <Magnum/SceneGraph/Camera.h>
 #include <Magnum/SceneGraph/Drawable.h>
 
+#include <Magnum/GL/Mesh.h>
+
 #include <Magnum/Primitives/Plane.h>
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Primitives/Circle.h>
@@ -73,7 +75,7 @@ private:
 
     void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override {
         using namespace Math::Literals;
-
+        // _mesh.setPrimitive(GL::MeshPrimitive::Points);
         _shader.setDiffuseColor(0xa5c9ea_rgbf)
                 .setLightColor(Color3{1.0f})
                 .setLightPosition({0.0f, 2.0f, 0.0f})
@@ -120,23 +122,27 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
     for(int i = 0; i < _regionCalculator->regionOutput.rows; i++){
         for(int j = 0; j < _regionCalculator->regionOutput.cols; j++){
-            Vec6f patch = _regionCalculator->regionOutput.at<Vec6f>(i, j);
-            // cout << patch << endl;
-            Vector3 up = {0,0,1};
-            Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
-            Vector3 axis = Math::cross(up, dir).normalized();
-            Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+            uint8_t edges = _regionCalculator->patchData.at<uint8_t>(i, j);
+            if (edges == 255){
+                Vec6f patch = _regionCalculator->regionOutput.at<Vec6f>(i, j);
+                // cout << patch << endl;
+                Vector3 up = {0,0,1};
+                Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
+                Vector3 axis = Math::cross(up, dir).normalized();
+                Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
 
-            auto &plane = _sensor->addChild<Object3D>();
-            plane.scale({0.001,0.001,0.001});
-            // printf("(%.2lf,%.2lf,%.2lf)\n", patch[3], patch[4], patch[5]);
-            plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
-            plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-            if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
-                Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-                plane.transformLocal(Matrix4(quat.toMatrix()));
+                auto &plane = _sensor->addChild<Object3D>();
+                plane.scale({0.0004,0.0004,0.0004});
+                // printf("(%.2lf,%.2lf,%.2lf)\n", patch[3], patch[4], patch[5]);
+                plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
+                plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+                if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
+                    Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+                    plane.transformLocal(Matrix4(quat.toMatrix()));
+                }
+                new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.2, 0.0f, 0.3f}};
             }
-            new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.2, 0.0f, 0.3f}};
+
         }
     }
 
