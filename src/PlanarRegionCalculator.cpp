@@ -14,7 +14,7 @@
  * */
 void PlanarRegionCalculator::fit() {
     ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
-             regionOutput.cols, regionOutput.rows);
+             output.getRegionOutput().cols, output.getRegionOutput().rows);
 
     /* Input Data OpenCL Buffers */
     uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
@@ -99,14 +99,14 @@ void PlanarRegionCalculator::fit() {
     /* Combine the CPU buffers into single image with multiple channels */
     Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
     int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
-    mixChannels(in, 6, &regionOutput, 1, from_to, 6);
+    mixChannels(in, 6, &output.getRegionOutput(), 1, from_to, 6);
+    output.setPatchData(output_6);
 
-    patchData = output_6;
     // cout << patchData << endl;
 
     int i = 0;
     int j = 0;
-    printf("{%hu}", patchData.at<uint8_t>(2, 2));
+    printf("{%hu}", output.getPatchData().at<uint8_t>(2, 2));
 }
 
 
@@ -172,10 +172,10 @@ void PlanarRegionCalculator::init_opencl() {
 }
 
 static void onMouse(int event, int x, int y, int flags, void *userdata) {
-    Mat out = *((Mat *) userdata);
+    MapFrame out = *((MapFrame *) userdata);
     if (event == EVENT_MOUSEMOVE) {
         printf("[%d,%d]:", y / 8, x / 8);
-        printf("%hu\n", out.at<uint8_t>(y / 8, x / 8) );
+        printf("%hu\n", out.getPatchData().at<uint8_t>(y / 8, x / 8) );
     }
 }
 
@@ -192,28 +192,33 @@ void PlanarRegionCalculator::launch_tester() {
 
     this->fit(); // Generate planar regions from depth map and color image.
 
+
+    mapFrameProcessor.generateSegmentation(output);
+
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
 
+    //
+    // for (int i = 0; i < SUB_H; i++) {
+    //     line(inputDepth, cv::Point(0, i * 8), cv::Point(WIDTH, i * 8), Scalar(255, 255, 0), 1);
+    // }
+    // for (int i = 0; i < SUB_W; i++) {
+    //     line(inputDepth, cv::Point(i * 8, 0), cv::Point(i * 8, HEIGHT), Scalar(255, 255, 0), 1);
+    // }
 
-    for (int i = 0; i < SUB_H; i++) {
-        line(inputDepth, cv::Point(0, i * 8), cv::Point(WIDTH, i * 8), Scalar(255, 255, 0), 1);
-    }
-    for (int i = 0; i < SUB_W; i++) {
-        line(inputDepth, cv::Point(i * 8, 0), cv::Point(i * 8, HEIGHT), Scalar(255, 255, 0), 1);
-    }
+    inputDepth.convertTo(inputDepth, -1, 8, 100);
+    Mat dispDepth;
+    inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
+    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+    output.drawGraph(dispDepth);
 
-    namedWindow("RealSense L515 Depth", 1);
-    setMouseCallback("RealSense L515 Depth", onMouse, (void *) &patchData);
-
-    inputDepth.convertTo(inputDepth, -1, 10, 200);
-    namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
-    resizeWindow("RealSense L515 Depth", inputDepth.cols, inputDepth.rows);
-    imshow("RealSense L515 Depth", inputDepth);
-    imshow("RealSense L515 Color", inputColor);
-    int code = waitKeyEx(0);
-
-
+    // namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
+    // resizeWindow("RealSense L515 Depth", inputDepth.cols*2, inputDepth.rows*2);
+    // setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
+    // imshow("RealSense L515 Depth", dispDepth);
+    // imshow("RealSense L515 Color", inputColor);
+    //
+    // int code = waitKeyEx(0);
     // if (code == 1048689) exit(1);
 }

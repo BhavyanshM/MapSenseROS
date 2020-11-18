@@ -23,7 +23,7 @@ void SensorDataReceiver::get_sample_depth(Mat depth, float mean, float stddev) {
         for (int j = 0; j < depth.rows; j++) {
             float d = 10.04;
             d += distribution(generator);
-            if (160 < i && i < 350 && 160 < j && j < 350) {
+            if (160 < i && i < 350 && 200 < j && j < 390) {
                 // d = 0.008 * i + 0.014 * j;
                 depth.at<short>(j, i) = (d - 2.0f) * 1000;
             } else {

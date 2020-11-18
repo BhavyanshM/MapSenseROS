@@ -7,8 +7,12 @@
 
 #include <Magnum/GL/Mesh.h>
 
+#include <Magnum/ImGuiIntegration/Context.h>
+#include <Magnum/ImGuiIntegration/Context.hpp>
+
 #include <Magnum/Primitives/Plane.h>
 #include <Magnum/Primitives/Cube.h>
+
 #include <Magnum/Primitives/Circle.h>
 #include <Magnum/Primitives/Axis.h>
 
@@ -22,9 +26,12 @@
 #include <Magnum/MeshTools/Interleave.h>
 #include <iostream>
 #include <Magnum/GL/Renderer.h>
+#include <imgui.h>
 #include "PlanarRegionCalculator.h"
 
 using namespace Magnum;
+using namespace Math::Literals;
+
 
 typedef SceneGraph::Object<SceneGraph::MatrixTransformation3D> Object3D;
 typedef SceneGraph::Scene<SceneGraph::MatrixTransformation3D> Scene3D;
@@ -35,15 +42,20 @@ public:
 
 private:
     void drawEvent() override;
-
     void tickEvent() override;
 
     void mousePressEvent(MouseEvent &event) override;
-
+    void mouseReleaseEvent(MouseEvent& event) override;
     void mouseMoveEvent(MouseMoveEvent &event) override;
-
     void mouseScrollEvent(MouseScrollEvent &event) override;
 
+    void viewportEvent(ViewportEvent& event) override;
+
+    ImGuiIntegration::Context _imgui{NoCreate};
+    Color4 _clearColor = 0x72909aff_rgbaf;
+    Float _floatValue = 0.0f;
+    bool _showDemoWindow = true;
+    bool _showAnotherWindow = false;
 
     Scene3D _scene;
     Object3D *_camGrandParent;
@@ -74,7 +86,7 @@ private:
     Vector3 _color;
 
     void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override {
-        using namespace Math::Literals;
+
         // _mesh.setPrimitive(GL::MeshPrimitive::Points);
         _shader.setDiffuseColor(0xa5c9ea_rgbf)
                 .setLightColor(Color3{1.0f})
@@ -87,7 +99,23 @@ private:
     }
 };
 
-MyApplication::MyApplication(const Arguments &arguments) : Platform::Application{arguments} {
+MyApplication::MyApplication(const Arguments &arguments) : Platform::Application{arguments,
+                                                                                 Configuration{}.setTitle("Magnum ImGui Application")
+                                                                                            .setSize(Vector2i(1024, 768))
+                                                                                            .setWindowFlags(Configuration::WindowFlag::Resizable)
+} {
+
+    _imgui = ImGuiIntegration::Context(Vector2{windowSize()}/dpiScaling(),
+                                       windowSize(), framebufferSize());
+
+    /* Set up proper blending to be used by ImGui. There's a great chance
+       you'll need this exact behavior for the rest of your scene. If not, set
+       this only for the drawFrame() call. */
+    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add,
+                                   GL::Renderer::BlendEquation::Add);
+    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
+                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+
     /* TODO: Instantiate the Information Processor*/
     _regionCalculator = new PlanarRegionCalculator();
     _regionCalculator->init_opencl();
@@ -97,7 +125,7 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
 
-    using namespace Math::Literals;
+
 
     /* TODO: Configure Camera in Scene Graph*/
     _camGrandParent = new Object3D{&_scene};
@@ -120,11 +148,11 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _camOriginCube->scale({0.0004f, 0.0004f, 0.0004f});
     new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
-    for(int i = 0; i < _regionCalculator->regionOutput.rows; i++){
-        for(int j = 0; j < _regionCalculator->regionOutput.cols; j++){
-            uint8_t edges = _regionCalculator->patchData.at<uint8_t>(i, j);
+    for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
+        for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
+            uint8_t edges = _regionCalculator->output.getPatchData().at<uint8_t>(i, j);
             if (edges == 255){
-                Vec6f patch = _regionCalculator->regionOutput.at<Vec6f>(i, j);
+                Vec6f patch = _regionCalculator->output.getRegionOutput().at<Vec6f>(i, j);
                 // cout << patch << endl;
                 Vector3 up = {0,0,1};
                 Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
@@ -157,14 +185,24 @@ void MyApplication::tickEvent() {
     // new RedCubeDrawable{cube, &_drawables};
 }
 
+void MyApplication::viewportEvent(ViewportEvent& event) {
+    GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+    _imgui.relayout(Vector2{event.windowSize()}/event.dpiScaling(),
+                    event.windowSize(), event.framebufferSize());
+}
+
 void MyApplication::mousePressEvent(MouseEvent &event) {
-    if (event.button() == MouseEvent::Button::Right) {
-        // std::cout << "RightMouseButton" << std::endl;
-    }
-    event.setAccepted();
+    if(_imgui.handleMousePressEvent(event)) { return; }
+}
+
+void MyApplication::mouseReleaseEvent(MouseEvent& event) {
+    if(_imgui.handleMouseReleaseEvent(event)) return;
 }
 
 void MyApplication::mouseMoveEvent(MouseMoveEvent &event) {
+    if(_imgui.handleMouseMoveEvent(event)) {
+        return;
+    }
     if ((event.buttons() & MouseMoveEvent::Button::Left)) {
         Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
         _camGrandParent->transformLocal(Matrix4::rotationY(-Rad{delta.x()}));
@@ -185,13 +223,51 @@ void MyApplication::mouseMoveEvent(MouseMoveEvent &event) {
 }
 
 void MyApplication::mouseScrollEvent(MouseScrollEvent &event) {
+    if(_imgui.handleMouseScrollEvent(event)) {
+        /* Prevent scrolling the page */
+        return;
+    }
     Vector2 delta = Vector2{event.offset()};
     _camObject->translate({0, 0, -0.01f * delta.y()});
+    event.setAccepted();
 }
 
 void MyApplication::drawEvent() {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
     _camera->draw(_drawables);
+
+    _imgui.newFrame();
+
+    ImGui::Text("Hello, world!");
+    ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
+    if(ImGui::ColorEdit3("Clear Color", _clearColor.data()))
+        GL::Renderer::setClearColor(_clearColor);
+    if(ImGui::Button("Test Window"))
+        _showDemoWindow ^= true;
+    if(ImGui::Button("Another Window"))
+        _showAnotherWindow ^= true;
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
+
+    // if(_showDemoWindow) {
+    //     ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+    //     ImGui::ShowDemoWindow();
+    // }
+
+    /* Update application cursor */
+    _imgui.updateApplicationCursor(*this);
+
+    GL::Renderer::enable(GL::Renderer::Feature::Blending);
+    GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
+    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
+    GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
+
+    _imgui.drawFrame();
+
+    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+    // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
+    GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
+    GL::Renderer::disable(GL::Renderer::Feature::Blending);
 
     swapBuffers();
     redraw();

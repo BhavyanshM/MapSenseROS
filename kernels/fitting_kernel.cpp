@@ -294,7 +294,7 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
 bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
     float3 vec = ag - bg;
     float dist = length(vec);
-    if (dist < 0.1){
+    if (dist < 0.12){
         return true;
     }else {
         return false;
@@ -388,7 +388,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
         for(int i = -1; i<2; i++){
             for(int j = -1; j<2; j++){
                 if (!(j==0 && i==0)){
-                     count++;
+
                      float n1_b = read_imagef(out0, (int2)(x+i,y+j)).x;
                      float n2_b = read_imagef(out1, (int2)(x+i,y+j)).x;
                      float n3_b = read_imagef(out2, (int2)(x+i,y+j)).x;
@@ -403,7 +403,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
                          // printf("Connected: (%d,%d)\n",x+i, y+j);
                          patch = (1 << count) | patch;
                      }
-
+                     count++;
                 }
             }
         }

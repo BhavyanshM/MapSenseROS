@@ -20,6 +20,9 @@ find_package(Magnum REQUIRED
 		Sdl2Application
 		SceneGraph)
 
+find_package(MagnumIntegration REQUIRED ImGui)
+#find_package(ImGui REQUIRED)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -36,7 +39,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
 )
 
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 
 
 add_message_files(
@@ -72,7 +75,7 @@ set (HEADERS
 		include/RegionFinder.h
 		include/GPU.h
 		src/PlanarRegionCalculator.h
-		src/SensorDataReceiver.h)
+		src/SensorDataReceiver.h src/MapFrame.cpp src/MapFrame.h src/MapFrameProcessor.cpp src/MapFrameProcessor.h src/ImGuiExample.cpp src/PlanarRegion.cpp src/PlanarRegion.h)
 
 include_directories(
   include
@@ -94,8 +97,17 @@ target_link_libraries(planar_region_publisher
 	Magnum::Primitives
 	Magnum::Shaders
 	Magnum::SceneGraph
+	MagnumIntegration::ImGui
+	Eigen3::Eigen
 )
 
+add_executable(ImGuiEx src/ImGuiExample.cpp)
+target_link_libraries(ImGuiEx PRIVATE
+		Corrade::Main
+		Magnum::Application
+		Magnum::GL
+		Magnum::Magnum
+		MagnumIntegration::ImGui)
 #set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
