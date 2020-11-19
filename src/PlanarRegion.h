@@ -15,8 +15,8 @@ private:
     int numPatches;
 
 public:
-    void addPatch(const Vector3f &normal, const Vector3f &center);
-    void insertVertex(Vector2f &vertex);
+    void addPatch(Vector3f normal, Vector3f center);
+    void insertVertex(Vector2f vertex);
     Vector3f getNormal() const;
     Vector3f getCenter() const;
     vector<Vector2f> getVertices() const;

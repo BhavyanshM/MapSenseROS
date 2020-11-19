@@ -13,6 +13,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"
+#include "PlanarRegion.h"
 
 #include "image_transport/image_transport.h"
 #include "opencv2/highgui/highgui.hpp"
@@ -26,6 +27,7 @@
 #include <random>
 
 #include "SensorDataReceiver.h"
+#include "PlanarRegion.h"
 
 using namespace ros;
 using namespace std;
@@ -54,6 +56,8 @@ public:
     Mat inputColor = Mat(HEIGHT, WIDTH, CV_8UC3);
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
+
+    vector<PlanarRegion> planarRegionList;
 
     void fit();
     void init_opencl();

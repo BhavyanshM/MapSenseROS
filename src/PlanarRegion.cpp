@@ -16,13 +16,13 @@ int PlanarRegion::getNumOfVertices() const {
     return this->vertices.size();
 }
 
-void PlanarRegion::addPatch(const Vector3f &normal, const Vector3f &center) {
+void PlanarRegion::addPatch(Vector3f normal, Vector3f center) {
     this->normal += normal;
     this->center += center;
     this->numPatches += 1;
 }
 
-void PlanarRegion::insertVertex(Vector2f &vertex) {
+void PlanarRegion::insertVertex(Vector2f vertex) {
     this->vertices.push_back(vertex);
 }
 

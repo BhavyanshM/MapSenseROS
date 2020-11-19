@@ -1,6 +1,11 @@
 
 #include "MapFrame.h"
 
+MapFrame::MapFrame(){
+    this->regionOutput = Mat(SUB_H, SUB_W, CV_32FC(6));
+    this->patchData = Mat(SUB_H, SUB_W, CV_8UC1);
+}
+
 void MapFrame::setRegionOutput(Mat &regionOutput) {
     MapFrame::regionOutput = regionOutput;
 }

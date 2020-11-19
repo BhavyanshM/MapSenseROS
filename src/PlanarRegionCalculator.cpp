@@ -93,13 +93,14 @@ void PlanarRegionCalculator::fit() {
     commandQueue.finish();
 
     // debug.convertTo(debug, -1, 4, 100);
-    // imshow("Output", debug);
+    // imshow("Output", inputDepth);
     // waitKey(0);
 
     /* Combine the CPU buffers into single image with multiple channels */
     Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
     int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
     mixChannels(in, 6, &output.getRegionOutput(), 1, from_to, 6);
+    cout << "REACHED" << endl;
     output.setPatchData(output_6);
 
     // cout << patchData << endl;
@@ -193,7 +194,7 @@ void PlanarRegionCalculator::launch_tester() {
     this->fit(); // Generate planar regions from depth map and color image.
 
 
-    mapFrameProcessor.generateSegmentation(output);
+    mapFrameProcessor.generateSegmentation(output, planarRegionList);
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
@@ -207,7 +208,7 @@ void PlanarRegionCalculator::launch_tester() {
     //     line(inputDepth, cv::Point(i * 8, 0), cv::Point(i * 8, HEIGHT), Scalar(255, 255, 0), 1);
     // }
 
-    inputDepth.convertTo(inputDepth, -1, 8, 100);
+    inputDepth.convertTo(inputDepth, -1, 3, 100);
     Mat dispDepth;
     inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
@@ -218,7 +219,7 @@ void PlanarRegionCalculator::launch_tester() {
     // setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
     // imshow("RealSense L515 Depth", dispDepth);
     // imshow("RealSense L515 Color", inputColor);
-    //
     // int code = waitKeyEx(0);
+
     // if (code == 1048689) exit(1);
 }

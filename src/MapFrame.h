@@ -10,18 +10,19 @@ using namespace cv;
 
 class MapFrame {
 public:
-    void setRegionOutput(Mat &regionOutput);
-    void setPatchData(Mat &patchData);
-
-     Mat& getRegionOutput();
-     Mat& getPatchData();
-     void drawGraph(Mat& img);
-
-public:
     const int SUB_W = 80;
     const int SUB_H = 60;
-    Mat regionOutput = Mat(SUB_H, SUB_W, CV_32FC(6));
-    Mat patchData = Mat(SUB_H, SUB_W, CV_8UC1);
+    Mat regionOutput;
+    Mat patchData;
+
+    MapFrame();
+    void setRegionOutput(Mat &regionOutput);
+
+    void setPatchData(Mat &patchData);
+    Mat& getRegionOutput();
+    Mat& getPatchData();
+
+     void drawGraph(Mat& img);
 };
 
 

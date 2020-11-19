@@ -101,7 +101,7 @@ private:
 
 MyApplication::MyApplication(const Arguments &arguments) : Platform::Application{arguments,
                                                                                  Configuration{}.setTitle("Magnum ImGui Application")
-                                                                                            .setSize(Vector2i(1024, 768))
+                                                                                            .setSize(Magnum::Vector2i(1024, 768))
                                                                                             .setWindowFlags(Configuration::WindowFlag::Resizable)
 } {
 
