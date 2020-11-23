@@ -12,6 +12,8 @@
 
 #include <Magnum/Primitives/Plane.h>
 #include <Magnum/Primitives/Cube.h>
+#include <Magnum/Primitives/Circle.h>
+
 
 #include <Magnum/Primitives/Circle.h>
 #include <Magnum/Primitives/Axis.h>
@@ -28,6 +30,7 @@
 #include <Magnum/GL/Renderer.h>
 #include <imgui.h>
 #include "PlanarRegionCalculator.h"
+#include "MeshGenerator.h"
 
 using namespace Magnum;
 using namespace Math::Literals;
@@ -134,6 +137,7 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _camObject = new Object3D{_camParent};
     _camera = new SceneGraph::Camera3D(*_camObject);
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf,1.33f, 0.001f, 100.0f));
+    _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
 
 
     /* TODO: Prepare your objects here and add them to the scene */
@@ -147,6 +151,33 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _camOriginCube = new Object3D{_camGrandParent};
     _camOriginCube->scale({0.0004f, 0.0004f, 0.0004f});
     new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
+
+    for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
+        shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
+        Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
+        Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
+
+
+        Vector3 up = {0,0,-1};
+        Vector3 dir = {normal[0], normal[1], -normal[2]};
+        Vector3 axis = Math::cross(up, dir).normalized();
+        Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+
+        auto &region = _sensor->addChild<Object3D>();
+        // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
+        float regionScale = 0.5f;
+        region.scale({ regionScale*0.004f, regionScale*0.004f, regionScale*0.004f});
+        region.translate({ 0.01f*center[0], 0.01f*center[1], 0.01f*center[2]});
+        // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+
+        axis = axis.normalized();
+        printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2]);
+        if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
+            Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+            region.transformLocal(Matrix4(quat.toMatrix()));
+        }
+        new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(8), {0.2, 0.0f, 0.3f}};
+    }
 
     for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
         for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
@@ -163,7 +194,9 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
                 plane.scale({0.0004,0.0004,0.0004});
                 // printf("(%.2lf,%.2lf,%.2lf)\n", patch[3], patch[4], patch[5]);
                 plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
-                plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+
+                // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+
                 if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
                     Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
                     plane.transformLocal(Matrix4(quat.toMatrix()));
@@ -211,8 +244,8 @@ void MyApplication::mouseMoveEvent(MouseMoveEvent &event) {
     }
     if ((event.buttons() & MouseMoveEvent::Button::Right)) {
         Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
-        _camGrandParent->translateLocal({-0.1f*delta.x(), 0, -0.1f*delta.y()});
-        _camOriginCube->translateLocal({-0.1f*delta.x(), 0, -0.1f*delta.y()});
+        _camGrandParent->translateLocal({-0.05f*delta.x(), 0, -0.05f*delta.y()});
+        _camOriginCube->translateLocal({-0.05f*delta.x(), 0, -0.05f*delta.y()});
     }
     if ((event.buttons() & MouseMoveEvent::Button::Middle)) {
         Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};

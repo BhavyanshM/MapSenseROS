@@ -13,14 +13,20 @@ private:
     Vector3f center;
     vector<Vector2f> vertices;
     int numPatches;
+    int id;
 
 public:
+    PlanarRegion(int id);
     void addPatch(Vector3f normal, Vector3f center);
     void insertVertex(Vector2f vertex);
-    Vector3f getNormal() const;
-    Vector3f getCenter() const;
-    vector<Vector2f> getVertices() const;
-    int getNumOfVertices() const;
+    Vector3f getNormal();
+    Vector3f getCenter();
+    vector<Vector2f> getVertices();
+    int getNumOfVertices();
+
+    int getNumPatches();
+
+    int getId();
 };
 
 

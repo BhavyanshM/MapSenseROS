@@ -1,7 +1,7 @@
 
 #include "MapFrameProcessor.h"
 
-void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<PlanarRegion>& planarRegionList) {
+void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList) {
     int components = 0;
     vector<int> sizes;
     vector<int> ids;
@@ -22,10 +22,10 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<PlanarR
             uint8_t patch = framePatch[i*80 + j];
             if (!visited[i][j] && patch == 255) {
                 int num = 0;
-                PlanarRegion planarRegion;
+                shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
                 dfs(i, j, components, num, debug, framePatch, planarRegion);
-                if (num > 5){
-                    planarRegionList.push_back(planarRegion);
+                if (num > 20){
+                    planarRegionList.emplace_back(planarRegion);
                     components++;
                     sizes.push_back(num);
                     ids.push_back(components);
@@ -43,22 +43,26 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<PlanarR
 
     printf("[");
     for(int k = 0; k< sizes.size(); k++){
-        printf("(%d,%d), ", sizes[k], ids[k]);
-        cout << planarRegionList[k].getCenter() << endl << planarRegionList[k].getNormal() << endl;
+        // printf("(%d,%d), ", sizes[k], ids[k]);
+        // cout << planarRegionList[k].getCenter() << endl << planarRegionList[k].getNormal() << endl;
+        Vector3f normal = planarRegionList[k]->getNormal();
+        Vector3f center = planarRegionList[k]->getCenter();
+        // printf("Patches:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", planarRegionList[k]->getNumPatches(), center[0], center[1], center[2], normal[0], normal[1], normal[2]);
     }
     printf("]\n");
     printf("Components:%d\n", components);
 }
 
 
-void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, uint8_t* framePatch, PlanarRegion& planarRegion) {
+void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, uint8_t* framePatch, shared_ptr<PlanarRegion> planarRegion) {
     if (visited[x][y]) return;
 
     num++;
     visited[x][y] = true;
     region[x][y] = component;
     Vec6f patch = this->frame->getRegionOutput().at<Vec6f>(x,y);
-    planarRegion.addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
+
+    planarRegion->addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
     // cout << planarRegion.getCenter() << endl << planarRegion.getNormal() << endl;
 
     // circle(debug, Point((y)*10, (x)*10), 2, Scalar((component+1)*231 % 255,(component+1)*123 % 255,(component+1)*312 % 255), -1);

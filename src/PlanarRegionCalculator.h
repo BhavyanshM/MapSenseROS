@@ -54,10 +54,10 @@ public:
     const int SUB_W = 80;
     Mat inputDepth = Mat(HEIGHT, WIDTH, CV_16UC1);
     Mat inputColor = Mat(HEIGHT, WIDTH, CV_8UC3);
+
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
-
-    vector<PlanarRegion> planarRegionList;
+    vector<shared_ptr<PlanarRegion>> planarRegionList;
 
     void fit();
     void init_opencl();

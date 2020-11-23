@@ -75,7 +75,7 @@ set (HEADERS
 		include/RegionFinder.h
 		include/GPU.h
 		src/PlanarRegionCalculator.h
-		src/SensorDataReceiver.h src/MapFrame.cpp src/MapFrame.h src/MapFrameProcessor.cpp src/MapFrameProcessor.h src/ImGuiExample.cpp src/PlanarRegion.cpp src/PlanarRegion.h)
+		src/SensorDataReceiver.h src/MapFrame.cpp src/MapFrame.h src/MapFrameProcessor.cpp src/MapFrameProcessor.h src/ImGuiExample.cpp src/PlanarRegion.cpp src/PlanarRegion.h src/MeshGenerator.cpp src/MeshGenerator.h)
 
 include_directories(
   include

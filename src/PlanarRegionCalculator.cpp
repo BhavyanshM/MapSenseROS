@@ -176,7 +176,9 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
     MapFrame out = *((MapFrame *) userdata);
     if (event == EVENT_MOUSEMOVE) {
         printf("[%d,%d]:", y / 8, x / 8);
-        printf("%hu\n", out.getPatchData().at<uint8_t>(y / 8, x / 8) );
+        printf("%hu ", out.getPatchData().at<uint8_t>(y / 8, x / 8) );
+        Vec6f patch = out.getRegionOutput().at<Vec6f>(y/8, x/8);
+        printf("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3],patch[4],patch[5],patch[0],patch[1],patch[2]);
     }
 }
 
@@ -208,11 +210,12 @@ void PlanarRegionCalculator::launch_tester() {
     //     line(inputDepth, cv::Point(i * 8, 0), cv::Point(i * 8, HEIGHT), Scalar(255, 255, 0), 1);
     // }
 
-    inputDepth.convertTo(inputDepth, -1, 3, 100);
+    inputDepth.convertTo(inputDepth, -1, 10, 100);
     Mat dispDepth;
     inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    output.drawGraph(dispDepth);
+
+    // output.drawGraph(dispDepth);
 
     // namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
     // resizeWindow("RealSense L515 Depth", inputDepth.cols*2, inputDepth.rows*2);
