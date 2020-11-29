@@ -78,9 +78,18 @@ private:
 class RedCubeDrawable : public SceneGraph::Drawable3D {
 public:
     explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData, Vector3 color) :
-            SceneGraph::Drawable3D{object, group} {
+        SceneGraph::Drawable3D{object, group} {
         _color = color;
         _mesh = MeshTools::compile(meshData);
+    }
+
+
+    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, GL::Buffer& vertexBuffer, Vector3 color) :
+            SceneGraph::Drawable3D{object, group} {
+        _color = color;
+        _mesh.setPrimitive(MeshPrimitive::TriangleFan)
+            .addVertexBuffer(vertexBuffer, 0, Position{})
+            .setCount(vertexBuffer.size());
     }
 
 private:
@@ -128,8 +137,6 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
 
-
-
     /* TODO: Configure Camera in Scene Graph*/
     _camGrandParent = new Object3D{&_scene};
     _sensor = new Object3D{&_scene};
@@ -138,7 +145,6 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _camera = new SceneGraph::Camera3D(*_camObject);
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf,1.33f, 0.001f, 100.0f));
     _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
-
 
     /* TODO: Prepare your objects here and add them to the scene */
     _sensorAxes = new Object3D{_sensor};
@@ -156,8 +162,6 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
         Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
         Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
-
-
         Vector3 up = {0,0,-1};
         Vector3 dir = {normal[0], normal[1], -normal[2]};
         Vector3 axis = Math::cross(up, dir).normalized();
@@ -165,18 +169,20 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
         auto &region = _sensor->addChild<Object3D>();
         // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
-        float regionScale = 0.5f;
+        float regionScale = 1.2f;
         region.scale({ regionScale*0.004f, regionScale*0.004f, regionScale*0.004f});
         region.translate({ 0.01f*center[0], 0.01f*center[1], 0.01f*center[2]});
         // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
 
         axis = axis.normalized();
-        printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2]);
+        printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
         if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
             Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
             region.transformLocal(Matrix4(quat.toMatrix()));
         }
-        new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(8), {0.2, 0.0f, 0.3f}};
+        // GL::Buffer bufferToPack;
+        // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
+        new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {1.0f, 0.0f, 0.3f}};
     }
 
     for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
@@ -192,16 +198,13 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
                 auto &plane = _sensor->addChild<Object3D>();
                 plane.scale({0.0004,0.0004,0.0004});
-                // printf("(%.2lf,%.2lf,%.2lf)\n", patch[3], patch[4], patch[5]);
                 plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
-
                 // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-
                 if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
                     Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
                     plane.transformLocal(Matrix4(quat.toMatrix()));
                 }
-                new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.2, 0.0f, 0.3f}};
+                new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
             }
 
         }

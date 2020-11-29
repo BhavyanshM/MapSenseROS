@@ -1,84 +1,89 @@
 #include "MeshGenerator.h"
 
-Trade::MeshData MeshGenerator::getPlanarRegionMesh(const UnsignedInt segments) {
-    CORRADE_ASSERT(segments >= 3, "Primitives::circle3DSolid(): segments must be >= 3",
+void MeshGenerator::getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion, GL::Buffer& bufferToPack) {
+    vector<Vector3> positions;
+    positions.emplace_back(Vector3(planarRegion->getCenter().x(), planarRegion->getCenter().y(), planarRegion->getCenter().z()));
+
+    vector<Vector2f> circularPoints;
+    planarRegion->getClockWise2D(circularPoints);
+
+    for(int i = 0; i<circularPoints.size()+2; i++){
+        // Vector2f meshPoint = circularPoints[i];
+        positions.emplace_back(0.1f, 0.1f, 0.0f);
+
+        // Vector3f center = planarRegion->getCenter();
+        // Vector3f normal = planarRegion->getNormal();
+        // Vector3f regionPoint =  (vec - center) - ((vec - center).dot(normal)/ (normal.squaredNorm()) * normal);
+        // hull.push_back(Point(regionPoint.x(), regionPoint.y()));
+    }
+    bufferToPack.setData(positions);
+}
+
+Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> planarRegion) {
+
+    vector<Vector2f> circularPoints;
+    planarRegion->getClockWise2D(circularPoints);
+    printf("CircularPoints:%d\n", circularPoints.size());
+
+    CORRADE_ASSERT(circularPoints.size() >= 3, "PlanarRegion->getNumOfVertices() must be >= 3",
                    (Trade::MeshData{MeshPrimitive::TriangleFan, 0}));
 
     /* Calculate attribute count and vertex size */
     std::size_t stride = sizeof(Vector3) + sizeof(Vector3);
     std::size_t attributeCount = 2;
-    // if(flags & Circle3DFlag::Tangents) {
-    //     stride += sizeof(Vector4);
-    //     ++attributeCount;
-    // }
-    // if(flags & Circle3DFlag::TextureCoordinates) {
-    //     stride += sizeof(Vector2);
-    //     ++attributeCount;
-    // }
 
     /* Set up the layout */
-    Containers::Array<char> vertexData{Containers::NoInit, (segments + 2)*stride};
+    Containers::Array<char> vertexData{Containers::NoInit, (circularPoints.size() + 2)*stride};
     Containers::Array<Trade::MeshAttributeData> attributeData{attributeCount};
     std::size_t attributeIndex = 0;
     std::size_t attributeOffset = 0;
 
     Containers::StridedArrayView1D<Vector3> positions{vertexData,
                                                       reinterpret_cast<Vector3*>(vertexData.data() + attributeOffset),
-                                                      segments + 2, std::ptrdiff_t(stride)};
+                                                      circularPoints.size() + 2, std::ptrdiff_t(stride)};
     attributeData[attributeIndex++] = Trade::MeshAttributeData{
             Trade::MeshAttribute::Position, positions};
     attributeOffset += sizeof(Vector3);
 
     Containers::StridedArrayView1D<Vector3> normals{vertexData,
                                                     reinterpret_cast<Vector3*>(vertexData.data() + attributeOffset),
-                                                    segments + 2, std::ptrdiff_t(stride)};
+                                                    circularPoints.size() + 2, std::ptrdiff_t(stride)};
     attributeData[attributeIndex++] = Trade::MeshAttributeData{
             Trade::MeshAttribute::Normal, normals};
     attributeOffset += sizeof(Vector3);
-
-    Containers::StridedArrayView1D<Vector4> tangents;
-    // if(flags & Circle3DFlag::Tangents) {
-    //     tangents = Containers::StridedArrayView1D<Vector4>{vertexData,
-    //                                                        reinterpret_cast<Vector4*>(vertexData.data() + attributeOffset),
-    //                                                        segments + 2, std::ptrdiff_t(stride)};
-    //     attributeData[attributeIndex++] = Trade::MeshAttributeData{
-    //             Trade::MeshAttribute::Tangent, tangents};
-    //     attributeOffset += sizeof(Vector4);
-    // }
-
-    Containers::StridedArrayView1D<Vector2> textureCoordinates;
-    // if(flags & Circle3DFlag::TextureCoordinates) {
-    //     textureCoordinates = Containers::StridedArrayView1D<Vector2>{vertexData,
-    //                                                                  reinterpret_cast<Vector2*>(vertexData.data() + attributeOffset),
-    //                                                                  segments + 2, std::ptrdiff_t(stride)};
-    //     attributeData[attributeIndex++] = Trade::MeshAttributeData{
-    //             Trade::MeshAttribute::TextureCoordinates, textureCoordinates};
-    //     attributeOffset += sizeof(Vector2);
-    // }
 
     CORRADE_INTERNAL_ASSERT(attributeIndex == attributeCount);
     CORRADE_INTERNAL_ASSERT(attributeOffset == stride);
 
     /* Fill the data. First is center, the first/last point on the edge is
        twice to close the circle properly. */
+
+    // for(UnsignedInt i = 0; i < circularPoints.size() + 1; i++) {
+    //     // float meshVecAng = atan2(points[i % points.size()].x(), points[i % points.size()].y());
+    //     // float r = 0.00000001f * hullPoint.norm();
+    //
+    //     // float r = 1;
+    //     // const Rad ang(Float(i+1)*angleIncrement);
+    //     // const std::pair<Float, Float> sincos = Math::sincos(ang);
+    //     // positions[i+1] = {sincos.second, sincos.first, 0.0f};
+    //     // normals[i+1] = {0.0f, 0.0f, 1.0f};
+    // }
+
+
+    // printf("Circular:%d\n", circularPoints.size());
+
     positions[0] = {};
     normals[0] = {0.0f, 0.0f, 1.0f};
-    // if(flags & Circle3DFlag::Tangents)
-    //     tangents[0] = {1.0f, 0.0f, 0.0f, 1.0f};
-    // if(flags & Circle3DFlag::TextureCoordinates)
-    //     textureCoordinates[0] = {0.5f, 0.5f};
-    const Rad angleIncrement(Constants::tau()/segments);
-    for(UnsignedInt i = 1; i != segments + 2; ++i) {
+    const Rad angleIncrement(Constants::tau()/circularPoints.size());
+
+    for(UnsignedInt i = 1; i != circularPoints.size() + 2; i++) {
         const Rad angle(Float(i - 1)*angleIncrement);
         const std::pair<Float, Float> sincos = Math::sincos(angle);
 
-        positions[i] = {sincos.second, sincos.first, 0.0f};
+        positions[i] = {circularPoints[i-1 % circularPoints.size()].x(), circularPoints[i-1 % circularPoints.size()].y(), 0.0f};
         normals[i] = {0.0f, 0.0f, 1.0f};
-        // if(flags & Circle3DFlag::Tangents)
-        //     tangents[i] = {1.0f, 0.0f, 0.0f, 1.0f};
-        // if(flags & Circle3DFlag::TextureCoordinates)
-        //     textureCoordinates[i] = positions[i].xy()*0.5f + Vector2{0.5f};
     }
+
 
     return Trade::MeshData{MeshPrimitive::TriangleFan,
                            std::move(vertexData), std::move(attributeData)};

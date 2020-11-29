@@ -100,10 +100,7 @@ void PlanarRegionCalculator::fit() {
     Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
     int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
     mixChannels(in, 6, &output.getRegionOutput(), 1, from_to, 6);
-    cout << "REACHED" << endl;
     output.setPatchData(output_6);
-
-    // cout << patchData << endl;
 
     int i = 0;
     int j = 0;

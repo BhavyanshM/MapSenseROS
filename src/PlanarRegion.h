@@ -11,17 +11,18 @@ class PlanarRegion {
 private:
     Vector3f normal;
     Vector3f center;
-    vector<Vector2f> vertices;
+    vector<Vector3f> vertices;
     int numPatches;
     int id;
 
 public:
     PlanarRegion(int id);
     void addPatch(Vector3f normal, Vector3f center);
-    void insertVertex(Vector2f vertex);
+    void insertVertex(Vector3f vertex);
+    void getClockWise2D(vector<Vector2f>& points);
     Vector3f getNormal();
     Vector3f getCenter();
-    vector<Vector2f> getVertices();
+    vector<Vector3f> getVertices();
     int getNumOfVertices();
 
     int getNumPatches();
