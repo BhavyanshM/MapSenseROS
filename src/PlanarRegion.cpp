@@ -58,7 +58,7 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
             AngleAxisf angleAxis(angle, axis);
             Quaternionf quat(angleAxis);
             Vector3f meshVec = quat._transformVector(vec);
-            if(meshVec.norm() < 3){
+            if(meshVec.norm() < 2){
                 points.emplace_back(Vector2f(2*meshVec.x(), 2*meshVec.y()));
                 // printf("MeshVecInner:(%.2lf, %.2lf)\n", meshVec.x(), meshVec.y());
             }
@@ -69,10 +69,11 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
     north.normalize();
     sort(points.begin(), points.end(), [=](const Vector2f& a, Vector2f& b) -> bool
     {
-        return acos(north.dot(a)/a.norm()) < acos(north.dot(b)/b.norm());
+        return atan2(a.y(), a.x()) < atan2(b.y(), b.x());
     });
+    points.emplace_back(Vector2f(points[0].x(), points[0].y()));
     for(int i = 0; i<points.size(); i++){
-        printf("MeshVecOuter:(%.2lf, %.2lf)\n", points[i].x(), points[i].y());
+        printf("%.2lf, %.2lf\n", points[i].x(), points[i].y());
     }
     // printf("STOP\n");
 }

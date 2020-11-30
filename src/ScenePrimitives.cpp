@@ -185,30 +185,30 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
         new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {1.0f, 0.0f, 0.3f}};
     }
 
-    for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
-        for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
-            uint8_t edges = _regionCalculator->output.getPatchData().at<uint8_t>(i, j);
-            if (edges == 255){
-                Vec6f patch = _regionCalculator->output.getRegionOutput().at<Vec6f>(i, j);
-                // cout << patch << endl;
-                Vector3 up = {0,0,1};
-                Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
-                Vector3 axis = Math::cross(up, dir).normalized();
-                Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
-
-                auto &plane = _sensor->addChild<Object3D>();
-                plane.scale({0.0004,0.0004,0.0004});
-                plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
-                // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-                if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
-                    Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-                    plane.transformLocal(Matrix4(quat.toMatrix()));
-                }
-                new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
-            }
-
-        }
-    }
+    // for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
+    //     for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
+    //         uint8_t edges = _regionCalculator->output.getPatchData().at<uint8_t>(i, j);
+    //         if (edges == 255){
+    //             Vec6f patch = _regionCalculator->output.getRegionOutput().at<Vec6f>(i, j);
+    //             // cout << patch << endl;
+    //             Vector3 up = {0,0,1};
+    //             Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
+    //             Vector3 axis = Math::cross(up, dir).normalized();
+    //             Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+    //
+    //             auto &plane = _sensor->addChild<Object3D>();
+    //             plane.scale({0.0004,0.0004,0.0004});
+    //             plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
+    //             // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+    //             if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
+    //                 Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+    //                 plane.transformLocal(Matrix4(quat.toMatrix()));
+    //             }
+    //             new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
+    //         }
+    //
+    //     }
+    // }
 
 
 }

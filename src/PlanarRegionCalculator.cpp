@@ -220,6 +220,6 @@ void PlanarRegionCalculator::launch_tester() {
     // imshow("RealSense L515 Depth", dispDepth);
     // imshow("RealSense L515 Color", inputColor);
     // int code = waitKeyEx(0);
-
+    //
     // if (code == 1048689) exit(1);
 }
