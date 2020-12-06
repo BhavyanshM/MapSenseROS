@@ -92,8 +92,11 @@ void PlanarRegionCalculator::fit() {
     /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
     commandQueue.finish();
 
-    // debug.convertTo(debug, -1, 4, 100);
-    // imshow("Output", inputDepth);
+
+    // debug.convertTo(debug, -1, 10, 100);
+    // namedWindow("DebugOutput", WINDOW_NORMAL);
+    // resizeWindow("DebugOutput", (int)(debug.cols*1.5), (int)(debug.rows*1.5));
+    // imshow("DebugOutput", debug);
     // waitKey(0);
 
     /* Combine the CPU buffers into single image with multiple channels */
@@ -215,7 +218,7 @@ void PlanarRegionCalculator::launch_tester() {
     // output.drawGraph(dispDepth);
 
     // namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
-    // resizeWindow("RealSense L515 Depth", inputDepth.cols*2, inputDepth.rows*2);
+    // resizeWindow("RealSense L515 Depth", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
     // setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
     // imshow("RealSense L515 Depth", dispDepth);
     // imshow("RealSense L515 Color", inputColor);

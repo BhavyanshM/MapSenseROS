@@ -23,7 +23,7 @@ Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> plan
 
     vector<Vector2f> circularPoints;
     planarRegion->getClockWise2D(circularPoints);
-    printf("CircularPoints:%d\n", circularPoints.size());
+    // printf("CircularPoints:%d\n", circularPoints.size());
 
     CORRADE_ASSERT(circularPoints.size() >= 3, "PlanarRegion->getNumOfVertices() must be >= 3",
                    (Trade::MeshData{MeshPrimitive::TriangleFan, 0}));

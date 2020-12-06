@@ -294,11 +294,89 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
 bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
     float3 vec = ag - bg;
     float dist = length(vec);
-    if (dist < 0.2){
+    if (dist < 0.13){
         return true;
     }else {
         return false;
     }
+}
+
+int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0){
+    uint Z = 0;
+    int count = 0;
+    int xs[8], ys[8], values[8];
+    int total_unique = 0;
+
+    /* Develop depth profile for 8x8 patch. */
+    for(int i = 0; i<SIZE_X; i++){
+        for(int j = 0; j<SIZE_Y; j++){
+            count++;
+            int gx = x*SIZE_X + i;
+            int gy = y*SIZE_Y + j;
+
+            int2 pos = (int2)(gx,gy);
+            Z = read_imageui(in, pos).x;
+            if (Z != 0){
+                if (total_unique == 0){
+                    xs[total_unique] = gx;
+                    ys[total_unique] = gy;
+                    values[total_unique] = Z;
+                    total_unique++;
+                }{
+                    int unique = 0;
+                    for(int k = 0; k<total_unique; k++){
+
+                        if ((Z - values[k])*(Z - values[k]) > 2000){
+                            // if (x==0 && y==0)printf("Compare(%d,%d,%d)(%d,%d)\n", Z, abs(Z - values[k]), values[k], unique, total_unique);
+                            unique++;
+
+                        }
+                    }
+                    if (unique == total_unique && total_unique < 8){
+                        // if (x==0 && y==0)printf("Insert(%d,%d)(%d,%d)\n", gx, gy, unique, total_unique);
+                        xs[total_unique] = gx;
+                        ys[total_unique] = gy;
+                        values[total_unique] = Z;
+                        total_unique++;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /* Use the depth profile to fill in the gaps. */
+    for(int i = 0; i<SIZE_X; i++){
+        for(int j = 0; j<SIZE_Y; j++){
+            count++;
+            int gx = x*SIZE_X + i;
+            int gy = y*SIZE_Y + j;
+
+            int2 pos = (int2)(gx,gy);
+            Z = read_imageui(in, pos).x;
+
+            if (Z == 0){
+                float minDist = 10000000;
+                float curDist = 0;
+                int minIndex = 0;
+                for(int m = 0; m<total_unique; m++){
+                    curDist = length((float2)(gx,gy) - (float2)(xs[m], ys[m]));
+                    // if (x==0 && y==0) printf("Filling(%d,%d)-(%d,%d):%.2lf\n", gx,gy,xs[m],ys[m],curDist);
+                    if (curDist < minDist){
+                        minDist = curDist;
+                        minIndex = m;
+                    }
+                }
+                Z = values[minIndex];
+                // if (x==0 && y==0) printf("%d\t",Z);
+            }
+
+            // if (x == 10 && y == 10) printf("Depth:%hu\n",Z);
+            write_imageui(out0, pos, (uint4)(Z,0,0,0));
+        }
+        // if (x==0 && y==0) printf("\n");
+    }
+
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++ OPEN_CL KERNELS BEGIN HERE ++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -306,26 +384,13 @@ bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
 
 /* Filter Kernel: Filters all pixels within a patch on depth map. Removes outliers, flying points, dead pixels and measurement
  * noise. */
- void kernel filterKernel(read_only image2d_t in, read_only image2d_t in_color, write_only image2d_t out0){
+void kernel filterKernel(read_only image2d_t in, read_only image2d_t in_color, write_only image2d_t out0){
     int y = get_global_id(0);
     int x = get_global_id(1);
 
     if(y >= 0 && y < 60 && x >= 0 && x < 80){
 
-        uint Z = 0;
-        int count = 0;
-        for(int i = 0; i<SIZE_X; i++){
-            for(int j = 0; j<SIZE_Y; j++){
-                count++;
-                int gx = x*SIZE_X + i;
-                int gy = y*SIZE_Y + j;
-
-                int2 pos = (int2)(gx,gy);
-                Z = read_imageui(in, pos).x;
-                // if (x == 10 && y == 10) printf("Depth:%hu\n",Z);
-                write_imageui(out0, pos, (uint4)(Z,0,0,0));
-            }
-        }
+        filter_depth(in, x, y, out0);
 
     }
 }
@@ -347,7 +412,7 @@ void kernel packKernel(  read_only image2d_t in,
         float3 normal = estimate_normal(in, x, y);
         float3 centroid = estimate_centroid(in, x, y);
 
-        if(x==24 && y==50) printf("Normal:(%.4lf, %.4lf, %.4lf)\n", normal.x, normal.y, normal.z);
+        // if(x==24 && y==50) printf("Normal:(%.4lf, %.4lf, %.4lf)\n", normal.x, normal.y, normal.z);
 
         write_imagef(out0, (int2)(x,y), (float4)(normal.x,0,0,0));
         write_imagef(out1, (int2)(x,y), (float4)(normal.y,0,0,0));

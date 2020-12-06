@@ -42,7 +42,7 @@ int PlanarRegion::getId() {
 }
 
 void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
-    printf("START \t");
+    // printf("START \t");
     Vector3f center = this->getCenter();
     Vector3f normal = this->getNormal();
 
@@ -64,7 +64,7 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
             }
         }
     }
-    printf("Points:%d\n", points.size());
+    // printf("Points:%d\n", points.size());
     Vector2f north(1, 0);
     north.normalize();
     sort(points.begin(), points.end(), [=](const Vector2f& a, Vector2f& b) -> bool
@@ -72,9 +72,9 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
         return atan2(a.y(), a.x()) < atan2(b.y(), b.x());
     });
     points.emplace_back(Vector2f(points[0].x(), points[0].y()));
-    for(int i = 0; i<points.size(); i++){
-        printf("%.2lf, %.2lf\n", points[i].x(), points[i].y());
-    }
+    // for(int i = 0; i<points.size(); i++){
+    //     printf("%.2lf, %.2lf\n", points[i].x(), points[i].y());
+    // }
     // printf("STOP\n");
 }
 
