@@ -19,11 +19,12 @@ public:
     PlanarRegion(int id);
     void addPatch(Vector3f normal, Vector3f center);
     void insertVertex(Vector3f vertex);
+
     void getClockWise2D(vector<Vector2f>& points);
+    int getNumOfVertices();
     Vector3f getNormal();
     Vector3f getCenter();
     vector<Vector3f> getVertices();
-    int getNumOfVertices();
 
     int getNumPatches();
 

@@ -4,20 +4,14 @@
 #include <Magnum/SceneGraph/MatrixTransformation3D.h>
 #include <Magnum/SceneGraph/Camera.h>
 #include <Magnum/SceneGraph/Drawable.h>
-
 #include <Magnum/GL/Mesh.h>
-
 #include <Magnum/ImGuiIntegration/Context.h>
 #include <Magnum/ImGuiIntegration/Context.hpp>
-
 #include <Magnum/Primitives/Plane.h>
 #include <Magnum/Primitives/Cube.h>
 #include <Magnum/Primitives/Circle.h>
-
-
 #include <Magnum/Primitives/Circle.h>
 #include <Magnum/Primitives/Axis.h>
-
 #include <Magnum/Trade/MeshData.h>
 #include <Magnum/Shaders/Phong.h>
 #include <Magnum/MeshTools/Compile.h>
@@ -26,11 +20,13 @@
 #include <Magnum/Math/Matrix4.h>
 #include <Magnum/Math/Quaternion.h>
 #include <Magnum/MeshTools/Interleave.h>
-#include <iostream>
 #include <Magnum/GL/Renderer.h>
+
+#include <iostream>
 #include <imgui.h>
-#include "PlanarRegionCalculator.h"
+
 #include "MeshGenerator.h"
+#include "PlanarRegionCalculator.h"
 
 using namespace Magnum;
 using namespace Math::Literals;
@@ -72,6 +68,7 @@ private:
     SceneGraph::DrawableGroup3D _drawables;
 
     PlanarRegionCalculator* _regionCalculator;
+    SensorDataReceiver* _dataReceiver;
     int count = 0;
 };
 
@@ -133,6 +130,8 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _regionCalculator->init_opencl();
     _regionCalculator->launch_tester();
 
+    _dataReceiver = new SensorDataReceiver();
+
     /* TODO: Check that the appropriate flags for renderer are set*/
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
@@ -158,32 +157,34 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _camOriginCube->scale({0.0004f, 0.0004f, 0.0004f});
     new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
-    // for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
-    //     shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-    //     Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
-    //     Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
-    //     Vector3 up = {0,0,-1};
-    //     Vector3 dir = {normal[0], normal[1], -normal[2]};
-    //     Vector3 axis = Math::cross(up, dir).normalized();
-    //     Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
-    //
-    //     auto &region = _sensor->addChild<Object3D>();
-    //     // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
-    //     float regionScale = 1.2f;
-    //     region.scale({ regionScale*0.004f, regionScale*0.004f, regionScale*0.004f});
-    //     region.translate({ 0.01f*center[0], 0.01f*center[1], 0.01f*center[2]});
-    //     // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-    //
-    //     axis = axis.normalized();
-    //     // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
-    //     if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
-    //         Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-    //         region.transformLocal(Matrix4(quat.toMatrix()));
-    //     }
-    //     // GL::Buffer bufferToPack;
-    //     // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
-    //     new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {1.0f, 0.0f, 0.3f}};
-    // }
+    for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
+        shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
+        Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
+        Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
+        Vector3 up = {0,0,-1};
+        Vector3 dir = {normal[0], normal[1], -normal[2]};
+        Vector3 axis = Math::cross(up, dir).normalized();
+        Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+
+
+        auto &region = _sensor->addChild<Object3D>();
+        // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
+        float regionScale = 1.2f;
+        region.scale({ regionScale*0.004f, regionScale*0.004f, regionScale*0.004f});
+        region.translate({ 0.01f*center[0], 0.01f*center[1], 0.01f*center[2]});
+        // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+
+        axis = axis.normalized();
+        // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
+        if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
+            Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+            region.transformLocal(Matrix4(quat.toMatrix()));
+        }
+        // GL::Buffer bufferToPack;
+        // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
+        cout << "REACHED:" << _regionCalculator->planarRegionList.size() << endl;
+        new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {1.0f, 0.0f, 0.3f}};
+    }
 
     for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
         for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
@@ -206,7 +207,6 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
                 }
                 new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
             }
-
         }
     }
 
@@ -214,11 +214,47 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 }
 
 void MyApplication::tickEvent() {
-    // auto &cube = _scene.addChild<Object3D>();
-    // cube.translate({0.01, 0.01, 0.01});
-    // printf("%f,%f,%f\n",0.01,0.01,0.01);
-    // cube.scale({0.01, 0.01, 0.01});
-    // new RedCubeDrawable{cube, &_drawables};
+
+    // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
+    dataReceiver.load_sample_depth("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", inputDepth);
+    dataReceiver.load_sample_color("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", inputColor);
+
+    // medianBlur(inputDepth, inputDepth, 5);
+
+    auto start = high_resolution_clock::now();
+
+    this->fit(); // Generate planar regions from depth map and color image.
+
+
+    mapFrameProcessor.generateSegmentation(output, planarRegionList);
+
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end - start).count();
+    ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
+
+    //
+    // for (int i = 0; i < SUB_H; i++) {
+    //     line(inputDepth, cv::Point(0, i * 8), cv::Point(WIDTH, i * 8), Scalar(255, 255, 0), 1);
+    // }
+    // for (int i = 0; i < SUB_W; i++) {
+    //     line(inputDepth, cv::Point(i * 8, 0), cv::Point(i * 8, HEIGHT), Scalar(255, 255, 0), 1);
+    // }
+
+    inputDepth.convertTo(inputDepth, -1, 10, 100);
+    Mat dispDepth;
+    inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
+    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+
+    // output.drawGraph(dispDepth);
+
+    // namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
+    // resizeWindow("RealSense L515 Depth", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
+    // setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
+    // imshow("RealSense L515 Depth", dispDepth);
+    // imshow("RealSense L515 Color", inputColor);
+    // int code = waitKeyEx(0);
+    //
+    // if (code == 1048689) exit(1);
 }
 
 void MyApplication::viewportEvent(ViewportEvent& event) {

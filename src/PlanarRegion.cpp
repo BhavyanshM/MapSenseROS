@@ -60,7 +60,8 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
             Vector3f meshVec = quat._transformVector(vec);
             if(meshVec.norm() < 2){
                 points.emplace_back(Vector2f(2*meshVec.x(), 2*meshVec.y()));
-                // printf("MeshVecInner:(%.2lf, %.2lf)\n", meshVec.x(), meshVec.y());
+            }else{
+                printf("Singularity:(%.2lf, %.2lf, %.2lf)\n", meshVec.x(), meshVec.y(), meshVec.norm());
             }
         }
     }

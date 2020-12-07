@@ -44,12 +44,14 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
 	FILES
-	PlanarRegions.msg
+	PlanarRegionList.msg
+	PlanarRegionMessage.msg
 )
 
 generate_messages(
 	DEPENDENCIES
 	std_msgs
+	geometry_msgs
 )
 
 catkin_package(
@@ -100,6 +102,7 @@ target_link_libraries(planar_region_publisher
 	MagnumIntegration::ImGui
 	Eigen3::Eigen
 )
+add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 
 add_executable(ImGuiEx src/ImGuiExample.cpp)
 target_link_libraries(ImGuiEx PRIVATE
@@ -119,9 +122,8 @@ set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #target_include_directories(magnum-primitives PUBLIC "../eigen-3.3.7")
 
 
-#add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 
-
+# map_sense_generate_messages_cpp
 
 
 

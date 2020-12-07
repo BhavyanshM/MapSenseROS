@@ -23,19 +23,21 @@ using namespace std;
 using namespace chrono;
 using namespace cv;
 using namespace sensor_msgs;
-using namespace geometry_msgs;
-using namespace map_sense;
 
 class SensorDataReceiver {
 public:
     ImageConstPtr sensorColorMessage;
     ImageConstPtr sensorDepthMessage;
 
+    bool nextDepthAvailable = false;
+    bool nextColorAvailable = false;
+
     void depthCallback(const ImageConstPtr &depthMsg);
     void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg);
     void get_sample_depth(Mat depth, float mean, float stddev);
     void get_sample_color(Mat color);
 
+    void get_next_depth(Mat& depth);
     void load_sample_depth(String filename, Mat& depth);
     void load_sample_color(String filename, Mat& color);
 

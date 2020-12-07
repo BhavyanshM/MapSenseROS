@@ -17,7 +17,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
                 int num = 0;
                 shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
                 dfs(i, j, components, num, debug, framePatch, planarRegion);
-                if (num > 20){
+                if (num > 20 && num - planarRegion->getNumOfVertices() > 20){
                     planarRegionList.emplace_back(planarRegion);
                     components++;
                     sizes.push_back(num);
@@ -56,7 +56,6 @@ void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, u
 
     // imshow("Debug", debug);
     // if(waitKeyEx(1) == 1048689) exit(1);
-
 }
 
 // PlanarRegionPolygonizer

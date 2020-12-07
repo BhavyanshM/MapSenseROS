@@ -29,13 +29,15 @@
 #include "SensorDataReceiver.h"
 #include "PlanarRegion.h"
 
+#include "map_sense/PlanarRegionList.h"
+
 using namespace ros;
 using namespace std;
 using namespace chrono;
 using namespace cv;
-using namespace sensor_msgs;
-using namespace geometry_msgs;
-using namespace map_sense;
+
+
+
 
 class PlanarRegionCalculator {
 public:
@@ -46,6 +48,8 @@ public:
     cl::ImageFormat uint8_img, float_img;
     cl::size_t<3> origin, size;
     cl::Event event;
+
+    Publisher planarRegionPub;
 
     ImageConstPtr colorMessage;
     ImageConstPtr depthMessage;

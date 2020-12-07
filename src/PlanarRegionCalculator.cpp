@@ -1,6 +1,14 @@
 #include "PlanarRegionCalculator.h"
 
-
+void launch_ros_node(int argc, char **argv) {
+    init(argc, argv, "PlanarRegionPublisher");
+    NodeHandle nh;
+    planarRegionPub = nh.advertise<PlanarRegionList>("/map/regions/test", 10);
+    Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
+    Subscriber subColor = nh.subscribe("/camera/color/image_raw", 3, colorCallback);
+    Timer timer1 = nh.createTimer(Duration(0.1), processDataCallback);
+    spin();
+}
 
 /*
  * The following are the intrinsic parameters of the depth camera as recorded from L515 RealSense
@@ -55,7 +63,7 @@ void PlanarRegionCalculator::fit() {
     mergeKernel.setArg(5, clOutput_5);
     mergeKernel.setArg(6, clOutput_6);
 
-    // kernel.setArg(4, clDebug);
+    // kernel.setArg(4, clDebug); /* For whenever clDebug may be required. */
 
     /* Setup size for reading patch-wise kernel maps from GPU */
     cl::size_t<3> regionOutputSize;

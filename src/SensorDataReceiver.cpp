@@ -8,6 +8,10 @@ void SensorDataReceiver::colorCallback(const sensor_msgs::ImageConstPtr &colorMs
     sensorColorMessage = colorMsg;
 }
 
+void SensorDataReceiver::get_next_depth(Mat& depth){
+
+}
+
 void SensorDataReceiver::load_sample_depth(String filename, Mat& depth){
     depth = imread(filename, IMREAD_ANYDEPTH);
 }
