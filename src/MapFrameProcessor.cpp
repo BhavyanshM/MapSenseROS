@@ -51,11 +51,11 @@ void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, u
     }
     if (count != 8) {
         planarRegion->insertVertex(Vector3f(patch[3], patch[4], patch[5]));
-        // circle(debug, Point((y)*10, (x)*10), 2, Scalar(255,255,255), -1);
+        circle(debug, Point((y)*10, (x)*10), 2, Scalar(255,255,255), -1);
     }
 
-    // imshow("Debug", debug);
-    // if(waitKeyEx(1) == 1048689) exit(1);
+    imshow("Debug", debug);
+    if(waitKeyEx(1) == 1048689) exit(1);
 }
 
 // PlanarRegionPolygonizer

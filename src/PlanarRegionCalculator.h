@@ -51,8 +51,7 @@ public:
 
     Publisher planarRegionPub;
 
-    ImageConstPtr colorMessage;
-    ImageConstPtr depthMessage;
+    SensorDataReceiver* _dataReceiver;
 
     const int SUB_H = 60;
     const int SUB_W = 80;
@@ -66,6 +65,8 @@ public:
     void fit();
     void init_opencl();
     void launch_tester();
+    void generate_regions(SensorDataReceiver* receiver);
+
 };
 
 

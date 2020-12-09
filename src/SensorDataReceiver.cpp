@@ -1,16 +1,95 @@
 #include "SensorDataReceiver.h"
 
 void SensorDataReceiver::depthCallback(const ImageConstPtr &depthMsg) {
-    sensorDepthMessage = depthMsg;
+    ROS_INFO("Depth Callback", depthMsg->header.seq);
+    depthMessage = depthMsg;
 }
 
 void SensorDataReceiver::colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
-    sensorColorMessage = colorMsg;
+    colorMessage = colorMsg;
 }
 
-void SensorDataReceiver::get_next_depth(Mat& depth){
+void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
+    cv_bridge::CvImagePtr img_ptr_depth;
+    cv_bridge::CvImagePtr img_ptr_color;
+    if (colorMessage != nullptr && depthMessage != nullptr) {
+        try {
+            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
 
+            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
+            color = img_ptr_color->image;
+
+            img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
+            depth = img_ptr_depth->image;
+            // depthImg.convertTo(depthImg, -1, 10, 100);
+
+            imshow("RealSense L515 Depth", depth);
+            imshow("RealSense L515 Color", color);
+            int code = waitKeyEx(1);
+            if (code == 1048689) exit(1);
+            if (code == 1048691) {
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depth);
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", color);
+                ROS_INFO("Pressed S %d", code);
+            }
+            // ROS_INFO("Pressed: %d", code);
+
+        } catch (cv_bridge::Exception &e) {
+            ROS_ERROR("Could not convert to image!");
+        }
+    }
 }
+
+void SensorDataReceiver::processDataCallback(const TimerEvent &) {
+    cv_bridge::CvImagePtr img_ptr_depth;
+    cv_bridge::CvImagePtr img_ptr_color;
+    if (colorMessage != nullptr && depthMessage != nullptr) {
+        try {
+            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
+
+            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
+            Mat colorImg = img_ptr_color->image;
+
+            img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
+            Mat depthImg = img_ptr_depth->image;
+            // depthImg.convertTo(depthImg, -1, 10, 100);
+
+            Mat output(depthImg.rows, depthImg.cols, CV_16UC1);
+            // fit(colorImg, depthImg, output);
+
+            imshow("RealSense L515 Depth", depthImg);
+            imshow("RealSense L515 Color", colorImg);
+            int code = waitKeyEx(32);
+            if (code == 1048689) exit(1);
+            if (code == 1048691) {
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depthImg);
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", colorImg);
+                ROS_INFO("Pressed S %d", code);
+            }
+            // ROS_INFO("Pressed: %d", code);
+
+        } catch (cv_bridge::Exception &e) {
+            ROS_ERROR("Could not convert to image!");
+        }
+    }
+}
+
+void SensorDataReceiver::init_ros_node(int argc, char **argv) {
+    init(argc, argv, "PlanarRegionPublisher");
+    ROS_INFO("Starting ROS Node");
+    nh = new NodeHandle();
+    // planarRegionPub = nh.advertise<PlanarRegionList>("/map/regions/test", 10);
+    Subscriber subDepth = nh->subscribe("/camera/depth/image_rect_raw", 3, &SensorDataReceiver::depthCallback, this);
+    Subscriber subColor = nh->subscribe("/camera/color/image_raw", 3, &SensorDataReceiver::colorCallback, this);
+    // Timer timer1 = nh.createTimer(Duration(0.032), &SensorDataReceiver::processDataCallback, this);
+    // spin();
+}
+
+void SensorDataReceiver::spin_ros_node() {
+    ROS_INFO("SpinOnce");
+    spinOnce();
+}
+
 
 void SensorDataReceiver::load_sample_depth(String filename, Mat& depth){
     depth = imread(filename, IMREAD_ANYDEPTH);

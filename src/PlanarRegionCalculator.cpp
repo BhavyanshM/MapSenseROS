@@ -1,14 +1,5 @@
 #include "PlanarRegionCalculator.h"
 
-void launch_ros_node(int argc, char **argv) {
-    init(argc, argv, "PlanarRegionPublisher");
-    NodeHandle nh;
-    planarRegionPub = nh.advertise<PlanarRegionList>("/map/regions/test", 10);
-    Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
-    Subscriber subColor = nh.subscribe("/camera/color/image_raw", 3, colorCallback);
-    Timer timer1 = nh.createTimer(Duration(0.1), processDataCallback);
-    spin();
-}
 
 /*
  * The following are the intrinsic parameters of the depth camera as recorded from L515 RealSense
@@ -188,6 +179,24 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
         Vec6f patch = out.getRegionOutput().at<Vec6f>(y/8, x/8);
         printf("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3],patch[4],patch[5],patch[0],patch[1],patch[2]);
     }
+}
+
+void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver){
+    this->_dataReceiver = receiver;
+    // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
+    // _dataReceiver->load_sample_depth("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", inputDepth);
+    // _dataReceiver->load_sample_color("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", inputColor);
+
+    _dataReceiver->load_next_frame(inputDepth, inputColor);
+
+    auto start = high_resolution_clock::now();
+
+    this->fit(); // Generate planar regions from depth map and color image.
+    this->mapFrameProcessor.generateSegmentation(output, planarRegionList);
+
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end - start).count();
+    ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
 }
 
 void PlanarRegionCalculator::launch_tester() {
