@@ -29,6 +29,8 @@ public:
     ImageConstPtr colorMessage;
     ImageConstPtr depthMessage;
     NodeHandle* nh;
+    Subscriber subDepth;
+    Subscriber subColor;
 
 
     bool nextDepthAvailable = false;
@@ -44,7 +46,6 @@ public:
     void depthCallback(const ImageConstPtr &depthMsg);
     void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg);
 
-    void processDataCallback(const TimerEvent &);
     void init_ros_node(int argc, char **argv);
     void spin_ros_node();
 

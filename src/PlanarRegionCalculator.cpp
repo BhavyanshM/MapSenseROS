@@ -91,12 +91,13 @@ void PlanarRegionCalculator::fit() {
     /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
     commandQueue.finish();
 
+    ROS_INFO("Reached Fit");
 
-    // debug.convertTo(debug, -1, 10, 100);
-    // namedWindow("DebugOutput", WINDOW_NORMAL);
-    // resizeWindow("DebugOutput", (int)(debug.cols*1.5), (int)(debug.rows*1.5));
-    // imshow("DebugOutput", debug);
-    // waitKey(0);
+    debug.convertTo(debug, -1, 10, 100);
+    namedWindow("DebugOutput", WINDOW_NORMAL);
+    resizeWindow("DebugOutput", (int)(debug.cols*1.5), (int)(debug.rows*1.5));
+    imshow("DebugOutput", debug);
+    waitKey(1);
 
     /* Combine the CPU buffers into single image with multiple channels */
     Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
@@ -183,20 +184,35 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
 
 void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver){
     this->_dataReceiver = receiver;
-    // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
-    // _dataReceiver->load_sample_depth("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", inputDepth);
-    // _dataReceiver->load_sample_color("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", inputColor);
-
     _dataReceiver->load_next_frame(inputDepth, inputColor);
 
     auto start = high_resolution_clock::now();
 
     this->fit(); // Generate planar regions from depth map and color image.
     this->mapFrameProcessor.generateSegmentation(output, planarRegionList);
+    printf("Planar Regions Found: %d\n", planarRegionList.size());
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
+
+    /* Debugging and Visualization */
+    // inputDepth.convertTo(inputDepth, -1, 10, 100);
+    // Mat dispDepth;
+    // inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
+    // cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+    //
+    // output.drawGraph(dispDepth);
+    //
+    // namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
+    // resizeWindow("RealSense L515 Depth", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
+    // setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
+    // imshow("RealSense L515 Depth", dispDepth);
+    // imshow("RealSense L515 Color", inputColor);
+    // int code = waitKeyEx(0.1);
+    //
+    // if (code == 1048689) exit(1);
+
 }
 
 void PlanarRegionCalculator::launch_tester() {

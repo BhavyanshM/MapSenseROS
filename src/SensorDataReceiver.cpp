@@ -12,60 +12,29 @@ void SensorDataReceiver::colorCallback(const sensor_msgs::ImageConstPtr &colorMs
 void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
+    ROS_INFO("Loading Next Frame");
     if (colorMessage != nullptr && depthMessage != nullptr) {
         try {
-            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
+            ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
 
             img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
             color = img_ptr_color->image;
 
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             depth = img_ptr_depth->image;
-            // depthImg.convertTo(depthImg, -1, 10, 100);
 
-            imshow("RealSense L515 Depth", depth);
-            imshow("RealSense L515 Color", color);
+            // Mat dispDepth = depth.clone();
+            // dispDepth.convertTo(dispDepth, -1, 10, 100);
+            //
+            // imshow("RealSense L515 Depth", dispDepth);
+            imshow("RealSense L515 Color", depth);
             int code = waitKeyEx(1);
             if (code == 1048689) exit(1);
-            if (code == 1048691) {
-                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depth);
-                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", color);
-                ROS_INFO("Pressed S %d", code);
-            }
-            // ROS_INFO("Pressed: %d", code);
-
-        } catch (cv_bridge::Exception &e) {
-            ROS_ERROR("Could not convert to image!");
-        }
-    }
-}
-
-void SensorDataReceiver::processDataCallback(const TimerEvent &) {
-    cv_bridge::CvImagePtr img_ptr_depth;
-    cv_bridge::CvImagePtr img_ptr_color;
-    if (colorMessage != nullptr && depthMessage != nullptr) {
-        try {
-            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
-
-            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
-            Mat colorImg = img_ptr_color->image;
-
-            img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
-            Mat depthImg = img_ptr_depth->image;
-            // depthImg.convertTo(depthImg, -1, 10, 100);
-
-            Mat output(depthImg.rows, depthImg.cols, CV_16UC1);
-            // fit(colorImg, depthImg, output);
-
-            imshow("RealSense L515 Depth", depthImg);
-            imshow("RealSense L515 Color", colorImg);
-            int code = waitKeyEx(32);
-            if (code == 1048689) exit(1);
-            if (code == 1048691) {
-                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depthImg);
-                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", colorImg);
-                ROS_INFO("Pressed S %d", code);
-            }
+            // if (code == 1048691) {
+            //     imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depth);
+            //     imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", color);
+            //     ROS_INFO("Pressed S %d", code);
+            // }
             // ROS_INFO("Pressed: %d", code);
 
         } catch (cv_bridge::Exception &e) {
@@ -75,14 +44,20 @@ void SensorDataReceiver::processDataCallback(const TimerEvent &) {
 }
 
 void SensorDataReceiver::init_ros_node(int argc, char **argv) {
-    init(argc, argv, "PlanarRegionPublisher");
+    // Time::init();
     ROS_INFO("Starting ROS Node");
+    init(argc, argv, "PlanarRegionPublisher");
     nh = new NodeHandle();
+
+    AsyncSpinner spinner(4);
+    spinner.start();
     // planarRegionPub = nh.advertise<PlanarRegionList>("/map/regions/test", 10);
-    Subscriber subDepth = nh->subscribe("/camera/depth/image_rect_raw", 3, &SensorDataReceiver::depthCallback, this);
-    Subscriber subColor = nh->subscribe("/camera/color/image_raw", 3, &SensorDataReceiver::colorCallback, this);
+    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &SensorDataReceiver::depthCallback, this);
+    subColor = nh->subscribe("/camera/color/image_raw", 8, &SensorDataReceiver::colorCallback, this);
     // Timer timer1 = nh.createTimer(Duration(0.032), &SensorDataReceiver::processDataCallback, this);
     // spin();
+    // waitForShutdown();
+    ROS_INFO("Started ROS Node");
 }
 
 void SensorDataReceiver::spin_ros_node() {
