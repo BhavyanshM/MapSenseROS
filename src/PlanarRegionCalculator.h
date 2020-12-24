@@ -64,7 +64,7 @@ public:
 
     void fit();
     void init_opencl();
-    void launch_tester();
+    void launch_tester(string depthFile, string colorFile);
     void generate_regions(SensorDataReceiver* receiver);
 
 };

@@ -23,11 +23,11 @@ void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             depth = img_ptr_depth->image;
 
-            // Mat dispDepth = depth.clone();
-            // dispDepth.convertTo(dispDepth, -1, 10, 100);
+            Mat dispDepth = depth.clone();
+            dispDepth.convertTo(dispDepth, -1, 10, 100);
             //
-            // imshow("RealSense L515 Depth", dispDepth);
-            imshow("RealSense L515 Color", depth);
+            imshow("RealSense L515 Depth", dispDepth);
+            // imshow("RealSense L515 Color", depth);
             int code = waitKeyEx(1);
             if (code == 1048689) exit(1);
             // if (code == 1048691) {
@@ -52,8 +52,8 @@ void SensorDataReceiver::init_ros_node(int argc, char **argv) {
     AsyncSpinner spinner(4);
     spinner.start();
     // planarRegionPub = nh.advertise<PlanarRegionList>("/map/regions/test", 10);
-    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &SensorDataReceiver::depthCallback, this);
-    subColor = nh->subscribe("/camera/color/image_raw", 8, &SensorDataReceiver::colorCallback, this);
+    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 12, &SensorDataReceiver::depthCallback, this);
+    subColor = nh->subscribe("/camera/color/image_raw", 12, &SensorDataReceiver::colorCallback, this);
     // Timer timer1 = nh.createTimer(Duration(0.032), &SensorDataReceiver::processDataCallback, this);
     // spin();
     // waitForShutdown();

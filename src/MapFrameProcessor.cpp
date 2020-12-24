@@ -55,7 +55,7 @@ void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, u
     region[x][y] = component;
     Vec6f patch = inputFrame.getRegionOutput().at<Vec6f>(x,y);
     planarRegion->addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
-    // circle(debug, Point((y)*10, (x)*10), 2, Scalar((component+1)*231 % 255,(component+1)*123 % 255,(component+1)*312 % 255), -1);
+    circle(debug, Point((y)*10, (x)*10), 2, Scalar((component+1)*231 % 255,(component+1)*123 % 255,(component+1)*312 % 255), -1);
 
     int count = 0;
     for (int i = 0; i < 8; i++) {
@@ -71,12 +71,11 @@ void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, u
     // printf("\n");
     if (count != 8) {
         planarRegion->insertVertex(Vector3f(patch[3], patch[4], patch[5]));
-        // circle(debug, Point((y)*10, (x)*10), 2, Scalar(255,255,255), -1);
+        circle(debug, Point((y)*10, (x)*10), 2, Scalar(255,255,255), -1);
     }
 
     // imshow("Debugger", debug);
-    // waitKey(0.1);
-    // if(waitKeyEx(0.1) == 1048689) exit(1);
+    // waitKey(8);
 }
 
 // PlanarRegionPolygonizer

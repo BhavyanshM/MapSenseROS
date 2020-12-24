@@ -1,7 +1,7 @@
 #include "MeshGenerator.h"
 
 Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> planarRegion) {
-
+    printf("Generating Mesh\n");
     vector<Vector2f> circularPoints;
     planarRegion->getClockWise2D(circularPoints);
 
@@ -31,7 +31,7 @@ Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> plan
         positions[i] = {circularPoints[i-1 % circularPoints.size()].x(), circularPoints[i-1 % circularPoints.size()].y(), 0.0f};
         normals[i] = {0.0f, 0.0f, 1.0f};
     }
-
+    printf("Mesh Generated\n");
     return Trade::MeshData{MeshPrimitive::TriangleFan, std::move(vertexData), std::move(attributeData)};
 }
 

@@ -1,112 +1,4 @@
-#include <Magnum/GL/DefaultFramebuffer.h>
-#include <Magnum/Platform/Sdl2Application.h>
-#include <Magnum/SceneGraph/Scene.h>
-#include <Magnum/SceneGraph/MatrixTransformation3D.h>
-#include <Magnum/SceneGraph/Camera.h>
-#include <Magnum/SceneGraph/Drawable.h>
-#include <Magnum/GL/Mesh.h>
-#include <Magnum/ImGuiIntegration/Context.h>
-#include <Magnum/ImGuiIntegration/Context.hpp>
-#include <Magnum/Primitives/Plane.h>
-#include <Magnum/Primitives/Cube.h>
-#include <Magnum/Primitives/Circle.h>
-#include <Magnum/Primitives/Circle.h>
-#include <Magnum/Primitives/Axis.h>
-#include <Magnum/Trade/MeshData.h>
-#include <Magnum/Shaders/Phong.h>
-#include <Magnum/MeshTools/Compile.h>
-#include <Magnum/GL/Mesh.h>
-#include <Magnum/Math/Color.h>
-#include <Magnum/Math/Matrix4.h>
-#include <Magnum/Math/Quaternion.h>
-#include <Magnum/MeshTools/Interleave.h>
-#include <Magnum/GL/Renderer.h>
-
-#include <iostream>
-#include <imgui.h>
-
-#include "MeshGenerator.h"
-#include "PlanarRegionCalculator.h"
-
-using namespace Magnum;
-using namespace Math::Literals;
-
-
-typedef SceneGraph::Object<SceneGraph::MatrixTransformation3D> Object3D;
-typedef SceneGraph::Scene<SceneGraph::MatrixTransformation3D> Scene3D;
-
-class MyApplication : public Platform::Application {
-public:
-    explicit MyApplication(const Arguments &arguments);
-
-private:
-    void drawEvent() override;
-    void tickEvent() override;
-
-    void mousePressEvent(MouseEvent &event) override;
-    void mouseReleaseEvent(MouseEvent& event) override;
-    void mouseMoveEvent(MouseMoveEvent &event) override;
-    void mouseScrollEvent(MouseScrollEvent &event) override;
-
-    void viewportEvent(ViewportEvent& event) override;
-
-    ImGuiIntegration::Context _imgui{NoCreate};
-    Color4 _clearColor = 0x72909aff_rgbaf;
-    Float _floatValue = 0.0f;
-    bool _showDemoWindow = true;
-    bool _showAnotherWindow = false;
-
-    Scene3D _scene;
-    Object3D *_camGrandParent;
-    Object3D *_camParent;
-    Object3D *_camObject;
-    Object3D *_camOriginCube;
-    Object3D *_sensor;
-    Object3D *_sensorAxes;
-    SceneGraph::Camera3D *_camera;
-
-    SceneGraph::DrawableGroup3D _drawables;
-
-    PlanarRegionCalculator* _regionCalculator;
-    SensorDataReceiver* _dataReceiver;
-    int count = 0;
-};
-
-class RedCubeDrawable : public SceneGraph::Drawable3D {
-public:
-    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData, Vector3 color) :
-        SceneGraph::Drawable3D{object, group} {
-        _color = color;
-        _mesh = MeshTools::compile(meshData);
-    }
-
-
-    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, GL::Buffer& vertexBuffer, Vector3 color) :
-            SceneGraph::Drawable3D{object, group} {
-        _color = color;
-        _mesh.setPrimitive(MeshPrimitive::TriangleFan)
-            .addVertexBuffer(vertexBuffer, 0, Position{})
-            .setCount(vertexBuffer.size());
-    }
-
-private:
-    GL::Mesh _mesh;
-    Shaders::Phong _shader;
-    Vector3 _color;
-
-    void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override {
-
-        // _mesh.setPrimitive(GL::MeshPrimitive::Points);
-        _shader.setDiffuseColor(0xa5c9ea_rgbf)
-                .setLightColor(Color3{1.0f})
-                .setLightPosition({0.0f, 2.0f, 0.0f})
-                .setAmbientColor(_color)
-                .setTransformationMatrix(transformationMatrix)
-                .setNormalMatrix(transformationMatrix.normalMatrix())
-                .setProjectionMatrix(camera.projectionMatrix())
-                .draw(_mesh);
-    }
-};
+#include "ScenePrimitives.h"
 
 MyApplication::MyApplication(const Arguments &arguments) : Platform::Application{arguments,
                                                                                  Configuration{}.setTitle("Magnum ImGui Application")
@@ -127,7 +19,7 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
     /* TODO: Instantiate the Information Processors */
     _dataReceiver = new SensorDataReceiver();
-    _dataReceiver->init_ros_node(arguments.argc, arguments.argv);
+    // _dataReceiver->init_ros_node(arguments.argc, arguments.argv);
 
     _regionCalculator = new PlanarRegionCalculator();
     _regionCalculator->init_opencl();
@@ -157,74 +49,76 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
 
     _camOriginCube = new Object3D{_camGrandParent};
-    _camOriginCube->scale({0.0004f, 0.0004f, 0.0004f});
+    _camOriginCube->scale({0.0001f, 0.0001f, 0.0001f});
     new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
     // setMinimalLoopPeriod(32); /* Needs to be less than 30-32 milliseconds for real-time performance */
 
     /* --------------------------------------- For Testing Purposes Only --------------------------------------------*/
-    // _regionCalculator->launch_tester();
-    // for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
-    //     shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-    //     Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
-    //     Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
-    //     Vector3 up = {0,0,-1};
-    //     Vector3 dir = {normal[0], normal[1], -normal[2]};
-    //     Vector3 axis = Math::cross(up, dir).normalized();
-    //     Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
-    //
-    //
-    //     auto &region = _sensor->addChild<Object3D>();
-    //     // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
-    //     float regionScale = 1.2f;
-    //     region.scale({ regionScale*0.004f, regionScale*0.004f, regionScale*0.004f});
-    //     region.translate({ 0.01f*center[0], 0.01f*center[1], 0.01f*center[2]});
-    //     // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-    //
-    //     axis = axis.normalized();
-    //     // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
-    //     if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
-    //         Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-    //         region.transformLocal(Matrix4(quat.toMatrix()));
-    //     }
-    //     // GL::Buffer bufferToPack;
-    //     // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
-    //     cout << "REACHED:" << _regionCalculator->planarRegionList.size() << endl;
-    //     new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {1.0f, 0.0f, 0.3f}};
-    // }
-    //
-    // for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
-    //     for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
-    //         uint8_t edges = _regionCalculator->output.getPatchData().at<uint8_t>(i, j);
-    //         if (edges == 255){
-    //             Vec6f patch = _regionCalculator->output.getRegionOutput().at<Vec6f>(i, j);
-    //             // cout << patch << endl;
-    //             Vector3 up = {0,0,1};
-    //             Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
-    //             Vector3 axis = Math::cross(up, dir).normalized();
-    //             Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
-    //
-    //             auto &plane = _sensor->addChild<Object3D>();
-    //             plane.scale({0.0004,0.0004,0.0004});
-    //             plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
-    //             // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-    //             if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
-    //                 Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-    //                 plane.transformLocal(Matrix4(quat.toMatrix()));
-    //             }
-    //             new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
-    //         }
-    //     }
-    // }
+    _regionCalculator->launch_tester(appState.getDepthFile(), appState.getColorFile());
+//     for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
+//         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
+//         Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
+//         Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
+//         Vector3 up = {0,0,-1};
+//         Vector3 dir = {normal[0], normal[1], -normal[2]};
+//         Vector3 axis = Math::cross(up, dir).normalized();
+//         Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+//
+//
+//         auto &region = _sensor->addChild<Object3D>();
+//         // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
+//         float regionScale = 1.2f;
+//         region.scale({ regionScale*0.004f, regionScale*0.004f, regionScale*0.004f});
+//         region.translate({ 0.01f*center[0], 0.01f*center[1], 0.01f*center[2]});
+//         // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+//
+//         axis = axis.normalized();
+//         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
+//         if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
+//             Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+//             region.transformLocal(Matrix4(quat.toMatrix()));
+//         }
+//         // GL::Buffer bufferToPack;
+//         // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
+//         cout << "REACHED:" << _regionCalculator->planarRegionList.size() << endl;
+//         new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {(planarRegion->getId() * 123 % 255)/255.0f, (planarRegion->getId() * 161 % 255)/255.0f, (planarRegion->getId() * 113 % 255)/255.0f}};
+//     }
+
+    for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
+        for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
+            uint8_t edges = _regionCalculator->output.getPatchData().at<uint8_t>(i, j);
+            if (edges == 255){
+                Vec6f patch = _regionCalculator->output.getRegionOutput().at<Vec6f>(i, j);
+                // cout << patch << endl;
+                Vector3 up = {0,0,1};
+                Vector3 dir = {0.01f*patch[0], 0.01f*patch[1], 0.01f*patch[2]};
+                Vector3 axis = Math::cross(up, dir).normalized();
+                Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
+
+                auto &plane = _sensor->addChild<Object3D>();
+                plane.scale({0.0002,0.0002,0.0002});
+                plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
+                // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+                if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
+                    Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+                    plane.transformLocal(Matrix4(quat.toMatrix()));
+                }
+                new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
+            }
+        }
+    }
 
 }
 
 void MyApplication::tickEvent() {
 
-    cout << "TickEvent:" << count++ << endl;
+    // cout << "TickEvent:" << count++ << endl;
 
-    _dataReceiver->spin_ros_node();
-    _regionCalculator->generate_regions(_dataReceiver);
+    // _dataReceiver->spin_ros_node();
+    // _regionCalculator->generate_regions(_dataReceiver);
+    //
+
     //
     // for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
     //     shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];

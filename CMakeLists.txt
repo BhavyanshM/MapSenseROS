@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
-find_package( OpenCV 4.4 REQUIRED )
+find_package( OpenCV 4.2 REQUIRED )
 find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
@@ -77,7 +77,7 @@ set (HEADERS
 		include/RegionFinder.h
 		include/GPU.h
 		src/PlanarRegionCalculator.h
-		src/SensorDataReceiver.h src/MapFrame.cpp src/MapFrame.h src/MapFrameProcessor.cpp src/MapFrameProcessor.h src/ImGuiExample.cpp src/PlanarRegion.cpp src/PlanarRegion.h src/MeshGenerator.cpp src/MeshGenerator.h)
+		src/SensorDataReceiver.h src/MapFrame.cpp src/MapFrame.h src/MapFrameProcessor.cpp src/MapFrameProcessor.h src/ImGuiExample.cpp src/PlanarRegion.cpp src/PlanarRegion.h src/MeshGenerator.cpp src/MeshGenerator.h src/ApplicationState.cpp src/ApplicationState.h src/ScenePrimitives.h)
 
 include_directories(
   include

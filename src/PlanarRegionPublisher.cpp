@@ -151,6 +151,7 @@ void fit(const Mat &color, const Mat &depth, Mat &regionOutput) {
 
 void depthCallback(const ImageConstPtr &depthMsg) {
     depthMessage = depthMsg;
+    printf("ReachedDepth\n");
 }
 
 void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
@@ -160,12 +161,9 @@ void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
 void processDataCallback(const TimerEvent &) {
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
-    if (colorMessage != nullptr && depthMessage != nullptr) {
+    if (depthMessage != nullptr) {
         try {
             // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
-
-            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
-            Mat colorImg = img_ptr_color->image;
 
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             Mat depthImg = img_ptr_depth->image;
@@ -175,12 +173,30 @@ void processDataCallback(const TimerEvent &) {
             // fit(colorImg, depthImg, output);
 
             imshow("RealSense L515 Depth", depthImg);
+            int code = waitKeyEx(32);
+            if (code == 1048689) exit(1);
+            if (code == 1048691) {
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_Boxes.png", depthImg);
+                ROS_INFO("Pressed S %d", code);
+            }
+            // ROS_INFO("Pressed: %d", code);
+
+        } catch (cv_bridge::Exception &e) {
+            ROS_ERROR("Could not convert to image!");
+        }
+    }
+    if (colorMessage != nullptr) {
+        try {
+            // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
+
+            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
+            Mat colorImg = img_ptr_color->image;
+
             imshow("RealSense L515 Color", colorImg);
             int code = waitKeyEx(32);
             if (code == 1048689) exit(1);
             if (code == 1048691) {
-                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depthImg);
-                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", colorImg);
+                imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_Boxes.png", colorImg);
                 ROS_INFO("Pressed S %d", code);
             }
             // ROS_INFO("Pressed: %d", code);

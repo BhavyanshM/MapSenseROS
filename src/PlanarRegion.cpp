@@ -38,11 +38,11 @@ int PlanarRegion::getNumPatches() {
 }
 
 int PlanarRegion::getId() {
-    return id;
+    return id + 1;
 }
 
 void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
-    // printf("START \t");
+    printf("Getting ClockWise 2D\n");
     Vector3f center = this->getCenter();
     Vector3f normal = this->getNormal();
 
@@ -58,7 +58,7 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
             AngleAxisf angleAxis(angle, axis);
             Quaternionf quat(angleAxis);
             Vector3f meshVec = quat._transformVector(vec);
-            if(meshVec.norm() < 2){
+            if(meshVec.norm() < 4){
                 points.emplace_back(Vector2f(2*meshVec.x(), 2*meshVec.y()));
             }else{
                 printf("Singularity:(%.2lf, %.2lf, %.2lf)\n", meshVec.x(), meshVec.y(), meshVec.norm());
@@ -77,5 +77,6 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
     //     printf("%.2lf, %.2lf\n", points[i].x(), points[i].y());
     // }
     // printf("STOP\n");
+    printf("ClockWise 2D Generated\n");
 }
 
