@@ -57,6 +57,7 @@ private:
     void mouseScrollEvent(MouseScrollEvent &event) override;
 
     void viewportEvent(ViewportEvent& event) override;
+    void generate_patches();
 
     ApplicationState appState;
     ImGuiIntegration::Context _imgui{NoCreate};
@@ -73,6 +74,8 @@ private:
     Object3D *_sensor;
     Object3D *_sensorAxes;
     SceneGraph::Camera3D *_camera;
+
+    vector<Object3D*> planePatches;
 
     SceneGraph::DrawableGroup3D _drawables;
 
