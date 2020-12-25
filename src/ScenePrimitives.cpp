@@ -233,6 +233,13 @@ void MyApplication::generate_patches(){
     }
 }
 
+void displayDebugOutput(Mat disp){
+    namedWindow("DebugOutput", WINDOW_NORMAL);
+    resizeWindow("DebugOutput", (int)(disp.cols), (int)(disp.rows));
+    imshow("DebugOutput", disp);
+    waitKey(100);
+}
+
 void MyApplication::drawEvent() {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
     _camera->draw(_drawables);
@@ -247,6 +254,14 @@ void MyApplication::drawEvent() {
         clear(planePatches);
     if(ImGui::Button("Generate Patches"))
         generate_patches();
+    if(ImGui::Button("Show Filtered Depth")){
+        Mat dispDepth;
+        _regionCalculator->getFilteredDepth(dispDepth);
+        displayDebugOutput(dispDepth);
+    }
+    if(ImGui::Button("Show Region Components")){
+        displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);
+    }
     ImGui::Text("Time:%.3f ms FPS:%.1f",
                 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 

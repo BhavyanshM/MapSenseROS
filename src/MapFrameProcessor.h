@@ -10,6 +10,7 @@ class MapFrameProcessor {
 public:
 
     // MapFrame* frame;
+    Mat debug = Mat(600,800, CV_8UC3);
     bool visited[60][80] = {0};
     int region[60][80] = {0};
 

@@ -56,6 +56,7 @@ public:
     const int SUB_W = 80;
     Mat inputDepth = Mat(HEIGHT, WIDTH, CV_16UC1);
     Mat inputColor = Mat(HEIGHT, WIDTH, CV_8UC3);
+    Mat filteredDepth = Mat(HEIGHT, WIDTH, CV_16UC1);
 
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
@@ -65,6 +66,7 @@ public:
     void init_opencl();
     void launch_tester(string depthFile, string colorFile);
     void generate_regions(SensorDataReceiver* receiver);
+    void getFilteredDepth(Mat& dispDepth);
 
 };
 

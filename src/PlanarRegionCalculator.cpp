@@ -79,7 +79,7 @@ void PlanarRegionCalculator::fit() {
 
     /* Read the output data from OpenCL buffers into CPU buffers */
     // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
-    commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, debug.data);
+    commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, filteredDepth.data);
     commandQueue.enqueueReadImage(clOutput_0, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
     commandQueue.enqueueReadImage(clOutput_1, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
     commandQueue.enqueueReadImage(clOutput_2, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
@@ -91,32 +91,19 @@ void PlanarRegionCalculator::fit() {
     /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
     commandQueue.finish();
 
-    ROS_INFO("Reached Fit");
-
-
-
     /* Combine the CPU buffers into single image with multiple channels */
     Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
     int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
     mixChannels(in, 6, &output.getRegionOutput(), 1, from_to, 6);
     output.setPatchData(output_6);
-
-    int i = 0;
-    int j = 0;
-    printf("{%hu}", output.getPatchData().at<uint8_t>(2, 2));
-
-
-//    Mat dispDepth;
-//    debug.convertTo(dispDepth, CV_8U, 1/256.0);
-//    dispDepth.convertTo(dispDepth, -1, 4, 50);
-//    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-//    output.drawGraph(dispDepth);
-//    namedWindow("DebugOutput", WINDOW_NORMAL);
-//    resizeWindow("DebugOutput", (int)(dispDepth.cols*1.5), (int)(dispDepth.rows*1.5));
-//    imshow("DebugOutput", dispDepth);
-//    waitKey(0);
 }
 
+void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth){
+    filteredDepth.convertTo(dispDepth, CV_8U, 1/256.0);
+    dispDepth.convertTo(dispDepth, -1, 4, 50);
+    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+    output.drawGraph(dispDepth);
+}
 
 
 void PlanarRegionCalculator::init_opencl() {

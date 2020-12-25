@@ -26,7 +26,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
     // printPatchGraph(inputFrame);
 
     uint8_t* framePatch = reinterpret_cast<uint8_t *>(inputFrame.patchData.data);
-    Mat debug(600,800, CV_8UC3);
+
     debug = Scalar(0);
     for (int i = 0; i < inputFrame.SUB_H; i++) {
         for (int j = 0; j < inputFrame.SUB_W; j++) {
