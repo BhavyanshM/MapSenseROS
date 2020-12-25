@@ -4,7 +4,6 @@
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "std_msgs/String.h"
-#include "map_sense/PlanarRegions.h"
 #include "geometry_msgs/PoseStamped.h"
 
 #include "image_transport/image_transport.h"

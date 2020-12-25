@@ -1,7 +1,6 @@
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "std_msgs/String.h"
-#include "map_sense/PlanarRegions.h"
 #include "geometry_msgs/PoseStamped.h"
 
 #include "image_transport/image_transport.h"
@@ -21,7 +20,6 @@ using namespace chrono;
 using namespace cv;
 using namespace sensor_msgs;
 using namespace geometry_msgs;
-using namespace map_sense;
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -212,7 +210,7 @@ void launch_ros_node(int argc, char **argv) {
     init(argc, argv, "PlanarRegionPublisher");
     NodeHandle nh;
     RGBDPosePub = nh.advertise<PoseStamped>("rgbd_pose", 100);
-    planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 10);
+//    planarRegionPub = nh.advertise<PlanarRegions>("/map/regions/test", 10);
     Subscriber subDepth = nh.subscribe("/camera/depth/image_rect_raw", 3, depthCallback);
     Subscriber subColor = nh.subscribe("/camera/color/image_raw", 3, colorCallback);
     Timer timer1 = nh.createTimer(Duration(0.1), processDataCallback);
