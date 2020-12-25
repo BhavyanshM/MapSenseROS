@@ -67,7 +67,7 @@ void SensorDataReceiver::spin_ros_node() {
 
 
 void SensorDataReceiver::load_sample_depth(String filename, Mat& depth){
-    depth = imread(filename, IMREAD_ANYDEPTH);
+    depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
 }
 
 void SensorDataReceiver::load_sample_color(String filename, Mat& color){

@@ -323,7 +323,7 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
                     ys[total_unique] = gy;
                     values[total_unique] = Z;
                     total_unique++;
-                }{
+                }else{
                     int unique = 0;
                     for(int k = 0; k<total_unique; k++){
 

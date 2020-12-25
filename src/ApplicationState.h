@@ -20,7 +20,7 @@ public:
     void setColorFile(const string &colorFile);
 
 private:
-    string depthFile = "/home/quantum/Workspace/Storage/Other/Temp/Depth_Boxes.png";
+    string depthFile = "/data/Depth_Boxes.png";
     string colorFile = "/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png";
 
 
