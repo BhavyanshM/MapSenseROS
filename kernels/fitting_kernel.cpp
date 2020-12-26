@@ -294,8 +294,9 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
 bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
     float3 vec = ag - bg;
     float dist = length(vec);
-    float sim = dot(normalize(an), normalize(bn));
-    if (dist < 0.12){
+    float sim = fabs(dot(normalize(an), normalize(bn)));
+    float perpDist = fabs(dot(ag-bg, normalize(bn))) + fabs(dot(bg-ag, normalize(ag)));
+    if (perpDist < 0.07 && sim > 0.6){
         return true;
     }else {
         return false;

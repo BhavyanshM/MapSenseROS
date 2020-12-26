@@ -66,7 +66,7 @@ public:
     void init_opencl();
     void launch_tester(string depthFile, string colorFile);
     void generate_regions(SensorDataReceiver* receiver);
-    void getFilteredDepth(Mat& dispDepth);
+    void getFilteredDepth(Mat& dispDepth, bool showGraph);
 
 };
 

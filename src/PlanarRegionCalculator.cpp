@@ -98,11 +98,10 @@ void PlanarRegionCalculator::fit() {
     output.setPatchData(output_6);
 }
 
-void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth){
-    filteredDepth.convertTo(dispDepth, CV_8U, 1/256.0);
-    dispDepth.convertTo(dispDepth, -1, 4, 50);
+void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth, bool showGraph){
+    filteredDepth.convertTo(dispDepth, -1, 10, 200);
     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    output.drawGraph(dispDepth);
+    if(showGraph) output.drawGraph(dispDepth);
 }
 
 

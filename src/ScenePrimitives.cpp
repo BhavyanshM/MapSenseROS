@@ -248,17 +248,25 @@ void MyApplication::drawEvent() {
 
     ImGui::Text("MapSense");
     ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
-    if(ImGui::ColorEdit3("Color", _clearColor.data()))
+    if(ImGui::ColorEdit3("Color", _clearColor.data())){
         GL::Renderer::setClearColor(_clearColor);
-    if(ImGui::Button("Clear Patches"))
+    }
+    if(ImGui::Button("Clear Patches")){
         clear(planePatches);
-    if(ImGui::Button("Generate Patches"))
+    }
+    if(ImGui::Button("Generate Patches")){
         generate_patches();
+    }
+    if(ImGui::Button("Show Input Depth")){
+        displayDebugOutput(_regionCalculator->inputDepth);
+    }
     if(ImGui::Button("Show Filtered Depth")){
         Mat dispDepth;
-        _regionCalculator->getFilteredDepth(dispDepth);
+        _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
         displayDebugOutput(dispDepth);
     }
+    ImGui::SameLine(180);
+    ImGui::Checkbox("Show Graph", &_showGraph);
     if(ImGui::Button("Show Region Components")){
         displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);
     }

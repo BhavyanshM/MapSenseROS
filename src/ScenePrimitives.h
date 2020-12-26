@@ -63,7 +63,7 @@ private:
     ImGuiIntegration::Context _imgui{NoCreate};
     Color4 _clearColor = 0x72909aff_rgbaf;
     Float _floatValue = 0.0f;
-    bool _showDemoWindow = true;
+    bool _showGraph = true;
     bool _showAnotherWindow = false;
 
     Scene3D _scene;
