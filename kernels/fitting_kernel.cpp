@@ -1,4 +1,9 @@
 
+
+#define FILTER_DISPARITY_THRESHOLD 0
+#define MERGE_ANGULAR_THRESHOLD 1
+#define MERGE_DISTANCE_THRESHOLD 2
+
  void kernel depthKernel(
 	read_only image2d_t in,
 	write_only image2d_t out,
@@ -291,19 +296,19 @@ float3 plane_grad(read_only image2d_t in, float3 p, int x, int y){
     return (1/(float)(count)) * centroid;
  }
 
-bool isConnected(float3 ag, float3 an, float3 bg, float3 bn){
+bool isConnected(float3 ag, float3 an, float3 bg, float3 bn, global float* params){
     float3 vec = ag - bg;
     float dist = length(vec);
     float sim = fabs(dot(normalize(an), normalize(bn)));
     float perpDist = fabs(dot(ag-bg, normalize(bn))) + fabs(dot(bg-ag, normalize(ag)));
-    if (perpDist < 0.07 && sim > 0.6){
+    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] && sim > params[MERGE_ANGULAR_THRESHOLD]){
         return true;
     }else {
         return false;
     }
 }
 
-int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0){
+int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0, global float* params){
     uint Z = 0;
     int count = 0;
     int xs[8], ys[8], values[8];
@@ -328,7 +333,7 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
                     int unique = 0;
                     for(int k = 0; k<total_unique; k++){
 
-                        if ((Z - values[k])*(Z - values[k]) > 2000){
+                        if ((Z - values[k])*(Z - values[k]) > params[FILTER_DISPARITY_THRESHOLD]){
                             // if (x==0 && y==0)printf("Compare(%d,%d,%d)(%d,%d)\n", Z, abs(Z - values[k]), values[k], unique, total_unique);
                             unique++;
 
@@ -345,7 +350,6 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
             }
         }
     }
-
 
     /* Use the depth profile to fill in the gaps. */
     for(int i = 0; i<SIZE_X; i++){
@@ -386,13 +390,14 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
 
 /* Filter Kernel: Filters all pixels within a patch on depth map. Removes outliers, flying points, dead pixels and measurement
  * noise. */
-void kernel filterKernel(read_only image2d_t in, read_only image2d_t in_color, write_only image2d_t out0){
+
+ void kernel filterKernel(read_only image2d_t in, read_only image2d_t in_color, write_only image2d_t out0, global float* params){
     int y = get_global_id(0);
     int x = get_global_id(1);
 
     if(y >= 0 && y < 60 && x >= 0 && x < 80){
 
-        filter_depth(in, x, y, out0);
+        filter_depth(in, x, y, out0, params);
 
     }
 }
@@ -431,7 +436,8 @@ void kernel packKernel(  read_only image2d_t in,
  */
 void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2, /* float3 maps for normal*/
                           write_only image2d_t out3, write_only image2d_t out4, write_only image2d_t out5, /* float3 maps for centroids */
-                          write_only image2d_t out6 /* uint8 map for patch metadata*/
+                          write_only image2d_t out6, /* uint8 map for patch metadata*/
+                          global float* params /* All parameters */
                           // write_only image2d_t debug
 ){
      int y = get_global_id(0);
@@ -466,7 +472,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
                      float3 g_b = (float3)(g1_b,g2_b,g3_b);
                      float3 n_b = (float3)(n1_b,n2_b,n3_b);
 
-                     if(isConnected(g_a, n_a, g_b, n_b)){
+                     if(isConnected(g_a, n_a, g_b, n_b, params)){
                          // printf("Connected: (%d,%d)\n",x+i, y+j);
                          patch = (1 << count) | patch;
                      }

@@ -5,7 +5,7 @@ Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> plan
     vector<Vector2f> circularPoints;
     planarRegion->getClockWise2D(circularPoints);
 
-    CORRADE_ASSERT(circularPoints.size() >= 3, "PlanarRegion->getNumOfVertices() must be >= 3",
+    CORRADE_ASSERT(circularPoints.size() >= 3, "PlanarRegion->getNumOfBoundaryVertices() must be >= 3",
                    (Trade::MeshData{MeshPrimitive::TriangleFan, 0}));
     std::size_t stride = sizeof(Vector3) + sizeof(Vector3);
     std::size_t attributeCount = 2;
@@ -37,7 +37,8 @@ Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> plan
 
 void MeshGenerator::getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion, GL::Buffer& bufferToPack) {
     vector<Vector3> positions;
-    positions.emplace_back(Vector3(planarRegion->getCenter().x(), planarRegion->getCenter().y(), planarRegion->getCenter().z()));
+    positions.emplace_back(Vector3(planarRegion->getMeanCenter().x(), planarRegion->getMeanCenter().y(),
+                                   planarRegion->getMeanCenter().z()));
 
     vector<Vector2f> circularPoints;
     planarRegion->getClockWise2D(circularPoints);
@@ -46,8 +47,8 @@ void MeshGenerator::getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion,
         // Vector2f meshPoint = circularPoints[i];
         positions.emplace_back(0.1f, 0.1f, 0.0f);
 
-        // Vector3f center = planarRegion->getCenter();
-        // Vector3f normal = planarRegion->getNormal();
+        // Vector3f center = planarRegion->getMeanCenter();
+        // Vector3f normal = planarRegion->getMeanNormal();
         // Vector3f regionPoint =  (vec - center) - ((vec - center).dot(normal)/ (normal.squaredNorm()) * normal);
         // hull.push_back(Point(regionPoint.x(), regionPoint.y()));
     }

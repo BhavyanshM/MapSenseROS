@@ -11,9 +11,17 @@
     R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
     P: [459.97265625, 0.0, 341.83984375, 0.0, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 0.0, 1.0, 0.0]
  * */
-void PlanarRegionCalculator::fit() {
+void PlanarRegionCalculator::fit(ApplicationState appState) {
     ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              output.getRegionOutput().cols, output.getRegionOutput().rows);
+
+    float params[] = {appState.FILTER_DISPARITY_THRESHOLD,
+                      appState.MERGE_ANGULAR_THRESHOLD,
+                      appState.MERGE_DISTANCE_THRESHOLD};
+
+    printf("ParamsCPU(%.4lf, %.4lf, %.4lf)\n", appState.FILTER_DISPARITY_THRESHOLD, appState.MERGE_ANGULAR_THRESHOLD, appState.MERGE_DISTANCE_THRESHOLD);
+    cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
+    cout << sizeof(params) / sizeof(params[0]) << endl;
 
     /* Input Data OpenCL Buffers */
     uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
@@ -36,6 +44,7 @@ void PlanarRegionCalculator::fit() {
     filterKernel.setArg(0, clDepth);
     filterKernel.setArg(1, clColor);
     filterKernel.setArg(2, clFilterDepth);
+    filterKernel.setArg(3, paramsBuffer);
 
     packKernel.setArg(0, clFilterDepth);
     packKernel.setArg(1, clOutput_0);
@@ -53,6 +62,7 @@ void PlanarRegionCalculator::fit() {
     mergeKernel.setArg(4, clOutput_4);
     mergeKernel.setArg(5, clOutput_5);
     mergeKernel.setArg(6, clOutput_6);
+    mergeKernel.setArg(7, paramsBuffer);
 
     // kernel.setArg(4, clDebug); /* For whenever clDebug may be required. */
 
@@ -175,14 +185,14 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
     }
 }
 
-void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver){
+void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, ApplicationState appState){
     this->_dataReceiver = receiver;
     _dataReceiver->load_next_frame(inputDepth, inputColor);
 
     auto start = high_resolution_clock::now();
 
-    this->fit(); // Generate planar regions from depth map and color image.
-    this->mapFrameProcessor.generateSegmentation(output, planarRegionList);
+    this->fit(appState); // Generate planar regions from depth map and color image.
+    this->mapFrameProcessor.generateSegmentation(output, planarRegionList, appState);
     printf("Planar Regions Found: %d\n", planarRegionList.size());
 
     auto end = high_resolution_clock::now();
@@ -208,21 +218,19 @@ void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver){
 
 }
 
-void PlanarRegionCalculator::launch_tester(string depthFile, string colorFile) {
+void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
 
     SensorDataReceiver dataReceiver;
     // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
-    dataReceiver.load_sample_depth(depthFile, inputDepth);
-    dataReceiver.load_sample_color(colorFile, inputColor);
+    dataReceiver.load_sample_depth(appState.getDepthFile(), inputDepth);
+    dataReceiver.load_sample_color(appState.getColorFile(), inputColor);
 
     // medianBlur(inputDepth, inputDepth, 5);
 
     auto start = high_resolution_clock::now();
 
-    this->fit(); // Generate planar regions from depth map and color image.
-
-
-    mapFrameProcessor.generateSegmentation(output, planarRegionList);
+    this->fit(appState); // Generate planar patch graph from depth map and color image.
+    mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Generate planar region components from patch-graph
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();

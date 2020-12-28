@@ -63,14 +63,14 @@ void MyApplication::tickEvent() {
     // cout << "TickEvent:" << count++ << endl;
 
     // _dataReceiver->spin_ros_node();
-    // _regionCalculator->generate_regions(_dataReceiver);
+    // _regionCalculator->generate_regions(_dataReceiver, appState);
     //
 
     //
     // for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
     //     shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-    //     Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
-    //     Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
+    //     Vector3f normal = _regionCalculator->planarRegionList[i]->getMeanNormal();
+    //     Vector3f center = _regionCalculator->planarRegionList[i]->getMeanCenter();
     //     Vector3 up = {0,0,-1};
     //     Vector3 dir = {normal[0], normal[1], -normal[2]};
     //     Vector3 axis = Math::cross(up, dir).normalized();
@@ -85,7 +85,7 @@ void MyApplication::tickEvent() {
     //     // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
     //
     //     axis = axis.normalized();
-    //     // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
+    //     // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
     //     if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
     //         Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
     //         region.transformLocal(Matrix4(quat.toMatrix()));
@@ -177,11 +177,12 @@ void clear(vector<Object3D*>& objects){
 }
 
 void MyApplication::generate_patches(){
-    _regionCalculator->launch_tester(appState.getDepthFile(), appState.getColorFile());
-//     for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
+    _regionCalculator->launch_tester(appState);
+     for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
 //         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-//         Vector3f normal = _regionCalculator->planarRegionList[i]->getNormal();
-//         Vector3f center = _regionCalculator->planarRegionList[i]->getCenter();
+         Vector3f normal = _regionCalculator->planarRegionList[i]->getPCANormal();
+//         Vector3f normal = _regionCalculator->planarRegionList[i]->getMeanNormal();
+//         Vector3f center = _regionCalculator->planarRegionList[i]->getMeanCenter();
 //         Vector3 up = {0,0,-1};
 //         Vector3 dir = {normal[0], normal[1], -normal[2]};
 //         Vector3 axis = Math::cross(up, dir).normalized();
@@ -196,7 +197,7 @@ void MyApplication::generate_patches(){
 //         // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
 //
 //         axis = axis.normalized();
-//         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfVertices());
+//         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
 //         if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
 //             Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
 //             region.transformLocal(Matrix4(quat.toMatrix()));
@@ -205,7 +206,7 @@ void MyApplication::generate_patches(){
 //         // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
 //         cout << "REACHED:" << _regionCalculator->planarRegionList.size() << endl;
 //         new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {(planarRegion->getId() * 123 % 255)/255.0f, (planarRegion->getId() * 161 % 255)/255.0f, (planarRegion->getId() * 113 % 255)/255.0f}};
-//     }
+     }
 
     for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
         for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
@@ -220,7 +221,7 @@ void MyApplication::generate_patches(){
 
                 Object3D& plane = _sensor->addChild<Object3D>();
                 planePatches.emplace_back(&plane);
-                plane.scale({0.0002,0.0002,0.0002});
+                plane.scale({appState.MAGNUM_PATCH_SCALE * 0.001f ,appState.MAGNUM_PATCH_SCALE * 0.001f, appState.MAGNUM_PATCH_SCALE * 0.001f});
                 plane.translate({0.01f* patch[3], 0.01f * patch[4], 0.01f* patch[5]});
                 // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
                 if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z())){
@@ -240,6 +241,35 @@ void displayDebugOutput(Mat disp){
     waitKey(100);
 }
 
+void testPCA(){
+    // copy coordinates to  matrix in Eigen format
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator (seed);
+    std::normal_distribution<double> distribution (0.0,4.0);
+
+    Matrix< float, 3, Dynamic> coord(3, 325);
+    int count = 0;
+    for (int i = -10; i < 15; i+=2){
+        for(int j = -10; j<40; j+=2){
+            coord(0, count) = (float)i;
+            coord(1, count) = (float)j;
+            coord(2, count) = (float) ((-5 * i + 7 * j - 5) * (1. / 5) + distribution(generator));
+            printf("%.2lf, %.2lf, %.2lf\n", coord(0,count), coord(1,count), coord(2,count));
+            count ++;
+        }
+    }
+    cout << count << endl;
+    cout << coord << endl;
+
+    Vector3f centroid(coord.row(0).mean(), coord.row(1).mean(), coord.row(2).mean());
+    coord.row(0).array() -= centroid(0); coord.row(1).array() -= centroid(1); coord.row(2).array() -= centroid(2);
+    auto svd = coord.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Vector3f plane_normal = svd.matrixU().rightCols<1>();
+
+    cout << plane_normal << endl;
+
+}
+
 void MyApplication::drawEvent() {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
     _camera->draw(_drawables);
@@ -247,19 +277,18 @@ void MyApplication::drawEvent() {
     _imgui.newFrame();
 
     ImGui::Text("MapSense");
-    ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
-    if(ImGui::ColorEdit3("Color", _clearColor.data())){
-        GL::Renderer::setClearColor(_clearColor);
-    }
-    if(ImGui::Button("Clear Patches")){
-        clear(planePatches);
-    }
+
+    if(ImGui::Button("Test PCA")) {testPCA();}
+
+
+
+    if(ImGui::ColorEdit3("Color", _clearColor.data())){GL::Renderer::setClearColor(_clearColor);}
+    if(ImGui::Button("Clear Patches")){clear(planePatches);}
     if(ImGui::Button("Generate Patches")){
+        clear(planePatches);
         generate_patches();
     }
-    if(ImGui::Button("Show Input Depth")){
-        displayDebugOutput(_regionCalculator->inputDepth);
-    }
+    if(ImGui::Button("Show Input Depth")){displayDebugOutput(_regionCalculator->inputDepth);}
     if(ImGui::Button("Show Filtered Depth")){
         Mat dispDepth;
         _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
@@ -267,11 +296,16 @@ void MyApplication::drawEvent() {
     }
     ImGui::SameLine(180);
     ImGui::Checkbox("Show Graph", &_showGraph);
-    if(ImGui::Button("Show Region Components")){
-        displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);
-    }
-    ImGui::Text("Time:%.3f ms FPS:%.1f",
-                1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
+    if(ImGui::Button("Show Region Components")){displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);}
+
+    ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
+    ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);
+    ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.1f, 0.3f);
+    ImGui::SliderFloat("Filter Disparity Threshold", &appState.FILTER_DISPARITY_THRESHOLD, 1000, 4000);
+    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01, 0.16);
+    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.2f, 1.0f);
+
+    ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
     /* Update application cursor */
     _imgui.updateApplicationCursor(*this);

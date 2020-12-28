@@ -62,10 +62,10 @@ public:
     MapFrameProcessor mapFrameProcessor;
     vector<shared_ptr<PlanarRegion>> planarRegionList;
 
-    void fit();
+    void fit(ApplicationState appState);
     void init_opencl();
-    void launch_tester(string depthFile, string colorFile);
-    void generate_regions(SensorDataReceiver* receiver);
+    void launch_tester(ApplicationState appState);
+    void generate_regions(SensorDataReceiver* receiver, ApplicationState appState);
     void getFilteredDepth(Mat& dispDepth, bool showGraph);
 
 };

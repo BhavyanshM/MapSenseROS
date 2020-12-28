@@ -1,5 +1,5 @@
-
 #include "MapFrameProcessor.h"
+
 
 void printPatchGraph(MapFrame inputFrame){
     for(int i = 0; i<inputFrame.SUB_H; i++){
@@ -15,7 +15,7 @@ void printPatchGraph(MapFrame inputFrame){
     }
 }
 
-void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList) {
+void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList, ApplicationState params) {
     int components = 0;
     vector<int> sizes;
     vector<int> ids;
@@ -35,7 +35,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
                 int num = 0;
                 shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
                 dfs(i, j, components, num, debug, framePatch, planarRegion, inputFrame);
-                if (num > 20 && num - planarRegion->getNumOfVertices() > 20){
+                if (num > params.REGION_MIN_PATCHES && num - planarRegion->getNumOfBoundaryVertices() > params.REGION_BOUNDARY_DIFF){
                     planarRegionList.emplace_back(planarRegion);
                     components++;
                     sizes.push_back(num);
@@ -70,7 +70,7 @@ void MapFrameProcessor::dfs(int x, int y, int component, int& num, Mat& debug, u
     }
     // printf("\n");
     if (count != 8) {
-        planarRegion->insertVertex(Vector3f(patch[3], patch[4], patch[5]));
+        planarRegion->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
         circle(debug, Point((y)*10, (x)*10), 2, Scalar(255,255,255), -1);
     }
 
