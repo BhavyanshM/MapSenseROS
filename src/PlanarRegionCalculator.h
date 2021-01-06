@@ -62,7 +62,7 @@ public:
     MapFrameProcessor mapFrameProcessor;
     vector<shared_ptr<PlanarRegion>> planarRegionList;
 
-    void fit(ApplicationState appState);
+    void generatePatchGraph(ApplicationState appState);
     void init_opencl();
     void launch_tester(ApplicationState appState);
     void generate_regions(SensorDataReceiver* receiver, ApplicationState appState);

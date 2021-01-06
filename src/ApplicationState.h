@@ -20,7 +20,7 @@ public:
     void setColorFile(const string &colorFile);
 
 private:
-    string depthFile = "/data/Depth_Boxes.png";
+    string depthFile = "/data/Depth_L515.png";
     string colorFile = "/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png";
 
 public:
@@ -28,7 +28,7 @@ public:
      float MERGE_DISTANCE_THRESHOLD = 0.07;
      float FILTER_DISPARITY_THRESHOLD = 2000;
 
-     float MAGNUM_PATCH_SCALE = 0.2;
+     float MAGNUM_PATCH_SCALE = 0.01;
      int REGION_MIN_PATCHES = 20;
      int REGION_BOUNDARY_DIFF = 20;
 

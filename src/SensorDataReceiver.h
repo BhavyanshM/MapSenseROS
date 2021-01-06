@@ -16,6 +16,7 @@
 #include "math.h"
 #include <sstream>
 #include <random>
+#include "map_sense/PlanarRegionList.h"
 
 using namespace ros;
 using namespace std;
@@ -30,6 +31,7 @@ public:
     NodeHandle* nh;
     Subscriber subDepth;
     Subscriber subColor;
+    Publisher planarRegionPub;
 
 
     bool nextDepthAvailable = false;

@@ -16,6 +16,15 @@ void printPatchGraph(MapFrame inputFrame){
 }
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList, ApplicationState params) {
+    printf("Starting DFS for Segmentation\n");
+
+    /* For initial development only. Delete all old previous regions before inserting new ones. */
+    for(int i = 0; i<planarRegionList.size(); i++){
+        printf("Region Pointer:%d\n", planarRegionList[i].unique());
+        planarRegionList[i].reset();
+    }
+    planarRegionList.clear();
+
     int components = 0;
     vector<int> sizes;
     vector<int> ids;
@@ -44,6 +53,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
             }
         }
     }
+    printf("DFS Generated %d Regions\n", components);
 }
 
 

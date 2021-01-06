@@ -21,8 +21,8 @@ Vector3f PlanarRegion::getPCANormal(){
     patchMatrix.row(0).array() -= centroid(0); patchMatrix.row(1).array() -= centroid(1); patchMatrix.row(2).array() -= centroid(2);
     auto svd = patchMatrix.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
     Vector3f plane_normal = svd.matrixU().rightCols<1>();
-    cout << "PCANormal:\n" << svd.matrixU().rightCols<1>() << endl;
-    cout << "MeanNormal:\n" << this->getMeanNormal() << endl;
+//    cout << "PCANormal:\n" << svd.matrixU().rightCols<1>() << endl;
+//    cout << "MeanNormal:\n" << this->getMeanNormal() << endl;
     return plane_normal;
 }
 

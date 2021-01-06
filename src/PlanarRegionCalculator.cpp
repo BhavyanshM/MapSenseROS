@@ -11,8 +11,8 @@
     R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
     P: [459.97265625, 0.0, 341.83984375, 0.0, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 0.0, 1.0, 0.0]
  * */
-void PlanarRegionCalculator::fit(ApplicationState appState) {
-    ROS_INFO("Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
+void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
+    ROS_INFO("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              output.getRegionOutput().cols, output.getRegionOutput().rows);
 
     float params[] = {appState.FILTER_DISPARITY_THRESHOLD,
@@ -28,6 +28,8 @@ void PlanarRegionCalculator::fit(ApplicationState appState) {
     uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(inputColor.data);
     cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT, 0, depthBuffer);
     cl::Image2D clColor(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), WIDTH, HEIGHT, 0, colorBuffer);
+
+    cout << "DEBUG" << endl;
 
     /* Output Data OpenCL Buffers */
     // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
@@ -106,6 +108,9 @@ void PlanarRegionCalculator::fit(ApplicationState appState) {
     int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
     mixChannels(in, 6, &output.getRegionOutput(), 1, from_to, 6);
     output.setPatchData(output_6);
+
+    ROS_INFO("Patch Graph Generated on GPU");
+
 }
 
 void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth, bool showGraph){
@@ -186,35 +191,55 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
 }
 
 void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, ApplicationState appState){
+    ROS_INFO("Generating Regions");
     this->_dataReceiver = receiver;
     _dataReceiver->load_next_frame(inputDepth, inputColor);
 
     auto start = high_resolution_clock::now();
 
-    this->fit(appState); // Generate planar regions from depth map and color image.
-    this->mapFrameProcessor.generateSegmentation(output, planarRegionList, appState);
-    printf("Planar Regions Found: %d\n", planarRegionList.size());
+    this->generatePatchGraph(appState); // Generate patch graph of connected patches on GPU
+    this->mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+    ROS_INFO("Planar Regions Generated: %d\n", planarRegionList.size());
+
+    map_sense::PlanarRegionList regionList;
+    for(int i = 0; i<planarRegionList.size(); i++){
+        map_sense::PlanarRegionMessage region;
+        region.numOfPatches = planarRegionList[i]->getNumPatches();
+        region.id = planarRegionList[i]->getId();
+        region.normal = geometry_msgs::Vector3();
+        region.normal.x = static_cast<double>(planarRegionList[i]->getPCANormal().x());
+        region.normal.y = static_cast<double>(planarRegionList[i]->getPCANormal().y());
+        region.normal.z = static_cast<double>(planarRegionList[i]->getPCANormal().z());
+        region.centroid = geometry_msgs::Point();
+        region.centroid.x = static_cast<double>(planarRegionList[i]->getMeanCenter().x());
+        region.centroid.y = static_cast<double>(planarRegionList[i]->getMeanCenter().y());
+        region.centroid.z = static_cast<double>(planarRegionList[i]->getMeanCenter().z());
+        regionList.regions.emplace_back(region);
+    }
+    regionList.numOfRegions = planarRegionList.size();
+    _dataReceiver->planarRegionPub.publish(regionList);
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
-    ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
+
+    ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
 
     /* Debugging and Visualization */
-    // inputDepth.convertTo(inputDepth, -1, 10, 100);
-    // Mat dispDepth;
-    // inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
-    // cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    //
-    // output.drawGraph(dispDepth);
-    //
-    // namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
-    // resizeWindow("RealSense L515 Depth", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
-    // setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
-    // imshow("RealSense L515 Depth", dispDepth);
-    // imshow("RealSense L515 Color", inputColor);
-    // int code = waitKeyEx(1);
-    //
-    // if (code == 1048689) exit(1);
+//     inputDepth.convertTo(inputDepth, -1, 10, 100);
+//     Mat dispDepth;
+//     inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
+//     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+//
+//     output.drawGraph(dispDepth);
+//
+//     namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
+//     resizeWindow("RealSense L515 Depth", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
+//     setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
+//     imshow("RealSense L515 Depth", dispDepth);
+//     imshow("RealSense L515 Color", inputColor);
+//     int code = waitKeyEx(1);
+//
+//     if (code == 1048689) exit(1);
 
 }
 
@@ -229,7 +254,7 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
 
     auto start = high_resolution_clock::now();
 
-    this->fit(appState); // Generate planar patch graph from depth map and color image.
+    this->generatePatchGraph(appState); // Generate planar patch graph from depth map and color image.
     mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Generate planar region components from patch-graph
 
     auto end = high_resolution_clock::now();

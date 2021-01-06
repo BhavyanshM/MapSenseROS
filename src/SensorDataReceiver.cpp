@@ -41,22 +41,17 @@ void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
             ROS_ERROR("Could not convert to image!");
         }
     }
+    ROS_INFO("Data Frame Loaded");
 }
 
 void SensorDataReceiver::init_ros_node(int argc, char **argv) {
-    // Time::init();
     ROS_INFO("Starting ROS Node");
     init(argc, argv, "PlanarRegionPublisher");
     nh = new NodeHandle();
 
-    AsyncSpinner spinner(4);
-    spinner.start();
-    // planarRegionPub = nh.advertise<PlanarRegionList>("/map/regions/test", 10);
-    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 12, &SensorDataReceiver::depthCallback, this);
-    subColor = nh->subscribe("/camera/color/image_raw", 12, &SensorDataReceiver::colorCallback, this);
-    // Timer timer1 = nh.createTimer(Duration(0.032), &SensorDataReceiver::processDataCallback, this);
-    // spin();
-    // waitForShutdown();
+    planarRegionPub = nh->advertise<map_sense::PlanarRegionList>("/map/regions/test", 10);
+    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &SensorDataReceiver::depthCallback, this);
+    subColor = nh->subscribe("/camera/color/image_raw", 8, &SensorDataReceiver::colorCallback, this);
     ROS_INFO("Started ROS Node");
 }
 
