@@ -12,17 +12,13 @@ Vector3f PlanarRegion::getMeanNormal() {
 
 Vector3f PlanarRegion::getPCANormal(){
     Matrix<float, 3, Dynamic> patchMatrix(3, patchCentroids.size());
-    printf("Region:%d\n", id);
     for(int i = 0; i<patchCentroids.size(); i++) {
         patchMatrix.col(i) = patchCentroids[i];
-//        printf("%.3lf, %.3lf, %.3lf\n", patchCentroids[i].x(), patchCentroids[i].y(), patchCentroids[i].z());
     }
     Vector3f centroid(patchMatrix.row(0).mean(), patchMatrix.row(1).mean(), patchMatrix.row(2).mean());
     patchMatrix.row(0).array() -= centroid(0); patchMatrix.row(1).array() -= centroid(1); patchMatrix.row(2).array() -= centroid(2);
     auto svd = patchMatrix.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
     Vector3f plane_normal = svd.matrixU().rightCols<1>();
-//    cout << "PCANormal:\n" << svd.matrixU().rightCols<1>() << endl;
-//    cout << "MeanNormal:\n" << this->getMeanNormal() << endl;
     return plane_normal;
 }
 

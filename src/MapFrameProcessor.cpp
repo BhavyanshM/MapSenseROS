@@ -20,7 +20,6 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
     /* For initial development only. Delete all old previous regions before inserting new ones. */
     for(int i = 0; i<planarRegionList.size(); i++){
-        printf("Region Pointer:%d\n", planarRegionList[i].unique());
         planarRegionList[i].reset();
     }
     planarRegionList.clear();

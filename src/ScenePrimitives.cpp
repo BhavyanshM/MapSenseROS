@@ -57,7 +57,7 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 }
 
 void MyApplication::tickEvent() {
-     cout << "TickEvent:" << count++ << endl;
+//     cout << "TickEvent:" << count++ << endl;
 
      _dataReceiver->spin_ros_node();
      _regionCalculator->generate_regions(_dataReceiver, appState);
@@ -222,26 +222,38 @@ void MyApplication::drawEvent() {
     _imgui.newFrame();
 
     ImGui::Text("MapSense");
+    if(ImGui::BeginTabBar("Tab Bar")){
+        if(ImGui::BeginTabItem("Launcher")) {
 
-    if(ImGui::Button("Test PCA")) {testPCA();}
+            if (ImGui::Button("Test PCA")) { testPCA(); }
+            if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
+            if (ImGui::Button("Clear Patches")) { clear(planePatches); }
+            if (ImGui::Button("Generate Patches")) {
+                clear(planePatches);
+                generate_patches();
+            }
+            if (ImGui::Button("Show Input Depth")) { displayDebugOutput(_regionCalculator->inputDepth); }
+            if (ImGui::Button("Show Filtered Depth")) {
+                Mat dispDepth;
+                _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
+                displayDebugOutput(dispDepth);
+            }
+            ImGui::SameLine(180);
+            ImGui::Checkbox("Show Graph", &_showGraph);
+            if (ImGui::Button("Show Region Components")) {
+                displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);
+            }
 
+            ImGui::EndTabItem();
+        }
 
+        if(ImGui::BeginTabItem("ROS")){
+            if(ImGui::Button("Show Input Depth")){displayDebugOutput(_regionCalculator->inputDepth);}
+            ImGui::EndTabItem();
+        }
 
-    if(ImGui::ColorEdit3("Color", _clearColor.data())){GL::Renderer::setClearColor(_clearColor);}
-    if(ImGui::Button("Clear Patches")){clear(planePatches);}
-    if(ImGui::Button("Generate Patches")){
-        clear(planePatches);
-        generate_patches();
+        ImGui::EndTabBar();
     }
-    if(ImGui::Button("Show Input Depth")){displayDebugOutput(_regionCalculator->inputDepth);}
-    if(ImGui::Button("Show Filtered Depth")){
-        Mat dispDepth;
-        _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
-        displayDebugOutput(dispDepth);
-    }
-    ImGui::SameLine(180);
-    ImGui::Checkbox("Show Graph", &_showGraph);
-    if(ImGui::Button("Show Region Components")){displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);}
 
     ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
     ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);

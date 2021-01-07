@@ -19,17 +19,17 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
                       appState.MERGE_ANGULAR_THRESHOLD,
                       appState.MERGE_DISTANCE_THRESHOLD};
 
-    printf("ParamsCPU(%.4lf, %.4lf, %.4lf)\n", appState.FILTER_DISPARITY_THRESHOLD, appState.MERGE_ANGULAR_THRESHOLD, appState.MERGE_DISTANCE_THRESHOLD);
+    ROS_INFO("ParamsCPU(%.4lf, %.4lf, %.4lf)", appState.FILTER_DISPARITY_THRESHOLD, appState.MERGE_ANGULAR_THRESHOLD, appState.MERGE_DISTANCE_THRESHOLD);
     cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
-    cout << sizeof(params) / sizeof(params[0]) << endl;
+
+    Mat depthMat = inputDepth.clone();
+    Mat colorMat = inputColor.clone();
 
     /* Input Data OpenCL Buffers */
-    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(inputDepth.data);
-    uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(inputColor.data);
+    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);
+    uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(colorMat.data);
     cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT, 0, depthBuffer);
     cl::Image2D clColor(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), WIDTH, HEIGHT, 0, colorBuffer);
-
-    cout << "DEBUG" << endl;
 
     /* Output Data OpenCL Buffers */
     // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), WIDTH, HEIGHT);
@@ -199,7 +199,7 @@ void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, Appl
 
     this->generatePatchGraph(appState); // Generate patch graph of connected patches on GPU
     this->mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
-    ROS_INFO("Planar Regions Generated: %d\n", planarRegionList.size());
+    ROS_INFO("Planar Regions Generated: %d", planarRegionList.size());
 
     map_sense::PlanarRegionList regionList;
     for(int i = 0; i<planarRegionList.size(); i++){
@@ -214,6 +214,15 @@ void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, Appl
         region.centroid.x = static_cast<double>(planarRegionList[i]->getMeanCenter().x());
         region.centroid.y = static_cast<double>(planarRegionList[i]->getMeanCenter().y());
         region.centroid.z = static_cast<double>(planarRegionList[i]->getMeanCenter().z());
+
+        for(int j = 0; j<planarRegionList[i]->getVertices().size(); j++){
+            Vector3f vertex = planarRegionList[i]->getVertices()[j];
+            geometry_msgs::Point point;
+            point.x = static_cast<double>(vertex.x());
+            point.y = static_cast<double>(vertex.y());
+            point.z = static_cast<double>(vertex.z());
+            region.vertices.emplace_back(point);
+        }
         regionList.regions.emplace_back(region);
     }
     regionList.numOfRegions = planarRegionList.size();
