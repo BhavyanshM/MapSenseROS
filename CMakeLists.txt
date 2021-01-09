@@ -44,8 +44,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
 	FILES
-	PlanarRegionList.msg
-	PlanarRegionMessage.msg
+	RawGPUPlanarRegionList.msg
+	RawGPUPlanarRegion.msg
 )
 
 generate_messages(
@@ -71,13 +71,24 @@ set(SOURCE_FILES
 		src/GPU.cpp
 		src/PlanarRegionCalculator.cpp
 		src/SensorDataReceiver.cpp
-		src/ScenePrimitives.cpp)
+		src/ScenePrimitives.cpp
+		src/MapFrame.cpp
+		src/MapFrameProcessor.cpp
+		src/PlanarRegion.cpp
+		src/MeshGenerator.cpp
+		src/ApplicationState.cpp)
 
 set (HEADERS
 		include/RegionFinder.h
 		include/GPU.h
 		src/PlanarRegionCalculator.h
-		src/SensorDataReceiver.h src/MapFrame.cpp src/MapFrame.h src/MapFrameProcessor.cpp src/MapFrameProcessor.h src/ImGuiExample.cpp src/PlanarRegion.cpp src/PlanarRegion.h src/MeshGenerator.cpp src/MeshGenerator.h src/ApplicationState.cpp src/ApplicationState.h src/ScenePrimitives.h)
+		src/SensorDataReceiver.h
+		src/MapFrame.h
+		src/MapFrameProcessor.h
+		src/PlanarRegion.h
+		src/MeshGenerator.h
+		src/ApplicationState.h
+		src/ScenePrimitives.h)
 
 include_directories(
   include
@@ -104,13 +115,7 @@ target_link_libraries(planar_region_publisher
 )
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 
-add_executable(ImGuiEx src/ImGuiExample.cpp)
-target_link_libraries(ImGuiEx PRIVATE
-		Corrade::Main
-		Magnum::Application
-		Magnum::GL
-		Magnum::Magnum
-		MagnumIntegration::ImGui)
+
 #set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 

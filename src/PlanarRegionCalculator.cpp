@@ -201,9 +201,9 @@ void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, Appl
     this->mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
     ROS_INFO("Planar Regions Generated: %d", planarRegionList.size());
 
-    map_sense::PlanarRegionList regionList;
+    map_sense::RawGPUPlanarRegionList regionList;
     for(int i = 0; i<planarRegionList.size(); i++){
-        map_sense::PlanarRegionMessage region;
+        map_sense::RawGPUPlanarRegion region;
         region.numOfPatches = planarRegionList[i]->getNumPatches();
         region.id = planarRegionList[i]->getId();
         region.normal = geometry_msgs::Vector3();

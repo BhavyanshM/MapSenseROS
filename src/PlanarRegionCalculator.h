@@ -28,7 +28,7 @@
 #include "SensorDataReceiver.h"
 #include "PlanarRegion.h"
 
-#include "map_sense/PlanarRegionList.h"
+#include "map_sense/RawGPUPlanarRegionList.h"
 
 using namespace ros;
 using namespace std;

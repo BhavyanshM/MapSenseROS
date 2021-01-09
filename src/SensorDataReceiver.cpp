@@ -49,7 +49,7 @@ void SensorDataReceiver::init_ros_node(int argc, char **argv) {
     init(argc, argv, "PlanarRegionPublisher");
     nh = new NodeHandle();
 
-    planarRegionPub = nh->advertise<map_sense::PlanarRegionList>("/map/regions/test", 10);
+    planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 10);
     subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &SensorDataReceiver::depthCallback, this);
     subColor = nh->subscribe("/camera/color/image_raw", 8, &SensorDataReceiver::colorCallback, this);
     ROS_INFO("Started ROS Node");

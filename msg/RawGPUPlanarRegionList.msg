@@ -1,3 +1,3 @@
 std_msgs/Header header
-map_sense/PlanarRegionMessage[] regions
+map_sense/RawGPUPlanarRegion[] regions
 uint16 numOfRegions

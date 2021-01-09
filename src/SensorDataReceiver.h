@@ -16,7 +16,7 @@
 #include "math.h"
 #include <sstream>
 #include <random>
-#include "map_sense/PlanarRegionList.h"
+#include "map_sense/RawGPUPlanarRegionList.h"
 
 using namespace ros;
 using namespace std;
