@@ -7,6 +7,11 @@
 
 #include <string>
 
+#define SHOW_INPUT_DEPTH 1
+#define SHOW_FILTERED_DEPTH 2
+#define SHOW_REGION_COMPONENTS 0
+
+
 using namespace std;
 
 class ApplicationState {

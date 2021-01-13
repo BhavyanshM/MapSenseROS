@@ -56,11 +56,30 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
 }
 
+void displayDebugOutput(Mat disp){
+    namedWindow("DebugOutput", WINDOW_NORMAL);
+    resizeWindow("DebugOutput", (int)(disp.cols), (int)(disp.rows));
+    imshow("DebugOutput", disp);
+    waitKey(1);
+}
+
+
 void MyApplication::tickEvent() {
 //     cout << "TickEvent:" << count++ << endl;
-
-     _dataReceiver->spin_ros_node();
-     _regionCalculator->generate_regions(_dataReceiver, appState);
+    switch(_displayItem){
+        case SHOW_INPUT_DEPTH : displayDebugOutput(_regionCalculator->inputDepth); break;
+        case SHOW_REGION_COMPONENTS : displayDebugOutput(_regionCalculator->mapFrameProcessor.debug); break;
+        case SHOW_FILTERED_DEPTH : {
+            Mat dispDepth;
+            _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
+            displayDebugOutput(dispDepth);
+        } break;
+        case -1 : destroyAllWindows(); break;
+    }
+    if(_rosEnabled){
+        _dataReceiver->spin_ros_node();
+        _regionCalculator->generate_regions(_dataReceiver, appState);
+    }
 }
 
 void MyApplication::viewportEvent(ViewportEvent& event) {
@@ -179,41 +198,7 @@ void MyApplication::generate_patches(){
     }
 }
 
-void displayDebugOutput(Mat disp){
-    namedWindow("DebugOutput", WINDOW_NORMAL);
-    resizeWindow("DebugOutput", (int)(disp.cols), (int)(disp.rows));
-    imshow("DebugOutput", disp);
-    waitKey(100);
-}
 
-void testPCA(){
-    // copy coordinates to  matrix in Eigen format
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator (seed);
-    std::normal_distribution<double> distribution (0.0,4.0);
-
-    Matrix< float, 3, Dynamic> coord(3, 325);
-    int count = 0;
-    for (int i = -10; i < 15; i+=2){
-        for(int j = -10; j<40; j+=2){
-            coord(0, count) = (float)i;
-            coord(1, count) = (float)j;
-            coord(2, count) = (float) ((-5 * i + 7 * j - 5) * (1. / 5) + distribution(generator));
-            printf("%.2lf, %.2lf, %.2lf\n", coord(0,count), coord(1,count), coord(2,count));
-            count ++;
-        }
-    }
-    cout << count << endl;
-    cout << coord << endl;
-
-    Vector3f centroid(coord.row(0).mean(), coord.row(1).mean(), coord.row(2).mean());
-    coord.row(0).array() -= centroid(0); coord.row(1).array() -= centroid(1); coord.row(2).array() -= centroid(2);
-    auto svd = coord.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
-    Vector3f plane_normal = svd.matrixU().rightCols<1>();
-
-    cout << plane_normal << endl;
-
-}
 
 void MyApplication::drawEvent() {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
@@ -222,38 +207,15 @@ void MyApplication::drawEvent() {
     _imgui.newFrame();
 
     ImGui::Text("MapSense");
-    if(ImGui::BeginTabBar("Tab Bar")){
-        if(ImGui::BeginTabItem("Launcher")) {
 
-            if (ImGui::Button("Test PCA")) { testPCA(); }
-            if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
-            if (ImGui::Button("Clear Patches")) { clear(planePatches); }
-            if (ImGui::Button("Generate Patches")) {
-                clear(planePatches);
-                generate_patches();
-            }
-            if (ImGui::Button("Show Input Depth")) { displayDebugOutput(_regionCalculator->inputDepth); }
-            if (ImGui::Button("Show Filtered Depth")) {
-                Mat dispDepth;
-                _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
-                displayDebugOutput(dispDepth);
-            }
-            ImGui::SameLine(180);
-            ImGui::Checkbox("Show Graph", &_showGraph);
-            if (ImGui::Button("Show Region Components")) {
-                displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);
-            }
+    if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
 
-            ImGui::EndTabItem();
-        }
-
-        if(ImGui::BeginTabItem("ROS")){
-            if(ImGui::Button("Show Input Depth")){displayDebugOutput(_regionCalculator->inputDepth);}
-            ImGui::EndTabItem();
-        }
-
-        ImGui::EndTabBar();
-    }
+    if(ImGui::Button("Show Region Components")) _displayItem = 0;
+    if(ImGui::Button("Show Input Depth")) _displayItem = 1;
+    if(ImGui::Button("Show Filtered Depth")) _displayItem = 2;
+    ImGui::SameLine(180);
+    ImGui::Checkbox("Show Graph", &_showGraph);
+    if(ImGui::Button("Hide Display")) { destroyAllWindows();destroyAllWindows();_displayItem = -1; }
 
     ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
     ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);
@@ -261,6 +223,25 @@ void MyApplication::drawEvent() {
     ImGui::SliderFloat("Filter Disparity Threshold", &appState.FILTER_DISPARITY_THRESHOLD, 1000, 4000);
     ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01, 0.16);
     ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.2f, 1.0f);
+
+    if(ImGui::BeginTabBar("Tab Bar")){
+        if(ImGui::BeginTabItem("Launcher")) {
+            if (ImGui::Button("Generate Patches")) {
+                clear(planePatches);
+                generate_patches();
+            }
+            ImGui::SameLine(180);
+            if (ImGui::Button("Clear Patches")) { clear(planePatches); }
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("ROS")){
+            if(ImGui::Button("Enable ROS Node")){_rosEnabled = true;}
+            ImGui::SameLine(180);
+            if(ImGui::Button("Disable ROS Node")){_rosEnabled = false;}
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
 
     ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 

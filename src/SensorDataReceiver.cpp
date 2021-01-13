@@ -26,10 +26,10 @@ void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
             Mat dispDepth = depth.clone();
             dispDepth.convertTo(dispDepth, -1, 10, 100);
             //
-            imshow("RealSense L515 Depth", dispDepth);
+//            imshow("RealSense L515 Depth", dispDepth);
             // imshow("RealSense L515 Color", depth);
-            int code = waitKeyEx(1);
-            if (code == 1048689) exit(1);
+//            int code = waitKeyEx(1);
+//            if (code == 1048689) exit(1);
             // if (code == 1048691) {
             //     imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depth);
             //     imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", color);
