@@ -149,7 +149,6 @@ void fit(const Mat &color, const Mat &depth, Mat &regionOutput) {
 
 void depthCallback(const ImageConstPtr &depthMsg) {
     depthMessage = depthMsg;
-    printf("ReachedDepth\n");
 }
 
 void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
@@ -159,6 +158,7 @@ void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
 void processDataCallback(const TimerEvent &) {
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
+    ROS_INFO("Process Data Callback:", depthMessage == nullptr, colorMessage == nullptr);
     if (depthMessage != nullptr) {
         try {
             // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);

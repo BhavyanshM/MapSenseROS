@@ -88,7 +88,7 @@ set (HEADERS
 		src/PlanarRegion.h
 		src/MeshGenerator.h
 		src/ApplicationState.h
-		src/ScenePrimitives.h)
+		src/ScenePrimitives.h src/RegionHole.cpp src/RegionHole.h)
 
 include_directories(
   include

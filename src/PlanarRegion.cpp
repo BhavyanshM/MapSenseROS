@@ -30,6 +30,10 @@ vector<Vector3f> PlanarRegion::getVertices() {
     return boundaryVertices;
 }
 
+vector<Vector2i> PlanarRegion::getLeafPatches() {
+    return leafPatches;
+}
+
 int PlanarRegion::getNumOfBoundaryVertices() {
     return this->boundaryVertices.size();
 }
@@ -44,6 +48,10 @@ void PlanarRegion::addPatch(Vector3f normal, Vector3f center) {
 
 void PlanarRegion::insertBoundaryVertex(Vector3f vertex) {
     this->boundaryVertices.push_back(vertex);
+}
+
+void PlanarRegion::insertLeafPatch(Vector2i pos){
+    this->leafPatches.push_back(pos);
 }
 
 int PlanarRegion::getNumPatches() {

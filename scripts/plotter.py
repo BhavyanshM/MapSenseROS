@@ -1,13 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-plt.figure(figsize=(10,8))
+plt.figure(figsize=(20,20))
 
-data = np.loadtxt("plotter_data.csv", delimiter=',', dtype=np.float64)
+data = np.loadtxt("data2D.txt", delimiter=',', dtype=np.float64)
 
-plt.plot(data[:,0], data[:,1], 'go')
+x,y = data[:,1], -data[:,0]
+
+plt.plot(x, y, 'go')
 
 for i in range(data.shape[0]):
-    plt.text(data[i][0] + 0.1, data[i][1] + 0.1, str(i))
+    plt.text(x[i]+0.1 , y[i]+0.1 , str(i))
 
 plt.show()

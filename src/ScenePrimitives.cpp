@@ -210,11 +210,15 @@ void MyApplication::drawEvent() {
 
     if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
 
-    if(ImGui::Button("Show Region Components")) _displayItem = 0;
-    if(ImGui::Button("Show Input Depth")) _displayItem = 1;
-    if(ImGui::Button("Show Filtered Depth")) _displayItem = 2;
+    if(ImGui::Button("Region Components")) _displayItem = 0;
+    ImGui::SameLine(140);
+    ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
+    ImGui::SameLine(220);
+    ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
+    if(ImGui::Button("Input Depth")) _displayItem = 1;
+    if(ImGui::Button("Filtered Depth")) _displayItem = 2;
     ImGui::SameLine(180);
-    ImGui::Checkbox("Show Graph", &_showGraph);
+    ImGui::Checkbox("Graph", &_showGraph);
     if(ImGui::Button("Hide Display")) { destroyAllWindows();destroyAllWindows();_displayItem = -1; }
 
     ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);

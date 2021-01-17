@@ -12,30 +12,22 @@ void SensorDataReceiver::colorCallback(const sensor_msgs::ImageConstPtr &colorMs
 void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
-    ROS_INFO("Loading Next Frame");
-    if (colorMessage != nullptr && depthMessage != nullptr) {
+    ROS_INFO("Process Data Callback");
+    if (depthMessage != nullptr) {
         try {
-            ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
-
-            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
-            color = img_ptr_color->image;
-
+            ROS_INFO("Callback: Depth:%d", depthMessage->header.stamp.sec);
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             depth = img_ptr_depth->image;
 
-            Mat dispDepth = depth.clone();
-            dispDepth.convertTo(dispDepth, -1, 10, 100);
-            //
-//            imshow("RealSense L515 Depth", dispDepth);
-            // imshow("RealSense L515 Color", depth);
-//            int code = waitKeyEx(1);
-//            if (code == 1048689) exit(1);
-            // if (code == 1048691) {
-            //     imwrite("/home/quantum/Workspace/Storage/Other/Temp/Depth_L515.png", depth);
-            //     imwrite("/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png", color);
-            //     ROS_INFO("Pressed S %d", code);
-            // }
-            // ROS_INFO("Pressed: %d", code);
+        } catch (cv_bridge::Exception &e) {
+            ROS_ERROR("Could not convert to image!");
+        }
+    }
+    if (colorMessage != nullptr ) {
+        try {
+            ROS_INFO("Callback: Color:%d", colorMessage->header.stamp.sec);
+            img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
+            color = img_ptr_color->image;
 
         } catch (cv_bridge::Exception &e) {
             ROS_ERROR("Could not convert to image!");

@@ -29,13 +29,16 @@ private:
     string colorFile = "/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png";
 
 public:
-     float MERGE_ANGULAR_THRESHOLD = 0.6;
-     float MERGE_DISTANCE_THRESHOLD = 0.07;
+     float MERGE_ANGULAR_THRESHOLD = 0.5;
+     float MERGE_DISTANCE_THRESHOLD = 0.09;
      float FILTER_DISPARITY_THRESHOLD = 2000;
 
      float MAGNUM_PATCH_SCALE = 0.01;
      int REGION_MIN_PATCHES = 20;
      int REGION_BOUNDARY_DIFF = 20;
+
+     bool SHOW_BOUNDARIES = true;
+     bool SHOW_PATCHES = true;
 
 };
 
