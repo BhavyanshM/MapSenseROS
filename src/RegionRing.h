@@ -13,12 +13,12 @@
 using namespace Eigen;
 using namespace std;
 
-class RegionHole {
+class RegionRing {
 public:
     vector<Vector3f> boundaryIndices;
     int id;
 
-    RegionHole(int id);
+    RegionRing(int id);
     void insertBoundaryVertex(Vector3f pos);
     int getNumOfVertices() const;
     int getId() const;

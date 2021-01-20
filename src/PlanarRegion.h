@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <iostream>
-#include "RegionHole.h"
+#include "RegionRing.h"
 #include <memory>
 
 using namespace Eigen;
@@ -38,7 +38,7 @@ public:
 
     int getId();
 
-    vector<shared_ptr<RegionHole>> rings;
+    vector<shared_ptr<RegionRing>> rings;
 };
 
 

@@ -20,7 +20,7 @@ public:
 
     void generateSegmentation(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList, ApplicationState params);
     void dfs(int x, int y, int component, int& num, Mat& debug, uint8_t* framePatch, shared_ptr<PlanarRegion> planarRegion, MapFrame inputFrame);
-    void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionHole> planarRegion, MapFrame inputFrame);
+    void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing, MapFrame inputFrame);
     void findBoundaryAndHoles(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
     void printPatchGraph(MapFrame inputFrame);
 

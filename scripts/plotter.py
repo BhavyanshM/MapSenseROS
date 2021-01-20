@@ -7,6 +7,9 @@ data = np.loadtxt("data2D.txt", delimiter=',', dtype=np.float64)
 
 x,y = data[:,1], -data[:,0]
 
+print(x)
+print(y)
+
 plt.plot(x, y, 'go')
 
 for i in range(data.shape[0]):
