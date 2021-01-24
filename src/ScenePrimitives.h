@@ -16,6 +16,7 @@
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/Primitives/Plane.h>
 #include <Magnum/Primitives/Cube.h>
+#include <Magnum/Primitives/Line.h>
 #include <Magnum/Primitives/Circle.h>
 #include <Magnum/Primitives/Circle.h>
 #include <Magnum/Primitives/Axis.h>
@@ -58,6 +59,8 @@ private:
 
     void viewportEvent(ViewportEvent& event) override;
     void generate_patches();
+    void draw_patches();
+    void draw_regions();
 
     ApplicationState appState;
     ImGuiIntegration::Context _imgui{NoCreate};
@@ -77,6 +80,7 @@ private:
     SceneGraph::Camera3D *_camera;
 
     vector<Object3D*> planePatches;
+    vector<Object3D*> regionEdges;
 
     SceneGraph::DrawableGroup3D _drawables;
 

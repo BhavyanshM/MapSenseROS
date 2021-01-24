@@ -56,13 +56,19 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
 
 }
 
+void clear(vector<Object3D*>& objects){
+    for(int i = 0; i<objects.size(); i++){
+        delete objects[i];
+    }
+    objects.clear();
+}
+
 void displayDebugOutput(Mat disp){
     namedWindow("DebugOutput", WINDOW_NORMAL);
     resizeWindow("DebugOutput", (int)(disp.cols), (int)(disp.rows));
     imshow("DebugOutput", disp);
     waitKey(1);
 }
-
 
 void MyApplication::tickEvent() {
 //     cout << "TickEvent:" << count++ << endl;
@@ -79,6 +85,8 @@ void MyApplication::tickEvent() {
     if(_rosEnabled){
         _dataReceiver->spin_ros_node();
         _regionCalculator->generate_regions(_dataReceiver, appState);
+        clear(regionEdges);
+        draw_regions();
     }
 }
 
@@ -129,49 +137,9 @@ void MyApplication::mouseScrollEvent(MouseScrollEvent &event) {
     event.setAccepted();
 }
 
-void clear(vector<Object3D*>& objects){
-    for(int i = 0; i<objects.size(); i++){
-        delete objects[i];
-    }
-    objects.clear();
-}
 
-void MyApplication::generate_patches(){
-    _regionCalculator->launch_tester(appState);
-//    auto start = high_resolution_clock::now();
-//    for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
-//
-//         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-//         Vector3f normal = planarRegion->getPCANormal();
-//         Vector3f center = planarRegion->getMeanCenter();
-//         Vector3 up = {0,0,-1};
-//         Vector3 dir = {normal[0], normal[1], -normal[2]};
-//         Vector3 axis = Math::cross(up, dir).normalized();
-//         Rad angle = Math::acos(Math::dot(up, dir)/(up.length()*dir.length()));
-//
-//
-//         auto &region = _sensor->addChild<Object3D>();
-//         // float regionScale = 0.001 * (float) planarRegion->getNumPatches();
-//         float regionScale = 1.2f;
-//         region.scale({ regionScale*0.4f, regionScale*0.4f, regionScale*0.4f});
-//         region.translate({ center[0], center[1], center[2]});
-//         // region.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
-//
-//         axis = axis.normalized();
-//         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
-//         if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()) && axis.isNormalized()){
-//             Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-//             region.transformLocal(Matrix4(quat.toMatrix()));
-//         }
-//         // GL::Buffer bufferToPack;
-//         // MeshGenerator::getPlanarRegionBuffer(planarRegion, bufferToPack);
-//         cout << "REACHED:" << _regionCalculator->planarRegionList.size() << endl;
-//         new RedCubeDrawable{region, &_drawables, MeshGenerator::getPlanarRegionMesh(planarRegion) , {(planarRegion->getId() * 123 % 255)/255.0f, (planarRegion->getId() * 161 % 255)/255.0f, (planarRegion->getId() * 113 % 255)/255.0f}};
-//    }
-//    auto end = high_resolution_clock::now();
-//    auto duration = duration_cast<microseconds>(end - start).count();
-//    ROS_INFO("PCA Normal Took: %.2f ms\n", duration / (float) 1000);
 
+void MyApplication::draw_patches(){
     for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
         for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
             uint8_t edges = _regionCalculator->output.getPatchData().at<uint8_t>(i, j);
@@ -198,6 +166,34 @@ void MyApplication::generate_patches(){
     }
 }
 
+void MyApplication::draw_regions(){
+    auto start = high_resolution_clock::now();
+    for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
+
+         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
+//         Vector3f normal = planarRegion->getPCANormal();
+//         Vector3f center = planarRegion->getMeanCenter();
+        // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
+        vector<Vector3f> vertices = planarRegion->getVertices();
+        for(int j = 6; j<vertices.size(); j+=6){
+            Object3D& edge = _sensor->addChild<Object3D>();
+            Vector3f prevPoint = vertices[j-6];
+            Vector3f curPoint = vertices[j];
+            regionEdges.emplace_back(&edge);
+            new RedCubeDrawable{edge, &_drawables, Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()},{curPoint.x(), curPoint.y(), curPoint.z()}),
+                                {(planarRegion->getId() * 123 % 255) / 255.0f, (planarRegion->getId() * 161 % 255) / 255.0f, (planarRegion->getId() * 113 % 255) / 255.0f}};
+        }
+    }
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end - start).count();
+    ROS_INFO("PCA Normal Took: %.2f ms\n", duration / (float) 1000);
+
+}
+
+void MyApplication::generate_patches(){
+    _regionCalculator->launch_tester(appState);
+    draw_patches();
+}
 
 
 void MyApplication::drawEvent() {
