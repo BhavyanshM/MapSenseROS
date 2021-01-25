@@ -37,6 +37,8 @@ public:
      int REGION_MIN_PATCHES = 20;
      int REGION_BOUNDARY_DIFF = 20;
 
+     int NUM_SKIP_EDGES = 6;
+
      bool SHOW_BOUNDARIES = true;
      bool SHOW_PATCHES = true;
 

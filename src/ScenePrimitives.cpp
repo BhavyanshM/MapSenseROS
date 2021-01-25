@@ -177,9 +177,9 @@ void MyApplication::draw_regions(){
 //         Vector3f center = planarRegion->getMeanCenter();
         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
         vector<Vector3f> vertices = planarRegion->getVertices();
-        for(int j = 6; j<vertices.size(); j+=6){
+        for(int j = appState.NUM_SKIP_EDGES; j<vertices.size(); j+=appState.NUM_SKIP_EDGES){
             Object3D& edge = _sensor->addChild<Object3D>();
-            Vector3f prevPoint = vertices[j-6];
+            Vector3f prevPoint = vertices[j-appState.NUM_SKIP_EDGES];
             Vector3f curPoint = vertices[j];
             regionEdges.emplace_back(&edge);
             new RedCubeDrawable{edge, &_drawables, Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()},{curPoint.x(), curPoint.y(), curPoint.z()}),
@@ -188,7 +188,7 @@ void MyApplication::draw_regions(){
     }
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
-    ROS_INFO("Visualization Took: %.2f ms\n", duration / (float) 1000);
+    ROS_INFO("Visualization Took: %.2f ms", duration / (float) 1000);
 
 }
 
@@ -246,6 +246,7 @@ void MyApplication::drawEvent() {
         ImGui::EndTabBar();
     }
     ImGui::Checkbox("Show Edges", &_showRegionEdges);
+    ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 10);
 
     ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
