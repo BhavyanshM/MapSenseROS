@@ -68,6 +68,7 @@ private:
     Float _floatValue = 0.0f;
     bool _showGraph = true;
     bool _rosEnabled = false;
+    bool _showRegionEdges = false;
     uint8_t _displayItem = -1;
 
     Scene3D _scene;

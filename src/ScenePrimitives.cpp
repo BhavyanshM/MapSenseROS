@@ -85,8 +85,10 @@ void MyApplication::tickEvent() {
     if(_rosEnabled){
         _dataReceiver->spin_ros_node();
         _regionCalculator->generate_regions(_dataReceiver, appState);
-        clear(regionEdges);
-        draw_regions();
+        if(_showRegionEdges){
+            clear(regionEdges);
+            draw_regions();
+        }
     }
 }
 
@@ -186,7 +188,7 @@ void MyApplication::draw_regions(){
     }
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
-    ROS_INFO("PCA Normal Took: %.2f ms\n", duration / (float) 1000);
+    ROS_INFO("Visualization Took: %.2f ms\n", duration / (float) 1000);
 
 }
 
@@ -215,6 +217,7 @@ void MyApplication::drawEvent() {
     if(ImGui::Button("Filtered Depth")) _displayItem = 2;
     ImGui::SameLine(180);
     ImGui::Checkbox("Graph", &_showGraph);
+
     if(ImGui::Button("Hide Display")) { destroyAllWindows();destroyAllWindows();_displayItem = -1; }
 
     ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
@@ -242,6 +245,7 @@ void MyApplication::drawEvent() {
         }
         ImGui::EndTabBar();
     }
+    ImGui::Checkbox("Show Edges", &_showRegionEdges);
 
     ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
