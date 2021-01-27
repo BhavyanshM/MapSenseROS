@@ -25,10 +25,10 @@
 #include <sstream>
 #include <random>
 
-#include "SensorDataReceiver.h"
+#include "NetworkManager.h"
 #include "PlanarRegion.h"
 
-#include "map_sense/RawGPUPlanarRegionList.h"
+
 
 using namespace ros;
 using namespace std;
@@ -50,7 +50,7 @@ public:
 
     Publisher planarRegionPub;
 
-    SensorDataReceiver* _dataReceiver;
+    NetworkManager* _dataReceiver;
 
     const int SUB_H = 60;
     const int SUB_W = 80;
@@ -65,8 +65,9 @@ public:
     void generatePatchGraph(ApplicationState appState);
     void init_opencl();
     void launch_tester(ApplicationState appState);
-    void generate_regions(SensorDataReceiver* receiver, ApplicationState appState);
+    void generate_regions(NetworkManager* receiver, ApplicationState appState);
     void getFilteredDepth(Mat& dispDepth, bool showGraph);
+    void getInputDepth(Mat& dispDepth, bool showGraph);
 
 };
 

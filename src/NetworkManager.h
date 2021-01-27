@@ -17,6 +17,7 @@
 #include <sstream>
 #include <random>
 #include "map_sense/RawGPUPlanarRegionList.h"
+#include "map_sense/MapSenseParams.h"
 
 using namespace ros;
 using namespace std;
@@ -24,13 +25,17 @@ using namespace chrono;
 using namespace cv;
 using namespace sensor_msgs;
 
-class SensorDataReceiver {
+class NetworkManager {
 public:
     ImageConstPtr colorMessage;
+    map_sense::MapSenseParams paramsMessage;
+    CompressedImageConstPtr colorCompressedMessage;
     ImageConstPtr depthMessage;
     NodeHandle* nh;
     Subscriber subDepth;
     Subscriber subColor;
+    Subscriber subColorCompressed;
+    Subscriber subMapSenseParams;
     Publisher planarRegionPub;
 
 
@@ -46,6 +51,8 @@ public:
 
     void depthCallback(const ImageConstPtr &depthMsg);
     void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg);
+    void colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr &colorMsg);
+    void mapSenseParamsCallback(const map_sense::MapSenseParams compressedMsg);
 
     void init_ros_node(int argc, char **argv);
     void spin_ros_node();

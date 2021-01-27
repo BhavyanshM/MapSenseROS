@@ -1,17 +1,29 @@
-#include "SensorDataReceiver.h"
+#include "NetworkManager.h"
 
-void SensorDataReceiver::depthCallback(const ImageConstPtr &depthMsg) {
+void NetworkManager::depthCallback(const ImageConstPtr &depthMsg) {
     ROS_INFO("Depth Callback", depthMsg->header.seq);
     depthMessage = depthMsg;
 }
 
-void SensorDataReceiver::colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
+void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
     colorMessage = colorMsg;
+    ROS_INFO("COLOR CALLBACK");
 }
 
-void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
+void NetworkManager::colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr &compressedMsg) {
+    colorCompressedMessage = compressedMsg;
+    ROS_INFO("COLOR CALLBACK");
+}
+
+void NetworkManager::mapSenseParamsCallback(const map_sense::MapSenseParams msg) {
+    paramsMessage = msg;
+    ROS_INFO("COLOR CALLBACK");
+}
+
+void NetworkManager::load_next_frame(Mat& depth, Mat& color){
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
+    cv_bridge::CvImagePtr img_ptr_color_compressed;
     ROS_INFO("Process Data Callback");
     if (depthMessage != nullptr) {
         try {
@@ -32,36 +44,48 @@ void SensorDataReceiver::load_next_frame(Mat& depth, Mat& color){
         } catch (cv_bridge::Exception &e) {
             ROS_ERROR("Could not convert to image!");
         }
+    } else
+    if (colorCompressedMessage != nullptr ) {
+        try {
+            ROS_INFO("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
+//            img_ptr_color = cv_bridge::toCvCopy(*colorCompressedMessage, image_encodings::TYPE_8UC3);
+            color = imdecode(cv::Mat(colorCompressedMessage->data), 1);
+
+        } catch (cv_bridge::Exception &e) {
+            ROS_ERROR("Could not convert compressedImage to image!");
+        }
     }
     ROS_INFO("Data Frame Loaded");
 }
 
-void SensorDataReceiver::init_ros_node(int argc, char **argv) {
+void NetworkManager::init_ros_node(int argc, char **argv) {
     ROS_INFO("Starting ROS Node");
     init(argc, argv, "PlanarRegionPublisher");
     nh = new NodeHandle();
 
     planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 10);
-    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &SensorDataReceiver::depthCallback, this);
-    subColor = nh->subscribe("/camera/color/image_raw", 8, &SensorDataReceiver::colorCallback, this);
+    subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &NetworkManager::depthCallback, this);
+    subColor = nh->subscribe("/camera/color/image_raw", 8, &NetworkManager::colorCallback, this);
+    subColorCompressed = nh->subscribe("/camera/color/image_raw/compressed", 8, &NetworkManager::colorCompressedCallback, this);
+//    subMapSenseParams = nh->subscribe("/map_sense/params", 8, &NetworkManager::colorCompressedCallback, this);
     ROS_INFO("Started ROS Node");
 }
 
-void SensorDataReceiver::spin_ros_node() {
+void NetworkManager::spin_ros_node() {
     ROS_INFO("SpinOnce");
     spinOnce();
 }
 
 
-void SensorDataReceiver::load_sample_depth(String filename, Mat& depth){
+void NetworkManager::load_sample_depth(String filename, Mat& depth){
     depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
 }
 
-void SensorDataReceiver::load_sample_color(String filename, Mat& color){
+void NetworkManager::load_sample_color(String filename, Mat& color){
     color = imread(filename, IMREAD_ANYCOLOR);
 }
 
-void SensorDataReceiver::get_sample_depth(Mat depth, float mean, float stddev) {
+void NetworkManager::get_sample_depth(Mat depth, float mean, float stddev) {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(mean, stddev);
     for (int i = 0; i < depth.cols; i++) {
@@ -78,7 +102,7 @@ void SensorDataReceiver::get_sample_depth(Mat depth, float mean, float stddev) {
     }
 }
 
-void SensorDataReceiver::get_sample_color(Mat color) {
+void NetworkManager::get_sample_color(Mat color) {
     for (int i = 0; i < color.rows; i++) {
         for (int j = 0; j < color.cols; j++) {
             color.at<Vec3b>(i, j) = Vec3b(0, 0, 255);

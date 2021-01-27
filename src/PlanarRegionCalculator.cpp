@@ -114,7 +114,13 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 }
 
 void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth, bool showGraph){
-    filteredDepth.convertTo(dispDepth, -1, 10, 200);
+    filteredDepth.convertTo(dispDepth, -1, 16, 100);
+    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+    if(showGraph) output.drawGraph(dispDepth);
+}
+
+void PlanarRegionCalculator::getInputDepth(Mat& dispDepth, bool showGraph){
+    inputDepth.convertTo(dispDepth, -1, 16, 100);
     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
     if(showGraph) output.drawGraph(dispDepth);
 }
@@ -190,7 +196,7 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
     }
 }
 
-void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, ApplicationState appState){
+void PlanarRegionCalculator::generate_regions(NetworkManager* receiver, ApplicationState appState){
     ROS_INFO("Generating Regions");
     this->_dataReceiver = receiver;
     _dataReceiver->load_next_frame(inputDepth, inputColor);
@@ -254,7 +260,7 @@ void PlanarRegionCalculator::generate_regions(SensorDataReceiver* receiver, Appl
 
 void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
 
-    SensorDataReceiver dataReceiver;
+    NetworkManager dataReceiver;
     // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
     dataReceiver.load_sample_depth(appState.getDepthFile(), inputDepth);
     dataReceiver.load_sample_color(appState.getColorFile(), inputColor);

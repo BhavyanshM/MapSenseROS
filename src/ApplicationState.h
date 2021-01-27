@@ -10,6 +10,7 @@
 #define SHOW_INPUT_DEPTH 1
 #define SHOW_FILTERED_DEPTH 2
 #define SHOW_REGION_COMPONENTS 0
+#define SHOW_INPUT_COLOR 3
 
 
 using namespace std;

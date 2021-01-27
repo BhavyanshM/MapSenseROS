@@ -86,7 +86,7 @@ private:
     SceneGraph::DrawableGroup3D _drawables;
 
     PlanarRegionCalculator* _regionCalculator;
-    SensorDataReceiver* _dataReceiver;
+    NetworkManager* _dataReceiver;
     int count = 0;
 };
 

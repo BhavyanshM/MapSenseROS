@@ -18,7 +18,7 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
                                    GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
     /* TODO: Instantiate the Information Processors */
-    _dataReceiver = new SensorDataReceiver();
+    _dataReceiver = new NetworkManager();
     _dataReceiver->init_ros_node(arguments.argc, arguments.argv);
 
     _regionCalculator = new PlanarRegionCalculator();
@@ -73,7 +73,12 @@ void displayDebugOutput(Mat disp){
 void MyApplication::tickEvent() {
 //     cout << "TickEvent:" << count++ << endl;
     switch(_displayItem){
-        case SHOW_INPUT_DEPTH : displayDebugOutput(_regionCalculator->inputDepth); break;
+        case SHOW_INPUT_COLOR : displayDebugOutput(_regionCalculator->inputColor); break;
+        case SHOW_INPUT_DEPTH : {
+            Mat dispDepth;
+            _regionCalculator->getInputDepth(dispDepth, _showGraph);
+            displayDebugOutput(dispDepth); break;
+        }
         case SHOW_REGION_COMPONENTS : displayDebugOutput(_regionCalculator->mapFrameProcessor.debug); break;
         case SHOW_FILTERED_DEPTH : {
             Mat dispDepth;
@@ -213,6 +218,7 @@ void MyApplication::drawEvent() {
     ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
     ImGui::SameLine(220);
     ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
+    if(ImGui::Button("Input Color")) _displayItem = 3;
     if(ImGui::Button("Input Depth")) _displayItem = 1;
     if(ImGui::Button("Filtered Depth")) _displayItem = 2;
     ImGui::SameLine(180);

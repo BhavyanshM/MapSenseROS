@@ -46,6 +46,7 @@ add_message_files(
 	FILES
 	RawGPUPlanarRegionList.msg
 	RawGPUPlanarRegion.msg
+	MapSenseParams.msg
 )
 
 generate_messages(
@@ -70,7 +71,7 @@ set(SOURCE_FILES
 		src/RegionFinder.cpp
 		src/GPU.cpp
 		src/PlanarRegionCalculator.cpp
-		src/SensorDataReceiver.cpp
+		src/NetworkManager.cpp
 		src/ScenePrimitives.cpp
 		src/MapFrame.cpp
 		src/MapFrameProcessor.cpp
@@ -82,7 +83,7 @@ set (HEADERS
 		include/RegionFinder.h
 		include/GPU.h
 		src/PlanarRegionCalculator.h
-		src/SensorDataReceiver.h
+		src/NetworkManager.h
 		src/MapFrame.h
 		src/MapFrameProcessor.h
 		src/PlanarRegion.h
