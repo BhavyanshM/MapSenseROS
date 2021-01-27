@@ -238,24 +238,6 @@ void PlanarRegionCalculator::generate_regions(NetworkManager* receiver, Applicat
     auto duration = duration_cast<microseconds>(end - start).count();
 
     ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
-
-    /* Debugging and Visualization */
-//     inputDepth.convertTo(inputDepth, -1, 10, 100);
-//     Mat dispDepth;
-//     inputDepth.convertTo(dispDepth, CV_8U, 1/256.0);
-//     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-//
-//     output.drawGraph(dispDepth);
-//
-//     namedWindow("RealSense L515 Depth", WINDOW_NORMAL);
-//     resizeWindow("RealSense L515 Depth", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
-//     setMouseCallback("RealSense L515 Depth", onMouse, (void *) &output);
-//     imshow("RealSense L515 Depth", dispDepth);
-//     imshow("RealSense L515 Color", inputColor);
-//     int code = waitKeyEx(1);
-//
-//     if (code == 1048689) exit(1);
-
 }
 
 void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
@@ -292,12 +274,5 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
     // output.drawGraph(dispDepth);
 
     cout << "PackAndMerge" << endl;
-
-    // namedWindow("PackAndMerge", WINDOW_NORMAL);
-    // resizeWindow("PackAndMerge", (int)(inputDepth.cols*1.5), (int)(inputDepth.rows*1.5));
-    // setMouseCallback("PackAndMerge", onMouse, (void *) &output);
-    // imshow("PackAndMerge", dispDepth);
-    // imshow("RealSense L515 Color", inputColor);
-    // waitKey(0);
 
 }
