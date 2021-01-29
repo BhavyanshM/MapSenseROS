@@ -22,7 +22,7 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _dataReceiver->init_ros_node(arguments.argc, arguments.argv);
 
     _regionCalculator = new PlanarRegionCalculator();
-    _regionCalculator->init_opencl();
+    _regionCalculator->initOpenCL();
 
     /* TODO: Check that the appropriate flags for renderer are set*/
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
@@ -89,7 +89,7 @@ void MyApplication::tickEvent() {
     }
     if(_rosEnabled){
         _dataReceiver->spin_ros_node();
-        _regionCalculator->generate_regions(_dataReceiver, appState);
+        _regionCalculator->generateRegions(_dataReceiver, appState);
         if(_showRegionEdges){
             clear(regionEdges);
             draw_regions();
@@ -175,9 +175,9 @@ void MyApplication::draw_patches(){
 
 void MyApplication::draw_regions(){
     auto start = high_resolution_clock::now();
-    for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
+    for(int i = 0; i<_regionCalculator->currentRegionList.size(); i++){
 
-         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
+         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->currentRegionList[i];
 //         Vector3f normal = planarRegion->getPCANormal();
 //         Vector3f center = planarRegion->getMeanCenter();
         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
     return app.exec();
 
     // PlanarRegionCalculator regionCalculator;
-    // regionCalculator.init_opencl();
+    // regionCalculator.initOpenCL();
     // regionCalculator.launch_tester();
 
 }

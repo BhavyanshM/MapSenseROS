@@ -326,7 +326,7 @@ void launch_tester() {
 //     // export ROSCONSOLE_FORMAT='${time:format string}'
 //     // export ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${line}]: ${message}'
 //
-//     init_opencl();
+//     initOpenCL();
 //     launch_ros_node(argc, argv);
 //     // launch_tester();
 //     return 0;

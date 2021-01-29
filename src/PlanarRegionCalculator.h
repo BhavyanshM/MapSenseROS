@@ -28,7 +28,7 @@
 #include "NetworkManager.h"
 #include "PlanarRegion.h"
 
-
+#include "tbb/tbb.h"
 
 using namespace ros;
 using namespace std;
@@ -60,14 +60,17 @@ public:
 
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
-    vector<shared_ptr<PlanarRegion>> planarRegionList;
+    vector<shared_ptr<PlanarRegion>> planarRegionList, currentRegionList, previousRegionList;
+    vector<int> matchIndices;
 
     void generatePatchGraph(ApplicationState appState);
-    void init_opencl();
+    void initOpenCL();
     void launch_tester(ApplicationState appState);
-    void generate_regions(NetworkManager* receiver, ApplicationState appState);
+    void generateRegions(NetworkManager* receiver, ApplicationState appState);
+    void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
     void getFilteredDepth(Mat& dispDepth, bool showGraph);
     void getInputDepth(Mat& dispDepth, bool showGraph);
+    void registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions, vector<int>& matchIndices);
 
 };
 

@@ -126,7 +126,7 @@ void PlanarRegionCalculator::getInputDepth(Mat& dispDepth, bool showGraph){
 }
 
 
-void PlanarRegionCalculator::init_opencl() {
+void PlanarRegionCalculator::initOpenCL() {
     origin[0] = 0;
     origin[1] = 0;
     origin[2] = 0;
@@ -196,7 +196,8 @@ static void onMouse(int event, int x, int y, int flags, void *userdata) {
     }
 }
 
-void PlanarRegionCalculator::generate_regions(NetworkManager* receiver, ApplicationState appState){
+
+void PlanarRegionCalculator::generateRegions(NetworkManager* receiver, ApplicationState appState){
     ROS_INFO("Generating Regions");
     this->_dataReceiver = receiver;
     _dataReceiver->load_next_frame(inputDepth, inputColor);
@@ -204,22 +205,57 @@ void PlanarRegionCalculator::generate_regions(NetworkManager* receiver, Applicat
     auto start = high_resolution_clock::now();
 
     this->generatePatchGraph(appState); // Generate patch graph of connected patches on GPU
-    this->mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
-    ROS_INFO("Planar Regions Generated: %d", planarRegionList.size());
+    this->mapFrameProcessor.generateSegmentation(output, currentRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+    ROS_INFO("Registering Regions: %d, %d", previousRegionList.size(), currentRegionList.size());
+    if(previousRegionList.size() > 0 && currentRegionList.size() > 0){
+        this->registerRegions(previousRegionList, currentRegionList, matchIndices);
+    }
+    previousRegionList = currentRegionList;
 
-    map_sense::RawGPUPlanarRegionList regionList;
-    for(int i = 0; i<planarRegionList.size(); i++){
+    ROS_INFO("Planar Regions Generated: %d", currentRegionList.size());
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end - start).count();
+    ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
+
+//    publishRegions(this->planarRegionList);
+}
+
+void PlanarRegionCalculator::registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions, vector<int>& matchIndices){
+    for(int i = 0; i<prevRegions.size(); i++){
+        int best = 0;
+        float minDiff = 10000000;
+        for(int j = 0; j<curRegions.size(); j++){
+            Vector3f prevCenter = prevRegions[i]->getMeanCenter();
+            Vector3f curCenter = curRegions[j]->getMeanCenter();
+            float diff = (prevCenter - curCenter).norm();
+            cout << prevCenter << endl;
+            cout << curCenter << endl;
+            printf("(%d,%d): (%.2f, %.2f)\n", i,j, diff, minDiff);
+            if (diff < minDiff){
+                minDiff = diff;
+                best = j;
+            }
+        }
+        ROS_INFO("Match(%d):%d ", i, best);
+        matchIndices.push_back(best);
+    }
+    printf("\n");
+}
+
+void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> rawRegionList){
+    map_sense::RawGPUPlanarRegionList planarRegionsToPublish;
+    for(int i = 0; i<rawRegionList.size(); i++){
         map_sense::RawGPUPlanarRegion region;
-        region.numOfPatches = planarRegionList[i]->getNumPatches();
-        region.id = planarRegionList[i]->getId();
+        region.numOfPatches = rawRegionList[i]->getNumPatches();
+        region.id = rawRegionList[i]->getId();
         region.normal = geometry_msgs::Vector3();
-        region.normal.x = static_cast<double>(planarRegionList[i]->getPCANormal().x());
-        region.normal.y = static_cast<double>(planarRegionList[i]->getPCANormal().y());
-        region.normal.z = static_cast<double>(planarRegionList[i]->getPCANormal().z());
+        region.normal.x = static_cast<double>(rawRegionList[i]->getPCANormal().x());
+        region.normal.y = static_cast<double>(rawRegionList[i]->getPCANormal().y());
+        region.normal.z = static_cast<double>(rawRegionList[i]->getPCANormal().z());
         region.centroid = geometry_msgs::Point();
-        region.centroid.x = static_cast<double>(planarRegionList[i]->getMeanCenter().x());
-        region.centroid.y = static_cast<double>(planarRegionList[i]->getMeanCenter().y());
-        region.centroid.z = static_cast<double>(planarRegionList[i]->getMeanCenter().z());
+        region.centroid.x = static_cast<double>(rawRegionList[i]->getMeanCenter().x());
+        region.centroid.y = static_cast<double>(rawRegionList[i]->getMeanCenter().y());
+        region.centroid.z = static_cast<double>(rawRegionList[i]->getMeanCenter().z());
 
         for(int j = 0; j<planarRegionList[i]->getVertices().size(); j++){
             Vector3f vertex = planarRegionList[i]->getVertices()[j];
@@ -229,15 +265,10 @@ void PlanarRegionCalculator::generate_regions(NetworkManager* receiver, Applicat
             point.z = static_cast<double>(vertex.z());
             region.vertices.emplace_back(point);
         }
-        regionList.regions.emplace_back(region);
+        planarRegionsToPublish.regions.emplace_back(region);
     }
-    regionList.numOfRegions = planarRegionList.size();
-    _dataReceiver->planarRegionPub.publish(regionList);
-
-    auto end = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(end - start).count();
-
-    ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
+    planarRegionsToPublish.numOfRegions = planarRegionList.size();
+    _dataReceiver->planarRegionPub.publish(planarRegionsToPublish);
 }
 
 void PlanarRegionCalculator::launch_tester(ApplicationState appState) {

@@ -19,9 +19,9 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
     this->params = params;
 
     /* For initial development only. Delete all old previous regions before inserting new ones. Old and new regions should be fused instead. */
-    for(int i = 0; i<planarRegionList.size(); i++){
-        planarRegionList[i].reset();
-    }
+//    for(int i = 0; i<planarRegionList.size(); i++){
+//        planarRegionList[i].reset();
+//    }
     planarRegionList.clear();
 
     int components = 0;
