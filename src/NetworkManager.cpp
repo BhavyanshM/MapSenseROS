@@ -82,7 +82,7 @@ void NetworkManager::load_sample_depth(String filename, Mat& depth){
 }
 
 void NetworkManager::load_sample_color(String filename, Mat& color){
-    color = imread(filename, IMREAD_ANYCOLOR);
+    color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
 }
 
 void NetworkManager::get_sample_depth(Mat depth, float mean, float stddev) {
