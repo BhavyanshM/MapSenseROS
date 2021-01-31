@@ -27,7 +27,7 @@ public:
 
 private:
     string depthFile = "/data/Depth_L515.png";
-    string colorFile = "/home/quantum/Workspace/Storage/Other/Temp/Color_L515.png";
+    string colorFile = "/data/Color_L515.png";
 
 public:
      float MERGE_ANGULAR_THRESHOLD = 0.5;
