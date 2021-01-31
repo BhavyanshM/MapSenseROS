@@ -49,6 +49,8 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     _camOriginCube->scale({0.01f, 0.01f, 0.01f});
     new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
+    namedWindow("DebugOutput", WINDOW_NORMAL);
+
     // setMinimalLoopPeriod(32); /* Needs to be less than 30-32 milliseconds for real-time performance */
 
     /* --------------------------------------- For Testing Purposes Only --------------------------------------------*/
@@ -64,7 +66,7 @@ void clear(vector<Object3D*>& objects){
 }
 
 void displayDebugOutput(Mat disp){
-    namedWindow("DebugOutput", WINDOW_NORMAL);
+
     resizeWindow("DebugOutput", (int)(disp.cols), (int)(disp.rows));
     imshow("DebugOutput", disp);
     waitKey(1);

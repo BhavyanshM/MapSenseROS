@@ -17,26 +17,33 @@ private:
     vector<Vector3f> patchCentroids;
     vector<Vector3f> boundaryVertices;
     vector<Vector2i> leafPatches;
+    bool normalCalculated = false;
+    bool centroidCalculated = false;
     int numPatches;
     int id;
+
+    Vector3f getPCANormal();
+    Vector3f getMeanCenter();
+    Vector3f getMeanNormal();
 
 public:
     PlanarRegion(int id);
     void addPatch(Vector3f normal, Vector3f center);
     void insertBoundaryVertex(Vector3f vertex);
+
     void insertLeafPatch(Vector2i pos);
     void getClockWise2D(vector<Vector2f>& points);
-
     int getNumOfBoundaryVertices();
-    Vector3f getPCANormal();
-    Vector3f getMeanNormal();
-    Vector3f getMeanCenter();
+
+    Vector3f getNormal();
+    Vector3f getCentroid();
     vector<Vector3f> getVertices();
     vector<Vector2i> getLeafPatches();
 
     int getNumPatches();
 
     int getId();
+    void setId(int id);
 
     vector<shared_ptr<RegionRing>> rings;
 };

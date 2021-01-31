@@ -2,6 +2,8 @@
 
 
 PlanarRegion::PlanarRegion(int id){
+    this->normal.setZero();
+    this->center.setZero();
     numPatches = 0;
     this->id = id;
 }
@@ -20,6 +22,24 @@ Vector3f PlanarRegion::getPCANormal(){
     auto svd = patchMatrix.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
     Vector3f plane_normal = svd.matrixU().rightCols<1>();
     return plane_normal;
+}
+
+Vector3f PlanarRegion::getNormal(){
+    if(!normalCalculated){
+        normalCalculated = true;
+        this->normal = getPCANormal();
+        this->normal.normalize();
+        this->normal *= -this->normal.z()/fabs(this->normal.z());
+    }
+    return this->normal;
+}
+
+Vector3f PlanarRegion::getCentroid(){
+    if(!centroidCalculated){
+        centroidCalculated = true;
+        this->center = getMeanCenter();
+    }
+    return this->center;
 }
 
 Vector3f PlanarRegion::getMeanCenter() {
@@ -43,7 +63,8 @@ void PlanarRegion::addPatch(Vector3f normal, Vector3f center) {
     this->center += center;
     this->patchCentroids.emplace_back(center);
     this->numPatches += 1;
-    // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", getId(), getNumPatches(), this->center[0], this->center[1], this->center[2], this->normal[0], this->normal[1], this->normal[2]);
+//    printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", getId(), getNumPatches(), this->center[0], this->center[1], this->center[2], this->normal[0], this->normal[1], this->normal[2]);
+//    printf("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", center[0], center[1], center[2], normal[0], normal[1], normal[2]);
 }
 
 void PlanarRegion::insertBoundaryVertex(Vector3f vertex) {
@@ -60,6 +81,10 @@ int PlanarRegion::getNumPatches() {
 
 int PlanarRegion::getId() {
     return id + 1;
+}
+
+void PlanarRegion::setId(int id){
+    this->id = id;
 }
 
 void PlanarRegion::getClockWise2D(vector<Vector2f>& points){

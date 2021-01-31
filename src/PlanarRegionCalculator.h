@@ -71,7 +71,7 @@ public:
     void getFilteredDepth(Mat& dispDepth, bool showGraph);
     void getInputDepth(Mat& dispDepth, bool showGraph);
     void registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions, vector<int>& matchIndices);
-
+    static void onMouse(int event, int x, int y, int flags, void *userdata);
 };
 
 
