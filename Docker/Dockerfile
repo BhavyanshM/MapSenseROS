@@ -41,7 +41,9 @@ RUN git clone git://github.com/mosra/magnum-integration && cd magnum-integration
 	ln -s package/debian . && dpkg-buildpackage && dpkg -i ../magnum-integration*.deb
 
 
-# Setup Catkin Workspace and MapSenseROS C++ node
+# TODO: Use (https://code.visualstudio.com/docs/remote/containers) to configure VSCode for containers
+
+# Setup Catkin Workspace and MapSenseROS C++ node 
 RUN mkdir -p Workspace/catkin_ws/src
 
 

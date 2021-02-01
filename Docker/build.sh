@@ -6,4 +6,12 @@ sudo apt-get update -y
 sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 
+
+# Visual Studio Code (Optional)
+# Install Visual Studio Code for C++ Development (https://linuxize.com/post/how-to-install-visual-studio-code-on-ubuntu-20-04/)
+# wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+# sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+# sudo apt install -y code
+
+
 docker build -t bmishra/mapsense-nvidia-ros .

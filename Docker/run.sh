@@ -1,13 +1,13 @@
 sudo xhost +local:docker
 
 
-mkdir Data #To store ROSBags for testing MapSense
+mkdir Shared_Volume #To store ROSBags for testing MapSense
 
 sudo docker run -it \
 	--net=host \
 	--env="DISPLAY" \
 	--volume "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--volume ${pwd}/Data:/Data \
+	--volume ${pwd}/Shared_Volume:/Shared_Volume \
 	--privileged \
 	--runtime=nvidia \
 	--rm --gpus all \
