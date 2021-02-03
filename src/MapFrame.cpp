@@ -1,17 +1,19 @@
 
 #include "MapFrame.h"
 
-MapFrame::MapFrame(){
-    this->regionOutput = Mat(SUB_H, SUB_W, CV_32FC(6));
-    this->patchData = Mat(SUB_H, SUB_W, CV_8UC1);
+void MapFrame::update(ApplicationState app){
+    this->SUB_W = app.SUB_W;
+    this->SUB_H = app.SUB_H;
+    this->PATCH_HEIGHT = app.PATCH_HEIGHT;
+    this->PATCH_WIDTH = app.PATCH_WIDTH;
 }
 
 void MapFrame::setRegionOutput(Mat &regionOutput) {
-    MapFrame::regionOutput = regionOutput;
+   this->regionOutput = regionOutput;
 }
 
 void MapFrame::setPatchData(Mat &patchData) {
-    MapFrame::patchData = patchData;
+    this->patchData = patchData;
 }
 
 Mat& MapFrame::getRegionOutput() {

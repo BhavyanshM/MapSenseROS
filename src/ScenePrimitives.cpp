@@ -20,9 +20,8 @@ MyApplication::MyApplication(const Arguments &arguments) : Platform::Application
     /* TODO: Instantiate the Information Processors */
     _dataReceiver = new NetworkManager();
     _dataReceiver->init_ros_node(arguments.argc, arguments.argv);
-
-    _regionCalculator = new PlanarRegionCalculator();
-    _regionCalculator->initOpenCL();
+    _regionCalculator = new PlanarRegionCalculator(appState);
+    _regionCalculator->initOpenCL(appState);
 
     /* TODO: Check that the appropriate flags for renderer are set*/
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
@@ -214,6 +213,10 @@ void MyApplication::drawEvent() {
     ImGui::Text("MapSense");
 
     if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
+
+    ImGui::SliderInt("Kernel Level", &appState.KERNEL_SLIDER_LEVEL, 1, 6); appState.update();
+    ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT,  appState.INPUT_WIDTH,
+                appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.KERNEL_RESOLUTION_LEVEL);
 
     if(ImGui::Button("Region Components")) _displayItem = 0;
     ImGui::SameLine(140);

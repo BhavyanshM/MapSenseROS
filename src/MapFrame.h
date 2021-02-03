@@ -2,6 +2,7 @@
 #define SRC_MAPFRAME_H
 
 #include "opencv2/core/core.hpp"
+#include "ApplicationState.h"
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 
@@ -10,12 +11,15 @@ using namespace cv;
 
 class MapFrame {
 public:
-    const int SUB_W = 80;
-    const int SUB_H = 60;
+    int SUB_W = 0;
+    int SUB_H = 0;
+    int PATCH_WIDTH = 0;
+    int PATCH_HEIGHT = 0;
+
     Mat regionOutput;
     Mat patchData;
 
-    MapFrame();
+    void update(ApplicationState app);
     void setRegionOutput(Mat &regionOutput);
 
     void setPatchData(Mat &patchData);

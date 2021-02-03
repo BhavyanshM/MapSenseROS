@@ -1,11 +1,6 @@
 #ifndef SRC_PLANARREGIONCALCULATOR_H
 #define SRC_PLANARREGIONCALCULATOR_H
 
-#define WIDTH 640
-#define HEIGHT 480
-#define GRID_X 8
-#define GRID_Y 8
-
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "std_msgs/String.h"
@@ -21,7 +16,7 @@
 
 #include <iostream>
 #include <CL/cl.hpp>
-#include "math.h"
+#include <cmath>
 #include <sstream>
 #include <random>
 
@@ -35,36 +30,33 @@ using namespace std;
 using namespace chrono;
 using namespace cv;
 
-
-
-
 class PlanarRegionCalculator {
 public:
     cl::Kernel filterKernel, packKernel, mergeKernel;
     cl::Context context;
     cl::CommandQueue commandQueue;
-    cl::Image2D imgInBuf, imgOutBuf1, imgOutBuf2;
-    cl::ImageFormat uint8_img, float_img;
     cl::size_t<3> origin, size;
     cl::Event event;
 
-    Publisher planarRegionPub;
+    int SUB_H = 0;
+    int SUB_W = 0;
+    int PATCH_HEIGHT = 0;
+    int PATCH_WIDTH = 0;
 
     NetworkManager* _dataReceiver;
 
-    const int SUB_H = 60;
-    const int SUB_W = 80;
-    Mat inputDepth = Mat(HEIGHT, WIDTH, CV_16UC1);
-    Mat inputColor = Mat(HEIGHT, WIDTH, CV_8UC3);
-    Mat filteredDepth = Mat(HEIGHT, WIDTH, CV_16UC1);
+    Mat inputDepth;
+    Mat inputColor;
+    Mat filteredDepth;
 
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
     vector<shared_ptr<PlanarRegion>> planarRegionList, currentRegionList, previousRegionList;
     vector<int> matchIndices;
 
+    explicit PlanarRegionCalculator(ApplicationState app);
     void generatePatchGraph(ApplicationState appState);
-    void initOpenCL();
+    void initOpenCL(ApplicationState app);
     void launch_tester(ApplicationState appState);
     void generateRegions(NetworkManager* receiver, ApplicationState appState);
     void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
@@ -73,6 +65,5 @@ public:
     void registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions, vector<int>& matchIndices);
     static void onMouse(int event, int x, int y, int flags, void *userdata);
 };
-
 
 #endif //SRC_PLANARREGIONCALCULATOR_H
