@@ -14,6 +14,7 @@ sudo systemctl restart docker
 # sudo apt install -y code
 
 
+git clone https://github.com/BhavyanshM/MapSenseROS.git
 mkdir -p Shared_Volume #To store ROSBags for testing MapSense
 
 docker build -t bmishra/mapsense-nvidia-ros .

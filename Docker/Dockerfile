@@ -42,6 +42,10 @@ RUN git clone git://github.com/mosra/magnum-integration && cd magnum-integration
 
 
 # TODO: Use (https://code.visualstudio.com/docs/remote/containers) to configure VSCode for containers
+# CLion (https://www.jetbrains.com/clion/download/#section=linux)
+RUN curl -sL https://download.jetbrains.com/cpp/CLion-2020.3.2.tar.gz -o clion.tar.gz
+RUN tar -xvzf clion.tar.gz
+RUN mv clion-2020.3.2/ /opt/clion
 
 # Setup Catkin Workspace and MapSenseROS C++ node 
 RUN mkdir -p Workspace/catkin_ws/src
@@ -52,6 +56,17 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 
 
-COPY ./setup.sh /setup.sh
+COPY ./compile.sh /compile.sh
 
+RUN echo 'rm -rf /corrade* /magnum*' >> ~/.bashrc
+RUN echo 'alias clion="/opt/clion/bin/clion.sh"' >> ~/.bashrc
+
+RUN echo 'alias mapsense="source /Workspace/catkin_ws/devel/setup.bash && \
+	rosrun map_sense planar_region_publisher"' >> ~/.bashrc
+
+RUN echo 'alias mapsense-clion="source /opt/ros/noetic/setup.bash && source /Workspace/catkin_ws/devel/setup.bash && \
+	/opt/clion/bin/clion.sh /Workspace/catkin_ws/src </dev/null &>/dev/null &"' >> ~/.bashrc
+
+RUN echo 'source /opt/ros/noetic/setup.bash' >> ~/.bashrc
+RUN echo 'roscore </dev/null &>/dev/null &' >> ~/.bashrc
 

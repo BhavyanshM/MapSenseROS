@@ -1,15 +1,14 @@
-sudo xhost +local:docker
+xhost +local:docker
 
 
-mkdir Shared_Volume #To store ROSBags for testing MapSense
-
-sudo docker run -it \
+docker run -it \
+	--name mapsense \
 	--net=host \
 	--env="DISPLAY" \
 	--volume "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--volume ${pwd}/Shared_Volume:/Shared_Volume \
+	--volume "${pwd}/Shared_Volume:/Shared_Volume:rw" \
 	--privileged \
 	--runtime=nvidia \
-	--rm --gpus all \
+	--gpus all \
 	--device /dev/dri:/dev/dri \
-	bmishra/mapsense-nvidia-ros bash setup.sh
+	bmishra/mapsense-nvidia-ros:latest bash
