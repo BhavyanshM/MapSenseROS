@@ -1,5 +1,6 @@
 xhost +local:docker
 
+mkdir -p Shared_Volume
 
 docker run -it \
 	--name mapsense \
