@@ -68,6 +68,8 @@ void NetworkManager::init_ros_node(int argc, char **argv) {
     subColor = nh->subscribe("/camera/color/image_raw", 8, &NetworkManager::colorCallback, this);
     subColorCompressed = nh->subscribe("/camera/color/image_raw/compressed", 8, &NetworkManager::colorCompressedCallback, this);
 //    subMapSenseParams = nh->subscribe("/map_sense/params", 8, &NetworkManager::colorCompressedCallback, this);
+
+
     ROS_INFO("Started ROS Node");
 }
 
