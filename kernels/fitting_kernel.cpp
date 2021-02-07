@@ -6,10 +6,14 @@
 #define PATCH_WIDTH 4
 #define SUB_H 5
 #define SUB_W 6
+#define DEPTH_FX 7
+#define DEPTH_FY 8
+#define DEPTH_CX 9
+#define DEPTH_CY 10
 
-float4 back_project(int2 pos, float Z){
-    float px = (pos.x - 341.84)/459.97 * Z;
-    float py = (pos.y - 249.17)/459.80 * Z;
+float4 back_project(int2 pos, float Z, global float* params){
+    float px = (pos.x - params[DEPTH_CX])/(params[DEPTH_FX]) * Z;
+    float py = (pos.y - params[DEPTH_CY])/(params[DEPTH_FY]) * Z;
     float4 X = (float4)(px, py, Z, 0);
     return X;
 }
@@ -31,15 +35,15 @@ float4 back_project(int2 pos, float Z){
 
                 pos = pos + (int2)(-m,-m);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 va = back_project(pos,Z);
+                float4 va = back_project(pos, Z, params);
 
                 pos = pos + (int2)(m,-m);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 vb = back_project(pos,Z);
+                float4 vb = back_project(pos, Z, params);
 
                 pos = pos + (int2)(m,m);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 vc = back_project(pos,Z);
+                float4 vc = back_project(pos, Z, params);
 
                 normal += cross((vc-vb),(vb-va));
 
@@ -62,7 +66,7 @@ float4 back_project(int2 pos, float Z){
                 int2 pos = (int2)(gx,gy);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
                 if(Z > 0.1f){
-                    float4 P = back_project(pos,Z);
+                    float4 P = back_project(pos, Z, params);
                     centroid += P.xyz;
                 }
 

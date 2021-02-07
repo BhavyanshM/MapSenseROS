@@ -20,7 +20,7 @@ void NetworkManager::mapSenseParamsCallback(const map_sense::MapSenseParams msg)
     ROS_INFO("COLOR CALLBACK");
 }
 
-void NetworkManager::load_next_frame(Mat& depth, Mat& color){
+void NetworkManager::load_next_frame(Mat &depth, Mat &color) {
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
     cv_bridge::CvImagePtr img_ptr_color_compressed;
@@ -30,22 +30,24 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color){
             ROS_INFO("Callback: Depth:%d", depthMessage->header.stamp.sec);
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             depth = img_ptr_depth->image;
+            pyrDown(depth, depth);
+            ROS_INFO("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
 
         } catch (cv_bridge::Exception &e) {
             ROS_ERROR("Could not convert to image!");
         }
     }
-    if (colorMessage != nullptr ) {
+    if (colorMessage != nullptr) {
         try {
             ROS_INFO("Callback: Color:%d", colorMessage->header.stamp.sec);
             img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
             color = img_ptr_color->image;
+            pyrDown(color, color);
 
         } catch (cv_bridge::Exception &e) {
             ROS_ERROR("Could not convert to image!");
         }
-    } else
-    if (colorCompressedMessage != nullptr ) {
+    } else if (colorCompressedMessage != nullptr) {
         try {
             ROS_INFO("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
 //            img_ptr_color = cv_bridge::toCvCopy(*colorCompressedMessage, image_encodings::TYPE_8UC3);
@@ -66,7 +68,8 @@ void NetworkManager::init_ros_node(int argc, char **argv) {
     planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 10);
     subDepth = nh->subscribe("/camera/depth/image_rect_raw", 8, &NetworkManager::depthCallback, this);
     subColor = nh->subscribe("/camera/color/image_raw", 8, &NetworkManager::colorCallback, this);
-    subColorCompressed = nh->subscribe("/camera/color/image_raw/compressed", 8, &NetworkManager::colorCompressedCallback, this);
+    subColorCompressed = nh->subscribe("/camera/color/image_raw/compressed", 8,
+                                       &NetworkManager::colorCompressedCallback, this);
 //    subMapSenseParams = nh->subscribe("/map_sense/params", 8, &NetworkManager::colorCompressedCallback, this);
     ROS_INFO("Started ROS Node");
 }
@@ -77,11 +80,11 @@ void NetworkManager::spin_ros_node() {
 }
 
 
-void NetworkManager::load_sample_depth(String filename, Mat& depth){
+void NetworkManager::load_sample_depth(String filename, Mat &depth) {
     depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
 }
 
-void NetworkManager::load_sample_color(String filename, Mat& color){
+void NetworkManager::load_sample_color(String filename, Mat &color) {
     color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
 }
 

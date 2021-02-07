@@ -44,21 +44,25 @@ public:
 
     /*
      * NOTE: The following parameters should meet these requirements.
-     * a) InputHeight should be divisible by (KernelResLevel * AspectRationHeight)
-     * b) InputWidth should be divisible by (KernelResLevel * AspectRationWidth)
+     * a) InputHeight should be divisible by (KernelResLevel * AspectRatioHeight)
+     * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
      * */
     int levels[7] = {8,10,16,20,32,40,80};
     int KERNEL_SLIDER_LEVEL = 5;
     int KERNEL_RESOLUTION_LEVEL = levels[KERNEL_SLIDER_LEVEL - 1];
     int ASPECT_RATIO_HEIGHT = 3;
     int ASPECT_RATIO_WIDTH = 4;
-    int INPUT_HEIGHT = 480;
-    int INPUT_WIDTH = 640;
+    int INPUT_HEIGHT = 240;
+    int INPUT_WIDTH = 320;
     int SUB_H = ASPECT_RATIO_HEIGHT * KERNEL_RESOLUTION_LEVEL;
     int SUB_W = ASPECT_RATIO_WIDTH * KERNEL_RESOLUTION_LEVEL;
     int PATCH_HEIGHT = (int) INPUT_HEIGHT / (SUB_H);
     int PATCH_WIDTH = (int) INPUT_WIDTH / (SUB_W);
 
+    float DEPTH_FX = 459.97/2;
+    float DEPTH_FY = 459.80/2;
+    float DEPTH_CX = 341.84/2;
+    float DEPTH_CY = 249.17/2;
 
     int NUM_SKIP_EDGES = 6;
 

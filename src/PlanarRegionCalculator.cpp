@@ -30,7 +30,12 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
                       (float) appState.PATCH_HEIGHT,
                       (float) appState.PATCH_WIDTH,
                       (float) this->SUB_H,
-                      (float) this->SUB_W};
+                      (float) this->SUB_W,
+                      appState.DEPTH_FX,
+                      appState.DEPTH_FY,
+                      appState.DEPTH_CX,
+                      appState.DEPTH_CY};
+
 
     ROS_INFO("(%d, %d, %d, %d, %d, %d)", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
              appState.PATCH_HEIGHT, appState.PATCH_WIDTH, this->SUB_H, this->SUB_W);

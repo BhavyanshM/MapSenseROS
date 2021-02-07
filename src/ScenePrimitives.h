@@ -126,6 +126,35 @@ private:
     }
 };
 
+class PointCloudDrawable : public SceneGraph::Drawable3D {
+public:
+    explicit PointCloudDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, GL::Buffer& vertexBuffer, Vector3 color) :
+            SceneGraph::Drawable3D{object, group} {
+        _color = color;
+        _mesh.setPrimitive(MeshPrimitive::Points)
+                .addVertexBuffer(vertexBuffer, 0, Position{})
+                .setCount(vertexBuffer.size());
+    }
+
+private:
+    GL::Mesh _mesh;
+    Shaders::Phong _shader;
+    Vector3 _color;
+
+    void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override {
+
+         _mesh.setPrimitive(GL::MeshPrimitive::Points);
+        _shader.setDiffuseColor(0xa5c9ea_rgbf)
+                .setLightColor(Color3{1.0f})
+                .setLightPosition({0.0f, 2.0f, 0.0f})
+                .setAmbientColor(_color)
+                .setTransformationMatrix(transformationMatrix)
+                .setNormalMatrix(transformationMatrix.normalMatrix())
+                .setProjectionMatrix(camera.projectionMatrix())
+                .draw(_mesh);
+    }
+};
+
 
 
 #endif //SRC_SCENEPRIMITIVES_H

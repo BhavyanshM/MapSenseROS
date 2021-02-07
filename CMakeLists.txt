@@ -68,8 +68,6 @@ catkin_package(
 
 set(SOURCE_FILES
 		src/PlanarRegionPublisher.cpp
-		src/RegionFinder.cpp
-		src/GPU.cpp
 		src/PlanarRegionCalculator.cpp
 		src/NetworkManager.cpp
 		src/ScenePrimitives.cpp
@@ -77,11 +75,10 @@ set(SOURCE_FILES
 		src/MapFrameProcessor.cpp
 		src/PlanarRegion.cpp
 		src/MeshGenerator.cpp
-		src/ApplicationState.cpp)
+		src/ApplicationState.cpp
+		src/RegionRing.cpp )
 
 set (HEADERS
-		include/RegionFinder.h
-		include/GPU.h
 		src/PlanarRegionCalculator.h
 		src/NetworkManager.h
 		src/MapFrame.h
@@ -89,7 +86,8 @@ set (HEADERS
 		src/PlanarRegion.h
 		src/MeshGenerator.h
 		src/ApplicationState.h
-		src/ScenePrimitives.h src/RegionRing.cpp src/RegionRing.h)
+		src/ScenePrimitives.h
+		src/RegionRing.h)
 
 include_directories(
   include
@@ -115,21 +113,21 @@ target_link_libraries(planar_region_publisher
 	Eigen3::Eigen
 )
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
-
-
-#set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-
-
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 
-#add_executable(magnum-primitives WIN32 src/ScenePrimitives.cpp)
+add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
+target_link_libraries(factorGraph2D PRIVATE
+		Corrade::Main
+		Magnum::Application
+		Magnum::GL
+		Magnum::Magnum
+		Magnum::MeshTools
+		Magnum::Primitives
+		Magnum::SceneGraph
+		Magnum::Shaders
+		Magnum::Trade)
 
-#target_include_directories(magnum-primitives PUBLIC "../eigen-3.3.7")
 
-
-
-# map_sense_generate_messages_cpp
 
 
 
