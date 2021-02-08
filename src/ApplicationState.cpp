@@ -5,11 +5,12 @@
 #include "ApplicationState.h"
 
 void ApplicationState::update() {
-    this->KERNEL_RESOLUTION_LEVEL = this->levels[this->KERNEL_SLIDER_LEVEL - 1];
-    this->SUB_H = this->ASPECT_RATIO_HEIGHT * this->KERNEL_RESOLUTION_LEVEL;
-    this->SUB_W = this->ASPECT_RATIO_WIDTH * this->KERNEL_RESOLUTION_LEVEL;
-    this->PATCH_HEIGHT = (int) this->INPUT_HEIGHT / this->SUB_H;
-    this->PATCH_WIDTH = (int) this->INPUT_WIDTH / this->SUB_W;
+    if(this->INPUT_HEIGHT % this->KERNEL_SLIDER_LEVEL == 0 && this->INPUT_WIDTH % this->KERNEL_SLIDER_LEVEL == 0){
+        this->PATCH_HEIGHT = this->KERNEL_SLIDER_LEVEL;
+        this->PATCH_WIDTH = this->KERNEL_SLIDER_LEVEL;
+        this->SUB_H = (int) this->INPUT_HEIGHT / this->PATCH_HEIGHT;
+        this->SUB_W = (int) this->INPUT_WIDTH / this->PATCH_WIDTH;
+    }
 }
 
 const string &ApplicationState::getDepthFile() const {

@@ -79,18 +79,19 @@ set(SOURCE_FILES
 		src/RegionRing.cpp )
 
 set (HEADERS
-		src/PlanarRegionCalculator.h
-		src/NetworkManager.h
-		src/MapFrame.h
-		src/MapFrameProcessor.h
-		src/PlanarRegion.h
-		src/MeshGenerator.h
-		src/ApplicationState.h
-		src/ScenePrimitives.h
-		src/RegionRing.h)
+		src/headers/PlanarRegionCalculator.h
+		src/headers/NetworkManager.h
+		src/headers/MapFrame.h
+		src/headers/MapFrameProcessor.h
+		src/headers/PlanarRegion.h
+		src/headers/MeshGenerator.h
+		src/headers/ApplicationState.h
+		src/headers/ScenePrimitives.h
+		src/headers/RegionRing.h)
 
 include_directories(
   include
+  src/headers
   ${catkin_INCLUDE_DIRS}
   /usr/include/CL/
 )

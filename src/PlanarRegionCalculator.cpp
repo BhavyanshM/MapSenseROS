@@ -24,7 +24,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 
     this->SUB_H = appState.SUB_H;
     this->SUB_W = appState.SUB_W;
-    float params[] = {appState.FILTER_DISPARITY_THRESHOLD,
+    float params[] = {(float)appState.FILTER_DISPARITY_THRESHOLD,
                       appState.MERGE_ANGULAR_THRESHOLD,
                       appState.MERGE_DISTANCE_THRESHOLD,
                       (float) appState.PATCH_HEIGHT,
@@ -67,7 +67,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     filterKernel.setArg(2, clFilterDepth);
     filterKernel.setArg(3, paramsBuffer);
 
-    packKernel.setArg(0, clFilterDepth);
+    packKernel.setArg(0, clDepth);
     packKernel.setArg(1, clOutput_0);
     packKernel.setArg(2, clOutput_1);
     packKernel.setArg(3, clOutput_2);

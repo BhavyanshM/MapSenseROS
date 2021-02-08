@@ -214,9 +214,9 @@ void MyApplication::drawEvent() {
 
     if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
 
-    ImGui::SliderInt("Kernel Level", &appState.KERNEL_SLIDER_LEVEL, 1, 6); appState.update();
+    ImGui::SliderInt("Kernel Level", &appState.KERNEL_SLIDER_LEVEL, 2, 10); appState.update();
     ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT,  appState.INPUT_WIDTH,
-                appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.KERNEL_RESOLUTION_LEVEL);
+                appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.KERNEL_SLIDER_LEVEL);
 
     if(ImGui::Button("Region Components")) _displayItem = 0;
     ImGui::SameLine(140);
@@ -257,7 +257,7 @@ void MyApplication::drawEvent() {
         ImGui::EndTabBar();
     }
     ImGui::Checkbox("Show Edges", &_showRegionEdges);
-    ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 10);
+    ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
 
     ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 

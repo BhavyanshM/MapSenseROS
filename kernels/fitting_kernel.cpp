@@ -21,31 +21,38 @@ float4 back_project(int2 pos, float Z, global float* params){
  float3 estimate_normal(read_only image2d_t in, int x, int y, global float* params){
     float residual = 0;
     float Z = 0;
-    int m = 2;
+    int m = 1;
     int count = 0;
     float4 normal = (float4)(0,0,0,0);
     if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
 
-        for(int i = m; i<(int)params[PATCH_HEIGHT]-m; i++){
-            for(int j = m; j<(int)params[PATCH_WIDTH]-m; j++){
+        for(int i = 0; i<(int)params[PATCH_HEIGHT]-m; i++){
+            for(int j = 0; j<(int)params[PATCH_WIDTH]-m; j++){
                 count++;
                 int gx = x*(int)params[PATCH_HEIGHT] + i;
                 int gy = y*(int)params[PATCH_WIDTH] + j;
                 int2 pos = (int2)(gx,gy);
 
-                pos = pos + (int2)(-m,-m);
+                pos = (int2)(gx,gy);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
                 float4 va = back_project(pos, Z, params);
 
-                pos = pos + (int2)(m,-m);
+                pos = (int2)(gx + m, gy);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
                 float4 vb = back_project(pos, Z, params);
 
-                pos = pos + (int2)(m,m);
+                pos = (int2)(gx + m, gy + m);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
                 float4 vc = back_project(pos, Z, params);
 
+                pos = (int2)(gx,gy + m);
+                Z = ((float)read_imageui(in, pos).x)/(float)1000;
+                float4 vd = back_project(pos, Z, params);
+
                 normal += cross((vc-vb),(vb-va));
+                normal += cross((vd-vc),(vc-vb));
+                normal += cross((va-vd),(vd-vc));
+                normal += cross((vb-va),(va-vd));
 
             }
         }
@@ -94,22 +101,26 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
     int xs[8], ys[8], values[8];
     int total_unique = 0;
 
-    /* Develop depth profile for 8x8 patch. */
+    /* Find all non-zero unique depth values available in this patch. */
     for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
         for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
             count++;
-            int gx = x*(int)params[PATCH_HEIGHT] + i;
-            int gy = y*(int)params[PATCH_WIDTH] + j;
+            int gx = x * ((int)params[PATCH_HEIGHT]) + i;
+            int gy = y * ((int)params[PATCH_WIDTH]) + j;
 
             int2 pos = (int2)(gx,gy);
             Z = read_imageui(in, pos).x;
+
+            /* For every unique non-zero depth value, insert x,y,z into xs,ys and values, respectively. */
             if (Z != 0){
+                /* For the first non-zero depth, simply insert.*/
                 if (total_unique == 0){
                     xs[total_unique] = gx;
                     ys[total_unique] = gy;
                     values[total_unique] = Z;
                     total_unique++;
                 }else{
+                    /* For all other non-zero values, check against all previously visited non-zero unique depth values. */
                     int unique = 0;
                     for(int k = 0; k<total_unique; k++){
 
@@ -119,7 +130,8 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
 
                         }
                     }
-                    if (unique == total_unique && total_unique < 8){
+                    /* After checking to see if the non-zero value is truly unique against stored unique values, insert.*/
+                    if (unique == total_unique){
                         // if (x==0 && y==0)printf("Insert(%d,%d)(%d,%d)\n", gx, gy, unique, total_unique);
                         xs[total_unique] = gx;
                         ys[total_unique] = gy;
@@ -131,7 +143,7 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
         }
     }
 
-    /* Use the depth profile to fill in the gaps. */
+    /* Fill all dead pixels in the patch with the nearest neighboring non-zero unique depth value. */
     for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
         for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
             count++;
@@ -145,6 +157,8 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
                 float minDist = 10000000;
                 float curDist = 0;
                 int minIndex = 0;
+
+                /* Find the nearest non-zero-unique neighbor for this dead pixel. */
                 for(int m = 0; m<total_unique; m++){
                     curDist = length((float2)(gx,gy) - (float2)(xs[m], ys[m]));
                     // if (x==0 && y==0) printf("Filling(%d,%d)-(%d,%d):%.2lf\n", gx,gy,xs[m],ys[m],curDist);
