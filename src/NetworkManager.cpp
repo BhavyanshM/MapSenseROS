@@ -82,10 +82,13 @@ void NetworkManager::spin_ros_node() {
 
 void NetworkManager::load_sample_depth(String filename, Mat &depth) {
     depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
+    pyrDown(depth, depth);
+
 }
 
 void NetworkManager::load_sample_color(String filename, Mat &color) {
     color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
+    pyrDown(color, color);
 }
 
 void NetworkManager::get_sample_depth(Mat depth, float mean, float stddev) {

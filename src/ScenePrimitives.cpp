@@ -235,8 +235,8 @@ void MyApplication::drawEvent() {
     ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);
     ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
     ImGui::SliderFloat("Filter Disparity Threshold", &appState.FILTER_DISPARITY_THRESHOLD, 1000, 4000);
-    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01, 0.16);
-    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.2f, 1.0f);
+    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.005, 0.1);
+    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.1f, 1.0f);
 
     if(ImGui::BeginTabBar("Tab Bar")){
         if(ImGui::BeginTabItem("Launcher")) {

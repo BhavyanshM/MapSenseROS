@@ -51,8 +51,7 @@ public:
 
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
-    vector<shared_ptr<PlanarRegion>> planarRegionList, currentRegionList, previousRegionList;
-    vector<int> matchIndices;
+    vector<shared_ptr<PlanarRegion>> planarRegionList, currentRegionList;
 
     explicit PlanarRegionCalculator(ApplicationState app);
     void generatePatchGraph(ApplicationState appState);
@@ -62,7 +61,7 @@ public:
     void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
     void getFilteredDepth(Mat& dispDepth, bool showGraph);
     void getInputDepth(Mat& dispDepth, bool showGraph);
-    void registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions, vector<int>& matchIndices);
+    void registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions);
     static void onMouse(int event, int x, int y, int flags, void *userdata);
 };
 

@@ -67,7 +67,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     filterKernel.setArg(2, clFilterDepth);
     filterKernel.setArg(3, paramsBuffer);
 
-    packKernel.setArg(0, clDepth);
+    packKernel.setArg(0, clFilterDepth);
     packKernel.setArg(1, clOutput_0);
     packKernel.setArg(2, clOutput_1);
     packKernel.setArg(3, clOutput_2);
@@ -122,8 +122,9 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
     commandQueue.finish();
 
+
     /* Combine the CPU buffers into single image with multiple channels */
-    Mat regionOutput;
+    Mat regionOutput(SUB_H, SUB_W, CV_32FC(6));
     vector<Mat> channels;
     channels.push_back(output_0);
     channels.push_back(output_1);
@@ -141,7 +142,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     output.setRegionOutput(regionOutput);
     output.setPatchData(output_6);
 
-    ROS_INFO("Patch Graph Generated on GPU");
+    ROS_INFO("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
 
 }
 
@@ -230,6 +231,13 @@ void PlanarRegionCalculator::onMouse(int event, int x, int y, int flags, void *u
     }
 }
 
+void logPlanarRegions(vector<shared_ptr<PlanarRegion>> planarRegionList){
+    for(int i = 0; i<planarRegionList.size(); i++){
+        ROS_INFO("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(),
+                 planarRegionList[i]->getCentroid().x(), planarRegionList[i]->getCentroid().y(), planarRegionList[i]->getCentroid().z(),
+                 planarRegionList[i]->getNormal().x(), planarRegionList[i]->getNormal().y(), planarRegionList[i]->getNormal().z());
+    }
+}
 
 void PlanarRegionCalculator::generateRegions(NetworkManager* receiver, ApplicationState appState){
     ROS_INFO("Generating Regions");
@@ -246,42 +254,40 @@ void PlanarRegionCalculator::generateRegions(NetworkManager* receiver, Applicati
     auto start = high_resolution_clock::now();
     this->generatePatchGraph(appState); // Generate patch graph of connected patches on GPU
     this->mapFrameProcessor.generateSegmentation(output, currentRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
-//    ROS_INFO("Registering Regions: %d, %d", previousRegionList.size(), currentRegionList.size());
-    if(previousRegionList.size() > 0 && currentRegionList.size() > 0){
-        this->registerRegions(previousRegionList, currentRegionList, matchIndices);
-    }
-    previousRegionList = currentRegionList;
+
+//    ROS_INFO("CurrentPlanarRegions");
+//    logPlanarRegions(currentRegionList);
+//    ROS_INFO("CurrentPlanarRegions");
+//    logPlanarRegions(previousRegionList);
+
+//    this->registerRegions(planarRegionList, currentRegionList);
 
     ROS_INFO("Number of Planar Regions: %d", currentRegionList.size());
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
 
-    for (int i = 0; i<matchIndices.size(); i++){
-        cout << matchIndices[i] << "\t";
-    }
-    cout << endl;
-    matchIndices.clear();
-
     publishRegions(currentRegionList);
 }
 
-void PlanarRegionCalculator::registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions, vector<int>& matchIndices){
+void PlanarRegionCalculator::registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions){
     for(int i = 0; i<prevRegions.size(); i++){
         int best = 0;
         float minDiff = 10000000;
         for(int j = 0; j<curRegions.size(); j++){
             Vector3f prevCenter = prevRegions[i]->getCentroid();
             Vector3f curCenter = curRegions[j]->getCentroid();
-            float diff = (prevCenter - curCenter).norm();
-//            ROS_INFO("DIFF:%.2lf", diff);
-            if (diff < 0.1){
+            Vector3f prevNormal = prevRegions[i]->getNormal();
+            Vector3f curNormal = curRegions[j]->getNormal();
+            float perpDist = fabs((prevCenter-curCenter).dot(curNormal)) + fabs((curCenter-prevCenter).dot(prevNormal));
+            float angularDiff = fabs(prevNormal.dot(curNormal));
+//            ROS_INFO("DIFF:%.4lf", diff);
+            if (perpDist < 0.1 && angularDiff > 0.7){
                 best = j;
                 curRegions[j]->setId(prevRegions[i]->getId());
                 break;
             }
         }
-        matchIndices.push_back(best);
     }
 }
 
@@ -324,6 +330,7 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
     // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
     dataReceiver.load_sample_depth(appState.getDepthFile(), inputDepth);
     dataReceiver.load_sample_color(appState.getColorFile(), inputColor);
+
 
     // medianBlur(inputDepth, inputDepth, 5);
 

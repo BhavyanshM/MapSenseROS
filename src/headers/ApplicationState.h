@@ -33,9 +33,9 @@ private:
 
 public:
 
-    float MERGE_ANGULAR_THRESHOLD = 0.5;
+    float MERGE_DISTANCE_THRESHOLD = 0.01;
+    float MERGE_ANGULAR_THRESHOLD = 0.3;
 
-    float MERGE_DISTANCE_THRESHOLD = 0.09;
     float FILTER_DISPARITY_THRESHOLD = 2000;
     float MAGNUM_PATCH_SCALE = 0.01;
 
@@ -48,8 +48,8 @@ public:
      * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
      * */
 
-    int INPUT_HEIGHT = 240;
-    int INPUT_WIDTH = 320;
+    int INPUT_HEIGHT = 480/2;
+    int INPUT_WIDTH = 640/2;
     int KERNEL_SLIDER_LEVEL = 2;
     int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
     int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;

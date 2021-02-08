@@ -23,7 +23,7 @@ public:
     void dfs(int x, int y, int component, int& num, Mat& debug, uint8_t* framePatch, shared_ptr<PlanarRegion> planarRegion, MapFrame inputFrame);
     void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing, MapFrame inputFrame);
     void findBoundaryAndHoles(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
-    void printPatchGraph(MapFrame inputFrame);
+    void printPatchGraph(MapFrame inputFrame, ApplicationState app);
 
     int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
     int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};

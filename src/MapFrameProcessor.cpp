@@ -7,8 +7,8 @@ void MapFrameProcessor::init(ApplicationState app) {
     this->region = MatrixXi(app.SUB_H, app.SUB_W).setZero();
 }
 
-void MapFrameProcessor::printPatchGraph(MapFrame inputFrame){
-    printf("DEBUGGER:(%d,%d)\n", inputFrame.SUB_H, inputFrame.SUB_W);
+void MapFrameProcessor::printPatchGraph(MapFrame inputFrame, ApplicationState app){
+    printf("DEBUGGER:(%d,%d), AppState:(%d,%d)\n", inputFrame.SUB_H, inputFrame.SUB_W, app.SUB_H, app.SUB_W);
     for(int i = 0; i<inputFrame.SUB_H; i++){
         for(int j = 0; j<inputFrame.SUB_W; j++){
             uint8_t current = inputFrame.patchData.at<uint8_t>(i,j);
@@ -29,7 +29,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
     /* For initial development only. Delete all old previous regions before inserting new ones. Old and new regions should be fused instead. */
     planarRegionList.clear();
 
-//    printPatchGraph(inputFrame);
+//    printPatchGraph(inputFrame, params);
 
     int components = 0;
 
@@ -37,11 +37,13 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
     region.setZero();
     boundary.setZero();
 
+    printf("PATCH_DATA:(%d,%d)\n", inputFrame.patchData.cols, inputFrame.patchData.rows);
     uint8_t* framePatch = reinterpret_cast<uint8_t *>(inputFrame.patchData.data);
     debug = Scalar(0);
     for (int i = 0; i < inputFrame.SUB_H; i++) {
         for (int j = 0; j < inputFrame.SUB_W; j++) {
             uint8_t patch = framePatch[i*inputFrame.SUB_W + j];
+//            printf("REACHED______________________________________________(%d,%d)\n", i,j);
             if (!visited(i,j) && patch == 255) {
                 int num = 0;
                 shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
