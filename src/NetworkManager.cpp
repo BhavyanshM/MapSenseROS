@@ -30,7 +30,7 @@ void NetworkManager::load_next_frame(Mat &depth, Mat &color) {
             ROS_INFO("Callback: Depth:%d", depthMessage->header.stamp.sec);
             img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
             depth = img_ptr_depth->image;
-            pyrDown(depth, depth);
+//            pyrDown(depth, depth);
             ROS_INFO("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
 
         } catch (cv_bridge::Exception &e) {
@@ -42,7 +42,7 @@ void NetworkManager::load_next_frame(Mat &depth, Mat &color) {
             ROS_INFO("Callback: Color:%d", colorMessage->header.stamp.sec);
             img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
             color = img_ptr_color->image;
-            pyrDown(color, color);
+//            pyrDown(color, color);
 
         } catch (cv_bridge::Exception &e) {
             ROS_ERROR("Could not convert to image!");
@@ -82,13 +82,13 @@ void NetworkManager::spin_ros_node() {
 
 void NetworkManager::load_sample_depth(String filename, Mat &depth) {
     depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
-    pyrDown(depth, depth);
+//    pyrDown(depth, depth);
 
 }
 
 void NetworkManager::load_sample_color(String filename, Mat &color) {
     color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
-    pyrDown(color, color);
+//    pyrDown(color, color);
 }
 
 void NetworkManager::get_sample_depth(Mat depth, float mean, float stddev) {
