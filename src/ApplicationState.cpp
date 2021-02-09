@@ -5,7 +5,8 @@
 #include "ApplicationState.h"
 
 void ApplicationState::update() {
-    if(this->INPUT_HEIGHT % this->KERNEL_SLIDER_LEVEL == 0 && this->INPUT_WIDTH % this->KERNEL_SLIDER_LEVEL == 0){
+    if( (this->INPUT_HEIGHT % this->KERNEL_SLIDER_LEVEL == 0)
+        && (this->INPUT_WIDTH % this->KERNEL_SLIDER_LEVEL == 0) ){
         this->PATCH_HEIGHT = this->KERNEL_SLIDER_LEVEL;
         this->PATCH_WIDTH = this->KERNEL_SLIDER_LEVEL;
         this->SUB_H = (int) this->INPUT_HEIGHT / this->PATCH_HEIGHT;

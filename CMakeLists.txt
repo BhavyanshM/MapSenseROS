@@ -5,6 +5,9 @@ project(map_sense)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
+#MATH(EXPR stack_size "2048000 * 1024 * 1024") # 16 Mb
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,stack-size=${stack_size}")
+
 find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
 find_package( OpenCV 4.2 REQUIRED )
@@ -76,7 +79,8 @@ set(SOURCE_FILES
 		src/PlanarRegion.cpp
 		src/MeshGenerator.cpp
 		src/ApplicationState.cpp
-		src/RegionRing.cpp )
+		src/RegionRing.cpp
+		src/PlanarRegionMapHandler.cpp)
 
 set (HEADERS
 		src/headers/PlanarRegionCalculator.h
@@ -87,7 +91,8 @@ set (HEADERS
 		src/headers/MeshGenerator.h
 		src/headers/ApplicationState.h
 		src/headers/ScenePrimitives.h
-		src/headers/RegionRing.h)
+		src/headers/RegionRing.h
+		src/headers/PlanarRegionMapHandler.h)
 
 include_directories(
   include
@@ -113,6 +118,9 @@ target_link_libraries(planar_region_publisher
 	MagnumIntegration::ImGui
 	Eigen3::Eigen
 )
+
+#set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
+
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 

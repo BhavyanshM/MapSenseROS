@@ -77,21 +77,24 @@ void MyApplication::tickEvent() {
         case SHOW_INPUT_COLOR : displayDebugOutput(_regionCalculator->inputColor); break;
         case SHOW_INPUT_DEPTH : {
             Mat dispDepth;
-            _regionCalculator->getInputDepth(dispDepth, _showGraph);
+            _regionCalculator->getInputDepth(dispDepth, appState.SHOW_GRAPH);
             displayDebugOutput(dispDepth); break;
         }
         case SHOW_REGION_COMPONENTS : displayDebugOutput(_regionCalculator->mapFrameProcessor.debug); break;
         case SHOW_FILTERED_DEPTH : {
             Mat dispDepth;
-            _regionCalculator->getFilteredDepth(dispDepth, _showGraph);
+            _regionCalculator->getFilteredDepth(dispDepth, appState.SHOW_GRAPH);
             displayDebugOutput(dispDepth);
         } break;
         case -1 : destroyAllWindows(); break;
     }
-    if(_rosEnabled){
+    if(appState.ROS_ENABLED){
         _dataReceiver->spin_ros_node();
-        _regionCalculator->generateRegions(_dataReceiver, appState);
-        if(_showRegionEdges){
+        _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, appState);
+        if(_dataReceiver->depthCamInfoSet){
+            _regionCalculator->generateRegions(_dataReceiver, appState);
+        }
+        if(appState.SHOW_REGION_EDGES){
             clear(regionEdges);
             draw_regions();
         }
@@ -146,7 +149,6 @@ void MyApplication::mouseScrollEvent(MouseScrollEvent &event) {
 }
 
 
-
 void MyApplication::draw_patches(){
     for(int i = 0; i < _regionCalculator->output.getRegionOutput().rows; i++){
         for(int j = 0; j < _regionCalculator->output.getRegionOutput().cols; j++){
@@ -176,9 +178,9 @@ void MyApplication::draw_patches(){
 
 void MyApplication::draw_regions(){
     auto start = high_resolution_clock::now();
-    for(int i = 0; i<_regionCalculator->currentRegionList.size(); i++){
+    for(int i = 0; i<_regionCalculator->planarRegionList.size(); i++){
 
-         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->currentRegionList[i];
+         shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
 //         Vector3f normal = planarRegion->getPCANormal();
 //         Vector3f center = planarRegion->getMeanCenter();
         // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
@@ -204,6 +206,37 @@ void MyApplication::generate_patches(){
 }
 
 
+void checkMemoryLimits() {
+    struct rlimit old_lim, lim, new_lim;
+
+    // Get old limits
+    if (getrlimit(RLIMIT_NOFILE, &old_lim) == 0) {
+        printf("Old limits -> soft limit= %ld \t"
+               " hard limit= %ld \n", old_lim.rlim_cur,
+               old_lim.rlim_max);
+    }else {
+        fprintf(stderr, "%s\n", strerror(errno));
+    }
+
+    // Set new value
+    lim.rlim_cur = 1024 * 1024 * 1024;
+    lim.rlim_max = 1024 * 1024 * 1024;
+
+    // Set limits
+    if (setrlimit(RLIMIT_NOFILE, &lim) == -1) {
+        fprintf(stderr, "%s\n", strerror(errno));
+    }
+    // Get new limits
+    if (getrlimit(RLIMIT_NOFILE, &new_lim) == 0) {
+        printf("New limits -> soft limit= %ld "
+               "\t hard limit= %ld \n", new_lim.rlim_cur,
+               new_lim.rlim_max);
+    }
+    else{
+        fprintf(stderr, "%s\n", strerror(errno));
+    }
+}
+
 void MyApplication::drawEvent() {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
     _camera->draw(_drawables);
@@ -227,7 +260,7 @@ void MyApplication::drawEvent() {
     if(ImGui::Button("Input Depth")) _displayItem = 1;
     if(ImGui::Button("Filtered Depth")) _displayItem = 2;
     ImGui::SameLine(180);
-    ImGui::Checkbox("Graph", &_showGraph);
+    ImGui::Checkbox("Graph", &appState.SHOW_GRAPH);
 
     if(ImGui::Button("Hide Display")) { destroyAllWindows();destroyAllWindows();_displayItem = -1; }
 
@@ -239,7 +272,13 @@ void MyApplication::drawEvent() {
     ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.1f, 1.0f);
 
     if(ImGui::BeginTabBar("Tab Bar")){
-        if(ImGui::BeginTabItem("Launcher")) {
+        if(ImGui::BeginTabItem("ROS")){
+            if(ImGui::Button("Enable ROS Node")){appState.ROS_ENABLED = true;}
+            ImGui::SameLine(180);
+            if(ImGui::Button("Disable ROS Node")){appState.ROS_ENABLED = false;}
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("Unit Tester")) {
             if (ImGui::Button("Generate Patches")) {
                 clear(planePatches);
                 generate_patches();
@@ -248,16 +287,16 @@ void MyApplication::drawEvent() {
             if (ImGui::Button("Clear Patches")) { clear(planePatches); }
             ImGui::EndTabItem();
         }
-        if(ImGui::BeginTabItem("ROS")){
-            if(ImGui::Button("Enable ROS Node")){_rosEnabled = true;}
-            ImGui::SameLine(180);
-            if(ImGui::Button("Disable ROS Node")){_rosEnabled = false;}
-            ImGui::EndTabItem();
-        }
+
         ImGui::EndTabBar();
     }
-    ImGui::Checkbox("Show Edges", &_showRegionEdges);
+    ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
     ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
+    ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
+    ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1,100);
+    if (ImGui::Button("Configure Memory")) {
+        checkMemoryLimits();
+    }
 
     ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
@@ -279,6 +318,9 @@ void MyApplication::drawEvent() {
     swapBuffers();
     redraw();
 }
+
+
+
 
 int main(int argc, char **argv) {
     MyApplication app({argc, argv});

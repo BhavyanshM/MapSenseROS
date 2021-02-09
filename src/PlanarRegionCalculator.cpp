@@ -1,8 +1,8 @@
 #include "PlanarRegionCalculator.h"
 
-PlanarRegionCalculator::PlanarRegionCalculator(ApplicationState app) {
+PlanarRegionCalculator::PlanarRegionCalculator(ApplicationState& app) {
+    this->app = app;
     this->mapFrameProcessor.init(app);
-    this->output.update(app);
     this->inputDepth = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
     this->filteredDepth = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
     this->inputColor = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
@@ -22,23 +22,21 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     ROS_INFO("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              output.getRegionOutput().cols, output.getRegionOutput().rows);
 
-    this->SUB_H = appState.SUB_H;
-    this->SUB_W = appState.SUB_W;
     float params[] = {(float)appState.FILTER_DISPARITY_THRESHOLD,
                       appState.MERGE_ANGULAR_THRESHOLD,
                       appState.MERGE_DISTANCE_THRESHOLD,
                       (float) appState.PATCH_HEIGHT,
                       (float) appState.PATCH_WIDTH,
-                      (float) this->SUB_H,
-                      (float) this->SUB_W,
+                      (float) appState.SUB_H,
+                      (float) appState.SUB_W,
                       appState.DEPTH_FX,
                       appState.DEPTH_FY,
                       appState.DEPTH_CX,
                       appState.DEPTH_CY};
 
 
-    ROS_INFO("(%d, %d, %d, %d, %d, %d)", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
-             appState.PATCH_HEIGHT, appState.PATCH_WIDTH, this->SUB_H, this->SUB_W);
+    ROS_INFO("GenerateRegions:(%d, %d, %d, %d, %d, %d)", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
+             appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W);
     cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
 
     Mat depthMat = inputDepth.clone();
@@ -53,13 +51,13 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     /* Output Data OpenCL Buffers */
     // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
     cl::Image2D clFilterDepth(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
-    cl::Image2D clOutput_0(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
-    cl::Image2D clOutput_1(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
-    cl::Image2D clOutput_2(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
-    cl::Image2D clOutput_3(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
-    cl::Image2D clOutput_4(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
-    cl::Image2D clOutput_5(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), SUB_W, SUB_H);
-    cl::Image2D clOutput_6(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), SUB_W, SUB_H);
+    cl::Image2D clOutput_0(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+    cl::Image2D clOutput_1(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+    cl::Image2D clOutput_2(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+    cl::Image2D clOutput_3(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+    cl::Image2D clOutput_4(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+    cl::Image2D clOutput_5(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+    cl::Image2D clOutput_6(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), appState.SUB_W, appState.SUB_H);
 
     /* Setting Kernel arguments for patch-packing kernel */
     filterKernel.setArg(0, clDepth);
@@ -89,24 +87,24 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 
     /* Setup size for reading patch-wise kernel maps from GPU */
     cl::size_t<3> regionOutputSize;
-    regionOutputSize[0] = SUB_W;
-    regionOutputSize[1] = SUB_H;
+    regionOutputSize[0] = appState.SUB_W;
+    regionOutputSize[1] = appState.SUB_H;
     regionOutputSize[2] = 1;
 
     /* Output Data Buffers on CPU */
     Mat debug(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
-    Mat output_0(SUB_H, SUB_W, CV_32FC1);
-    Mat output_1(SUB_H, SUB_W, CV_32FC1);
-    Mat output_2(SUB_H, SUB_W, CV_32FC1);
-    Mat output_3(SUB_H, SUB_W, CV_32FC1);
-    Mat output_4(SUB_H, SUB_W, CV_32FC1);
-    Mat output_5(SUB_H, SUB_W, CV_32FC1);
-    Mat output_6(SUB_H, SUB_W, CV_8UC1);
+    Mat output_0(appState.SUB_H, appState.SUB_W, CV_32FC1);
+    Mat output_1(appState.SUB_H, appState.SUB_W, CV_32FC1);
+    Mat output_2(appState.SUB_H, appState.SUB_W, CV_32FC1);
+    Mat output_3(appState.SUB_H, appState.SUB_W, CV_32FC1);
+    Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
+    Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
+    Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
 
     /* Deploy the patch-packing and patch-merging kernels patch-wise */
-    commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
-    commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
-    commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(SUB_H, SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
 
     /* Read the output data from OpenCL buffers into CPU buffers */
     // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
@@ -124,7 +122,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 
 
     /* Combine the CPU buffers into single image with multiple channels */
-    Mat regionOutput(SUB_H, SUB_W, CV_32FC(6));
+    Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
     vector<Mat> channels;
     channels.push_back(output_0);
     channels.push_back(output_1);
@@ -149,13 +147,13 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth, bool showGraph){
     filteredDepth.convertTo(dispDepth, -1, 16, 100);
     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    if(showGraph) output.drawGraph(dispDepth);
+    if(showGraph) output.drawGraph(dispDepth, this->app);
 }
 
 void PlanarRegionCalculator::getInputDepth(Mat& dispDepth, bool showGraph){
     inputDepth.convertTo(dispDepth, -1, 16, 100);
     cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    if(showGraph) output.drawGraph(dispDepth);
+    if(showGraph) output.drawGraph(dispDepth, this->app);
 }
 
 
@@ -242,54 +240,29 @@ void logPlanarRegions(vector<shared_ptr<PlanarRegion>> planarRegionList){
 void PlanarRegionCalculator::generateRegions(NetworkManager* receiver, ApplicationState appState){
     ROS_INFO("Generating Regions");
 
-    appState.update();
-    printf("AppState:(%d,%d)\n", appState.SUB_H, appState.SUB_W);
-    this->output.update(appState);
-    printf("OutputFrame:(%d,%d)\n", this->output.SUB_H, this->output.SUB_W);
-    setMouseCallback("DebugOutput", PlanarRegionCalculator::onMouse, (void *) &output);
-
     this->_dataReceiver = receiver;
-    _dataReceiver->load_next_frame(inputDepth, inputColor);
+    this->mapFrameProcessor.init(appState);
 
     auto start = high_resolution_clock::now();
     this->generatePatchGraph(appState); // Generate patch graph of connected patches on GPU
-    this->mapFrameProcessor.generateSegmentation(output, currentRegionList, appState); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+    this->mapFrameProcessor.generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
 
+    setMouseCallback("DebugOutput", PlanarRegionCalculator::onMouse, (void *) &output);
 //    ROS_INFO("CurrentPlanarRegions");
-//    logPlanarRegions(currentRegionList);
+//    logPlanarRegions(planarRegionList);
 //    ROS_INFO("CurrentPlanarRegions");
 //    logPlanarRegions(previousRegionList);
 
-//    this->registerRegions(planarRegionList, currentRegionList);
+//    this->registerRegions(planarRegionList, planarRegionList);
 
-    ROS_INFO("Number of Planar Regions: %d", currentRegionList.size());
+    ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
 
-    publishRegions(currentRegionList);
+    publishRegions(planarRegionList);
 }
 
-void PlanarRegionCalculator::registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions){
-    for(int i = 0; i<prevRegions.size(); i++){
-        int best = 0;
-        float minDiff = 10000000;
-        for(int j = 0; j<curRegions.size(); j++){
-            Vector3f prevCenter = prevRegions[i]->getCentroid();
-            Vector3f curCenter = curRegions[j]->getCentroid();
-            Vector3f prevNormal = prevRegions[i]->getNormal();
-            Vector3f curNormal = curRegions[j]->getNormal();
-            float perpDist = fabs((prevCenter-curCenter).dot(curNormal)) + fabs((curCenter-prevCenter).dot(prevNormal));
-            float angularDiff = fabs(prevNormal.dot(curNormal));
-//            ROS_INFO("DIFF:%.4lf", diff);
-            if (perpDist < 0.1 && angularDiff > 0.7){
-                best = j;
-                curRegions[j]->setId(prevRegions[i]->getId());
-                break;
-            }
-        }
-    }
-}
 
 void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> rawRegionList){
     map_sense::RawGPUPlanarRegionList planarRegionsToPublish;
@@ -305,7 +278,6 @@ void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> raw
         region.centroid.x = static_cast<double>(rawRegionList[i]->getCentroid().x());
         region.centroid.y = static_cast<double>(rawRegionList[i]->getCentroid().y());
         region.centroid.z = static_cast<double>(rawRegionList[i]->getCentroid().z());
-        ROS_INFO("Publishing");
 
         for(int j = 0; j<rawRegionList[i]->getVertices().size(); j++){
             Vector3f vertex = rawRegionList[i]->getVertices()[j];
@@ -324,7 +296,7 @@ void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> raw
 void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
 
     appState.update();
-    this->output.update(appState);
+    mapFrameProcessor.init(appState);
 
     NetworkManager dataReceiver;
     // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
@@ -337,17 +309,17 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState) {
     auto start = high_resolution_clock::now();
 
     this->generatePatchGraph(appState); // Generate planar patch graph from depth map and color image.
-    mapFrameProcessor.generateSegmentation(output, planarRegionList, appState); // Generate planar region components from patch-graph
+    mapFrameProcessor.generateSegmentation(output, planarRegionList); // Generate planar region components from patch-graph
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
     ROS_INFO("Plane Fitting Took: %.2f ms\n", duration / (float) 1000);
 
     //
-    // for (int i = 0; i < SUB_H; i++) {
+    // for (int i = 0; i < appState.SUB_H; i++) {
     //     line(inputDepth, cv::Point(0, i * 8), cv::Point(WIDTH, i * 8), Scalar(255, 255, 0), 1);
     // }
-    // for (int i = 0; i < SUB_W; i++) {
+    // for (int i = 0; i < appState.SUB_W; i++) {
     //     line(inputDepth, cv::Point(i * 8, 0), cv::Point(i * 8, HEIGHT), Scalar(255, 255, 0), 1);
     // }
 

@@ -7,6 +7,7 @@
 
 #include <string>
 
+
 #define SHOW_INPUT_DEPTH 1
 #define SHOW_FILTERED_DEPTH 2
 #define SHOW_REGION_COMPONENTS 0
@@ -48,23 +49,34 @@ public:
      * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
      * */
 
-    int INPUT_HEIGHT = 480/2;
-    int INPUT_WIDTH = 640/2;
+    int INPUT_HEIGHT = 0;
+    int INPUT_WIDTH = 0;
     int KERNEL_SLIDER_LEVEL = 2;
     int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
     int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
     int SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
     int SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
 
-    float DEPTH_FX = 459.97/2;
-    float DEPTH_FY = 459.80/2;
-    float DEPTH_CX = 341.84/2;
-    float DEPTH_CY = 249.17/2;
+//    float DEPTH_FX = 459.97;
+//    float DEPTH_FY = 459.80;
+//    float DEPTH_CX = 341.84;
+//    float DEPTH_CY = 249.17;
+
+    float DEPTH_FX = 0;
+    float DEPTH_FY = 0;
+    float DEPTH_CX = 0;
+    float DEPTH_CY = 0;
 
     int NUM_SKIP_EDGES = 8;
+    int VISUAL_DEBUG_DELAY = 10;
 
     bool SHOW_BOUNDARIES = true;
     bool SHOW_PATCHES = true;
+    bool VISUAL_DEBUG = false;
+
+    bool SHOW_GRAPH = true;
+    bool ROS_ENABLED = false;
+    bool SHOW_REGION_EDGES = false;
 
 };
 

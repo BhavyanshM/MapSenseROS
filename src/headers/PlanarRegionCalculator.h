@@ -5,25 +5,21 @@
 #include "ros/package.h"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "MapFrame.h"
-#include "MapFrameProcessor.h"
-#include "PlanarRegion.h"
-
 #include "image_transport/image_transport.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
-
 #include <iostream>
 #include <CL/cl.hpp>
 #include <cmath>
 #include <sstream>
+#include "tbb/tbb.h"
 #include <random>
 
 #include "NetworkManager.h"
+#include "MapFrame.h"
+#include "MapFrameProcessor.h"
 #include "PlanarRegion.h"
-
-#include "tbb/tbb.h"
 
 using namespace ros;
 using namespace std;
@@ -38,11 +34,7 @@ public:
     cl::size_t<3> origin, size;
     cl::Event event;
 
-    int SUB_H = 0;
-    int SUB_W = 0;
-    int PATCH_HEIGHT = 0;
-    int PATCH_WIDTH = 0;
-
+    ApplicationState app;
     NetworkManager* _dataReceiver;
 
     Mat inputDepth;
@@ -51,9 +43,9 @@ public:
 
     MapFrame output;
     MapFrameProcessor mapFrameProcessor;
-    vector<shared_ptr<PlanarRegion>> planarRegionList, currentRegionList;
+    vector<shared_ptr<PlanarRegion>> planarRegionList;
 
-    explicit PlanarRegionCalculator(ApplicationState app);
+    explicit PlanarRegionCalculator(ApplicationState& app);
     void generatePatchGraph(ApplicationState appState);
     void initOpenCL(ApplicationState app);
     void launch_tester(ApplicationState appState);

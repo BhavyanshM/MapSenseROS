@@ -36,6 +36,7 @@
 #include "MeshGenerator.h"
 #include "PlanarRegionCalculator.h"
 #include "ApplicationState.h"
+#include "sys/resource.h"
 
 using namespace Magnum;
 using namespace Math::Literals;
@@ -66,9 +67,7 @@ private:
     ImGuiIntegration::Context _imgui{NoCreate};
     Color4 _clearColor = 0x72909aff_rgbaf;
     Float _floatValue = 0.0f;
-    bool _showGraph = true;
-    bool _rosEnabled = false;
-    bool _showRegionEdges = false;
+
     uint8_t _displayItem = -1;
 
     Scene3D _scene;

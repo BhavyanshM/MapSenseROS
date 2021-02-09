@@ -11,19 +11,21 @@
 class MapFrameProcessor {
 public:
 
-    // MapFrame* frame;
+    MapFrame frame;
     Mat debug;
     MatrixXi visited;
     MatrixXi boundary;
     MatrixXi region;
-    ApplicationState params;
+    ApplicationState app;
 
-    void init(ApplicationState app);
-    void generateSegmentation(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList, ApplicationState params);
-    void dfs(int x, int y, int component, int& num, Mat& debug, uint8_t* framePatch, shared_ptr<PlanarRegion> planarRegion, MapFrame inputFrame);
-    void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing, MapFrame inputFrame);
-    void findBoundaryAndHoles(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
-    void printPatchGraph(MapFrame inputFrame, ApplicationState app);
+    void init(ApplicationState& app);
+    void generateSegmentation(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
+    void dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion);
+    void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing);
+    void findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList);
+    void printPatchGraph();
+
+    void displayDebugger(int delay);
 
     int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
     int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
