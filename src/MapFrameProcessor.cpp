@@ -87,10 +87,8 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
             uint8_t newPatch = this->frame.patchData.at<uint8_t>((x + adx[i]),(y + ady[i]));
             if (newPatch == 255){
                 count++;
-                printf("---------------------REACHED-----------(%d,%d,%d)\n", x,y, num);
-                if(num < 1000){
-                    dfs(x+adx[i], y+ady[i], component, num, debug, planarRegion);
-                }
+//                printf("---------------------REACHED-----------(%d,%d,%d)\n", x,y, num);
+                dfs(x+adx[i], y+ady[i], component, num, debug, planarRegion);
             }
         }
     }
