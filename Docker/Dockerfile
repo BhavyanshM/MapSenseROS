@@ -68,5 +68,6 @@ RUN echo 'alias mapsense-clion="source /opt/ros/noetic/setup.bash && source /Wor
 	/opt/clion/bin/clion.sh /Workspace/catkin_ws/src </dev/null &>/dev/null &"' >> ~/.bashrc
 
 RUN echo 'source /opt/ros/noetic/setup.bash' >> ~/.bashrc
-RUN echo 'roscore </dev/null &>/dev/null &' >> ~/.bashrc
+RUN echo '#roscore </dev/null &>/dev/null &' >> ~/.bashrc
+RUN echo 'export ROS_MASTER_URI=http://localhost:11311/' >> ~/.bashrc
 
