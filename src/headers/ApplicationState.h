@@ -57,6 +57,10 @@ public:
     int SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
     int SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
 
+    int FILTER_KERNEL_SIZE = 16;
+    int FILTER_SUB_H = (int) INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+    int FILTER_SUB_W = (int) INPUT_WIDTH / FILTER_KERNEL_SIZE;
+
 //    float DEPTH_FX = 459.97;
 //    float DEPTH_FY = 459.80;
 //    float DEPTH_CX = 341.84;

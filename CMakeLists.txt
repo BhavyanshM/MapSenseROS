@@ -49,7 +49,7 @@ add_message_files(
 	FILES
 	RawGPUPlanarRegionList.msg
 	RawGPUPlanarRegion.msg
-	MapSenseParams.msg
+	MapsenseConfiguration.msg
 )
 
 generate_messages(

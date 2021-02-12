@@ -33,11 +33,14 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
                       appState.DEPTH_FX,
                       appState.DEPTH_FY,
                       appState.DEPTH_CX,
-                      appState.DEPTH_CY};
+                      appState.DEPTH_CY,
+                      (float) appState.FILTER_KERNEL_SIZE,
+                      (float) appState.FILTER_SUB_H,
+                      (float) appState.FILTER_SUB_W};
 
 
-    ROS_INFO("GenerateRegions:(%d, %d, %d, %d, %d, %d)", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
-             appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W);
+    ROS_INFO("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
+             appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W, appState.FILTER_SUB_H, appState.FILTER_SUB_W, appState.FILTER_KERNEL_SIZE);
     cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
 
     Mat depthMat = inputDepth.clone();
@@ -112,7 +115,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 
 
     /* Deploy the patch-packing and patch-merging kernels patch-wise */
-    commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+    commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(appState.FILTER_SUB_H, appState.FILTER_SUB_W), cl::NullRange);
     commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
     commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
 

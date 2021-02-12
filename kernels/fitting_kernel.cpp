@@ -10,6 +10,9 @@
 #define DEPTH_FY 8
 #define DEPTH_CX 9
 #define DEPTH_CY 10
+#define FILTER_KERNEL_SIZE 11
+#define FILTER_SUB_H 12
+#define FILTER_SUB_W 13
 
 float4 back_project(int2 pos, float Z, global float* params){
     float px = (pos.x - params[DEPTH_CX])/(params[DEPTH_FX]) * Z;
@@ -102,11 +105,11 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
     int total_unique = 0;
 
     /* Find all non-zero unique depth values available in this patch. */
-    for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
-        for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
+    for(int i = 0; i<(int)params[FILTER_KERNEL_SIZE]; i++){
+        for(int j = 0; j<(int)params[FILTER_KERNEL_SIZE]; j++){
             count++;
-            int gx = x * ((int)params[PATCH_HEIGHT]) + i;
-            int gy = y * ((int)params[PATCH_WIDTH]) + j;
+            int gx = x * ((int)params[FILTER_KERNEL_SIZE]) + i;
+            int gy = y * ((int)params[FILTER_KERNEL_SIZE]) + j;
 
             int2 pos = (int2)(gx,gy);
             Z = read_imageui(in, pos).x;
@@ -144,11 +147,11 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
     }
 
     /* Fill all dead pixels in the patch with the nearest neighboring non-zero unique depth value. */
-    for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
-        for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
+    for(int i = 0; i<(int)params[FILTER_KERNEL_SIZE]; i++){
+        for(int j = 0; j<(int)params[FILTER_KERNEL_SIZE]; j++){
             count++;
-            int gx = x*(int)params[PATCH_HEIGHT] + i;
-            int gy = y*(int)params[PATCH_WIDTH] + j;
+            int gx = x*(int)params[FILTER_KERNEL_SIZE] + i;
+            int gy = y*(int)params[FILTER_KERNEL_SIZE] + j;
 
             int2 pos = (int2)(gx,gy);
             Z = read_imageui(in, pos).x;
@@ -188,7 +191,7 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
     int x = get_global_id(1);
 
     if(x==0 && y==0) printf("FilterKernel\n");
-    if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
+    if(y >= 0 && y < (int)params[FILTER_SUB_H] && x >= 0 && x < (int)params[FILTER_SUB_W]){
 
         filter_depth(in, x, y, out0, params);
 

@@ -1,7 +1,0 @@
-std_msgs/Header header
-float32 mergeAngularThreshold
-float32 mergeDistanceThreshold
-float32 filterDisparityThreshold
-uint16 regionMinPatches
-uint16 regionBoundaryToInternalDiff
-

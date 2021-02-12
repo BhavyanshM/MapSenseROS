@@ -1,0 +1,6 @@
+std_msgs/Header header
+float32 mergeAngularThreshold
+float32 mergeDistanceThreshold
+uint8 filterSize
+uint8 kernelLevel
+

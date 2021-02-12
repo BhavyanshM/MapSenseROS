@@ -247,7 +247,10 @@ void MyApplication::drawEvent() {
 
     if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
 
-    ImGui::SliderInt("Kernel Level", &appState.KERNEL_SLIDER_LEVEL, 2, 10); appState.update();
+    ImGui::SliderInt("Kernel Level", &appState.KERNEL_SLIDER_LEVEL, 2, 10);
+    ImGui::SliderInt("Filter Size", &appState.FILTER_KERNEL_SIZE, 2, 10);
+    appState.update();
+
     ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT,  appState.INPUT_WIDTH,
                 appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.KERNEL_SLIDER_LEVEL);
 
