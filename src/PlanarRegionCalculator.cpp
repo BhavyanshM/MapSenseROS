@@ -1,11 +1,12 @@
 #include "PlanarRegionCalculator.h"
 
 PlanarRegionCalculator::PlanarRegionCalculator(ApplicationState& app) {
-    this->app = app;
     this->mapFrameProcessor.init(app);
     this->inputDepth = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
-    this->filteredDepth = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
     this->inputColor = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
+    origin[0] = 0;
+    origin[0] = 0;
+    origin[0] = 0;
 }
 
 /*
@@ -21,7 +22,7 @@ PlanarRegionCalculator::PlanarRegionCalculator(ApplicationState& app) {
 void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     ROS_INFO("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              output.getRegionOutput().cols, output.getRegionOutput().rows);
-
+    this->app = appState;
     float params[] = {(float)appState.FILTER_DISPARITY_THRESHOLD,
                       appState.MERGE_ANGULAR_THRESHOLD,
                       appState.MERGE_DISTANCE_THRESHOLD,
@@ -90,6 +91,13 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     regionOutputSize[0] = appState.SUB_W;
     regionOutputSize[1] = appState.SUB_H;
     regionOutputSize[2] = 1;
+    cl::size_t<3> origin, size;
+    origin[0] = 0;
+    origin[0] = 0;
+    origin[0] = 0;
+    size[0] = appState.INPUT_WIDTH;
+    size[1] = appState.INPUT_HEIGHT;
+    size[2] = 1;
 
     /* Output Data Buffers on CPU */
     Mat debug(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
@@ -100,12 +108,15 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
     Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
     Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+    this->filteredDepth = Mat(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
+
 
     /* Deploy the patch-packing and patch-merging kernels patch-wise */
     commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
     commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
     commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
 
+    ROS_INFO("FilteredDepth:(%d,%d)", filteredDepth.rows, filteredDepth.cols);
     /* Read the output data from OpenCL buffers into CPU buffers */
     // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
     commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, filteredDepth.data);
@@ -119,6 +130,8 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 
     /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
     commandQueue.finish();
+
+
 
 
     /* Combine the CPU buffers into single image with multiple channels */
@@ -158,13 +171,7 @@ void PlanarRegionCalculator::getInputDepth(Mat& dispDepth, bool showGraph){
 
 
 void PlanarRegionCalculator::initOpenCL(ApplicationState app) {
-    origin[0] = 0;
-    origin[1] = 0;
-    origin[2] = 0;
 
-    size[0] = app.INPUT_WIDTH;
-    size[1] = app.INPUT_HEIGHT;
-    size[2] = 1;
 
     vector<cl::Platform> all_platforms;
     cl::Platform::get(&all_platforms);

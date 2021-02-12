@@ -31,8 +31,8 @@ public:
     cl::Kernel filterKernel, packKernel, mergeKernel;
     cl::Context context;
     cl::CommandQueue commandQueue;
-    cl::size_t<3> origin, size;
     cl::Event event;
+    cl::size_t<3> origin;
 
     ApplicationState app;
     NetworkManager* _dataReceiver;
@@ -53,7 +53,6 @@ public:
     void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
     void getFilteredDepth(Mat& dispDepth, bool showGraph);
     void getInputDepth(Mat& dispDepth, bool showGraph);
-    void registerRegions(vector<shared_ptr<PlanarRegion>> prevRegions, vector<shared_ptr<PlanarRegion>> curRegions);
     static void onMouse(int event, int x, int y, int flags, void *userdata);
 };
 

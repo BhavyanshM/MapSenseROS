@@ -171,10 +171,8 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
                 // if (x==0 && y==0) printf("%d\t",Z);
             }
 
-            // if (x == 10 && y == 10) printf("Depth:%hu\n",Z);
             write_imageui(out0, pos, (uint4)(Z,0,0,0));
         }
-        // if (x==0 && y==0) printf("\n");
     }
 
 }
