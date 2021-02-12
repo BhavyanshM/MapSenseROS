@@ -118,7 +118,6 @@ void NetworkManager::spin_ros_node() {
 
 void NetworkManager::load_sample_depth(String filename, Mat &depth) {
     depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
-
 }
 
 void NetworkManager::load_sample_color(String filename, Mat &color) {
