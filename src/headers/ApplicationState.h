@@ -57,7 +57,7 @@ public:
     int SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
     int SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
 
-    int FILTER_KERNEL_SIZE = 16;
+    int FILTER_KERNEL_SIZE = 4;
     int FILTER_SUB_H = (int) INPUT_HEIGHT / FILTER_KERNEL_SIZE;
     int FILTER_SUB_W = (int) INPUT_WIDTH / FILTER_KERNEL_SIZE;
 

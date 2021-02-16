@@ -69,7 +69,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     filterKernel.setArg(2, clFilterDepth);
     filterKernel.setArg(3, paramsBuffer);
 
-    packKernel.setArg(0, clFilterDepth);
+    packKernel.setArg(0, clDepth);
     packKernel.setArg(1, clOutput_0);
     packKernel.setArg(2, clOutput_1);
     packKernel.setArg(3, clOutput_2);
