@@ -51,8 +51,8 @@ public:
     void launch_tester(ApplicationState appState);
     void generateRegions(NetworkManager* receiver, ApplicationState appState);
     void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
-    void getFilteredDepth(Mat& dispDepth, bool showGraph);
-    void getInputDepth(Mat& dispDepth, bool showGraph);
+    void getFilteredDepth(Mat& dispDepth, ApplicationState appState);
+    void getInputDepth(Mat& dispDepth, ApplicationState appState);
     static void onMouse(int event, int x, int y, int flags, void *userdata);
 };
 

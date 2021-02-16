@@ -64,27 +64,21 @@ void clear(vector<Object3D*>& objects){
     objects.clear();
 }
 
-void displayDebugOutput(Mat disp){
-
-    resizeWindow("DebugOutput", (int)(disp.cols), (int)(disp.rows));
-    imshow("DebugOutput", disp);
-    waitKey(1);
-}
 
 void MyApplication::tickEvent() {
 //     cout << "TickEvent:" << count++ << endl;
     switch(_displayItem){
-        case SHOW_INPUT_COLOR : displayDebugOutput(_regionCalculator->inputColor); break;
+        case SHOW_INPUT_COLOR : AppUtils::displayDebugOutput(_regionCalculator->inputColor); break;
         case SHOW_INPUT_DEPTH : {
             Mat dispDepth;
-            _regionCalculator->getInputDepth(dispDepth, appState.SHOW_GRAPH);
-            displayDebugOutput(dispDepth); break;
+            _regionCalculator->getInputDepth(dispDepth, appState);
+            AppUtils::displayDebugOutput(dispDepth); break;
         }
-        case SHOW_REGION_COMPONENTS : displayDebugOutput(_regionCalculator->mapFrameProcessor.debug); break;
+        case SHOW_REGION_COMPONENTS : AppUtils::displayDebugOutput(_regionCalculator->mapFrameProcessor.debug); break;
         case SHOW_FILTERED_DEPTH : {
             Mat dispDepth;
-            _regionCalculator->getFilteredDepth(dispDepth, appState.SHOW_GRAPH);
-            displayDebugOutput(dispDepth);
+            _regionCalculator->getFilteredDepth(dispDepth, appState);
+            AppUtils::displayDebugOutput(dispDepth);
         } break;
         case -1 : destroyAllWindows(); break;
     }
@@ -201,41 +195,11 @@ void MyApplication::draw_regions(){
 }
 
 void MyApplication::generate_patches(){
-    _regionCalculator->launch_tester(appState);
+    _regionCalculator->generateRegions(_dataReceiver, appState);
     draw_patches();
 }
 
 
-void checkMemoryLimits() {
-    struct rlimit old_lim, lim, new_lim;
-
-    // Get old limits
-    if (getrlimit(RLIMIT_NOFILE, &old_lim) == 0) {
-        printf("Old limits -> soft limit= %ld \t"
-               " hard limit= %ld \n", old_lim.rlim_cur,
-               old_lim.rlim_max);
-    }else {
-        fprintf(stderr, "%s\n", strerror(errno));
-    }
-
-    // Set new value
-    lim.rlim_cur = 1024 * 1024 * 1024;
-    lim.rlim_max = 1024 * 1024 * 1024;
-
-    // Set limits
-    if (setrlimit(RLIMIT_NOFILE, &lim) == -1) {
-        fprintf(stderr, "%s\n", strerror(errno));
-    }
-    // Get new limits
-    if (getrlimit(RLIMIT_NOFILE, &new_lim) == 0) {
-        printf("New limits -> soft limit= %ld "
-               "\t hard limit= %ld \n", new_lim.rlim_cur,
-               new_lim.rlim_max);
-    }
-    else{
-        fprintf(stderr, "%s\n", strerror(errno));
-    }
-}
 
 void MyApplication::drawEvent() {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
@@ -245,43 +209,24 @@ void MyApplication::drawEvent() {
 
     ImGui::Text("MapSense");
 
-    if (ImGui::ColorEdit3("Color", _clearColor.data())) { GL::Renderer::setClearColor(_clearColor); }
-
-    ImGui::SliderInt("Kernel Level", &appState.KERNEL_SLIDER_LEVEL, 2, 10);
-    ImGui::SliderInt("Filter Size", &appState.FILTER_KERNEL_SIZE, 2, 10);
-    appState.update();
-
-    ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT,  appState.INPUT_WIDTH,
-                appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.KERNEL_SLIDER_LEVEL);
-
-    if(ImGui::Button("Region Components")) _displayItem = 0;
-    ImGui::SameLine(140);
-    ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
-    ImGui::SameLine(220);
-    ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
-    if(ImGui::Button("Input Color")) _displayItem = 3;
-    if(ImGui::Button("Input Depth")) _displayItem = 1;
-    if(ImGui::Button("Filtered Depth")) _displayItem = 2;
-    ImGui::SameLine(180);
-    ImGui::Checkbox("Graph", &appState.SHOW_GRAPH);
-
-    if(ImGui::Button("Hide Display")) { destroyAllWindows();destroyAllWindows();_displayItem = -1; }
-
-    ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
-    ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);
-    ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
-    ImGui::SliderFloat("Filter Disparity Threshold", &appState.FILTER_DISPARITY_THRESHOLD, 1000, 4000);
-    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.005, 0.1);
-    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.1f, 1.0f);
-
     if(ImGui::BeginTabBar("Tab Bar")){
         if(ImGui::BeginTabItem("ROS")){
-            if(ImGui::Button("Enable ROS Node")){appState.ROS_ENABLED = true;}
-            ImGui::SameLine(180);
-            if(ImGui::Button("Disable ROS Node")){appState.ROS_ENABLED = false;}
+            ImGuiLayout::getImGuiROSLayout(appState);
             ImGui::EndTabItem();
         }
-        if(ImGui::BeginTabItem("Unit Tester")) {
+        if(ImGui::BeginTabItem("Params")){
+            /* Params */
+            ImGuiLayout::getImGuiParamsLayout(appState);
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("2D")){
+            /* Display 2D */
+            ImGuiLayout::getImGui2DLayout(appState, _displayItem);
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("3D")) {
+            /* Display 3D */
+            ImGuiLayout::getImGui3DLayout(appState, _clearColor);
             if (ImGui::Button("Generate Patches")) {
                 clear(planePatches);
                 generate_patches();
@@ -290,18 +235,24 @@ void MyApplication::drawEvent() {
             if (ImGui::Button("Clear Patches")) { clear(planePatches); }
             ImGui::EndTabItem();
         }
-
+        if(ImGui::BeginTabItem("Beta")){
+            /* Beta Features */
+            if(ImGui::Button("Save All")){
+                AppUtils::capture_data("/data/Capture",
+                                       _regionCalculator->inputDepth,
+                                       _regionCalculator->inputColor,
+                                       _regionCalculator->filteredDepth,
+                                       _regionCalculator->mapFrameProcessor.debug,
+                                       appState);
+            }
+            if (ImGui::Button("Configure Memory")) {
+                AppUtils::checkMemoryLimits();
+            }
+            ImGui::EndTabItem();
+        }
         ImGui::EndTabBar();
     }
-    ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
-    ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
-    ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
-    ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1,100);
-    if (ImGui::Button("Configure Memory")) {
-        checkMemoryLimits();
-    }
 
-    ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
     /* Update application cursor */
     _imgui.updateApplicationCursor(*this);
@@ -323,15 +274,8 @@ void MyApplication::drawEvent() {
 }
 
 
-
-
 int main(int argc, char **argv) {
     MyApplication app({argc, argv});
     return app.exec();
-
-    // PlanarRegionCalculator regionCalculator;
-    // regionCalculator.initOpenCL();
-    // regionCalculator.launch_tester();
-
 }
 

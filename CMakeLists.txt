@@ -80,7 +80,9 @@ set(SOURCE_FILES
 		src/MeshGenerator.cpp
 		src/ApplicationState.cpp
 		src/RegionRing.cpp
-		src/PlanarRegionMapHandler.cpp)
+		src/PlanarRegionMapHandler.cpp
+		src/AppUtils.cpp
+		src/ImGuiLayout.cpp )
 
 set (HEADERS
 		src/headers/PlanarRegionCalculator.h
@@ -92,7 +94,10 @@ set (HEADERS
 		src/headers/ApplicationState.h
 		src/headers/ScenePrimitives.h
 		src/headers/RegionRing.h
-		src/headers/PlanarRegionMapHandler.h)
+		src/headers/PlanarRegionMapHandler.h
+		src/headers/AppUtils.h
+		src/headers/ImGuiLayout.h)
+
 
 include_directories(
   include

@@ -36,7 +36,8 @@
 #include "MeshGenerator.h"
 #include "PlanarRegionCalculator.h"
 #include "ApplicationState.h"
-#include "sys/resource.h"
+#include "ImGuiLayout.h"
+#include "AppUtils.h"
 
 using namespace Magnum;
 using namespace Math::Literals;

@@ -69,7 +69,11 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     filterKernel.setArg(2, clFilterDepth);
     filterKernel.setArg(3, paramsBuffer);
 
-    packKernel.setArg(0, clDepth);
+    if (appState.FILTER_SELECTED){
+        packKernel.setArg(0, clFilterDepth);
+    }else{
+        packKernel.setArg(0, clDepth);
+    }
     packKernel.setArg(1, clOutput_0);
     packKernel.setArg(2, clOutput_1);
     packKernel.setArg(3, clOutput_2);
@@ -160,16 +164,20 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
 
 }
 
-void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth, bool showGraph){
-    filteredDepth.convertTo(dispDepth, -1, 16, 100);
-    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    if(showGraph) output.drawGraph(dispDepth, this->app);
+void PlanarRegionCalculator::getFilteredDepth(Mat& dispDepth, ApplicationState appState){
+    if(filteredDepth.cols > 0 && filteredDepth.rows > 0 && !filteredDepth.empty()){
+        filteredDepth.convertTo(dispDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
+        cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+        if(appState.SHOW_GRAPH) output.drawGraph(dispDepth, this->app);
+    }
 }
 
-void PlanarRegionCalculator::getInputDepth(Mat& dispDepth, bool showGraph){
-    inputDepth.convertTo(dispDepth, -1, 16, 100);
-    cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
-    if(showGraph) output.drawGraph(dispDepth, this->app);
+void PlanarRegionCalculator::getInputDepth(Mat& dispDepth, ApplicationState appState){
+    if(inputDepth.rows > 0 && inputDepth.cols > 0 && !inputDepth.empty()){
+        inputDepth.convertTo(dispDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
+        cvtColor(dispDepth, dispDepth, COLOR_GRAY2BGR);
+        if(appState.SHOW_GRAPH) output.drawGraph(dispDepth, this->app);
+    }
 }
 
 

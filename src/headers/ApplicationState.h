@@ -37,8 +37,9 @@ public:
     float MERGE_DISTANCE_THRESHOLD = 0.01;
     float MERGE_ANGULAR_THRESHOLD = 0.3;
 
+    bool FILTER_SELECTED = false;
     float FILTER_DISPARITY_THRESHOLD = 2000;
-    float MAGNUM_PATCH_SCALE = 0.01;
+    float MAGNUM_PATCH_SCALE = 0.007;
 
     int REGION_MIN_PATCHES = 20;
     int REGION_BOUNDARY_DIFF = 20;
@@ -79,8 +80,12 @@ public:
     bool VISUAL_DEBUG = false;
 
     bool SHOW_GRAPH = true;
-    bool ROS_ENABLED = false;
+    bool ROS_ENABLED = true;
     bool SHOW_REGION_EDGES = false;
+
+    /*  VISUALIZATION-ONLY */
+    float DEPTH_BRIGHTNESS = 40;
+    float DEPTH_DISPLAY_OFFSET = 100;
 
 };
 
