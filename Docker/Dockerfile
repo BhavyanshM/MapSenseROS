@@ -53,12 +53,13 @@ RUN mv clion-2020.3.2/ /opt/clion
 USER robotlab
 WORKDIR /home/robotlab
 
+# Install graphics and UI tools magnum and ImGui
 RUN mkdir dev
 WORKDIR /home/robotlab/dev
 USER root
-RUN git clone git://github.com/mosra/corrade && cd corrade && ln -s package/debian . && dpkg-buildpackage && dpkg -i ../corrade*.deb && cd ..
-RUN git clone git://github.com/mosra/magnum && cd magnum && ln -s package/debian . && dpkg-buildpackage &&  dpkg -i ../magnum*.deb && cd ..
-RUN git clone git://github.com/mosra/magnum-integration && cd magnum-integration && cd src/MagnumExternal && \
+RUN mkdir corrade && cd corrade && git clone git://github.com/mosra/corrade && cd corrade && ln -s package/debian . && dpkg-buildpackage && dpkg -i ../corrade*.deb && cd ..
+RUN mkdir magnum && cd magnum && git clone git://github.com/mosra/magnum && cd magnum && ln -s package/debian . && dpkg-buildpackage &&  dpkg -i ../magnum*.deb && cd ..
+RUN mkdir magnum-integration && cd magnum-integration && git clone git://github.com/mosra/magnum-integration && cd magnum-integration && cd src/MagnumExternal && \
 	git clone https://github.com/ocornut/imgui.git && mv imgui ImGui && cd ../../ && \
 	sed -i "s/IMGUI=OFF/IMGUI=ON/g" package/debian/rules && \
 	sed -i "s/imgui_demo/imgui_demo imgui_tables/g" modules/FindImGui.cmake && \
@@ -78,7 +79,6 @@ VOLUME /home/robotlab/SharedVolume
 WORKDIR /home/robotlab
 COPY ./compile.sh /home/robotlab/compile.sh
 
-RUN echo 'rm -rf /corrade* /magnum*' >> /home/robotlab/.bashrc
 RUN echo 'alias clion="/opt/clion/bin/clion.sh"' >> /home/robotlab/.bashrc
 
 RUN echo 'alias mapsense="source /home/robotlab/dev/mapsense_ws/devel/setup.bash && \
