@@ -17,7 +17,7 @@
 #include <sstream>
 #include <random>
 #include "map_sense/RawGPUPlanarRegionList.h"
-#include "map_sense/MapSenseParams.h"
+#include "map_sense/MapsenseConfiguration.h"
 
 #include <ApplicationState.h>
 
@@ -32,7 +32,7 @@ class NetworkManager {
 public:
     CameraInfoConstPtr depthCameraInfo, colorCameraInfo;
     ImageConstPtr colorMessage;
-    map_sense::MapSenseParams paramsMessage;
+    map_sense::MapsenseConfiguration paramsMessage;
     CompressedImageConstPtr colorCompressedMessage;
     ImageConstPtr depthMessage;
     NodeHandle* nh;
@@ -61,7 +61,7 @@ public:
     void depthCallback(const ImageConstPtr &depthMsg);
     void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg);
     void colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr &colorMsg);
-    void mapSenseParamsCallback(const map_sense::MapSenseParams compressedMsg);
+    void mapSenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
 
     void init_ros_node(int argc, char **argv);
     void spin_ros_node();

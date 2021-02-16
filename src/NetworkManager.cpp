@@ -25,7 +25,7 @@ void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstP
     ROS_INFO("COLOR_CAM_INFO CALLBACK");
 }
 
-void NetworkManager::mapSenseParamsCallback(const map_sense::MapSenseParams msg) {
+void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg) {
     paramsMessage = msg;
     ROS_INFO("COLOR CALLBACK");
 }
