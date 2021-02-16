@@ -3,8 +3,8 @@ docker run -it \
 	--net=host \
 	--env="DISPLAY" \
 	--volume "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--volume "${pwd}/Shared_Volume:/Shared_Volume:rw" \
-	--volume "${pwd}/MapSenseROS:/Workspace/catkin_ws/src/MapSenseROS:rw" \
+	--volume "$(pwd)/Shared_Volume:/Shared_Volume:rw" \
+	--volume "$(pwd)/MapSenseROS:/Workspace/catkin_ws/src/MapSenseROS:rw" \
 	--privileged \
 	--runtime=nvidia \
 	--gpus all \
