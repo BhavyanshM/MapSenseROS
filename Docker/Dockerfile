@@ -48,6 +48,7 @@ RUN mkdir -p Downloads
 WORKDIR /home/robotlab/Downloads
 RUN curl -sL https://download.jetbrains.com/cpp/CLion-2020.3.2.tar.gz -o clion.tar.gz
 RUN tar -xvzf clion.tar.gz
+RUN rm -rf ./*.tar.gz
 USER root
 RUN mv clion-2020.3.2/ /opt/clion
 USER robotlab
@@ -57,13 +58,17 @@ WORKDIR /home/robotlab
 RUN mkdir dev
 WORKDIR /home/robotlab/dev
 USER root
-RUN mkdir corrade && cd corrade && git clone git://github.com/mosra/corrade && cd corrade && ln -s package/debian . && dpkg-buildpackage && dpkg -i ../corrade*.deb && cd ..
-RUN mkdir magnum && cd magnum && git clone git://github.com/mosra/magnum && cd magnum && ln -s package/debian . && dpkg-buildpackage &&  dpkg -i ../magnum*.deb && cd ..
+RUN mkdir corrade && cd corrade && git clone git://github.com/mosra/corrade && cd corrade && ln -s package/debian . && dpkg-buildpackage && dpkg -i ../corrade*.deb && cd ../../ && rm -rf corrade
+RUN mkdir magnum && cd magnum && git clone git://github.com/mosra/magnum && cd magnum && ln -s package/debian . && dpkg-buildpackage &&  dpkg -i ../magnum*.deb && cd ../../ && rm -rf magnum
 RUN mkdir magnum-integration && cd magnum-integration && git clone git://github.com/mosra/magnum-integration && cd magnum-integration && cd src/MagnumExternal && \
 	git clone https://github.com/ocornut/imgui.git && mv imgui ImGui && cd ../../ && \
 	sed -i "s/IMGUI=OFF/IMGUI=ON/g" package/debian/rules && \
 	sed -i "s/imgui_demo/imgui_demo imgui_tables/g" modules/FindImGui.cmake && \
-	ln -s package/debian . && dpkg-buildpackage && dpkg -i ../magnum-integration*.deb
+	ln -s package/debian . && dpkg-buildpackage && dpkg -i ../magnum-integration*.deb && \
+	cd ../../ && rm -rf magnum-integration
+
+
+
 USER robotlab
 
 # Setup Catkin Workspace and MapSenseROS C++ node 

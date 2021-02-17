@@ -70,7 +70,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 
 set(SOURCE_FILES
-		src/PlanarRegionPublisher.cpp
+		src/StandaloneOCLGenerator.cpp
 		src/PlanarRegionCalculator.cpp
 		src/NetworkManager.cpp
 		src/ScenePrimitives.cpp
