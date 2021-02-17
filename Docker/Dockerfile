@@ -9,20 +9,16 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y
 RUN apt-get install -y nano git wget curl unzip apt-transport-https ca-certificates curl software-properties-common python3-opencv
 
-
 # Setup ROS Noetic
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-RUN apt-get update
-RUN apt install -y ros-noetic-desktop-full
-RUN apt-get install -y ros-noetic-ddynamic-reconfigure
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
-
+RUN apt-get update -y
+RUN apt-get install -y ros-noetic-desktop ros-noetic-ddynamic-reconfigure
 
 # Install OpenGL libraries on nvidia-docker2 
 # Reference: (https://medium.com/@benjamin.botto/opengl-and-cuda-applications-in-docker-af0eece000f1)
 RUN apt-get install -y opencl-headers ocl-icd-opencl-dev libgflags-dev libglvnd-dev \
-	libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libxext6 libx11-6 freeglut3-dev mesa-utils
+	libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libxext6 libx11-6 freeglut3-dev mesa-utils dpkg-dev
 
 
 # Configure OpenCL (https://stackoverflow.com/questions/54243119/how-to-run-opencl-opengl-inside-a-docker-container)
@@ -73,7 +69,8 @@ RUN mkdir corrade \
 RUN mkdir magnum \
  && cd magnum \
  && git clone git://github.com/mosra/magnum \
- && cd magnum && ln -s package/debian . \
+ && cd magnum \
+ && ln -s package/debian . \
  && dpkg-buildpackage \
  && dpkg -i ../magnum*.deb \
  && cd ../.. \
