@@ -2,3 +2,4 @@ Docker/MapSenseROS*
 **/.idea
 Docker/SharedVolume*
 Docker/JetBrains*
+**/cmake-build-debug
