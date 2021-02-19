@@ -141,6 +141,14 @@ target_link_libraries(factorGraph2D PRIVATE
 		Magnum::Shaders
 		Magnum::Trade)
 
+add_executable(registration_and_mapping
+		src/PlanarRegionMapHandler.cpp
+		src/headers/PlanarRegionMapHandler.h
+		src/headers/PlanarRegion.h
+		src/PlanarRegion.cpp)
+target_link_libraries(registration_and_mapping
+		Eigen3::Eigen)
+
 
 
 

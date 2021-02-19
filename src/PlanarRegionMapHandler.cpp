@@ -21,3 +21,15 @@ void PlanarRegionMapHandler::registerRegions(vector<shared_ptr<PlanarRegion>> la
         }
     }
 }
+
+void PlanarRegionMapHandler::tester(){
+    cout << "Testing Registration and Mapping" << endl;
+}
+
+int main(){
+
+    PlanarRegionMapHandler mapper;
+    mapper.tester();
+
+    return 0;
+}

@@ -13,6 +13,7 @@ public:
     vector<shared_ptr<PlanarRegion>> regions;
 
     void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
+    void tester();
 };
 
 
