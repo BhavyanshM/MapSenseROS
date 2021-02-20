@@ -126,3 +126,11 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points){
     printf("ClockWise 2D Generated\n");
 }
 
+void PlanarRegion::setNormal(const Vector3f &normal) {
+    this->normal = normal;
+}
+
+void PlanarRegion::setCenter(const Vector3f &center) {
+    this->center = center;
+}
+

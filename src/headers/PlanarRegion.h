@@ -45,6 +45,10 @@ public:
     int getId();
     void setId(int id);
 
+    void setNormal(const Vector3f &normal);
+
+    void setCenter(const Vector3f &center);
+
     vector<shared_ptr<RegionRing>> rings;
 };
 

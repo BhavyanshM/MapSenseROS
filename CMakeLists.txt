@@ -123,11 +123,11 @@ target_link_libraries(planar_region_publisher
 	MagnumIntegration::ImGui
 	Eigen3::Eigen
 )
-
 #set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
-
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
+
+
 
 add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE
@@ -141,13 +141,25 @@ target_link_libraries(factorGraph2D PRIVATE
 		Magnum::Shaders
 		Magnum::Trade)
 
+
+
 add_executable(registration_and_mapping
 		src/PlanarRegionMapHandler.cpp
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
-		src/PlanarRegion.cpp)
+		src/PlanarRegion.cpp src/PlanarRegionSimulator.cpp src/headers/PlanarRegionSimulator.h src/SLAMApplication.cpp src/headers/SLAMApplication.h)
+
 target_link_libraries(registration_and_mapping
-		Eigen3::Eigen)
+		Eigen3::Eigen
+		Corrade::Main
+		Magnum::Application
+		Magnum::GL
+		Magnum::Magnum
+		Magnum::MeshTools
+		Magnum::Primitives
+		Magnum::SceneGraph
+		Magnum::Shaders
+		Magnum::Trade)
 
 
 
