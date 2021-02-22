@@ -1,12 +1,14 @@
 #ifndef SRC_MAPFRAMEPROCESSOR_H
 #define SRC_MAPFRAMEPROCESSOR_H
 
-
+#include "ros/ros.h"
 #include "MapFrame.h"
 #include "PlanarRegion.h"
 #include <opencv2/highgui.hpp>
 #include "ApplicationState.h"
 #include <algorithm>
+
+using namespace ros;
 
 class MapFrameProcessor {
 public:
