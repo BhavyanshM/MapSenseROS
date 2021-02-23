@@ -7,14 +7,14 @@
 
 #include <PlanarRegion.h>
 
-class PlanarRegionMapHandler
-{
-   public:
-      vector<shared_ptr<PlanarRegion>> regions;
+class PlanarRegionMapHandler {
+public:
+    vector<shared_ptr<PlanarRegion>> regions, latestRegions;
 
-      void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
-
-      void tester();
+    void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
+    void tester();
+    void loadRegions();
 };
+
 
 #endif //PLOTTER3D_PY_PLANARREGIONMAPHANDLER_H

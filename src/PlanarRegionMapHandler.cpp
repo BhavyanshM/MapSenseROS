@@ -31,6 +31,12 @@ void PlanarRegionMapHandler::tester()
    cout << "Testing Registration and Mapping" << endl;
 }
 
+void PlanarRegionMapHandler::loadRegions(){
+    for (int i = 0; i<regions.size(); i++){
+        shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(i);
+    }
+}
+
 
 
 

@@ -4,7 +4,16 @@
 
 #include "AppUtils.h"
 
-void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState)
+void write_regions(vector<shared_ptr<PlanarRegion>> regions)
+{
+   for (shared_ptr<PlanarRegion> region : regions)
+   {
+      region->writeToFile(ros::package::getPath("map_sense") + "/data/regions");
+   }
+}
+
+void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,
+                            vector<shared_ptr<PlanarRegion>> regions)
 {
    Mat finalDepth, finalFilteredDepth;
    depth.convertTo(finalDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
@@ -13,6 +22,7 @@ void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredD
    imwrite(ros::package::getPath("map_sense") + filename + "_Color.png", color);
    imwrite(ros::package::getPath("map_sense") + filename + "_FilteredDepth.png", finalFilteredDepth);
    imwrite(ros::package::getPath("map_sense") + filename + "_Components.png", components);
+   write_regions(regions);
 }
 
 void AppUtils::displayDebugOutput(Mat disp)
