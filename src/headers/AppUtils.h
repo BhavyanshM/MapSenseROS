@@ -15,7 +15,8 @@ using namespace cv;
 
 class AppUtils {
 public:
-    static void capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState);
+    static void capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState,
+                             vector<shared_ptr<PlanarRegion>> regions);
     static void displayDebugOutput(Mat disp);
     static void checkMemoryLimits();
 };

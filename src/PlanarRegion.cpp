@@ -134,3 +134,16 @@ void PlanarRegion::setCenter(const Vector3f &center) {
     this->center = center;
 }
 
+void PlanarRegion::writeToFile(string filename){
+    ofstream file;
+    file.open(filename, fstream::in | fstream::out | fstream::app);
+    file << "RegionID:" << this->id << endl;
+    file << boost::format("Center:%.3f,%.3f,%.3f\n") % center.x() % center.y() % center.z();
+    file << boost::format("Normal:%.3f,%.3f,%.3f\n") % normal.x() % normal.y() % normal.z();
+    file << "NumPatches:" << this->getNumOfBoundaryVertices() << endl;
+    for(int i = 0; i<boundaryVertices.size(); i++){
+        file << boost::format("%.3lf, %.3lf, %.3lf\n") % boundaryVertices[i].x() % boundaryVertices[i].y() % boundaryVertices[i].z();
+    }
+    file.close();
+}
+

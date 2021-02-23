@@ -6,6 +6,8 @@
 #include <iostream>
 #include "RegionRing.h"
 #include <memory>
+#include <boost/format.hpp>
+#include <fstream>
 
 using namespace Eigen;
 using namespace std;
@@ -48,6 +50,8 @@ public:
     void setNormal(const Vector3f &normal);
 
     void setCenter(const Vector3f &center);
+
+    void writeToFile(string filename);
 
     vector<shared_ptr<RegionRing>> rings;
 };
