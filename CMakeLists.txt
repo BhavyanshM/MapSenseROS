@@ -42,9 +42,6 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
 )
 
-#find_package(OpenCV REQUIRED)
-
-
 add_message_files(
 	FILES
 	RawGPUPlanarRegionList.msg
@@ -69,20 +66,17 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 
-set(SOURCE_FILES
-		src/StandaloneOCLGenerator.cpp
+set(SOURCE
 		src/PlanarRegionCalculator.cpp
 		src/NetworkManager.cpp
-		src/ScenePrimitives.cpp
 		src/MapFrame.cpp
 		src/MapFrameProcessor.cpp
 		src/PlanarRegion.cpp
-		src/MeshGenerator.cpp
 		src/ApplicationState.cpp
 		src/RegionRing.cpp
 		src/PlanarRegionMapHandler.cpp
 		src/AppUtils.cpp
-		src/ImGuiLayout.cpp )
+		)
 
 set (HEADERS
 		src/headers/PlanarRegionCalculator.h
@@ -90,39 +84,49 @@ set (HEADERS
 		src/headers/MapFrame.h
 		src/headers/MapFrameProcessor.h
 		src/headers/PlanarRegion.h
-		src/headers/MeshGenerator.h
 		src/headers/ApplicationState.h
-		src/headers/ScenePrimitives.h
 		src/headers/RegionRing.h
 		src/headers/PlanarRegionMapHandler.h
-		src/headers/AppUtils.h
+		src/headers/AppUtils.h)
+
+set(MAPSENSE_GUI_SOURCE
+		src/MeshGenerator.cpp
+		src/ScenePrimitives.cpp
+		src/ImGuiLayout.cpp )
+
+
+set(MAPSENSE_GUI_HEADERS
+		src/headers/MeshGenerator.h
+		src/headers/ScenePrimitives.h
 		src/headers/ImGuiLayout.h)
 
+set(MAGNUM_GUI_LIBS
+		Corrade::Main
+		Magnum::Application
+		Magnum::GL
+		Magnum::Magnum
+		Magnum::MeshTools
+		Magnum::Primitives
+		Magnum::SceneGraph
+		Magnum::Shaders
+		Magnum::Trade)
 
 include_directories(
-  include
-  src/headers
-  ${catkin_INCLUDE_DIRS}
-  /usr/include/CL/
+		include
+		src/headers
+		${catkin_INCLUDE_DIRS}
+		/usr/include/CL/
 )
 
-add_executable(planar_region_publisher ${SOURCE_FILES} ${HEADERS})
+add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS})
 target_link_libraries(planar_region_publisher
-	tbb
-	${OpenCV_LIBS}
-	${catkin_LIBRARIES}
-	/usr/lib/x86_64-linux-gnu/libOpenCL.so
-	Corrade::Main
-	Magnum::Application
-	Magnum::GL
-	Magnum::Magnum
-	Magnum::MeshTools
-	Magnum::Primitives
-	Magnum::Shaders
-	Magnum::SceneGraph
-	MagnumIntegration::ImGui
-	Eigen3::Eigen
-)
+		${OpenCV_LIBS}
+		${catkin_LIBRARIES}
+		${MAGNUM_GUI_LIBS}
+		MagnumIntegration::ImGui
+		/usr/lib/x86_64-linux-gnu/libOpenCL.so
+		Eigen3::Eigen
+		tbb)
 #set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
@@ -131,35 +135,33 @@ set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 
 add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE
-		Corrade::Main
-		Magnum::Application
-		Magnum::GL
-		Magnum::Magnum
-		Magnum::MeshTools
-		Magnum::Primitives
-		Magnum::SceneGraph
-		Magnum::Shaders
-		Magnum::Trade)
-
-
+		${MAGNUM_GUI_LIBS})
 
 add_executable(registration_and_mapping
 		src/PlanarRegionMapHandler.cpp
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
-		src/PlanarRegion.cpp src/PlanarRegionSimulator.cpp src/headers/PlanarRegionSimulator.h src/SLAMApplication.cpp src/headers/SLAMApplication.h)
-
+		src/PlanarRegion.cpp
+		src/PlanarRegionSimulator.cpp
+		src/headers/PlanarRegionSimulator.h
+		src/SLAMApplication.cpp
+		src/headers/SLAMApplication.h)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
-		Corrade::Main
-		Magnum::Application
-		Magnum::GL
-		Magnum::Magnum
-		Magnum::MeshTools
-		Magnum::Primitives
-		Magnum::SceneGraph
-		Magnum::Shaders
-		Magnum::Trade)
+		${MAGNUM_GUI_LIBS})
+
+
+add_executable(mapsense_headless
+        ${SOURCE} ${HEADERS}
+		src/MapsenseHeadlessLauncher.cpp src/headers/MapsenseHeadlessLauncher.h)
+target_link_libraries(mapsense_headless
+		${OpenCV_LIBS}
+		${catkin_LIBRARIES}
+		/usr/lib/x86_64-linux-gnu/libOpenCL.so
+		Eigen3::Eigen
+		tbb)
+add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
+
 
 
 
