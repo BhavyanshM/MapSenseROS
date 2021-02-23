@@ -10,47 +10,57 @@
 using namespace Eigen;
 using namespace std;
 
-class PlanarRegion {
-private:
-    Vector3f normal;
-    Vector3f center;
-    vector<Vector3f> patchCentroids;
-    vector<Vector3f> boundaryVertices;
-    vector<Vector2i> leafPatches;
-    bool normalCalculated = false;
-    bool centroidCalculated = false;
-    int numPatches;
-    int id;
+class PlanarRegion
+{
+   private:
+      Vector3f normal;
+      Vector3f center;
+      vector<Vector3f> patchCentroids;
+      vector<Vector3f> boundaryVertices;
+      vector<Vector2i> leafPatches;
+      bool normalCalculated = false;
+      bool centroidCalculated = false;
+      int numPatches;
+      int id;
 
-    Vector3f getPCANormal();
-    Vector3f getMeanCenter();
-    Vector3f getMeanNormal();
+      Vector3f getPCANormal();
 
-public:
-    PlanarRegion(int id);
-    void addPatch(Vector3f normal, Vector3f center);
-    void insertBoundaryVertex(Vector3f vertex);
+      Vector3f getMeanCenter();
 
-    void insertLeafPatch(Vector2i pos);
-    void getClockWise2D(vector<Vector2f>& points);
-    int getNumOfBoundaryVertices();
+      Vector3f getMeanNormal();
 
-    Vector3f getNormal();
-    Vector3f getCentroid();
-    vector<Vector3f> getVertices();
-    vector<Vector2i> getLeafPatches();
+   public:
+      PlanarRegion(int id);
 
-    int getNumPatches();
+      void addPatch(Vector3f normal, Vector3f center);
 
-    int getId();
-    void setId(int id);
+      void insertBoundaryVertex(Vector3f vertex);
 
-    void setNormal(const Vector3f &normal);
+      void insertLeafPatch(Vector2i pos);
 
-    void setCenter(const Vector3f &center);
+      void getClockWise2D(vector<Vector2f>& points);
 
-    vector<shared_ptr<RegionRing>> rings;
+      int getNumOfBoundaryVertices();
+
+      Vector3f getNormal();
+
+      Vector3f getCentroid();
+
+      vector<Vector3f> getVertices();
+
+      vector<Vector2i> getLeafPatches();
+
+      int getNumPatches();
+
+      int getId();
+
+      void setId(int id);
+
+      void setNormal(const Vector3f& normal);
+
+      void setCenter(const Vector3f& center);
+
+      vector<shared_ptr<RegionRing>> rings;
 };
-
 
 #endif //SRC_PLANARREGION_H

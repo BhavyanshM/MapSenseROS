@@ -32,75 +32,78 @@ using namespace Math::Literals;
 typedef SceneGraph::Object<SceneGraph::MatrixTransformation3D> Object3D;
 typedef SceneGraph::Scene<SceneGraph::MatrixTransformation3D> Scene3D;
 
+class SLAMApplication : public Platform::Application
+{
+   public:
+      explicit SLAMApplication(const Arguments& arguments);
 
-class SLAMApplication : public Platform::Application {
-public:
-    explicit SLAMApplication(const Arguments &arguments);
+   private:
+      void drawEvent() override;
 
-private:
-    void drawEvent() override;
-    void tickEvent() override;
+      void tickEvent() override;
 
-    void draw_regions(vector<shared_ptr<PlanarRegion>> planarRegionList);
-    void viewportEvent(ViewportEvent &event);
-    void mousePressEvent(MouseEvent &event);
-    void mouseReleaseEvent(MouseEvent &event);
-    void mouseMoveEvent(MouseMoveEvent &event);
-    void mouseScrollEvent(MouseScrollEvent &event);
+      void draw_regions(vector<shared_ptr<PlanarRegion>> planarRegionList);
 
-    Scene3D _scene;
-    Object3D *_camGrandParent;
-    Object3D *_camParent;
-    Object3D *_camObject;
-    Object3D *_camOriginCube;
-    Object3D *_sensor;
-    Object3D *_sensorAxes;
-    SceneGraph::Camera3D *_camera;
+      void viewportEvent(ViewportEvent& event);
 
-    vector<Object3D*> regionEdges;
+      void mousePressEvent(MouseEvent& event);
 
-    SceneGraph::DrawableGroup3D _drawables;
+      void mouseReleaseEvent(MouseEvent& event);
 
-    PlanarRegionMapHandler _mapper;
+      void mouseMoveEvent(MouseMoveEvent& event);
 
-    int count = 0;
+      void mouseScrollEvent(MouseScrollEvent& event);
 
+      Scene3D _scene;
+      Object3D *_camGrandParent;
+      Object3D *_camParent;
+      Object3D *_camObject;
+      Object3D *_camOriginCube;
+      Object3D *_sensor;
+      Object3D *_sensorAxes;
+      SceneGraph::Camera3D *_camera;
+
+      vector<Object3D *> regionEdges;
+
+      SceneGraph::DrawableGroup3D _drawables;
+
+      PlanarRegionMapHandler _mapper;
+
+      int count = 0;
 };
 
-class RedCubeDrawable : public SceneGraph::Drawable3D {
-public:
-    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData, Vector3 color) :
-            SceneGraph::Drawable3D{object, group} {
-        _color = color;
-        _mesh = MeshTools::compile(meshData);
-    }
+class RedCubeDrawable : public SceneGraph::Drawable3D
+{
+   public:
+      explicit RedCubeDrawable(Object3D& object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData, Vector3 color) : SceneGraph::Drawable3D{object,
+                                                                                                                                                       group}
+      {
+         _color = color;
+         _mesh = MeshTools::compile(meshData);
+      }
 
-    typedef GL::Attribute<0, Vector3> Position;
-    explicit RedCubeDrawable(Object3D &object, SceneGraph::DrawableGroup3D *group, GL::Buffer& vertexBuffer, Vector3 color) :
-            SceneGraph::Drawable3D{object, group} {
-        _color = color;
-        _mesh.setPrimitive(MeshPrimitive::TriangleFan)
-                .addVertexBuffer(vertexBuffer, 0, Position{})
-                .setCount(vertexBuffer.size());
-    }
+      typedef GL::Attribute<0, Vector3> Position;
 
-private:
-    GL::Mesh _mesh;
-    Shaders::Phong _shader;
-    Vector3 _color;
+      explicit RedCubeDrawable(Object3D& object, SceneGraph::DrawableGroup3D *group, GL::Buffer& vertexBuffer, Vector3 color) : SceneGraph::Drawable3D{object,
+                                                                                                                                                       group}
+      {
+         _color = color;
+         _mesh.setPrimitive(MeshPrimitive::TriangleFan).addVertexBuffer(vertexBuffer, 0, Position{}).setCount(vertexBuffer.size());
+      }
 
-    void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override {
+   private:
+      GL::Mesh _mesh;
+      Shaders::Phong _shader;
+      Vector3 _color;
 
-        // _mesh.setPrimitive(GL::MeshPrimitive::Points);
-        _shader.setDiffuseColor(0xa5c9ea_rgbf)
-                .setLightColor(Color3{1.0f})
-                .setLightPosition({0.0f, 2.0f, 0.0f})
-                .setAmbientColor(_color)
-                .setTransformationMatrix(transformationMatrix)
-                .setNormalMatrix(transformationMatrix.normalMatrix())
-                .setProjectionMatrix(camera.projectionMatrix())
-                .draw(_mesh);
-    }
+      void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override
+      {
+
+         // _mesh.setPrimitive(GL::MeshPrimitive::Points);
+         _shader.setDiffuseColor(0xa5c9ea_rgbf).setLightColor(Color3{1.0f}).setLightPosition({0.0f, 2.0f, 0.0f}).setAmbientColor(
+               _color).setTransformationMatrix(transformationMatrix).setNormalMatrix(transformationMatrix.normalMatrix()).setProjectionMatrix(
+               camera.projectionMatrix()).draw(_mesh);
+      }
 };
 
 #endif //PLOTTER3D_PY_SLAMAPPLICATION_H

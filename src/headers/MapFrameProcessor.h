@@ -10,29 +10,33 @@
 
 using namespace ros;
 
-class MapFrameProcessor {
-public:
+class MapFrameProcessor
+{
+   public:
 
-    MapFrame frame;
-    Mat debug;
-    MatrixXi visited;
-    MatrixXi boundary;
-    MatrixXi region;
-    ApplicationState app;
+      MapFrame frame;
+      Mat debug;
+      MatrixXi visited;
+      MatrixXi boundary;
+      MatrixXi region;
+      ApplicationState app;
 
-    void init(ApplicationState& app);
-    void generateSegmentation(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
-    void dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion);
-    void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing);
-    void findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList);
-    void printPatchGraph();
+      void init(ApplicationState& app);
 
-    void displayDebugger(int delay);
+      void generateSegmentation(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
 
-    int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
-    int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
+      void dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion);
 
+      void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing);
+
+      void findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList);
+
+      void printPatchGraph();
+
+      void displayDebugger(int delay);
+
+      int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
+      int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
 };
-
 
 #endif //SRC_MAPFRAMEPROCESSOR_H

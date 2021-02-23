@@ -13,12 +13,14 @@
 using namespace std;
 using namespace cv;
 
-class AppUtils {
-public:
-    static void capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState);
-    static void displayDebugOutput(Mat disp);
-    static void checkMemoryLimits();
-};
+class AppUtils
+{
+   public:
+      static void capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState);
 
+      static void displayDebugOutput(Mat disp);
+
+      static void checkMemoryLimits();
+};
 
 #endif //PLOTTER3D_PY_APPUTILS_H

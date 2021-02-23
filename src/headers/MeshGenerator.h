@@ -22,11 +22,12 @@ using namespace std;
 
 typedef GL::Attribute<0, Vector3> Position;
 
-class MeshGenerator {
-public:
-    static Trade::MeshData getPlanarRegionMesh(shared_ptr<PlanarRegion> planarRegion);
-    static void getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion, GL::Buffer& bufferToPack) ;
-};
+class MeshGenerator
+{
+   public:
+      static Trade::MeshData getPlanarRegionMesh(shared_ptr<PlanarRegion> planarRegion);
 
+      static void getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion, GL::Buffer& bufferToPack);
+};
 
 #endif //SRC_MESHGENERATOR_H

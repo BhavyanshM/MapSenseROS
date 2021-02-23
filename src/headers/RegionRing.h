@@ -9,21 +9,22 @@
 #include <vector>
 #include <iostream>
 
-
 using namespace Eigen;
 using namespace std;
 
-class RegionRing {
-public:
-    vector<Vector3f> boundaryIndices;
-    int id;
+class RegionRing
+{
+   public:
+      vector<Vector3f> boundaryIndices;
+      int id;
 
-    RegionRing(int id);
-    void insertBoundaryVertex(Vector3f pos);
-    int getNumOfVertices() const;
-    int getId() const;
+      RegionRing(int id);
 
+      void insertBoundaryVertex(Vector3f pos);
+
+      int getNumOfVertices() const;
+
+      int getId() const;
 };
-
 
 #endif //REGIONHOLE_H

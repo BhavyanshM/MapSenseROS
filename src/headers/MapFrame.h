@@ -9,21 +9,24 @@
 using namespace std;
 using namespace cv;
 
-class MapFrame {
-public:
+class MapFrame
+{
+   public:
 
-    Mat regionOutput;
-    Mat patchData;
+      Mat regionOutput;
+      Mat patchData;
 
-    void setRegionOutput(Mat &regionOutput);
+      void setRegionOutput(Mat& regionOutput);
 
-    void setPatchData(Mat &patchData);
-    Mat& getRegionOutput();
-    Mat& getPatchData();
+      void setPatchData(Mat& patchData);
 
-    void drawGraph(Mat& img, ApplicationState app);
-    Vec6f getPatch(int x, int y);
+      Mat& getRegionOutput();
+
+      Mat& getPatchData();
+
+      void drawGraph(Mat& img, ApplicationState app);
+
+      Vec6f getPatch(int x, int y);
 };
-
 
 #endif //SRC_MAPFRAME_H

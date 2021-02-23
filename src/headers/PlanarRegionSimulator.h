@@ -10,10 +10,10 @@
 using namespace std;
 using namespace Eigen;
 
-class PlanarRegionSimulator {
-public:
-    void createRegions(PlanarRegion& region);
+class PlanarRegionSimulator
+{
+   public:
+      void createRegions(PlanarRegion& region);
 };
-
 
 #endif //PLOTTER3D_PY_PLANARREGIONSIMULATOR_H
