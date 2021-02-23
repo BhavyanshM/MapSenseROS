@@ -20,7 +20,7 @@ PlanarRegionCalculator::PlanarRegionCalculator(ApplicationState& app) {
     P: [459.97265625, 0.0, 341.83984375, 0.0, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 0.0, 1.0, 0.0]
  * */
 void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
-    ROS_INFO("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
+    ROS_DEBUG("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              output.getRegionOutput().cols, output.getRegionOutput().rows);
     this->app = appState;
     float params[] = {(float)appState.FILTER_DISPARITY_THRESHOLD,
@@ -39,7 +39,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
                       (float) appState.FILTER_SUB_W};
 
 
-    ROS_INFO("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
+    ROS_DEBUG("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH,
              appState.PATCH_HEIGHT, appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W, appState.FILTER_SUB_H, appState.FILTER_SUB_W, appState.FILTER_KERNEL_SIZE);
     cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
 
@@ -123,7 +123,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
     commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
 
-    ROS_INFO("FilteredDepth:(%d,%d)", filteredDepth.rows, filteredDepth.cols);
+    ROS_DEBUG("FilteredDepth:(%d,%d)", filteredDepth.rows, filteredDepth.cols);
     /* Read the output data from OpenCL buffers into CPU buffers */
     // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
     commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, filteredDepth.data);
@@ -160,7 +160,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState) {
     output.setRegionOutput(regionOutput);
     output.setPatchData(output_6);
 
-    ROS_INFO("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
+    ROS_DEBUG("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
 
 }
 
@@ -240,23 +240,23 @@ void PlanarRegionCalculator::initOpenCL(ApplicationState app) {
 void PlanarRegionCalculator::onMouse(int event, int x, int y, int flags, void *userdata) {
     MapFrame out = *((MapFrame *) userdata);
     if (event == EVENT_MOUSEMOVE) {
-        printf("[%d,%d]:", y / 8, x / 8);
-        printf("%hu ", out.getPatchData().at<uint8_t>(y / 8, x / 8) );
+        ROS_DEBUG("[%d,%d]:", y / 8, x / 8);
+        ROS_DEBUG("%hu ", out.getPatchData().at<uint8_t>(y / 8, x / 8) );
         Vec6f patch = out.getRegionOutput().at<Vec6f>(y/8, x/8);
-        printf("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3],patch[4],patch[5],patch[0],patch[1],patch[2]);
+        ROS_DEBUG("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3],patch[4],patch[5],patch[0],patch[1],patch[2]);
     }
 }
 
 void logPlanarRegions(vector<shared_ptr<PlanarRegion>> planarRegionList){
     for(int i = 0; i<planarRegionList.size(); i++){
-        ROS_INFO("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(),
+        ROS_DEBUG("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(),
                  planarRegionList[i]->getCentroid().x(), planarRegionList[i]->getCentroid().y(), planarRegionList[i]->getCentroid().z(),
                  planarRegionList[i]->getNormal().x(), planarRegionList[i]->getNormal().y(), planarRegionList[i]->getNormal().z());
     }
 }
 
 void PlanarRegionCalculator::generateRegions(NetworkManager* receiver, ApplicationState appState){
-    ROS_INFO("Generating Regions");
+    ROS_DEBUG("Generating Regions");
 
     this->_dataReceiver = receiver;
     this->mapFrameProcessor.init(appState);
@@ -273,10 +273,10 @@ void PlanarRegionCalculator::generateRegions(NetworkManager* receiver, Applicati
 
 //    this->registerRegions(planarRegionList, planarRegionList);
 
-    ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
+    ROS_DEBUG("Number of Planar Regions: %d", planarRegionList.size());
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start).count();
-    ROS_INFO("Regions Generated in %.2f ms \n", duration / (float) 1000);
+    ROS_DEBUG("Regions Generated in %.2f ms \n", duration / (float) 1000);
 
     publishRegions(planarRegionList);
 }

@@ -24,7 +24,7 @@ void MapFrameProcessor::printPatchGraph(){
 }
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList) {
-    printf("Starting DFS for Segmentation\n");
+    ROS_DEBUG("Starting DFS for Segmentation\n");
     this->app = app;
     this->frame = inputFrame;
 
@@ -39,7 +39,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
     region.setZero();
     boundary.setZero();
 
-    printf("PATCH_DATA:(%d,%d), App:(%d, %d, %.2f, %.2f, %.2f, %.2f)\n", this->frame.patchData.cols, this->frame.patchData.rows,
+    ROS_DEBUG("PATCH_DATA:(%d,%d), App:(%d, %d, %.2f, %.2f, %.2f, %.2f)\n", this->frame.patchData.cols, this->frame.patchData.rows,
            app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY);
 //    uint8_t* framePatch = reinterpret_cast<uint8_t *>(inputFrame.patchData.data);
     debug = Scalar(0);
@@ -60,7 +60,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
             }
         }
     }
-    printf("DFS Generated %d Regions\n", components);
+    ROS_DEBUG("DFS Generated %d Regions\n", components);
     visited.setZero();
     findBoundaryAndHoles(planarRegionList);
 }

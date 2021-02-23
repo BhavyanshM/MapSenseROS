@@ -190,7 +190,7 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
     int y = get_global_id(0);
     int x = get_global_id(1);
 
-    if(x==0 && y==0) printf("FilterKernel\n");
+//    if(x==0 && y==0) printf("FilterKernel\n");
     if(y >= 0 && y < (int)params[FILTER_SUB_H] && x >= 0 && x < (int)params[FILTER_SUB_W]){
 
         filter_depth(in, x, y, out0, params);
@@ -213,7 +213,7 @@ void kernel packKernel(  read_only image2d_t in,
 	int y = get_global_id(0);
     int x = get_global_id(1);
 
-    if(x==0 && y==0) printf("PackKernel:(%d,%d)\n", (int)params[PATCH_HEIGHT], (int)params[PATCH_WIDTH]);
+//    if(x==0 && y==0) printf("PackKernel:(%d,%d)\n", (int)params[PATCH_HEIGHT], (int)params[PATCH_WIDTH]);
     if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
         float3 normal = estimate_normal(in, x, y, params);
         float3 centroid = estimate_centroid(in, x, y, params);
@@ -242,7 +242,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
      int y = get_global_id(0);
      int x = get_global_id(1);
 
-     if(x==0 && y==0) printf("MergeKernel:(%d,%d)\n", (int)params[SUB_H], (int)params[SUB_W]);
+//     if(x==0 && y==0) printf("MergeKernel:(%d,%d)\n", (int)params[SUB_H], (int)params[SUB_W]);
      if(y > 0 && y < (int)params[SUB_H]-1 && x > 0 && x < (int)params[SUB_W]-1){
 
         float n1_a = read_imagef(out0, (int2)(x,y)).x;

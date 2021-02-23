@@ -158,7 +158,7 @@ void colorCallback(const sensor_msgs::ImageConstPtr &colorMsg) {
 void processDataCallback(const TimerEvent &) {
     cv_bridge::CvImagePtr img_ptr_depth;
     cv_bridge::CvImagePtr img_ptr_color;
-    ROS_INFO("Process Data Callback:", depthMessage == nullptr, colorMessage == nullptr);
+    ROS_DEBUG("Process Data Callback:", depthMessage == nullptr, colorMessage == nullptr);
     if (depthMessage != nullptr) {
         try {
             // ROS_INFO("Callback: Color:%d Depth:%d", colorMessage->header.stamp.sec, depthMessage->header.stamp.sec);
