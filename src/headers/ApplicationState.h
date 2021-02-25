@@ -32,8 +32,8 @@ class ApplicationState
       string colorFile = "/data/Color_L515.png";
 
    public:
-      float MERGE_DISTANCE_THRESHOLD = 0.03;
-      float MERGE_ANGULAR_THRESHOLD = 0.85;
+      float MERGE_DISTANCE_THRESHOLD = 0.035;
+      float MERGE_ANGULAR_THRESHOLD = 0.7;
 
       bool FILTER_SELECTED = false;
       float FILTER_DISPARITY_THRESHOLD = 2000;

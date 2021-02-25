@@ -98,7 +98,7 @@ set(MAPSENSE_GUI_SOURCE
 set(MAPSENSE_GUI_HEADERS
 		src/headers/MeshGenerator.h
 		src/headers/ScenePrimitives.h
-		src/headers/ImGuiLayout.h)
+		src/headers/ImGuiLayout.h )
 
 set(MAGNUM_GUI_LIBS
 		Corrade::Main
@@ -141,11 +141,13 @@ add_executable(registration_and_mapping
 		src/SLAM/PlanarRegionMapHandler.cpp
 		src/RegionExtraction/PlanarRegion.cpp
 		src/SLAM/PlanarRegionSimulator.cpp
+		src/Launcher/MagnumApplication.cpp
 		src/Launcher/SLAMApplication.cpp
+		src/headers/SLAMApplication.h
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
 		src/headers/PlanarRegionSimulator.h
-		src/headers/SLAMApplication.h)
+		src/headers/MagnumApplication.h)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${MAGNUM_GUI_LIBS})

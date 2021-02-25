@@ -153,11 +153,13 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points)
 void PlanarRegion::setNormal(const Vector3f& normal)
 {
    this->normal = normal;
+   normalCalculated = true;
 }
 
 void PlanarRegion::setCenter(const Vector3f& center)
 {
    this->center = center;
+   centroidCalculated = true;
 }
 
 void PlanarRegion::writeToFile(string filename){

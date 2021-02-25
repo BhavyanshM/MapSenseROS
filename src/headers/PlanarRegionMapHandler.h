@@ -1,20 +1,23 @@
-//
-// Created by quantum on 2/8/21.
-//
-
-#ifndef PLOTTER3D_PY_PLANARREGIONMAPHANDLER_H
-#define PLOTTER3D_PY_PLANARREGIONMAPHANDLER_H
+#ifndef PLANARREGIONMAPHANDLER_H
+#define PLANARREGIONMAPHANDLER_H
 
 #include <PlanarRegion.h>
+#include <dirent.h>
 
-class PlanarRegionMapHandler {
-public:
-    vector<shared_ptr<PlanarRegion>> regions, latestRegions;
+using namespace std;
 
-    void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
-    void tester();
-    void loadRegions();
+class PlanarRegionMapHandler
+{
+   public:
+      vector<string> files;
+      vector<shared_ptr<PlanarRegion>> regions, latestRegions;
+      string directory;
+
+      void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
+
+      void loadRegion(int frameId, shared_ptr<PlanarRegion> region);
+
+      void getFileNames(string dirName);
 };
 
-
-#endif //PLOTTER3D_PY_PLANARREGIONMAPHANDLER_H
+#endif //PLANARREGIONMAPHANDLER_H
