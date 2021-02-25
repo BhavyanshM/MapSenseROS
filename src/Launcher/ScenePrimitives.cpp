@@ -321,9 +321,11 @@ int main(int argc, char **argv)
    MyApplication app({argc, argv});
    std::vector<std::string> args(argv, argv + argc);
 
-   if(args[1] == "--record"){
-      printf("Setting EXPORT_REGIONS: true\n");
-      app.appState.EXPORT_REGIONS = true;
+   for(int i = 0; i< argc; i++){
+      if(args[i] == "--export"){
+            printf("Setting EXPORT_REGIONS: true\n");
+            app.appState.EXPORT_REGIONS = true;
+      }
    }
 
    return app.exec();
