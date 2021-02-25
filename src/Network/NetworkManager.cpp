@@ -50,9 +50,10 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
          img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
          depth = img_ptr_depth->image;
          ROS_DEBUG("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
-      } catch (cv_bridge::Exception& e)
+      }
+      catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert to image!");
+         ROS_ERROR("Could not convert to image! %s", e.what());
       }
    }
    if (colorMessage != nullptr)
@@ -62,9 +63,10 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
          ROS_DEBUG("Callback: Color:%d", colorMessage->header.stamp.sec);
          img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
          color = img_ptr_color->image;
-      } catch (cv_bridge::Exception& e)
+      }
+      catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert to image!");
+         ROS_ERROR("Could not convert to image! %s", e.what());
       }
    } else if (colorCompressedMessage != nullptr)
    {
@@ -73,15 +75,16 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
          ROS_DEBUG("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
          //            img_ptr_color = cv_bridge::toCvCopy(*colorCompressedMessage, image_encodings::TYPE_8UC3);
          color = imdecode(cv::Mat(colorCompressedMessage->data), 1);
-      } catch (cv_bridge::Exception& e)
+      }
+      catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert compressedImage to image!");
+         ROS_ERROR("Could not convert compressedImage to image! %s", e.what());
       }
    }
    if (depthCameraInfo != nullptr)
    {
       ROS_DEBUG("DEPTH_SET:", depthCamInfoSet);
-      if (!depthCamInfoSet)
+//      if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
          app.INPUT_WIDTH = depthCameraInfo->width;
