@@ -67,15 +67,15 @@ catkin_package(
 ## Your package locations should be listed before other locations
 
 set(SOURCE
-		src/PlanarRegionCalculator.cpp
-		src/NetworkManager.cpp
-		src/MapFrame.cpp
-		src/MapFrameProcessor.cpp
-		src/PlanarRegion.cpp
-		src/ApplicationState.cpp
-		src/RegionRing.cpp
-		src/PlanarRegionMapHandler.cpp
-		src/AppUtils.cpp
+		src/RegionExtraction/PlanarRegionCalculator.cpp
+		src/Network/NetworkManager.cpp
+		src/RegionExtraction/MapFrame.cpp
+		src/RegionExtraction/MapFrameProcessor.cpp
+		src/RegionExtraction/PlanarRegion.cpp
+		src/Application/ApplicationState.cpp
+		src/RegionExtraction/RegionRing.cpp
+		src/SLAM/PlanarRegionMapHandler.cpp
+		src/Application/AppUtils.cpp
 		)
 
 set (HEADERS
@@ -90,9 +90,9 @@ set (HEADERS
 		src/headers/AppUtils.h)
 
 set(MAPSENSE_GUI_SOURCE
-		src/MeshGenerator.cpp
-		src/ScenePrimitives.cpp
-		src/ImGuiLayout.cpp )
+		src/Rendering/MeshGenerator.cpp
+		src/Launcher/ScenePrimitives.cpp
+		src/UI/ImGuiLayout.cpp)
 
 
 set(MAPSENSE_GUI_HEADERS
@@ -127,9 +127,9 @@ target_link_libraries(planar_region_publisher
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen
 		tbb)
-#set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
+#set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
 
 
 
@@ -138,13 +138,13 @@ target_link_libraries(factorGraph2D PRIVATE
 		${MAGNUM_GUI_LIBS})
 
 add_executable(registration_and_mapping
-		src/PlanarRegionMapHandler.cpp
+		src/SLAM/PlanarRegionMapHandler.cpp
+		src/RegionExtraction/PlanarRegion.cpp
+		src/SLAM/PlanarRegionSimulator.cpp
+		src/Launcher/SLAMApplication.cpp
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
-		src/PlanarRegion.cpp
-		src/PlanarRegionSimulator.cpp
 		src/headers/PlanarRegionSimulator.h
-		src/SLAMApplication.cpp
 		src/headers/SLAMApplication.h)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
@@ -153,7 +153,7 @@ target_link_libraries(registration_and_mapping
 
 add_executable(mapsense_headless
         ${SOURCE} ${HEADERS}
-		src/MapsenseHeadlessLauncher.cpp src/headers/MapsenseHeadlessLauncher.h)
+		src/Launcher/MapsenseHeadlessLauncher.cpp src/headers/MapsenseHeadlessLauncher.h)
 target_link_libraries(mapsense_headless
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}

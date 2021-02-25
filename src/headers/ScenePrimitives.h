@@ -49,6 +49,7 @@ class MyApplication : public Platform::Application
 {
    public:
       explicit MyApplication(const Arguments& arguments);
+      ApplicationState appState;
 
    private:
       void drawEvent() override;
@@ -71,7 +72,7 @@ class MyApplication : public Platform::Application
 
       void draw_regions();
 
-      ApplicationState appState;
+
       ImGuiIntegration::Context _imgui{NoCreate};
       Color4 _clearColor = 0x72909aff_rgbaf;
       Float _floatValue = 0.0f;
@@ -94,7 +95,7 @@ class MyApplication : public Platform::Application
 
       PlanarRegionCalculator *_regionCalculator;
       NetworkManager *_dataReceiver;
-      int count = 0;
+      int count, frameId = 0;
 };
 
 class RedCubeDrawable : public SceneGraph::Drawable3D

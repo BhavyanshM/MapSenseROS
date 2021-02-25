@@ -97,6 +97,10 @@ void MyApplication::tickEvent()
       if (_dataReceiver->depthCamInfoSet)
       {
          _regionCalculator->generateRegions(_dataReceiver, appState);
+         if(appState.EXPORT_REGIONS){
+            AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
+            frameId++;
+         }
       }
       if (appState.SHOW_REGION_EDGES)
       {
@@ -315,6 +319,13 @@ void MyApplication::drawEvent()
 int main(int argc, char **argv)
 {
    MyApplication app({argc, argv});
+   std::vector<std::string> args(argv, argv + argc);
+
+   if(args[1] == "--record"){
+      printf("Setting EXPORT_REGIONS: true\n");
+      app.appState.EXPORT_REGIONS = true;
+   }
+
    return app.exec();
 }
 

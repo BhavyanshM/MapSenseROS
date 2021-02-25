@@ -85,6 +85,9 @@ class ApplicationState
       /*  VISUALIZATION-ONLY */
       float DEPTH_BRIGHTNESS = 40;
       float DEPTH_DISPLAY_OFFSET = 100;
+
+      bool EXPORT_REGIONS = false;
+
 };
 
 #endif //SRC_APPLICATIONSTATE_H

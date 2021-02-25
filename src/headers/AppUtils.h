@@ -16,11 +16,14 @@ using namespace cv;
 class AppUtils
 {
    public:
-      static void capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
+      static void
+      capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
 
       static void displayDebugOutput(Mat disp);
 
       static void checkMemoryLimits();
+
+      static void write_regions(vector<shared_ptr<PlanarRegion>> regions, int frameId);
 };
 
 #endif //PLOTTER3D_PY_APPUTILS_H

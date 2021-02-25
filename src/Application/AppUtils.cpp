@@ -4,11 +4,12 @@
 
 #include "AppUtils.h"
 
-void write_regions(vector<shared_ptr<PlanarRegion>> regions)
+void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, int frameId)
 {
    for (shared_ptr<PlanarRegion> region : regions)
    {
-      region->writeToFile(ros::package::getPath("map_sense") + "/data/regions");
+      region->writeToFile(ros::package::getPath("map_sense") + "/Extras/Regions/regions_" + to_string(frameId) + ".txt");
+      cout << "Writing Regions to:" << ros::package::getPath("map_sense") + "/Extras/Regions/regions_" + to_string(frameId) + ".txt" << endl;
    }
 }
 
@@ -22,7 +23,7 @@ void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredD
    imwrite(ros::package::getPath("map_sense") + filename + "_Color.png", color);
    imwrite(ros::package::getPath("map_sense") + filename + "_FilteredDepth.png", finalFilteredDepth);
    imwrite(ros::package::getPath("map_sense") + filename + "_Components.png", components);
-   write_regions(regions);
+   write_regions(regions, 0);
 }
 
 void AppUtils::displayDebugOutput(Mat disp)
