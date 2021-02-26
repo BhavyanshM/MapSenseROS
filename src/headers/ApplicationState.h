@@ -65,7 +65,7 @@ class ApplicationState
       //    float DEPTH_CX = 341.84;
       //    float DEPTH_CY = 249.17;
 
-      int DIVISION_FACTOR = 2; // To simulate lower resolution by a factor.
+      int DIVISION_FACTOR = 1; // To simulate lower resolution by a factor.
 
       float DEPTH_FX = 0;
       float DEPTH_FY = 0;
