@@ -49,9 +49,12 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
          ROS_DEBUG("Callback: Depth:%d", depthMessage->header.stamp.sec);
          img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
          depth = img_ptr_depth->image;
+         for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
+         {
+            pyrDown(depth, depth);
+         }
          ROS_DEBUG("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
-      }
-      catch (cv_bridge::Exception& e)
+      } catch (cv_bridge::Exception& e)
       {
          ROS_ERROR("Could not convert to image! %s", e.what());
       }
@@ -63,8 +66,11 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
          ROS_DEBUG("Callback: Color:%d", colorMessage->header.stamp.sec);
          img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
          color = img_ptr_color->image;
-      }
-      catch (cv_bridge::Exception& e)
+         for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
+         {
+            pyrDown(color, color);
+         }
+      } catch (cv_bridge::Exception& e)
       {
          ROS_ERROR("Could not convert to image! %s", e.what());
       }
@@ -75,8 +81,11 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
          ROS_DEBUG("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
          //            img_ptr_color = cv_bridge::toCvCopy(*colorCompressedMessage, image_encodings::TYPE_8UC3);
          color = imdecode(cv::Mat(colorCompressedMessage->data), 1);
-      }
-      catch (cv_bridge::Exception& e)
+         for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
+         {
+            pyrDown(color, color);
+         }
+      } catch (cv_bridge::Exception& e)
       {
          ROS_ERROR("Could not convert compressedImage to image! %s", e.what());
       }
@@ -84,15 +93,15 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
    if (depthCameraInfo != nullptr)
    {
       ROS_DEBUG("DEPTH_SET:", depthCamInfoSet);
-//      if (!depthCamInfoSet)
+      //      if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
-         app.INPUT_WIDTH = depthCameraInfo->width;
-         app.INPUT_HEIGHT = depthCameraInfo->height;
-         app.DEPTH_FX = depthCameraInfo->K[0];
-         app.DEPTH_FY = depthCameraInfo->K[4];
-         app.DEPTH_CX = depthCameraInfo->K[2];
-         app.DEPTH_CY = depthCameraInfo->K[5];
+         app.INPUT_WIDTH = depthCameraInfo->width / app.DIVISION_FACTOR;
+         app.INPUT_HEIGHT = depthCameraInfo->height / app.DIVISION_FACTOR;
+         app.DEPTH_FX = depthCameraInfo->K[0] / app.DIVISION_FACTOR;
+         app.DEPTH_FY = depthCameraInfo->K[4] / app.DIVISION_FACTOR;
+         app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
+         app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
          ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH,
                    app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);

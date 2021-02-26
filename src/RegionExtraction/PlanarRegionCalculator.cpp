@@ -268,6 +268,7 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
 
    auto start = high_resolution_clock::now();
    this->generatePatchGraph(appState); // Generate patch graph of connected patches on GPU
+   auto afterGraphTime = high_resolution_clock::now();
    this->mapFrameProcessor.generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
 
    setMouseCallback("DebugOutput", PlanarRegionCalculator::onMouse, (void *) &output);
@@ -279,9 +280,11 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
    //    this->registerRegions(planarRegionList, planarRegionList);
 
    ROS_DEBUG("Number of Planar Regions: %d", planarRegionList.size());
-   auto end = high_resolution_clock::now();
-   auto duration = duration_cast<microseconds>(end - start).count();
-   ROS_DEBUG("Regions Generated in %.2f ms \n", duration / (float) 1000);
+   auto afterRegionsTime = high_resolution_clock::now();
+   auto GPUDuration = duration_cast<microseconds>(afterGraphTime - start).count();
+   auto CPUDuration = duration_cast<microseconds>(afterRegionsTime - afterGraphTime).count();
+   ROS_DEBUG("Regions Generated in %.2f ms", (GPUDuration + CPUDuration) / (float) 1000);
+//   cout << GPUDuration/ (float) 1000 << "\t" << CPUDuration/ (float) 1000 << endl;
 
    publishRegions(planarRegionList);
 }

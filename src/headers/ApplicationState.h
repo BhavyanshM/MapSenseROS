@@ -35,7 +35,7 @@ class ApplicationState
       float MERGE_DISTANCE_THRESHOLD = 0.035;
       float MERGE_ANGULAR_THRESHOLD = 0.7;
 
-      bool FILTER_SELECTED = false;
+      bool FILTER_SELECTED = true;
       float FILTER_DISPARITY_THRESHOLD = 2000;
       float MAGNUM_PATCH_SCALE = 0.007;
 
@@ -50,7 +50,7 @@ class ApplicationState
 
       int INPUT_HEIGHT = 0;
       int INPUT_WIDTH = 0;
-      int KERNEL_SLIDER_LEVEL = 4;
+      int KERNEL_SLIDER_LEVEL = 2;
       int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
       int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
       int SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
@@ -64,6 +64,8 @@ class ApplicationState
       //    float DEPTH_FY = 459.80;
       //    float DEPTH_CX = 341.84;
       //    float DEPTH_CY = 249.17;
+
+      int DIVISION_FACTOR = 2; // To simulate lower resolution by a factor.
 
       float DEPTH_FX = 0;
       float DEPTH_FY = 0;

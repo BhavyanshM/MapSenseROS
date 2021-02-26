@@ -284,7 +284,7 @@ void MyApplication::drawEvent()
          /* Beta Features */
          if (ImGui::Button("Save All"))
          {
-            AppUtils::capture_data("/data/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
+            AppUtils::capture_data("/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
                                    _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
          }
          if (ImGui::Button("Configure Memory"))
