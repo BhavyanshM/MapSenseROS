@@ -223,7 +223,7 @@ void MyApplication::draw_regions()
    }
    auto end = high_resolution_clock::now();
    auto duration = duration_cast<microseconds>(end - start).count();
-   ROS_INFO("Visualization Took: %.2f ms", duration / (float) 1000);
+   ROS_DEBUG("Visualization Took: %.2f ms", duration / (float) 1000);
 }
 
 void MyApplication::generate_patches()
