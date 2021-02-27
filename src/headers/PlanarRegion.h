@@ -62,7 +62,7 @@ class PlanarRegion
 
       void setCenter(const Vector3f& center);
 
-      void writeToFile(string filename);
+      void writeToFile(ofstream& file);
 
       vector<shared_ptr<RegionRing>> rings;
 };

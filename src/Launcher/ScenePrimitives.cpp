@@ -97,7 +97,8 @@ void MyApplication::tickEvent()
       if (_dataReceiver->depthCamInfoSet)
       {
          _regionCalculator->generateRegions(_dataReceiver, appState);
-         if(appState.EXPORT_REGIONS){
+         if (appState.EXPORT_REGIONS)
+         {
             AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
             frameId++;
          }
@@ -207,11 +208,7 @@ void MyApplication::draw_regions()
    auto start = high_resolution_clock::now();
    for (int i = 0; i < _regionCalculator->planarRegionList.size(); i++)
    {
-
       shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-      //         Vector3f normal = planarRegion->getPCANormal();
-      //         Vector3f center = planarRegion->getMeanCenter();
-      // printf("Region[%d]:(%d), Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf), Vertices:(%d)\n", planarRegion->getId(), planarRegion->getNumPatches(), center[0], center[1], center[2], axis[0], axis[1], axis[2], planarRegion->getNumOfBoundaryVertices());
       vector<Vector3f> vertices = planarRegion->getVertices();
       for (int j = appState.NUM_SKIP_EDGES; j < vertices.size(); j += appState.NUM_SKIP_EDGES)
       {
@@ -321,10 +318,12 @@ int main(int argc, char **argv)
    MyApplication app({argc, argv});
    std::vector<std::string> args(argv, argv + argc);
 
-   for(int i = 0; i< argc; i++){
-      if(args[i] == "--export"){
-            printf("Setting EXPORT_REGIONS: true\n");
-            app.appState.EXPORT_REGIONS = true;
+   for (int i = 0; i < argc; i++)
+   {
+      if (args[i] == "--export")
+      {
+         printf("Setting EXPORT_REGIONS: true\n");
+         app.appState.EXPORT_REGIONS = true;
       }
    }
 

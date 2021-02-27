@@ -1,7 +1,3 @@
-//
-// Created by quantum on 2/8/21.
-//
-
 #include "PlanarRegionMapHandler.h"
 
 void PlanarRegionMapHandler::registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions)
@@ -16,7 +12,6 @@ void PlanarRegionMapHandler::registerRegions(vector<shared_ptr<PlanarRegion>> la
          Vector3f curNormal = latestRegions[j]->getNormal();
          float perpDist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
          float angularDiff = fabs(prevNormal.dot(curNormal));
-         //            ROS_INFO("DIFF:%.4lf", diff);
          if (perpDist < 0.1 && angularDiff > 0.7)
          {
             latestRegions[j]->setId(regions[i]->getId());
@@ -53,48 +48,57 @@ Vector3f getVec3f(string csv)
    {
       CSVSubStrings.push_back(csvStr);
    }
-   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
+//   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
    return Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
-void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>> regions)
+void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings){
+   subStrings.clear();
+   string regionText;
+   getline(regionFile, regionText);
+   stringstream ss(regionText);
+   string str;
+   while (getline(ss, str, ':'))
+   {
+//      cout << str << '\t';
+      subStrings.push_back(str);
+   }
+//   cout << endl;
+}
+
+void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions)
 {
    /* Generate planar region objects from the sorted list of files. */
-   string regionText;
    ifstream regionFile(directory + files[frameId]);
-   while (getline(regionFile, regionText))
+   vector<string> subStrings;
+   getNextLineSplit(regionFile, subStrings); // Get number of regions
+   int numRegions = stoi(subStrings[1]);
+//   cout << "Number of Regions: " << numRegions << endl;
+   for (int r = 0; r<numRegions; r++) // For each region
    {
-      vector<string> subStrings;
-      stringstream ss(regionText);
-      string str;
-      while (getline(ss, str, ':'))
+      shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(0);
+
+      getNextLineSplit(regionFile, subStrings); // Get regionId
+//      cout << "RegionID:" << subStrings[1] << endl;
+      region->setId(stoi(subStrings[1]));
+
+      getNextLineSplit(regionFile, subStrings); // Get regionCenter
+//      cout << subStrings[0] << ":" << subStrings[1] << endl;
+      region->setCenter(getVec3f(subStrings[1]));
+
+      getNextLineSplit(regionFile, subStrings); // Get regionNormal
+//      cout << subStrings[0] << ":" << subStrings[1] << endl;
+      region->setNormal(getVec3f(subStrings[1]));
+
+      getNextLineSplit(regionFile, subStrings); // Get numBoundaryVertices
+      int length = stoi(subStrings[1]);
+      for (int i = 0; i < length; i++)
       {
-         subStrings.push_back(str);
+         getNextLineSplit(regionFile, subStrings);
+//         cout << "RegionPoint(" << r << "," << i << "):" << subStrings[0] << endl;
+         region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
-      if (subStrings[0] == "RegionID" && subStrings.size() > 1)
-      {
-         cout << "RegionID:" << subStrings[1] << endl;
-         shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(0);
-         region->setId(stoi(subStrings[1]));
-         if (subStrings[0] == "Center" && subStrings.size() > 1)
-         {
-            cout << "Center:" << subStrings[1] << endl;
-            region->setCenter(getVec3f(subStrings[1]));
-         } else if (subStrings[0] == "Normal" && subStrings.size() > 1)
-         {
-            cout << "Normal:" << subStrings[1] << endl;
-            region->setNormal(getVec3f(subStrings[1]));
-         } else if (subStrings[0] == "NumPatches" && subStrings.size() > 1)
-         {
-            int length = stoi(subStrings[1]);
-            for (int i = 0; i < length; i++)
-            {
-               getline(regionFile, regionText);
-               cout << "RegionPoint:" << regionText << endl;
-               region->insertBoundaryVertex(getVec3f(regionText));
-            }
-         }
-      }
+      regions.emplace_back(region);
    }
 }
 

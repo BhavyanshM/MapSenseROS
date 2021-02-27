@@ -162,9 +162,7 @@ void PlanarRegion::setCenter(const Vector3f& center)
    centroidCalculated = true;
 }
 
-void PlanarRegion::writeToFile(string filename){
-    ofstream file;
-    file.open(filename, fstream::in | fstream::out | fstream::app);
+void PlanarRegion::writeToFile(ofstream& file){
     file << "RegionID:" << this->id << endl;
     file << boost::format("Center:%.3f,%.3f,%.3f\n") % center.x() % center.y() % center.z();
     file << boost::format("Normal:%.3f,%.3f,%.3f\n") % normal.x() % normal.y() % normal.z();
@@ -172,6 +170,5 @@ void PlanarRegion::writeToFile(string filename){
     for(int i = 0; i<boundaryVertices.size(); i++){
         file << boost::format("%.3lf, %.3lf, %.3lf\n") % boundaryVertices[i].x() % boundaryVertices[i].y() % boundaryVertices[i].z();
     }
-    file.close();
 }
 

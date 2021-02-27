@@ -15,7 +15,7 @@ class PlanarRegionMapHandler
 
       void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
 
-      void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>> regions);
+      void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions);
 
       void getFileNames(string dirName);
 };

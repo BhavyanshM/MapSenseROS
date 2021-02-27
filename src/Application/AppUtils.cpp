@@ -6,11 +6,16 @@
 
 void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, int frameId)
 {
+   ofstream file;
+   string filename = ros::package::getPath("map_sense") + "/Extras/Regions/regions_" + to_string(frameId) + ".txt";
+   file.open(filename, fstream::in | fstream::out | fstream::app);
+   file << "NumRegions:" << regions.size() << endl;
    for (shared_ptr<PlanarRegion> region : regions)
    {
-      region->writeToFile(ros::package::getPath("map_sense") + "/Extras/Regions/regions_" + to_string(frameId) + ".txt");
+      region->writeToFile(file);
       cout << "Writing Regions to:" << ros::package::getPath("map_sense") + "/Extras/Regions/regions_" + to_string(frameId) + ".txt" << endl;
    }
+   file.close();
 }
 
 void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,
