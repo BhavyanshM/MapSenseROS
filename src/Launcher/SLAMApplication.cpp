@@ -10,8 +10,8 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
    //   for (int i = 0; i<this->mapper.files.size(); i++){
    //      cout << this->mapper.files[i] << endl;
    //   }
-   shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(0);
-   this->mapper.loadRegion(1, region);
+   vector<shared_ptr<PlanarRegion>> regions;
+   this->mapper.loadRegions(1, regions);
 
    cout << "ID:" << region->getId() << endl;
    cout << "NORMAL:" <<  region->getNormal() << endl;
