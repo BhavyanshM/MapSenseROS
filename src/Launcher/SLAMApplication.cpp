@@ -11,8 +11,8 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
    //      cout << this->mapper.files[i] << endl;
    //   }
 
-   this->mapper.loadRegions(0, regions);
-   this->mapper.loadRegions(4, previousRegions);
+   this->mapper.loadRegions(frameIndex - 1, previousRegions);
+   this->mapper.loadRegions(frameIndex, regions);
 
 //   for (int i = 0; i < regions.size(); i++)
 //   {
@@ -43,15 +43,11 @@ void clear(vector<Object3D *>& objects)
 
 void SLAMApplication::tickEvent()
 {
-   if(count++ % 10 == 0){
-      clear(regionEdges);
-      draw_regions(regions, 1);
-      draw_regions(previousRegions, 2);
-   }
 }
 
-void SLAMApplication::draw_regions(vector<shared_ptr<PlanarRegion>> planarRegionList, int color)
+void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D*>& edges, int color)
 {
+   clear(edges);
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
@@ -61,7 +57,7 @@ void SLAMApplication::draw_regions(vector<shared_ptr<PlanarRegion>> planarRegion
          Object3D& edge = _sensor->addChild<Object3D>();
          Vector3f prevPoint = vertices[j - SKIP_EDGES];
          Vector3f curPoint = vertices[j];
-         regionEdges.emplace_back(&edge);
+         edges.emplace_back(&edge);
          new RedCubeDrawable{edge, &_drawables, Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
                              {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f,
                               (color * 113 % 255) / 255.0f}};
@@ -69,6 +65,39 @@ void SLAMApplication::draw_regions(vector<shared_ptr<PlanarRegion>> planarRegion
 //                              (planarRegion->getId() * 113 % 255) / 255.0f}};
       }
    }
+}
+
+void SLAMApplication::keyPressEvent(KeyEvent& event){
+   switch (event.key()){
+      case KeyEvent::Key::Right:
+         if(frameIndex < this->mapper.files.size() - 1){
+            frameIndex++;
+         }
+//         printf("RIGHT:%d\n", frameIndex);
+         break;
+      case KeyEvent::Key::Left:
+         if(frameIndex > 1){
+            frameIndex--;
+         }
+         printf("LEFT:%d\n", frameIndex);
+         break;
+      case KeyEvent::Key::O:
+//         for(int i = 0; i<regionEdges.size(); i++){
+//            regionEdges[i]->transformLocal(Matrix4::rotationX(Rad{5.0_degf}));
+//         }
+         for(int i = 0; i<regions.size(); i++){
+            regions[i]->transform(Vector3f(0,0,0), Vector3f(0.1, 0, 0));
+         }
+         generateRegionLineMesh(regions, regionEdges, 2);
+         break;
+   }
+   if(event.key() == KeyEvent::Key::Left || event.key() == KeyEvent::Key::Right){
+      this->mapper.loadRegions(frameIndex - 1, previousRegions);
+      this->mapper.loadRegions(frameIndex, regions);
+      generateRegionLineMesh(previousRegions, previousRegionEdges, 1);
+      generateRegionLineMesh(regions, regionEdges, 2);
+   }
+
 }
 
 int main(int argc, char **argv)

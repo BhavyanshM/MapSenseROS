@@ -32,6 +32,7 @@ class PlanarRegion
       Vector3f getMeanNormal();
 
    public:
+
       PlanarRegion(int id);
 
       void addPatch(Vector3f normal, Vector3f center);
@@ -65,6 +66,8 @@ class PlanarRegion
       void writeToFile(ofstream& file);
 
       vector<shared_ptr<RegionRing>> rings;
+
+      void transform(Vector3f translation, Vector3f rotationAngles);
 };
 
 #endif //SRC_PLANARREGION_H

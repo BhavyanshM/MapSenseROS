@@ -172,3 +172,15 @@ void PlanarRegion::writeToFile(ofstream& file){
     }
 }
 
+void PlanarRegion::transform(Vector3f translation, Vector3f rotationAngles){
+   Matrix3f rotation;
+   rotation = AngleAxisf(rotationAngles.x(), Vector3f::UnitX())
+       * AngleAxisf(rotationAngles.y(), Vector3f::UnitY())
+       * AngleAxisf(rotationAngles.z(), Vector3f::UnitZ());
+   this->center = rotation * this->center;
+   this->normal = rotation * this->normal;
+   for(int i = 0; i<getNumOfBoundaryVertices(); i++){
+      this->boundaryVertices[i] = rotation * this->boundaryVertices[i];
+   }
+}
+

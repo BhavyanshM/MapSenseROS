@@ -69,6 +69,7 @@ void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings){
 void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions)
 {
    /* Generate planar region objects from the sorted list of files. */
+   regions.clear();
    ifstream regionFile(directory + files[frameId]);
    vector<string> subStrings;
    getNextLineSplit(regionFile, subStrings); // Get number of regions

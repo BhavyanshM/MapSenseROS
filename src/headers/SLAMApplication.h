@@ -10,9 +10,10 @@
 class SLAMApplication : public MagnumApplication
 {
    public:
-      const int SKIP_EDGES = 16;
+      const int SKIP_EDGES = 3;
       int count = 0;
-      vector<Object3D *> regionEdges;
+      int frameIndex = 1;
+      vector<Object3D *> regionEdges, previousRegionEdges;
       PlanarRegionMapHandler mapper;
       vector<shared_ptr<PlanarRegion>> regions, previousRegions;
 
@@ -20,9 +21,11 @@ class SLAMApplication : public MagnumApplication
 
       void tickEvent() override;
 
+      void keyPressEvent(KeyEvent& event) override;
+
       void draw() override;
 
-      void draw_regions(vector<shared_ptr<PlanarRegion>> planarRegionList, int color);
+      void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D*>& regionEdges, int color);
 };
 
 #endif //PLOTTER3D_PY_SLAMAPPLICATION_H
