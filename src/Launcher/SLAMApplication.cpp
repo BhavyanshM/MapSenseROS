@@ -7,25 +7,14 @@
 SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments)
 {
    this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/");
-   //   for (int i = 0; i<this->mapper.files.size(); i++){
-   //      cout << this->mapper.files[i] << endl;
-   //   }
+   this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.regions);
+   this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
+   generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
+   generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
 
-   this->mapper.loadRegions(frameIndex - 1, previousRegions);
-   this->mapper.loadRegions(frameIndex, regions);
-
-//   for (int i = 0; i < regions.size(); i++)
-//   {
-//      shared_ptr<PlanarRegion> region = regions[i];
-//      cout << "ID:" << region->getId() << endl;
-//      cout << "NORMAL:" << region->getNormal() << endl;
-//      cout << "CENTER:" << region->getCentroid() << endl;
-//      cout << "NumBoundary:" << region->getNumOfBoundaryVertices() << endl;
-//      for (int j = 0; j < region->getNumOfBoundaryVertices(); j++)
-//      {
-//         printf("VERTEX:(%d,%d):(%.2lf, %.2lf, %.2lf)\n", i, j, region->getVertices()[j].x(), region->getVertices()[j].y(), region->getVertices()[j].z());
-//      }
-//   }
+   this->mapper.registerRegions(this->mapper.latestRegions);
+   cout << this->mapper.latestRegions.size() << endl;
+   generateMatchLineMesh(mapper, matchingEdges);
 }
 
 void SLAMApplication::draw()
@@ -43,6 +32,19 @@ void clear(vector<Object3D *>& objects)
 
 void SLAMApplication::tickEvent()
 {
+}
+
+void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D*>& edges){
+   clear(edges);
+   for(int i = 0; i<mapper.matches.size(); i++){
+      printf("Reached\n");
+      Vector3f first = this->mapper.regions[mapper.matches[i].first]->getCentroid();
+      Vector3f second = this->mapper.latestRegions[mapper.matches[i].second]->getCentroid();
+      Object3D& matchEdge = _sensor->addChild<Object3D>();
+      edges.emplace_back(&matchEdge);
+      new RedCubeDrawable{matchEdge, &_drawables, Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}),
+                          {1.0,1.0,1.0}};
+   }
 }
 
 void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D*>& edges, int color)
@@ -64,38 +66,45 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
 //                             {(planarRegion->getId() * 123 % 255) / 255.0f, (planarRegion->getId() * 161 % 255) / 255.0f,
 //                              (planarRegion->getId() * 113 % 255) / 255.0f}};
       }
+      Object3D& regionOrigin = _sensor->addChild<Object3D>();
+      regionOrigin.translateLocal({planarRegion->getCentroid().x(),planarRegion->getCentroid().y(),planarRegion->getCentroid().z()});
+      regionOrigin.scaleLocal({0.002, 0.002, 0.002});
+      new RedCubeDrawable{regionOrigin, &_drawables, Primitives::cubeSolid(), {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f,
+                                                      (color * 113 % 255) / 255.0f}};
+      edges.emplace_back(&regionOrigin);
    }
 }
 
 void SLAMApplication::keyPressEvent(KeyEvent& event){
    switch (event.key()){
       case KeyEvent::Key::Right:
-         if(frameIndex < this->mapper.files.size() - 1){
-            frameIndex++;
+         if(frameIndex < this->mapper.files.size() - SKIP_REGIONS){
+            frameIndex += SKIP_REGIONS;
          }
-//         printf("RIGHT:%d\n", frameIndex);
          break;
       case KeyEvent::Key::Left:
          if(frameIndex > 1){
-            frameIndex--;
+            frameIndex -= SKIP_REGIONS;
          }
-         printf("LEFT:%d\n", frameIndex);
          break;
       case KeyEvent::Key::O:
 //         for(int i = 0; i<regionEdges.size(); i++){
 //            regionEdges[i]->transformLocal(Matrix4::rotationX(Rad{5.0_degf}));
 //         }
-         for(int i = 0; i<regions.size(); i++){
-            regions[i]->transform(Vector3f(0,0,0), Vector3f(0.1, 0, 0));
+         for(int i = 0; i<this->mapper.latestRegions.size(); i++){
+            this->mapper.latestRegions[i]->transform(Vector3f(0,0,0), Vector3f(0.1, 0, 0));
          }
-         generateRegionLineMesh(regions, regionEdges, 2);
+         generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
          break;
    }
    if(event.key() == KeyEvent::Key::Left || event.key() == KeyEvent::Key::Right){
-      this->mapper.loadRegions(frameIndex - 1, previousRegions);
-      this->mapper.loadRegions(frameIndex, regions);
-      generateRegionLineMesh(previousRegions, previousRegionEdges, 1);
-      generateRegionLineMesh(regions, regionEdges, 2);
+      this->mapper.loadRegions(frameIndex - SKIP_REGIONS, this->mapper.regions);
+      this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
+      generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
+      generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
+      cout << this->mapper.latestRegions.size() << endl;
+      this->mapper.registerRegions(this->mapper.latestRegions);
+      generateMatchLineMesh(mapper, matchingEdges);
    }
 
 }

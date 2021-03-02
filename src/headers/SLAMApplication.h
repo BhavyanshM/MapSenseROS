@@ -2,8 +2,8 @@
 // Created by quantum on 2/24/21.
 //
 
-#ifndef PLOTTER3D_PY_SLAMAPPLICATION_H
-#define PLOTTER3D_PY_SLAMAPPLICATION_H
+#ifndef SLAMAPPLICATION_H
+#define SLAMAPPLICATION_H
 
 #include "MagnumApplication.h"
 
@@ -11,11 +11,11 @@ class SLAMApplication : public MagnumApplication
 {
    public:
       const int SKIP_EDGES = 3;
+      const int SKIP_REGIONS = 8;
       int count = 0;
       int frameIndex = 1;
-      vector<Object3D *> regionEdges, previousRegionEdges;
+      vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
       PlanarRegionMapHandler mapper;
-      vector<shared_ptr<PlanarRegion>> regions, previousRegions;
 
       SLAMApplication(const Arguments& arguments);
 
@@ -26,6 +26,8 @@ class SLAMApplication : public MagnumApplication
       void draw() override;
 
       void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D*>& regionEdges, int color);
+
+      void generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D*>& edges);
 };
 
-#endif //PLOTTER3D_PY_SLAMAPPLICATION_H
+#endif //SLAMAPPLICATION_H

@@ -11,6 +11,7 @@ class PlanarRegionMapHandler
    public:
       vector<string> files;
       vector<shared_ptr<PlanarRegion>> regions, latestRegions;
+      vector<pair<int, int>> matches;
       string directory;
 
       void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
