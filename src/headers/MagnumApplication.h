@@ -2,10 +2,8 @@
 // Created by quantum on 2/20/21.
 //
 
-#ifndef SLAMAPPLICATION_H
-#define SLAMAPPLICATION_H
-
-#include <PlanarRegionMapHandler.h>
+#ifndef MAGNUMAPPLICATION_H
+#define MAGNUMAPPLICATION_H
 
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/Platform/Sdl2Application.h>
@@ -26,6 +24,9 @@
 #include <Magnum/MeshTools/Interleave.h>
 #include <Magnum/GL/Renderer.h>
 
+#include <PlanarRegionMapHandler.h>
+
+
 using namespace Magnum;
 using namespace Math::Literals;
 
@@ -35,7 +36,7 @@ typedef SceneGraph::Scene<SceneGraph::MatrixTransformation3D> Scene3D;
 class MagnumApplication : public Platform::Application
 {
    public:
-      explicit MagnumApplication(const Arguments& arguments);
+      MagnumApplication(const Arguments& arguments);
 
    protected:
       void drawEvent() override;
@@ -94,4 +95,4 @@ class RedCubeDrawable : public SceneGraph::Drawable3D
       }
 };
 
-#endif //SLAMAPPLICATION_H
+#endif //MAGNUMAPPLICATION_H
