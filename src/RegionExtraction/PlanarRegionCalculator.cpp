@@ -277,7 +277,7 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
    //    ROS_INFO("CurrentPlanarRegions");
    //    logPlanarRegions(previousRegionList);
 
-   //    this->registerRegions(planarRegionList, planarRegionList);
+   //    this->matchPlanarRegionstoMap(planarRegionList, planarRegionList);
 
    ROS_DEBUG("Number of Planar Regions: %d", planarRegionList.size());
    auto afterRegionsTime = high_resolution_clock::now();

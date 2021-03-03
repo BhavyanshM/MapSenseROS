@@ -12,9 +12,10 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
    generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
    generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
 
-   this->mapper.registerRegions(this->mapper.latestRegions);
-   cout << this->mapper.latestRegions.size() << endl;
+   this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
    generateMatchLineMesh(mapper, matchingEdges);
+
+   this->mapper.registerRegions();
 }
 
 void SLAMApplication::draw()
@@ -37,7 +38,6 @@ void SLAMApplication::tickEvent()
 void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D*>& edges){
    clear(edges);
    for(int i = 0; i<mapper.matches.size(); i++){
-      printf("Reached\n");
       Vector3f first = this->mapper.regions[mapper.matches[i].first]->getCentroid();
       Vector3f second = this->mapper.latestRegions[mapper.matches[i].second]->getCentroid();
       Object3D& matchEdge = _sensor->addChild<Object3D>();
@@ -102,8 +102,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event){
       this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
       generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
       generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
-      cout << this->mapper.latestRegions.size() << endl;
-      this->mapper.registerRegions(this->mapper.latestRegions);
+      this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
       generateMatchLineMesh(mapper, matchingEdges);
    }
 

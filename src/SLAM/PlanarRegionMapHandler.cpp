@@ -1,25 +1,61 @@
 #include "PlanarRegionMapHandler.h"
 
-void PlanarRegionMapHandler::registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions)
+Matrix4f PlanarRegionMapHandler::registerRegions()
 {
-   printf("RegisterRegions: %d, %d\n", latestRegions.size(), regions.size());
+   Matrix4f T = Matrix4f::Identity();
+   int totalNumOfBoundaryPoints = 0;
+   for (int i = 0; i < this->matches.size(); i++)
+   {
+      totalNumOfBoundaryPoints += this->latestRegions[this->matches[i].second]->getNumOfBoundaryVertices();
+   }
+   MatrixX4f A(totalNumOfBoundaryPoints, 4);
+   VectorXf b(totalNumOfBoundaryPoints);
+
+   int i = 0;
+   for (int m = 0; m < this->matches.size(); m++)
+   {
+      for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
+      {
+         printf("(%d,%d,%d)\n", m,n, i);
+         Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
+         Vector3f correspondingMapCentroid = regions[matches[m].first]->getCentroid();
+         Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
+         Vector3f cross = latestPoint.cross(correspondingMapNormal);
+         A(i, 0) = cross(0);
+         A(i, 1) = cross(1);
+         A(i, 2) = cross(2);
+         A(i, 3) = correspondingMapNormal(0);
+         A(i, 4) = correspondingMapNormal(1);
+         A(i, 5) = correspondingMapNormal(2);
+         b(i) = -(latestPoint - correspondingMapCentroid).dot(correspondingMapNormal);
+         i++;
+      }
+   }
+   VectorXf x(6);
+   x = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
+   cout << "Solution:" << x << endl;
+   return T;
+}
+
+void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions)
+{
    matches.clear();
    for (int i = 0; i < regions.size(); i++)
    {
       for (int j = 0; j < latestRegions.size(); j++)
       {
-         Vector3f prevCenter = regions[i]->getCentroid();
-         Vector3f curCenter = latestRegions[j]->getCentroid();
-         float dist = (curCenter - prevCenter).norm();
-
          Vector3f prevNormal = regions[i]->getNormal();
          Vector3f curNormal = latestRegions[j]->getNormal();
          float angularDiff = fabs(prevNormal.dot(curNormal));
-         // float perpDist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
-         printf("(%d,%d):(%.2lf,%.2lf)\n", i,j, dist, angularDiff);
-         if (dist < 0.1 && angularDiff > 0.7)
+
+         Vector3f prevCenter = regions[i]->getCentroid();
+         Vector3f curCenter = latestRegions[j]->getCentroid();
+         float dist = (curCenter - prevCenter).norm();
+         //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
+
+         if (dist < 0.1 && angularDiff > 0.8)
          {
-            matches.emplace_back(i,j);
+            matches.emplace_back(i, j);
             latestRegions[j]->setId(regions[i]->getId());
             break;
          }
@@ -54,11 +90,12 @@ Vector3f getVec3f(string csv)
    {
       CSVSubStrings.push_back(csvStr);
    }
-//   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
+   //   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
    return Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
-void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings){
+void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings)
+{
    subStrings.clear();
    string regionText;
    getline(regionFile, regionText);
@@ -66,10 +103,10 @@ void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings){
    string str;
    while (getline(ss, str, ':'))
    {
-//      cout << str << '\t';
+      //      cout << str << '\t';
       subStrings.push_back(str);
    }
-//   cout << endl;
+   //   cout << endl;
 }
 
 void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions)
@@ -80,7 +117,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
    vector<string> subStrings;
    getNextLineSplit(regionFile, subStrings); // Get number of regions
    int numRegions = stoi(subStrings[1]);
-   for (int r = 0; r<numRegions; r++) // For each region
+   for (int r = 0; r < numRegions; r++) // For each region
    {
       shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(0);
       getNextLineSplit(regionFile, subStrings); // Get regionId

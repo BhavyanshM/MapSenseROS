@@ -14,11 +14,13 @@ class PlanarRegionMapHandler
       vector<pair<int, int>> matches;
       string directory;
 
-      void registerRegions(vector<shared_ptr<PlanarRegion>> latestRegions);
+      void matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions);
 
       void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions);
 
       void getFileNames(string dirName);
+
+      Matrix4f registerRegions();
 };
 
 #endif //PLANARREGIONMAPHANDLER_H
