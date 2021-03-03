@@ -15,7 +15,7 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
    this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
    generateMatchLineMesh(mapper, matchingEdges);
 
-   this->mapper.registerRegions();
+
 }
 
 void SLAMApplication::draw()
@@ -95,6 +95,9 @@ void SLAMApplication::keyPressEvent(KeyEvent& event){
             this->mapper.latestRegions[i]->transform(Vector3f(0,0,0), Vector3f(0.1, 0, 0));
          }
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
+         break;
+      case KeyEvent::Key::R:
+         this->mapper.registerRegions();
          break;
    }
    if(event.key() == KeyEvent::Key::Left || event.key() == KeyEvent::Key::Right){

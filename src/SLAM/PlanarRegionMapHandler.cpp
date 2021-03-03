@@ -8,7 +8,7 @@ Matrix4f PlanarRegionMapHandler::registerRegions()
    {
       totalNumOfBoundaryPoints += this->latestRegions[this->matches[i].second]->getNumOfBoundaryVertices();
    }
-   MatrixX4f A(totalNumOfBoundaryPoints, 4);
+   MatrixXf A(totalNumOfBoundaryPoints, 6);
    VectorXf b(totalNumOfBoundaryPoints);
 
    int i = 0;
@@ -16,8 +16,8 @@ Matrix4f PlanarRegionMapHandler::registerRegions()
    {
       for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
       {
-         printf("(%d,%d,%d)\n", m,n, i);
          Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
+         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
          Vector3f correspondingMapCentroid = regions[matches[m].first]->getCentroid();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
          Vector3f cross = latestPoint.cross(correspondingMapNormal);
