@@ -57,7 +57,7 @@ void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarReg
          float dist = (curCenter - prevCenter).norm();
          //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 
-         if (dist < 0.15 && angularDiff > 0.7)
+         if (dist < 0.1 && angularDiff > 0.75)
          {
             matches.emplace_back(i, j);
             latestRegions[j]->setId(regions[i]->getId());

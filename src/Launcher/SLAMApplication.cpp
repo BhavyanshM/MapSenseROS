@@ -3,7 +3,7 @@
 //
 
 #include "SLAMApplication.h"
-#include "../Application/PlanarRegionMapTester.h"
+
 
 SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments)
 {
@@ -105,8 +105,15 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          generateMatchLineMesh(mapper, matchingEdges);
          break;
       case KeyEvent::Key::R:
+         auto start = high_resolution_clock::now();
+
          this->mapper.registerRegions();
          this->mapper.transformLatestRegions(this->mapper.translationToReference, this->mapper.eulerAnglesToReference);
+         auto end = high_resolution_clock::now();
+         auto duration = duration_cast<microseconds>(end - start).count();
+
+         cout << "Registration Took: " << duration/1000.0f << " ms" << endl;
+
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
          generateMatchLineMesh(mapper, matchingEdges);

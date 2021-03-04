@@ -6,6 +6,11 @@
 #define SLAMAPPLICATION_H
 
 #include "MagnumApplication.h"
+#include "PlanarRegionMapTester.h"
+#include <chrono>
+
+using namespace std;
+using namespace chrono;
 
 class SLAMApplication : public MagnumApplication
 {

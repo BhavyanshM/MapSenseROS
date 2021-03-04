@@ -151,7 +151,7 @@ add_executable(registration_and_mapping
 		src/headers/PlanarRegionSimulator.h
 		src/headers/MagnumApplication.h
 		src/Application/PlanarRegionMapTester.cpp
-		src/Application/PlanarRegionMapTester.h
+        src/headers/PlanarRegionMapTester.h
 		src/headers/GeomTools.h
 		src/Geometry/GeomTools.cpp)
 target_link_libraries(registration_and_mapping
