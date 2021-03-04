@@ -68,6 +68,8 @@ class PlanarRegion
       vector<shared_ptr<RegionRing>> rings;
 
       void transform(Vector3f translation, Vector3f rotationAngles);
+
+      void transform(Vector3f translation, Matrix3f rotation);
 };
 
 #endif //SRC_PLANARREGION_H

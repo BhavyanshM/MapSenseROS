@@ -11,7 +11,7 @@ class SLAMApplication : public MagnumApplication
 {
    public:
       const int SKIP_EDGES = 3;
-      const int SKIP_REGIONS = 8;
+      const int SKIP_REGIONS = 0;
       int count = 0;
       int frameIndex = 1;
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
@@ -28,6 +28,8 @@ class SLAMApplication : public MagnumApplication
       void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D*>& regionEdges, int color);
 
       void generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D*>& edges);
+
+      void init();
 };
 
 #endif //SLAMAPPLICATION_H

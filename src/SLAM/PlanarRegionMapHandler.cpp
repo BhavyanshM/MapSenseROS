@@ -1,6 +1,6 @@
 #include "PlanarRegionMapHandler.h"
 
-Matrix4f PlanarRegionMapHandler::registerRegions()
+void PlanarRegionMapHandler::registerRegions()
 {
    Matrix4f T = Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
@@ -17,7 +17,7 @@ Matrix4f PlanarRegionMapHandler::registerRegions()
       for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
       {
          Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
-         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
+//         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
          Vector3f correspondingMapCentroid = regions[matches[m].first]->getCentroid();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
          Vector3f cross = latestPoint.cross(correspondingMapNormal);
@@ -31,10 +31,13 @@ Matrix4f PlanarRegionMapHandler::registerRegions()
          i++;
       }
    }
-   VectorXf x(6);
-   x = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
-   cout << "Solution:" << x << endl;
-   return T;
+   VectorXf solution(6);
+   solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
+   translationToReference = Vector3f(solution(0), solution(1), solution(2));
+   eulerAnglesToReference = Vector3f(solution(3), solution(4), solution(5));
+   cout << solution << endl;
+   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
+   printf("Translation:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
 }
 
 void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions)
@@ -134,6 +137,13 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
          region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
       regions.emplace_back(region);
+   }
+}
+
+void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Vector3f eulerAngles){
+   for (int i = 0; i < this->latestRegions.size(); i++)
+   {
+      this->latestRegions[i]->transform(translation, eulerAngles);
    }
 }
 

@@ -76,6 +76,7 @@ set(SOURCE
 		src/RegionExtraction/RegionRing.cpp
 		src/SLAM/PlanarRegionMapHandler.cpp
 		src/Application/AppUtils.cpp
+		src/Geometry/GeomTools.cpp
 		)
 
 set (HEADERS
@@ -87,7 +88,8 @@ set (HEADERS
 		src/headers/ApplicationState.h
 		src/headers/RegionRing.h
 		src/headers/PlanarRegionMapHandler.h
-		src/headers/AppUtils.h)
+		src/headers/AppUtils.h
+		src/headers/GeomTools.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -147,7 +149,11 @@ add_executable(registration_and_mapping
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
 		src/headers/PlanarRegionSimulator.h
-		src/headers/MagnumApplication.h)
+		src/headers/MagnumApplication.h
+		src/Application/PlanarRegionMapTester.cpp
+		src/Application/PlanarRegionMapTester.h
+		src/headers/GeomTools.h
+		src/Geometry/GeomTools.cpp)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${MAGNUM_GUI_LIBS})

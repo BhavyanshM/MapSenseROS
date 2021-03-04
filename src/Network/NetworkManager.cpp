@@ -33,7 +33,7 @@ void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstP
 void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
 {
    paramsMessage = msg;
-   ROS_DEBUG("COLOR CALLBACK");
+   ROS_DEBUG("PARAMS CALLBACK");
 }
 
 void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& app)
