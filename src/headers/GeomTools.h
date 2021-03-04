@@ -11,7 +11,8 @@ using namespace Eigen;
 
 class GeomTools
 {
-      static Matrix3f getRotationFromAngleApproximations(float alpha, float beta, float gamma);
+   public:
+      static Matrix3f getRotationFromAngleApproximations(Vector3f eulerAngles);
 };
 
 #endif //GEOMTOOLS_H

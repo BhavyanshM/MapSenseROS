@@ -4,8 +4,11 @@
 
 #include "GeomTools.h"
 
-Matrix3f GeomTools::getRotationFromAngleApproximations(float alpha, float beta, float gamma)
+Matrix3f GeomTools::getRotationFromAngleApproximations(Vector3f eulerAngles)
 {
+   float alpha = eulerAngles.x();
+   float beta = eulerAngles.y();
+   float gamma = eulerAngles.z();
    Matrix3f rotation = Matrix3f::Identity();
    rotation(0,1) = alpha * beta - gamma;
    rotation(0,2) = alpha * gamma + beta;

@@ -1,3 +1,4 @@
+#include <GeomTools.h>
 #include "PlanarRegionMapHandler.h"
 
 void PlanarRegionMapHandler::registerRegions()
@@ -33,11 +34,11 @@ void PlanarRegionMapHandler::registerRegions()
    }
    VectorXf solution(6);
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
-   translationToReference = Vector3f(solution(0), solution(1), solution(2));
-   eulerAnglesToReference = Vector3f(solution(3), solution(4), solution(5));
+   eulerAnglesToReference = Vector3f(solution(0), solution(1), solution(2));
+   translationToReference = Vector3f(solution(3), solution(4), solution(5));
    cout << solution << endl;
-   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
-   printf("Translation:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
+   printf("Translation:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
+   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
 }
 
 void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions)
@@ -56,7 +57,7 @@ void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarReg
          float dist = (curCenter - prevCenter).norm();
          //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 
-         if (dist < 0.1 && angularDiff > 0.8)
+         if (dist < 0.15 && angularDiff > 0.7)
          {
             matches.emplace_back(i, j);
             latestRegions[j]->setId(regions[i]->getId());

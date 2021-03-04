@@ -11,7 +11,7 @@ class SLAMApplication : public MagnumApplication
 {
    public:
       const int SKIP_EDGES = 3;
-      const int SKIP_REGIONS = 0;
+      const int SKIP_REGIONS = 8;
       int count = 0;
       int frameIndex = 1;
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
