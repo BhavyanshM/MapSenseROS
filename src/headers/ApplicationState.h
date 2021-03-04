@@ -50,7 +50,7 @@ class ApplicationState
 
       int INPUT_HEIGHT = 0;
       int INPUT_WIDTH = 0;
-      int KERNEL_SLIDER_LEVEL = 4;
+      int KERNEL_SLIDER_LEVEL = 2;
       int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
       int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
       int SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
