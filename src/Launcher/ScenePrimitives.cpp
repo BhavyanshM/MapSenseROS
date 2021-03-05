@@ -325,6 +325,10 @@ int main(int argc, char **argv)
          printf("Setting EXPORT_REGIONS: true\n");
          app.appState.EXPORT_REGIONS = true;
       }
+      if(args[i] == "--kernel-level"){
+         printf("Setting KERNEL_LEVEL_SLIDER: %d\n", stoi(args[i+1]));
+         app.appState.KERNEL_SLIDER_LEVEL = stoi(args[i+1]);
+      }
    }
 
    return app.exec();

@@ -75,7 +75,7 @@ class ApplicationState
       int NUM_SKIP_EDGES = 8;
       int VISUAL_DEBUG_DELAY = 10;
 
-      bool SHOW_BOUNDARIES = true;
+      bool SHOW_BOUNDARIES = false;
       bool SHOW_PATCHES = true;
       bool VISUAL_DEBUG = false;
 
