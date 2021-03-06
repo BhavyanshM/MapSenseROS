@@ -133,9 +133,6 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
    commandQueue.finish();
 
-
-
-
    /* Combine the CPU buffers into single image with multiple channels */
    Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
    vector<Mat> channels;
@@ -146,11 +143,6 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    channels.push_back(output_4);
    channels.push_back(output_5);
    merge(channels, regionOutput);
-
-   //    Mat in[] = {output_0, output_1, output_2, output_3, output_4, output_5};
-   //    int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5};
-   //    mixChannels(in, 6, &output.regionOutput, 1, from_to, 6);
-
 
    output.setRegionOutput(regionOutput);
    output.setPatchData(output_6);
@@ -284,7 +276,7 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
    auto GPUDuration = duration_cast<microseconds>(afterGraphTime - start).count();
    auto CPUDuration = duration_cast<microseconds>(afterRegionsTime - afterGraphTime).count();
    ROS_DEBUG("Regions Generated in %.2f ms", (GPUDuration + CPUDuration) / (float) 1000);
-//   cout << GPUDuration/ (float) 1000 << "\t" << CPUDuration/ (float) 1000 << endl;
+   //   cout << GPUDuration/ (float) 1000 << "\t" << CPUDuration/ (float) 1000 << endl;
 
    publishRegions(planarRegionList);
 }
@@ -331,9 +323,6 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState)
    // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
    dataReceiver.load_sample_depth(appState.getDepthFile(), inputDepth);
    dataReceiver.load_sample_color(appState.getColorFile(), inputColor);
-
-
-   // medianBlur(inputDepth, inputDepth, 5);
 
    auto start = high_resolution_clock::now();
 
