@@ -127,8 +127,8 @@ RUN apt-get install --quiet 2 --yes \
     libvtk7-dev \
     > /dev/null
 USER robotlab
-RUN mkdir -p /home/robotlab/dev/mapsense_ws/src/MapSenseROS
-VOLUME /home/robotlab/dev/mapsense_ws/src/MapSenseROS
+RUN mkdir -p /home/robotlab/dev/mapsense_ws/src
+VOLUME /home/robotlab/dev/mapsense_ws/src
 
 RUN mkdir -p /home/robotlab/.config/JetBrains
 VOLUME /home/robotlab/.config/JetBrains
