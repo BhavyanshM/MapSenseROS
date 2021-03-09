@@ -126,6 +126,27 @@ RUN mkdir magnum-integration \
 RUN apt-get install --quiet 2 --yes \
     libvtk7-dev \
     > /dev/null
+
+# Install latest GTSAM from source
+RUN cd /tmp && \
+    wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
+    apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
+    rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
+    cd - && \
+    wget https://apt.repos.intel.com/setup/intelproducts.list -O /etc/apt/sources.list.d/intelproducts.list
+
+RUN apt-get update --quiet 2 --yes && \
+    apt-get install --quiet 2 --yes \
+    libboost-all-dev \
+    libtbb-dev \
+    intel-mkl
+
+RUN add-apt-repository ppa:borglab/gtsam-develop && \
+    apt-get install --quiet 2 --yes \
+    libgtsam-dev \
+    libgtsam-unstable-dev
+
+
 USER robotlab
 RUN mkdir -p /home/robotlab/dev/mapsense_ws/src
 VOLUME /home/robotlab/dev/mapsense_ws/src

@@ -16,4 +16,4 @@ sudo systemctl restart docker
 
 mkdir -p Shared_Volume #To store ROSBags for testing MapSense
 
-docker build -t bmishra/mapsense-nvidia-ros .
+docker build -t ihmcrobotics/mapsense-nvidia-ros .
