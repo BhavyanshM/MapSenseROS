@@ -67,23 +67,23 @@ void MyApplication::tickEvent()
    switch (_displayItem)
    {
       case SHOW_INPUT_COLOR :
-         AppUtils::displayDebugOutput(_regionCalculator->inputColor);
+         AppUtils::displayDebugOutput(_regionCalculator->inputColor, appState);
          break;
       case SHOW_INPUT_DEPTH :
       {
          Mat dispDepth;
          _regionCalculator->getInputDepth(dispDepth, appState);
-         AppUtils::displayDebugOutput(dispDepth);
+         AppUtils::displayDebugOutput(dispDepth, appState);
          break;
       }
       case SHOW_REGION_COMPONENTS :
-         AppUtils::displayDebugOutput(_regionCalculator->mapFrameProcessor.debug);
+         AppUtils::displayDebugOutput(_regionCalculator->mapFrameProcessor.debug, appState);
          break;
       case SHOW_FILTERED_DEPTH :
       {
          Mat dispDepth;
          _regionCalculator->getFilteredDepth(dispDepth, appState);
-         AppUtils::displayDebugOutput(dispDepth);
+         AppUtils::displayDebugOutput(dispDepth, appState);
       }
          break;
       case -1 :
@@ -94,7 +94,7 @@ void MyApplication::tickEvent()
    {
       _dataReceiver->spin_ros_node();
       _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, appState);
-      if (_dataReceiver->depthCamInfoSet)
+      if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
       {
          _regionCalculator->generateRegions(_dataReceiver, appState);
          if (appState.EXPORT_REGIONS)
@@ -241,19 +241,23 @@ void MyApplication::drawEvent()
 
    ImGui::Text("MapSense");
 
-   if (ImGui::BeginTabBar("Tab Bar"))
+   if (ImGui::BeginTabBar("Configuration"))
    {
-      if (ImGui::BeginTabItem("ROS"))
-      {
-         ImGuiLayout::getImGuiROSLayout(appState);
-         ImGui::EndTabItem();
-      }
       if (ImGui::BeginTabItem("Params"))
       {
          /* Params */
          ImGuiLayout::getImGuiParamsLayout(appState);
          ImGui::EndTabItem();
       }
+      if (ImGui::BeginTabItem("ROS"))
+      {
+         ImGuiLayout::getImGuiROSLayout(appState);
+         ImGui::EndTabItem();
+      }
+      ImGui::EndTabBar();
+   }
+   if (ImGui::BeginTabBar("Visualization"))
+   {
       if (ImGui::BeginTabItem("2D"))
       {
          /* Display 2D */
@@ -283,6 +287,11 @@ void MyApplication::drawEvent()
          {
             AppUtils::capture_data("/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
                                    _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
+         }
+         if (ImGui::Button("Save Regions"))
+         {
+            AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
+            frameId++;
          }
          if (ImGui::Button("Configure Memory"))
          {
@@ -325,9 +334,10 @@ int main(int argc, char **argv)
          printf("Setting EXPORT_REGIONS: true\n");
          app.appState.EXPORT_REGIONS = true;
       }
-      if(args[i] == "--kernel-level"){
-         printf("Setting KERNEL_LEVEL_SLIDER: %d\n", stoi(args[i+1]));
-         app.appState.KERNEL_SLIDER_LEVEL = stoi(args[i+1]);
+      if (args[i] == "--kernel-level")
+      {
+         printf("Setting KERNEL_LEVEL_SLIDER: %d\n", stoi(args[i + 1]));
+         app.appState.KERNEL_SLIDER_LEVEL = stoi(args[i + 1]);
       }
    }
 

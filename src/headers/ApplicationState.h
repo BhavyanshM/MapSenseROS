@@ -84,10 +84,12 @@ class ApplicationState
       bool SHOW_REGION_EDGES = false;
 
       /*  VISUALIZATION-ONLY */
+      float DISPLAY_WINDOW_SIZE = 1.0f;
       float DEPTH_BRIGHTNESS = 40;
       float DEPTH_DISPLAY_OFFSET = 100;
 
       bool EXPORT_REGIONS = false;
+      bool GENERATE_REGIONS = true;
 
 };
 

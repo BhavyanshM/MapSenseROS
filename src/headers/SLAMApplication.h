@@ -8,17 +8,20 @@
 #include "MagnumApplication.h"
 #include "PlanarRegionMapTester.h"
 #include <chrono>
+#include "gtsam/geometry/Pose2.h"
 
 using namespace std;
 using namespace chrono;
+using namespace gtsam;
 
 class SLAMApplication : public MagnumApplication
 {
    public:
+      Pose2 pose;
       const int SKIP_EDGES = 3;
-      const int SKIP_REGIONS = 2;
+      const int SKIP_REGIONS = 1;
       int count = 0;
-      int frameIndex = 1;
+      int frameIndex = 0;
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
       PlanarRegionMapHandler mapper;
 
@@ -34,7 +37,7 @@ class SLAMApplication : public MagnumApplication
 
       void generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D*>& edges);
 
-      void init();
+      void init(const Arguments& arguments);
 };
 
 #endif //SLAMAPPLICATION_H

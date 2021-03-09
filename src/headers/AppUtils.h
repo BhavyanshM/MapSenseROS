@@ -19,7 +19,7 @@ class AppUtils
       static void
       capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
 
-      static void displayDebugOutput(Mat disp);
+      static void displayDebugOutput(Mat disp, ApplicationState appState);
 
       static void checkMemoryLimits();
 

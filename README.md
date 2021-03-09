@@ -5,7 +5,7 @@
 MapSense is a fast perception algorithm for extracting a map of the world for various applications including robotics and augmented reality. 
 Planar regions are abundantly available in most indoor and urban environment settings. 
 The current project aims to provide a fast planar region extraction algorithm for footstep planning on legged robots. 
-The MapSense planar region extraction algorithm uses OpenCL to perform GPU-accelerated planar region detection and extraction from depth images.
+The MapSense algorithm uses OpenCL to perform GPU-accelerated planar region detection and extraction from depth images.
 It can be used with any off-the-shelve depth image sensor. Some examples include RealSense L515, RealSense D435, Microsoft Kinect, and others.
 
 ![](Github_Images/Combined_FirstPage_v2.jpg) 

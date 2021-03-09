@@ -2,15 +2,8 @@
 
 void ImGuiLayout::getImGuiROSLayout(ApplicationState& appState)
 {
-   if (ImGui::Button("Enable ROS Node"))
-   {
-      appState.ROS_ENABLED = true;
-   }
-   ImGui::SameLine(150);
-   if (ImGui::Button("Disable ROS Node"))
-   {
-      appState.ROS_ENABLED = false;
-   }
+   ImGui::Checkbox("ROS Enabled", &appState.ROS_ENABLED);
+   ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
 }
 
 void ImGuiLayout::getImGuiParamsLayout(ApplicationState& appState)
@@ -20,7 +13,7 @@ void ImGuiLayout::getImGuiParamsLayout(ApplicationState& appState)
    ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
-
+   
    //    ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
    //    ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);
 
@@ -54,7 +47,7 @@ void ImGuiLayout::getImGui2DLayout(ApplicationState& appState, uint8_t& displayI
       destroyAllWindows();
       displayItem = -1;
    }
-
+   ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
    ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
 
    ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);

@@ -171,6 +171,8 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int component, int& num, Mat&
          }
       }
    }
+   if (app.VISUAL_DEBUG)
+      displayDebugger(app.VISUAL_DEBUG_DELAY);
 }
 
 void MapFrameProcessor::displayDebugger(int delay)

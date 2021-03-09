@@ -18,7 +18,7 @@ void PlanarRegionMapHandler::registerRegions()
       for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
       {
          Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
-//         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
+         //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
          Vector3f correspondingMapCentroid = regions[matches[m].first]->getCentroid();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
          Vector3f cross = latestPoint.cross(correspondingMapNormal);
@@ -46,22 +46,28 @@ void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarReg
    matches.clear();
    for (int i = 0; i < regions.size(); i++)
    {
-      for (int j = 0; j < latestRegions.size(); j++)
+      if (regions[i]->getNumOfBoundaryVertices() > 50 && regions[i]->getNumOfBoundaryVertices() < 500)
       {
-         Vector3f prevNormal = regions[i]->getNormal();
-         Vector3f curNormal = latestRegions[j]->getNormal();
-         float angularDiff = fabs(prevNormal.dot(curNormal));
-
-         Vector3f prevCenter = regions[i]->getCentroid();
-         Vector3f curCenter = latestRegions[j]->getCentroid();
-         float dist = (curCenter - prevCenter).norm();
-         //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
-
-         if (dist < 0.1 && angularDiff > 0.75)
+         for (int j = 0; j < latestRegions.size(); j++)
          {
-            matches.emplace_back(i, j);
-            latestRegions[j]->setId(regions[i]->getId());
-            break;
+            if (latestRegions[j]->getNumOfBoundaryVertices() > 50 && latestRegions[j]->getNumOfBoundaryVertices() < 500)
+            {
+               Vector3f prevNormal = regions[i]->getNormal();
+               Vector3f curNormal = latestRegions[j]->getNormal();
+               float angularDiff = fabs(prevNormal.dot(curNormal));
+
+               Vector3f prevCenter = regions[i]->getCentroid();
+               Vector3f curCenter = latestRegions[j]->getCentroid();
+               float dist = (curCenter - prevCenter).norm();
+               //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
+
+               if (dist < 0.2 && angularDiff > 0.75)
+               {
+                  matches.emplace_back(i, j);
+                  latestRegions[j]->setId(regions[i]->getId());
+                  break;
+               }
+            }
          }
       }
    }
@@ -118,6 +124,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
    /* Generate planar region objects from the sorted list of files. */
    regions.clear();
    ifstream regionFile(directory + files[frameId]);
+   cout << "Loading Regions From: " << directory + files[frameId] << endl;
    vector<string> subStrings;
    getNextLineSplit(regionFile, subStrings); // Get number of regions
    int numRegions = stoi(subStrings[1]);
@@ -141,7 +148,8 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
    }
 }
 
-void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Vector3f eulerAngles){
+void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Vector3f eulerAngles)
+{
    for (int i = 0; i < this->latestRegions.size(); i++)
    {
       this->latestRegions[i]->transform(translation, eulerAngles);

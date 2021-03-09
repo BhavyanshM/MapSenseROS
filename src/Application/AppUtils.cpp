@@ -32,11 +32,11 @@ void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredD
    write_regions(regions, 0);
 }
 
-void AppUtils::displayDebugOutput(Mat disp)
+void AppUtils::displayDebugOutput(Mat disp, ApplicationState appState)
 {
    if (disp.cols > 0 && disp.rows > 0 && !disp.empty())
    {
-      resizeWindow("DebugOutput", (int) (disp.cols), (int) (disp.rows));
+      resizeWindow("DebugOutput", (int) (disp.cols * appState.DISPLAY_WINDOW_SIZE), (int) (disp.rows * appState.DISPLAY_WINDOW_SIZE));
       imshow("DebugOutput", disp);
       waitKey(1);
    }

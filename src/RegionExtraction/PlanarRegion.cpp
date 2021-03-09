@@ -185,7 +185,7 @@ void PlanarRegion::transform(Vector3f translation, Matrix3f rotation){
    this->normal = rotation * this->normal;
    for(int i = 0; i<getNumOfBoundaryVertices(); i++){
       this->boundaryVertices[i] = rotation * this->boundaryVertices[i];
-//      this->boundaryVertices[i] += translation;
+      this->boundaryVertices[i] += translation;
    }
 }
 

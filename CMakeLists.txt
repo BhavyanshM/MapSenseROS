@@ -13,6 +13,8 @@ find_package(gflags REQUIRED)
 find_package( OpenCV 4.2 REQUIRED )
 find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(GTSAM REQUIRED)
+include_directories(${GTSAM_INCLUDE_DIR})
 
 find_package(Corrade REQUIRED Main)
 find_package(Magnum REQUIRED
@@ -156,7 +158,8 @@ add_executable(registration_and_mapping
 		src/Geometry/GeomTools.cpp)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
-		${MAGNUM_GUI_LIBS})
+		${MAGNUM_GUI_LIBS}
+		gtsam)
 
 
 add_executable(mapsense_headless

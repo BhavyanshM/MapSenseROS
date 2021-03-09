@@ -7,7 +7,7 @@
 
 SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments)
 {
-   this->init();
+   this->init(arguments);
    generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
    generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
 
@@ -15,11 +15,20 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
    generateMatchLineMesh(mapper, matchingEdges);
 }
 
-void SLAMApplication::init()
+void SLAMApplication::init(const Arguments& arguments)
 {
-   this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/");
-   this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.regions);
-   this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
+   string dirName;
+   std::vector<std::string> args(arguments.argv, arguments.argv + arguments.argc);
+   for (int i = 0; i < arguments.argc; i++)
+   {
+      if (args[i] == "--regions-dir")
+      {
+         dirName = args[i+1];
+      }
+   }
+   this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/" + dirName);
+   this->mapper.loadRegions(frameIndex, this->mapper.regions);
+   this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
 }
 
 void SLAMApplication::draw()
