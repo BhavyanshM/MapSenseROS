@@ -115,7 +115,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          break;
       case KeyEvent::Key::R:
          auto start = high_resolution_clock::now();
-
+         this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
          this->mapper.registerRegions();
          this->mapper.transformLatestRegions(this->mapper.translationToReference, this->mapper.eulerAnglesToReference);
          auto end = high_resolution_clock::now();
