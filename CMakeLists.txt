@@ -147,15 +147,17 @@ add_executable(registration_and_mapping
 		src/SLAM/PlanarRegionSimulator.cpp
 		src/Launcher/MagnumApplication.cpp
 		src/Launcher/SLAMApplication.cpp
+		src/Application/PlanarRegionMapTester.cpp
+		src/Geometry/GeomTools.cpp
+		src/SLAM/FactorGraphSLAM.cpp
 		src/headers/SLAMApplication.h
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
 		src/headers/PlanarRegionSimulator.h
 		src/headers/MagnumApplication.h
-		src/Application/PlanarRegionMapTester.cpp
-        src/headers/PlanarRegionMapTester.h
+		src/headers/PlanarRegionMapTester.h
 		src/headers/GeomTools.h
-		src/Geometry/GeomTools.cpp)
+		src/SLAM/FactorGraphSLAM.h)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${MAGNUM_GUI_LIBS}
