@@ -310,6 +310,7 @@ void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> raw
       planarRegionsToPublish.regions.emplace_back(region);
    }
    planarRegionsToPublish.numOfRegions = rawRegionList.size();
+   planarRegionsToPublish.header.stamp.fromSec(this->_dataReceiver->depthMessage.get()->header.stamp.toSec());
    _dataReceiver->planarRegionPub.publish(planarRegionsToPublish);
 }
 
