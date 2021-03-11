@@ -26,7 +26,8 @@ void SLAMApplication::init(const Arguments& arguments)
          dirName = args[i+1];
       }
    }
-   this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/" + dirName);
+   printf("Loading Regions from:"); cout << "../../../src/MapSenseROS/Extras/Regions/" + dirName << endl;
+   this->mapper.getFileNames("../../../../../src/MapSenseROS/Extras/Regions/" + dirName);
    this->mapper.loadRegions(frameIndex, this->mapper.regions);
    this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
 }
