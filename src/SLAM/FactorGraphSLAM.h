@@ -13,7 +13,7 @@
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
-#include <CppUnitLite/TestHarness.h>
+//#include <CppUnitLite/TestHarness.h>
 #include <boost/bind.hpp>
 #include <boost/assign/std/vector.hpp>
 
