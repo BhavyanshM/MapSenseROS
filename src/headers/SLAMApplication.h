@@ -24,6 +24,7 @@ class SLAMApplication : public MagnumApplication
       int frameIndex = 0;
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
       PlanarRegionMapHandler mapper;
+      Object3D& frameOrigin = _sensor->addChild<Object3D>();
 
       SLAMApplication(const Arguments& arguments);
 

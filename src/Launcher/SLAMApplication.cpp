@@ -13,6 +13,7 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
 
    this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
    generateMatchLineMesh(mapper, matchingEdges);
+
 }
 
 void SLAMApplication::init(const Arguments& arguments)
@@ -26,8 +27,8 @@ void SLAMApplication::init(const Arguments& arguments)
          dirName = args[i+1];
       }
    }
-   printf("Loading Regions from:"); cout << "../../../src/MapSenseROS/Extras/Regions/" + dirName << endl;
-   this->mapper.getFileNames("../../../../../src/MapSenseROS/Extras/Regions/" + dirName);
+   // Laptop: "../../../../../src/MapSenseROS/Extras/Regions/" + dirName << endl;
+   this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/" + dirName);
    this->mapper.loadRegions(frameIndex, this->mapper.regions);
    this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
 }
@@ -87,6 +88,11 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
                           {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
       edges.emplace_back(&regionOrigin);
    }
+
+   frameOrigin.scaleLocal({0.002, 0.002, 0.002});
+   new RedCubeDrawable{frameOrigin, &_drawables, Primitives::cubeSolid(),
+                       {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
+   edges.emplace_back(&frameOrigin);
 }
 
 void SLAMApplication::keyPressEvent(KeyEvent& event)

@@ -30,9 +30,9 @@ class FactorGraphSLAM
       int poseIndex = 1;
 
    public:
-      void addPriorPoseFactor(Pose3 mean, Vector3 variance);
-      void addOdometryFactor(Pose3 odometry, Vector3 odomVariance);
-      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, Vector3 lmVariance, int lmIndex);
+      void addPriorPoseFactor(Pose3 mean, Vector6 variance);
+      void addOdometryFactor(Pose3 odometry, Vector6 odomVariance);
+      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, Vector4 lmVariances, int lmIndex);
       void optimize();
       void initPoseValue(int index, Pose3 value);
       void initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value);
