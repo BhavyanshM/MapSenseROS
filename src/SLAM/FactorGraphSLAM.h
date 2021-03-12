@@ -13,7 +13,6 @@
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
-#include <CppUnitLite/TestHarness.h>
 #include <boost/bind.hpp>
 #include <boost/assign/std/vector.hpp>
 
@@ -28,13 +27,16 @@ class FactorGraphSLAM
       Values initial, result;
       NonlinearFactorGraph graph;
       int poseIndex = 1;
+      noiseModel::Diagonal::shared_ptr priorNoise;
+      noiseModel::Diagonal::shared_ptr odometryNoise;
+      noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
 
    public:
-      void addPriorPoseFactor(Pose3 mean, Vector6 variance);
+      void addPriorPoseFactor(Pose3 mean);
 
-      void addOdometryFactor(Pose3 odometry, Vector6 odomVariance);
+      void addOdometryFactor(Pose3 odometry);
 
-      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, Vector4 lmVariances, int lmIndex);
+      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmIndex);
 
       void optimize();
 
@@ -43,6 +45,12 @@ class FactorGraphSLAM
       void initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value);
 
       Values getResults();
+
+      void createPriorPoseNoiseModel(Vector6 variance);
+
+      void createOdometryNoiseModel(Vector6 odomVariance);
+
+      void createOrientedPlaneNoiseModel(Vector3 lmVariances);
 };
 
 #endif //FACTORGRAPHSLAM_H
