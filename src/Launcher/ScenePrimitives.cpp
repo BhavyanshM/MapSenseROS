@@ -64,13 +64,6 @@ void clear(vector<Object3D *>& objects)
 void MyApplication::tickEvent()
 {
    //     cout << "TickEvent:" << count++ << endl;
-   if (_dataReceiver->paramsAvailable)
-   {
-       _dataReceiver->paramsAvailable = false;
-       appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
-       appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
-   }
-
    switch (_displayItem)
    {
       case SHOW_INPUT_COLOR :
@@ -100,6 +93,12 @@ void MyApplication::tickEvent()
    if (appState.ROS_ENABLED)
    {
       _dataReceiver->spin_ros_node();
+      if (_dataReceiver->paramsAvailable)
+      {
+          _dataReceiver->paramsAvailable = false;
+          appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
+          appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
+      }
       _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, appState);
       if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
       {
