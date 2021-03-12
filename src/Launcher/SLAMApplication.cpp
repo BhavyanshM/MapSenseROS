@@ -4,7 +4,6 @@
 
 #include "SLAMApplication.h"
 
-
 SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments)
 {
    this->init(arguments);
@@ -13,7 +12,6 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
 
    this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
    generateMatchLineMesh(mapper, matchingEdges);
-
 }
 
 void SLAMApplication::init(const Arguments& arguments)
@@ -24,7 +22,7 @@ void SLAMApplication::init(const Arguments& arguments)
    {
       if (args[i] == "--regions-dir")
       {
-         dirName = args[i+1];
+         dirName = args[i + 1];
       }
    }
    // Laptop: "../../../../../src/MapSenseROS/Extras/Regions/" + dirName << endl;
@@ -128,7 +126,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
 
-         cout << "Registration Took: " << duration/1000.0f << " ms" << endl;
+         cout << "Registration Took: " << duration / 1000.0f << " ms" << endl;
 
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);

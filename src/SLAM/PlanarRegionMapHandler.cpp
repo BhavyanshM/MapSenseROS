@@ -81,7 +81,7 @@ void PlanarRegionMapHandler::getFileNames(string dirName)
    {
       while (auto f = readdir(dir))
       {
-          cout << f->d_name << endl;
+         cout << f->d_name << endl;
          if (!f->d_name || f->d_name[0] == '.')
             continue;
          files.emplace_back(f->d_name);

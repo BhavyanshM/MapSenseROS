@@ -34,9 +34,9 @@ class SLAMApplication : public MagnumApplication
 
       void draw() override;
 
-      void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D*>& regionEdges, int color);
+      void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& regionEdges, int color);
 
-      void generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D*>& edges);
+      void generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D *>& edges);
 
       void init(const Arguments& arguments);
 };

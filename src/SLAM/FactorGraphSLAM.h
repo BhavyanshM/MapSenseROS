@@ -31,13 +31,18 @@ class FactorGraphSLAM
 
    public:
       void addPriorPoseFactor(Pose3 mean, Vector6 variance);
-      void addOdometryFactor(Pose3 odometry, Vector6 odomVariance);
-      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, Vector4 lmVariances, int lmIndex);
-      void optimize();
-      void initPoseValue(int index, Pose3 value);
-      void initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value);
-      Values getResults();
 
+      void addOdometryFactor(Pose3 odometry, Vector6 odomVariance);
+
+      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, Vector4 lmVariances, int lmIndex);
+
+      void optimize();
+
+      void initPoseValue(int index, Pose3 value);
+
+      void initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value);
+
+      Values getResults();
 };
 
 #endif //FACTORGRAPHSLAM_H

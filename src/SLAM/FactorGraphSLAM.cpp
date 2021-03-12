@@ -19,11 +19,13 @@ void FactorGraphSLAM::addOrientedPlaneLandmarkFactor(Vector4 lmMean, Vector4 lmV
    graph.add(OrientedPlane3Factor(lmMean, lmNoise, lmIndex, poseIndex));
 }
 
-void FactorGraphSLAM::initPoseValue(int index, Pose3 value){
+void FactorGraphSLAM::initPoseValue(int index, Pose3 value)
+{
    initial.insert(index, value);
 }
 
-void FactorGraphSLAM::initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value){
+void FactorGraphSLAM::initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value)
+{
    initial.insert(index, value);
 }
 
