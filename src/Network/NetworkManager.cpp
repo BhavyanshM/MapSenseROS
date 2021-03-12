@@ -33,6 +33,7 @@ void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstP
 void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
 {
    paramsMessage = msg;
+   paramsAvailable = true;
    ROS_DEBUG("PARAMS CALLBACK");
 }
 
@@ -131,7 +132,7 @@ void NetworkManager::init_ros_node(int argc, char **argv)
    subColorCompressed = nh->subscribe("/camera/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
    subDepthCamInfo = nh->subscribe("/camera/depth/camera_info", 2, &NetworkManager::depthCameraInfoCallback, this);
    subColorCamInfo = nh->subscribe("/camera/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
-   //    subMapSenseParams = nh->subscribe("/map_sense/params", 8, &NetworkManager::colorCompressedCallback, this);
+   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
    ROS_INFO("Started ROS Node");
 }

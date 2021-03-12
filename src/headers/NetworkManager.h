@@ -33,6 +33,7 @@ class NetworkManager
       CameraInfoConstPtr depthCameraInfo, colorCameraInfo;
       ImageConstPtr colorMessage;
       map_sense::MapsenseConfiguration paramsMessage;
+      bool paramsAvailable = false;
       CompressedImageConstPtr colorCompressedMessage;
       ImageConstPtr depthMessage;
       NodeHandle *nh;
