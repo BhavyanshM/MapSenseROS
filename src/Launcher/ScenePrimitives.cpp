@@ -64,6 +64,13 @@ void clear(vector<Object3D *>& objects)
 void MyApplication::tickEvent()
 {
    //     cout << "TickEvent:" << count++ << endl;
+   if (_dataReceiver->paramsAvailable)
+   {
+       _dataReceiver->paramsAvailable = false;
+       appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
+       appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
+   }
+
    switch (_displayItem)
    {
       case SHOW_INPUT_COLOR :
