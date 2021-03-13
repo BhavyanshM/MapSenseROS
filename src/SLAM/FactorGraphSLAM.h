@@ -26,17 +26,18 @@ class FactorGraphSLAM
       ISAM2 isam2;
       Values initial, result;
       NonlinearFactorGraph graph;
-      int poseIndex = 1;
       noiseModel::Diagonal::shared_ptr priorNoise;
       noiseModel::Diagonal::shared_ptr odometryNoise;
       noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
+      int poseId = 0;
+      int newLandmarkId = 0;
 
    public:
       void addPriorPoseFactor(Pose3 mean);
 
       void addOdometryFactor(Pose3 odometry);
 
-      void addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmIndex);
+      int addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId);
 
       void optimize();
 
@@ -51,6 +52,8 @@ class FactorGraphSLAM
       void createOdometryNoiseModel(Vector6 odomVariance);
 
       void createOrientedPlaneNoiseModel(Vector3 lmVariances);
+
+      void generateNextPoseId(int numberOfLandmarks);
 };
 
 #endif //FACTORGRAPHSLAM_H
