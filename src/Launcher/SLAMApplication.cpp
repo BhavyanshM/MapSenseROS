@@ -57,7 +57,7 @@ void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vecto
       Vector3f second = this->mapper.latestRegions[mapper.matches[i].second]->getCentroid();
       Object3D& matchEdge = _sensor->addChild<Object3D>();
       edges.emplace_back(&matchEdge);
-      new RedCubeDrawable{matchEdge, &_drawables, Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}), {1.0, 1.0, 1.0}};
+      new RedCubeDrawable{matchEdge, &_drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}), {1.0, 1.0, 1.0}};
    }
 }
 
@@ -74,7 +74,7 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
          Vector3f prevPoint = vertices[j - SKIP_EDGES];
          Vector3f curPoint = vertices[j];
          edges.emplace_back(&edge);
-         new RedCubeDrawable{edge, &_drawables, Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
+         new RedCubeDrawable{edge, &_drawables, Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
                              {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
          //                             {(planarRegion->getId() * 123 % 255) / 255.0f, (planarRegion->getId() * 161 % 255) / 255.0f,
          //                              (planarRegion->getId() * 113 % 255) / 255.0f}};
@@ -82,13 +82,13 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
       Object3D& regionOrigin = _sensor->addChild<Object3D>();
       regionOrigin.translateLocal({planarRegion->getCentroid().x(), planarRegion->getCentroid().y(), planarRegion->getCentroid().z()});
       regionOrigin.scaleLocal({0.002, 0.002, 0.002});
-      new RedCubeDrawable{regionOrigin, &_drawables, Primitives::cubeSolid(),
+      new RedCubeDrawable{regionOrigin, &_drawables, Magnum::Primitives::cubeSolid(),
                           {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
       edges.emplace_back(&regionOrigin);
    }
 
    frameOrigin.scaleLocal({0.002, 0.002, 0.002});
-   new RedCubeDrawable{frameOrigin, &_drawables, Primitives::cubeSolid(),
+   new RedCubeDrawable{frameOrigin, &_drawables, Magnum::Primitives::cubeSolid(),
                        {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
    edges.emplace_back(&frameOrigin);
 }
@@ -123,6 +123,15 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
          this->mapper.registerRegions();
          this->mapper.transformLatestRegions(this->mapper.translationToReference, this->mapper.eulerAnglesToReference);
+         Matrix3f R;
+         R = AngleAxisf(mapper.eulerAnglesToReference.x(), Vector3f::UnitX())
+                    * AngleAxisf(mapper.eulerAnglesToReference.y(), Vector3f::UnitY())
+                    * AngleAxisf(mapper.eulerAnglesToReference.z(), Vector3f::UnitZ());
+         sensorPoseRelative.setIdentity();
+         sensorPoseRelative.block<3,3>(0,0) = R.transpose();
+         sensorPoseRelative.block<3,1>(0,3) = - R.transpose() * this->mapper.translationToReference;
+         sensorPoseWorldFrame *= sensorPoseRelative;
+
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
 
@@ -141,6 +150,17 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
       this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
       generateMatchLineMesh(mapper, matchingEdges);
+   }
+}
+
+void SLAMApplication::updateFactorGraph(){
+
+   fgSLAM.addOdometryFactor(sensorPoseRelative);
+   for(int i = 0; i<this->mapper.latestRegions.size(); i++){
+      shared_ptr<PlanarRegion> region = this->mapper.latestRegions[i];
+      Eigen::Vector4d plane;
+      plane << region->getNormal(), (double) region->getNormal().dot(region->getCentroid());
+      fgSLAM.addOrientedPlaneLandmarkFactor(plane, i);
    }
 }
 

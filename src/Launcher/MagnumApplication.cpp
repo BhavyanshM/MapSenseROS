@@ -4,6 +4,8 @@
 
 #include "MagnumApplication.h"
 
+using namespace Magnum;
+
 MagnumApplication::MagnumApplication(const Arguments& arguments) : Platform::Application{arguments,
                                                                                          Configuration{}.setTitle("Magnum ImGui Application").setSize(
                                                                                                Magnum::Vector2i(1024, 768)).setWindowFlags(

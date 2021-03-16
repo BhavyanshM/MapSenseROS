@@ -27,13 +27,12 @@
 #include <PlanarRegionMapHandler.h>
 
 
-using namespace Magnum;
-using namespace Math::Literals;
+using namespace Magnum::Math::Literals;
 
-typedef SceneGraph::Object<SceneGraph::MatrixTransformation3D> Object3D;
-typedef SceneGraph::Scene<SceneGraph::MatrixTransformation3D> Scene3D;
+typedef Magnum::SceneGraph::Object<Magnum::SceneGraph::MatrixTransformation3D> Object3D;
+typedef Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D> Scene3D;
 
-class MagnumApplication : public Platform::Application
+   class MagnumApplication : public Magnum::Platform::Application
 {
    public:
       MagnumApplication(const Arguments& arguments);
@@ -56,40 +55,40 @@ class MagnumApplication : public Platform::Application
       Object3D *_camOriginCube;
       Object3D *_sensor;
       Object3D *_sensorAxes;
-      SceneGraph::Camera3D *_camera;
+      Magnum::SceneGraph::Camera3D *_camera;
 
-      SceneGraph::DrawableGroup3D _drawables;
+      Magnum::SceneGraph::DrawableGroup3D _drawables;
 };
 
-class RedCubeDrawable : public SceneGraph::Drawable3D
+class RedCubeDrawable : public Magnum::SceneGraph::Drawable3D
 {
    public:
-      explicit RedCubeDrawable(Object3D& object, SceneGraph::DrawableGroup3D *group, Trade::MeshData meshData, Vector3 color) : SceneGraph::Drawable3D{object,
+      explicit RedCubeDrawable(Object3D& object, Magnum::SceneGraph::DrawableGroup3D *group, Magnum::Trade::MeshData meshData, Magnum::Vector3 color) : Magnum::SceneGraph::Drawable3D{object,
                                                                                                                                                        group}
       {
          _color = color;
-         _mesh = MeshTools::compile(meshData);
+         _mesh = Magnum::MeshTools::compile(meshData);
       }
 
-      typedef GL::Attribute<0, Vector3> Position;
+      typedef Magnum::GL::Attribute<0, Magnum::Vector3> Position;
 
-      explicit RedCubeDrawable(Object3D& object, SceneGraph::DrawableGroup3D *group, GL::Buffer& vertexBuffer, Vector3 color) : SceneGraph::Drawable3D{object,
+      explicit RedCubeDrawable(Object3D& object, Magnum::SceneGraph::DrawableGroup3D *group, Magnum::GL::Buffer& vertexBuffer, Magnum::Vector3 color) : Magnum::SceneGraph::Drawable3D{object,
                                                                                                                                                        group}
       {
          _color = color;
-         _mesh.setPrimitive(MeshPrimitive::TriangleFan).addVertexBuffer(vertexBuffer, 0, Position{}).setCount(vertexBuffer.size());
+         _mesh.setPrimitive(Magnum::MeshPrimitive::TriangleFan).addVertexBuffer(vertexBuffer, 0, Position{}).setCount(vertexBuffer.size());
       }
 
    private:
-      GL::Mesh _mesh;
-      Shaders::Phong _shader;
-      Vector3 _color;
+      Magnum::GL::Mesh _mesh;
+      Magnum::Shaders::Phong _shader;
+      Magnum::Vector3 _color;
 
-      void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override
+      void draw(const Magnum::Matrix4& transformationMatrix, Magnum::SceneGraph::Camera3D& camera) override
       {
 
          // _mesh.setPrimitive(GL::MeshPrimitive::Points);
-         _shader.setDiffuseColor(0xa5c9ea_rgbf).setLightColor(Color3{1.0f}).setLightPosition({0.0f, 2.0f, 0.0f}).setAmbientColor(
+         _shader.setDiffuseColor(0xa5c9ea_rgbf).setLightColor(Magnum::Color3{1.0f}).setLightPosition({0.0f, 2.0f, 0.0f}).setAmbientColor(
                _color).setTransformationMatrix(transformationMatrix).setNormalMatrix(transformationMatrix.normalMatrix()).setProjectionMatrix(
                camera.projectionMatrix()).draw(_mesh);
       }

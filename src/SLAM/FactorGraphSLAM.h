@@ -33,6 +33,9 @@ class FactorGraphSLAM
       int newLandmarkId = 0;
 
    public:
+
+      FactorGraphSLAM();
+
       void addPriorPoseFactor(Pose3 mean);
 
       void addOdometryFactor(Pose3 odometry);

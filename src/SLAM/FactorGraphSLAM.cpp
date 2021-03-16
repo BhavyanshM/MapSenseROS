@@ -1,5 +1,22 @@
 #include "FactorGraphSLAM.h"
 
+FactorGraphSLAM::FactorGraphSLAM(){
+
+   Vector6 odomVariance;
+   odomVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
+   createOdometryNoiseModel(odomVariance);
+
+   Vector3 lmVariance;
+   lmVariance << 0.1, 0.1, 0.1;
+   createOrientedPlaneNoiseModel(lmVariance);
+
+   Vector6 priorVariance;
+   odomVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
+   createPriorPoseNoiseModel(priorVariance);
+
+   addPriorPoseFactor(Pose3().identity());
+}
+
 void FactorGraphSLAM::createPriorPoseNoiseModel(Vector6 variance)
 {
    priorNoise = noiseModel::Diagonal::Variances(variance);
