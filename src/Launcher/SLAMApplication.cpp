@@ -29,6 +29,8 @@ void SLAMApplication::init(const Arguments& arguments)
    this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/" + dirName);
    this->mapper.loadRegions(frameIndex, this->mapper.regions);
    this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
+
+   this->fgSLAM.addPriorPoseFactor(Pose3().identity());
 }
 
 void SLAMApplication::draw()
@@ -57,7 +59,8 @@ void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vecto
       Vector3f second = this->mapper.latestRegions[mapper.matches[i].second]->getCentroid();
       Object3D& matchEdge = _sensor->addChild<Object3D>();
       edges.emplace_back(&matchEdge);
-      new RedCubeDrawable{matchEdge, &_drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}), {1.0, 1.0, 1.0}};
+      new RedCubeDrawable{matchEdge, &_drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}),
+                          {1.0, 1.0, 1.0}};
    }
 }
 
@@ -74,7 +77,8 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
          Vector3f prevPoint = vertices[j - SKIP_EDGES];
          Vector3f curPoint = vertices[j];
          edges.emplace_back(&edge);
-         new RedCubeDrawable{edge, &_drawables, Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
+         new RedCubeDrawable{edge, &_drawables,
+                             Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
                              {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
          //                             {(planarRegion->getId() * 123 % 255) / 255.0f, (planarRegion->getId() * 161 % 255) / 255.0f,
          //                              (planarRegion->getId() * 113 % 255) / 255.0f}};
@@ -120,17 +124,21 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          break;
       case KeyEvent::Key::R:
          auto start = high_resolution_clock::now();
+
+         updateFactorGraphLandmarks();
+
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
          this->mapper.registerRegions();
-         this->mapper.transformLatestRegions(this->mapper.translationToReference, this->mapper.eulerAnglesToReference);
          Matrix3f R;
-         R = AngleAxisf(mapper.eulerAnglesToReference.x(), Vector3f::UnitX())
-                    * AngleAxisf(mapper.eulerAnglesToReference.y(), Vector3f::UnitY())
-                    * AngleAxisf(mapper.eulerAnglesToReference.z(), Vector3f::UnitZ());
+         R = AngleAxisf(mapper.eulerAnglesToReference.x(), Vector3f::UnitX()) * AngleAxisf(mapper.eulerAnglesToReference.y(), Vector3f::UnitY()) *
+             AngleAxisf(mapper.eulerAnglesToReference.z(), Vector3f::UnitZ());
          sensorPoseRelative.setIdentity();
-         sensorPoseRelative.block<3,3>(0,0) = R.transpose();
-         sensorPoseRelative.block<3,1>(0,3) = - R.transpose() * this->mapper.translationToReference;
+         sensorPoseRelative.block<3, 3>(0, 0) = R.transpose();
+         sensorPoseRelative.block<3, 1>(0, 3) = -R.transpose() * this->mapper.translationToReference;
          sensorPoseWorldFrame *= sensorPoseRelative;
+         this->mapper.transformLatestRegions(this->mapper.translationToReference, this->mapper.eulerAnglesToReference);
+
+         updateFactorGraphPoses();
 
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
@@ -153,15 +161,20 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
    }
 }
 
-void SLAMApplication::updateFactorGraph(){
-
-   fgSLAM.addOdometryFactor(sensorPoseRelative);
-   for(int i = 0; i<this->mapper.latestRegions.size(); i++){
-      shared_ptr<PlanarRegion> region = this->mapper.latestRegions[i];
+void SLAMApplication::updateFactorGraphLandmarks()
+{
+   for (int i = 0; i < this->mapper.regions.size(); i++)
+   {
+      shared_ptr<PlanarRegion> region = this->mapper.regions[i];
       Eigen::Vector4d plane;
-      plane << region->getNormal(), (double) region->getNormal().dot(region->getCentroid());
-      fgSLAM.addOrientedPlaneLandmarkFactor(plane, i);
+      plane << region->getNormal(), (double) - region->getNormal().dot(region->getCentroid());
+      region->setId(fgSLAM.addOrientedPlaneLandmarkFactor(plane, i));
    }
+}
+
+void SLAMApplication::updateFactorGraphPoses()
+{
+   fgSLAM.addOdometryFactor(sensorPoseRelative);
 }
 
 int main(int argc, char **argv)

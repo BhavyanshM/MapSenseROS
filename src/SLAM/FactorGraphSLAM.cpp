@@ -1,6 +1,7 @@
 #include "FactorGraphSLAM.h"
 
-FactorGraphSLAM::FactorGraphSLAM(){
+FactorGraphSLAM::FactorGraphSLAM()
+{
 
    Vector6 odomVariance;
    odomVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
@@ -47,16 +48,9 @@ void FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
 
 int FactorGraphSLAM::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
 {
-   if (lmId != -1)
-   {
-      graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, poseId, lmId));
-      return lmId;
-   } else
-   {
-      newLandmarkId++;
-      graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, poseId, poseId + newLandmarkId));
-      return poseId + newLandmarkId;
-   }
+   int landmarkId = (lmId != -1) ? lmId : poseId + (++newLandmarkId);
+   graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, poseId, landmarkId));
+   return landmarkId;
 }
 
 void FactorGraphSLAM::generateNextPoseId(int numberOfLandmarks)

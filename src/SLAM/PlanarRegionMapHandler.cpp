@@ -1,4 +1,4 @@
-#include <GeomTools.h>
+
 #include "PlanarRegionMapHandler.h"
 
 void PlanarRegionMapHandler::registerRegions()
@@ -132,7 +132,8 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
    {
       shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(0);
       getNextLineSplit(regionFile, subStrings); // Get regionId
-      region->setId(stoi(subStrings[1]));
+      region->setId(-1);
+//      region->setId(stoi(subStrings[1]));
       getNextLineSplit(regionFile, subStrings); // Get regionCenter
       region->setCenter(getVec3f(subStrings[1]));
       getNextLineSplit(regionFile, subStrings); // Get regionNormal

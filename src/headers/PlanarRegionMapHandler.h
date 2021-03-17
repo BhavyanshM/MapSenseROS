@@ -2,6 +2,7 @@
 #define PLANARREGIONMAPHANDLER_H
 
 #include <PlanarRegion.h>
+#include <GeomTools.h>
 #include <dirent.h>
 
 using namespace std;

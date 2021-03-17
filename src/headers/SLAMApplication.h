@@ -7,9 +7,11 @@
 
 #include "MagnumApplication.h"
 #include "PlanarRegionMapTester.h"
-#include <chrono>
 #include "gtsam/geometry/Pose2.h"
 #include "../SLAM/FactorGraphSLAM.h"
+
+#include <chrono>
+#include <queue>
 
 using namespace std;
 using namespace chrono;
@@ -24,7 +26,8 @@ class SLAMApplication : public MagnumApplication
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
       PlanarRegionMapHandler mapper;
       Object3D& frameOrigin = _sensor->addChild<Object3D>();
-      Eigen::MatrixXd sensorPoseWorldFrame, sensorPoseRelative = Eigen::MatrixXd::Identity(4,4);
+      MatrixXd sensorPoseWorldFrame, sensorPoseRelative = Eigen::MatrixXd::Identity(4,4);
+      queue<MatrixXd> sensorPoseQueue;
       FactorGraphSLAM fgSLAM;
 
       SLAMApplication(const Arguments& arguments);
@@ -41,7 +44,9 @@ class SLAMApplication : public MagnumApplication
 
       void init(const Arguments& arguments);
 
-      void updateFactorGraph();
+      void updateFactorGraphLandmarks();
+
+      void updateFactorGraphPoses();
 
 };
 

@@ -29,7 +29,7 @@ class FactorGraphSLAM
       noiseModel::Diagonal::shared_ptr priorNoise;
       noiseModel::Diagonal::shared_ptr odometryNoise;
       noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
-      int poseId = 0;
+      int poseId = 1;
       int newLandmarkId = 0;
 
    public:
