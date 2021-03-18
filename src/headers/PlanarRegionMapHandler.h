@@ -25,6 +25,10 @@ class PlanarRegionMapHandler
       void registerRegions();
 
       void transformLatestRegions(Vector3f translation, Vector3f eulerAngles);
+
+      void transformLatestRegions(Vector3f translation, Matrix3f rotation);
+
+      void transformAndCopyLatestRegions(Vector3f translation, Matrix3f rotation, vector<shared_ptr<PlanarRegion>> transformedRegions);
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

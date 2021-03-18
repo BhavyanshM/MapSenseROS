@@ -38,24 +38,18 @@ void FactorGraphSLAM::addPriorPoseFactor(Pose3 mean)
    graph.add(PriorFactor<Pose3>(poseId, mean, priorNoise));
 }
 
-void FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
+int FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
 {
-   poseId += newLandmarkId + 1;
-   graph.add(BetweenFactor<Pose3>(poseId, poseId + 1, odometry, odometryNoise));
+   graph.add(BetweenFactor<Pose3>(Symbol('x', poseId), Symbol('x', poseId), odometry, odometryNoise));
    poseId++;
-   newLandmarkId = 0;
+   return poseId;
 }
 
 int FactorGraphSLAM::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
 {
-   int landmarkId = (lmId != -1) ? lmId : poseId + (++newLandmarkId);
-   graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, poseId, landmarkId));
+   int landmarkId = (lmId != -1) ? lmId : newLandmarkId++;
+   graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, Symbol('x', poseId), Symbol('l', newLandmarkId)));
    return landmarkId;
-}
-
-void FactorGraphSLAM::generateNextPoseId(int numberOfLandmarks)
-{
-   poseId += numberOfLandmarks + 1;
 }
 
 void FactorGraphSLAM::initPoseValue(int index, Pose3 value)

@@ -162,30 +162,45 @@ void PlanarRegion::setCenter(const Vector3f& center)
    centroidCalculated = true;
 }
 
-void PlanarRegion::writeToFile(ofstream& file){
-    file << "RegionID:" << this->id << endl;
-    file << boost::format("Center:%.3f,%.3f,%.3f\n") % center.x() % center.y() % center.z();
-    file << boost::format("Normal:%.3f,%.3f,%.3f\n") % normal.x() % normal.y() % normal.z();
-    file << "NumPatches:" << this->getNumOfBoundaryVertices() << endl;
-    for(int i = 0; i<boundaryVertices.size(); i++){
-        file << boost::format("%.3lf, %.3lf, %.3lf\n") % boundaryVertices[i].x() % boundaryVertices[i].y() % boundaryVertices[i].z();
-    }
+void PlanarRegion::writeToFile(ofstream& file)
+{
+   file << "RegionID:" << this->id << endl;
+   file << boost::format("Center:%.3f,%.3f,%.3f\n") % center.x() % center.y() % center.z();
+   file << boost::format("Normal:%.3f,%.3f,%.3f\n") % normal.x() % normal.y() % normal.z();
+   file << "NumPatches:" << this->getNumOfBoundaryVertices() << endl;
+   for (int i = 0; i < boundaryVertices.size(); i++)
+   {
+      file << boost::format("%.3lf, %.3lf, %.3lf\n") % boundaryVertices[i].x() % boundaryVertices[i].y() % boundaryVertices[i].z();
+   }
 }
 
-void PlanarRegion::transform(Vector3f translation, Vector3f rotationAngles){
+void PlanarRegion::transform(Vector3f translation, Vector3f rotationAngles)
+{
    Matrix3f rotation;
-   rotation = AngleAxisf(rotationAngles.x(), Vector3f::UnitX())
-       * AngleAxisf(rotationAngles.y(), Vector3f::UnitY())
-       * AngleAxisf(rotationAngles.z(), Vector3f::UnitZ());
+   rotation = AngleAxisf(rotationAngles.x(), Vector3f::UnitX()) * AngleAxisf(rotationAngles.y(), Vector3f::UnitY()) *
+              AngleAxisf(rotationAngles.z(), Vector3f::UnitZ());
    this->transform(translation, rotation);
 }
 
-void PlanarRegion::transform(Vector3f translation, Matrix3f rotation){
+void PlanarRegion::transform(Vector3f translation, Matrix3f rotation)
+{
    this->center = rotation * this->center;
    this->normal = rotation * this->normal;
-   for(int i = 0; i<getNumOfBoundaryVertices(); i++){
+   for (int i = 0; i < getNumOfBoundaryVertices(); i++)
+   {
       this->boundaryVertices[i] = rotation * this->boundaryVertices[i];
       this->boundaryVertices[i] += translation;
    }
+}
+
+void PlanarRegion::transformAndCopy(Vector3f translation, Matrix3f rotation, shared_ptr<PlanarRegion> planarRegion)
+{
+   planarRegion->setNormal(this->getNormal());
+   planarRegion->setNormal(this->getNormal());
+   for (int i = 0; i < this->getNumOfBoundaryVertices(); i++)
+   {
+      planarRegion->insertBoundaryVertex(this->boundaryVertices[i]);
+   }
+   planarRegion->transform(translation, rotation);
 }
 

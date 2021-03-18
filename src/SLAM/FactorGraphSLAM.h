@@ -30,7 +30,7 @@ class FactorGraphSLAM
       noiseModel::Diagonal::shared_ptr odometryNoise;
       noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
       int poseId = 1;
-      int newLandmarkId = 0;
+      int newLandmarkId = 1;
 
    public:
 
@@ -38,7 +38,7 @@ class FactorGraphSLAM
 
       void addPriorPoseFactor(Pose3 mean);
 
-      void addOdometryFactor(Pose3 odometry);
+      int addOdometryFactor(Pose3 odometry);
 
       int addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId);
 

@@ -125,18 +125,34 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       case KeyEvent::Key::R:
          auto start = high_resolution_clock::now();
 
+         /* Insert the first set of landmarks to initial pose. */
          updateFactorGraphLandmarks();
 
+         /* Match the previous and latest regions to copy ids and generate match indices. */
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
+
+         /* Calculate odometry between previous and latest poses. */
          this->mapper.registerRegions();
+
+         /* Create SE(3) matrix for odometry transform. */
          Matrix3f R;
          R = AngleAxisf(mapper.eulerAnglesToReference.x(), Vector3f::UnitX()) * AngleAxisf(mapper.eulerAnglesToReference.y(), Vector3f::UnitY()) *
              AngleAxisf(mapper.eulerAnglesToReference.z(), Vector3f::UnitZ());
          sensorPoseRelative.setIdentity();
          sensorPoseRelative.block<3, 3>(0, 0) = R.transpose();
          sensorPoseRelative.block<3, 1>(0, 3) = -R.transpose() * this->mapper.translationToReference;
-         sensorPoseWorldFrame *= sensorPoseRelative;
-         this->mapper.transformLatestRegions(this->mapper.translationToReference, this->mapper.eulerAnglesToReference);
+
+         /* Update total transform from map frame to current sensor pose. */
+         mapToSensorTransform *= sensorPoseRelative;
+
+         /* Calculate inverse transform from current sensor pose to map frame. */
+         Matrix4f sensorToMapTransform = Matrix4f::Identity();
+         sensorToMapTransform = mapToSensorTransform.inverse();
+
+         /* Transform and copy the latest planar regions from current sensor frame to map frame. */
+         vector<shared_ptr<PlanarRegion>> transformedRegions;
+         this->mapper.transformAndCopyLatestRegions(Vector3f(sensorToMapTransform.block<3, 1>(0, 3)), Matrix3f(sensorToMapTransform.block<3, 3>(0, 0)),
+                                                    transformedRegions);
 
          updateFactorGraphPoses();
 
@@ -149,6 +165,9 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
          generateMatchLineMesh(mapper, matchingEdges);
          break;
+   }
+   if (event.key() == KeyEvent::Key::Space)
+   {
    }
    if (event.key() == KeyEvent::Key::Left || event.key() == KeyEvent::Key::Right)
    {
@@ -167,8 +186,8 @@ void SLAMApplication::updateFactorGraphLandmarks()
    {
       shared_ptr<PlanarRegion> region = this->mapper.regions[i];
       Eigen::Vector4d plane;
-      plane << region->getNormal(), (double) - region->getNormal().dot(region->getCentroid());
-      region->setId(fgSLAM.addOrientedPlaneLandmarkFactor(plane, i));
+      plane << Vector3d(region->getNormal()), (double) -region->getNormal().dot(region->getCentroid());
+      region->setId(fgSLAM.addOrientedPlaneLandmarkFactor(plane, region->getId()));
    }
 }
 

@@ -70,6 +70,8 @@ class PlanarRegion
       void transform(Vector3f translation, Vector3f rotationAngles);
 
       void transform(Vector3f translation, Matrix3f rotation);
+
+      void transformAndCopy(Vector3f translation, Matrix3f rotation, shared_ptr<PlanarRegion> planarRegion);
 };
 
 #endif //SRC_PLANARREGION_H

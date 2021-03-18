@@ -1,4 +1,3 @@
-
 #include "PlanarRegionMapHandler.h"
 
 void PlanarRegionMapHandler::registerRegions()
@@ -133,7 +132,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
       shared_ptr<PlanarRegion> region = make_shared<PlanarRegion>(0);
       getNextLineSplit(regionFile, subStrings); // Get regionId
       region->setId(-1);
-//      region->setId(stoi(subStrings[1]));
+      //      region->setId(stoi(subStrings[1]));
       getNextLineSplit(regionFile, subStrings); // Get regionCenter
       region->setCenter(getVec3f(subStrings[1]));
       getNextLineSplit(regionFile, subStrings); // Get regionNormal
@@ -154,6 +153,24 @@ void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Vector
    for (int i = 0; i < this->latestRegions.size(); i++)
    {
       this->latestRegions[i]->transform(translation, eulerAngles);
+   }
+}
+
+void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Matrix3f rotation)
+{
+   for (int i = 0; i < this->latestRegions.size(); i++)
+   {
+      this->latestRegions[i]->transform(translation, rotation);
+   }
+}
+
+void PlanarRegionMapHandler::transformAndCopyLatestRegions(Vector3f translation, Matrix3f rotation, vector<shared_ptr<PlanarRegion>> transformedRegions)
+{
+   for (int i = 0; i < latestRegions.size(); i++)
+   {
+      shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(latestRegions[i]->getId());
+      this->latestRegions[i]->transformAndCopy(translation, rotation, planarRegion);
+      transformedRegions.emplace_back(planarRegion);
    }
 }
 
