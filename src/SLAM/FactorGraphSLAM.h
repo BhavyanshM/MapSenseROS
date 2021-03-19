@@ -36,7 +36,7 @@ class FactorGraphSLAM
 
       FactorGraphSLAM();
 
-      void addPriorPoseFactor(Pose3 mean);
+      int addPriorPoseFactor(Pose3 mean);
 
       int addOdometryFactor(Pose3 odometry);
 
@@ -44,7 +44,7 @@ class FactorGraphSLAM
 
       void optimize();
 
-      void initPoseValue(int index, Pose3 value);
+      void initPoseValue(Pose3 value);
 
       void initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value);
 

@@ -14,7 +14,7 @@ class PlanarRegionMapHandler
       vector<shared_ptr<PlanarRegion>> regions, latestRegions;
       vector<pair<int, int>> matches;
       string directory;
-      Vector3f translationToReference, eulerAnglesToReference;
+      Vector3d translationToReference, eulerAnglesToReference;
 
       void matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions);
 
@@ -24,11 +24,11 @@ class PlanarRegionMapHandler
 
       void registerRegions();
 
-      void transformLatestRegions(Vector3f translation, Vector3f eulerAngles);
+      void transformLatestRegions(Vector3d translation, Vector3d eulerAngles);
 
-      void transformLatestRegions(Vector3f translation, Matrix3f rotation);
+      void transformLatestRegions(Vector3d translation, Matrix3d rotation);
 
-      void transformAndCopyLatestRegions(Vector3f translation, Matrix3f rotation, vector<shared_ptr<PlanarRegion>> transformedRegions);
+      void transformAndCopyLatestRegions(Vector3d translation, Matrix3d rotation, vector<shared_ptr<PlanarRegion>>& transformedRegions);
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

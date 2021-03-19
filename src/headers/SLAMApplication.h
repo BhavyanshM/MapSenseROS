@@ -26,8 +26,8 @@ class SLAMApplication : public MagnumApplication
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
       PlanarRegionMapHandler mapper;
       Object3D& frameOrigin = _sensor->addChild<Object3D>();
-      MatrixXd mapToSensorTransform, sensorPoseRelative = Eigen::MatrixXd::Identity(4, 4);
-      queue<MatrixXd> sensorPoseQueue;
+      MatrixXd mapToSensorTransform = Eigen::MatrixXd::Identity(4, 4);
+      MatrixXd sensorPoseRelative = Eigen::MatrixXd::Identity(4, 4);
       FactorGraphSLAM fgSLAM;
 
       SLAMApplication(const Arguments& arguments);
@@ -44,9 +44,11 @@ class SLAMApplication : public MagnumApplication
 
       void init(const Arguments& arguments);
 
-      void updateFactorGraphLandmarks();
+      void updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert);
 
       void updateFactorGraphPoses();
+
+      void initFactorGraph();
 
 };
 

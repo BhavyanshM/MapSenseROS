@@ -33,8 +33,8 @@ void PlanarRegionMapHandler::registerRegions()
    }
    VectorXf solution(6);
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
-   eulerAnglesToReference = Vector3f(solution(0), solution(1), solution(2));
-   translationToReference = Vector3f(solution(3), solution(4), solution(5));
+   eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
+   translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
    cout << solution << endl;
    printf("Translation:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
    printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
@@ -80,7 +80,7 @@ void PlanarRegionMapHandler::getFileNames(string dirName)
    {
       while (auto f = readdir(dir))
       {
-         cout << f->d_name << endl;
+//         cout << f->d_name << endl;
          if (!f->d_name || f->d_name[0] == '.')
             continue;
          files.emplace_back(f->d_name);
@@ -148,7 +148,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
    }
 }
 
-void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Vector3f eulerAngles)
+void PlanarRegionMapHandler::transformLatestRegions(Vector3d translation, Vector3d eulerAngles)
 {
    for (int i = 0; i < this->latestRegions.size(); i++)
    {
@@ -156,7 +156,7 @@ void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Vector
    }
 }
 
-void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Matrix3f rotation)
+void PlanarRegionMapHandler::transformLatestRegions(Vector3d translation, Matrix3d rotation)
 {
    for (int i = 0; i < this->latestRegions.size(); i++)
    {
@@ -164,7 +164,7 @@ void PlanarRegionMapHandler::transformLatestRegions(Vector3f translation, Matrix
    }
 }
 
-void PlanarRegionMapHandler::transformAndCopyLatestRegions(Vector3f translation, Matrix3f rotation, vector<shared_ptr<PlanarRegion>> transformedRegions)
+void PlanarRegionMapHandler::transformAndCopyLatestRegions(Vector3d translation, Matrix3d rotation, vector<shared_ptr<PlanarRegion>>& transformedRegions)
 {
    for (int i = 0; i < latestRegions.size(); i++)
    {

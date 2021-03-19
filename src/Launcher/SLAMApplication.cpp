@@ -31,6 +31,16 @@ void SLAMApplication::init(const Arguments& arguments)
    this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
 
    this->fgSLAM.addPriorPoseFactor(Pose3().identity());
+   updateFactorGraphLandmarks(this->mapper.regions);
+
+   this->fgSLAM.initPoseValue( Pose3().identity());
+   for (int i = 0; i < this->mapper.regions.size(); i++)
+   {
+      shared_ptr<PlanarRegion> region = this->mapper.regions[i];
+      Eigen::Vector4d plane;
+      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
+      this->fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);
+   }
 }
 
 void SLAMApplication::draw()
@@ -117,7 +127,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          //         for(int i = 0; i<regionEdges.size(); i++){
          //            regionEdges[i]->transformLocal(Matrix4::rotationX(Rad{5.0_degf}));
          //         }
-         this->mapper.transformLatestRegions(Vector3f(0, 0, 0), Vector3f(0.1, 0, 0));
+         this->mapper.transformLatestRegions(Vector3d(0, 0, 0), Vector3d(0.1, 0, 0));
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
          generateMatchLineMesh(mapper, matchingEdges);
@@ -125,8 +135,6 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       case KeyEvent::Key::R:
          auto start = high_resolution_clock::now();
 
-         /* Insert the first set of landmarks to initial pose. */
-         updateFactorGraphLandmarks();
 
          /* Match the previous and latest regions to copy ids and generate match indices. */
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
@@ -135,26 +143,23 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          this->mapper.registerRegions();
 
          /* Create SE(3) matrix for odometry transform. */
-         Matrix3f R;
-         R = AngleAxisf(mapper.eulerAnglesToReference.x(), Vector3f::UnitX()) * AngleAxisf(mapper.eulerAnglesToReference.y(), Vector3f::UnitY()) *
-             AngleAxisf(mapper.eulerAnglesToReference.z(), Vector3f::UnitZ());
+         Matrix3d R;
+         R = AngleAxisd((double) mapper.eulerAnglesToReference.x(), Vector3d::UnitX()) *
+             AngleAxisd((double) mapper.eulerAnglesToReference.y(), Vector3d::UnitY()) *
+             AngleAxisd((double) mapper.eulerAnglesToReference.z(), Vector3d::UnitZ());
          sensorPoseRelative.setIdentity();
          sensorPoseRelative.block<3, 3>(0, 0) = R.transpose();
          sensorPoseRelative.block<3, 1>(0, 3) = -R.transpose() * this->mapper.translationToReference;
 
-         /* Update total transform from map frame to current sensor pose. */
-         mapToSensorTransform *= sensorPoseRelative;
-
-         /* Calculate inverse transform from current sensor pose to map frame. */
-         Matrix4f sensorToMapTransform = Matrix4f::Identity();
-         sensorToMapTransform = mapToSensorTransform.inverse();
-
-         /* Transform and copy the latest planar regions from current sensor frame to map frame. */
-         vector<shared_ptr<PlanarRegion>> transformedRegions;
-         this->mapper.transformAndCopyLatestRegions(Vector3f(sensorToMapTransform.block<3, 1>(0, 3)), Matrix3f(sensorToMapTransform.block<3, 3>(0, 0)),
-                                                    transformedRegions);
-
+         /* Insert the latest landmarks and pose. */
          updateFactorGraphPoses();
+         updateFactorGraphLandmarks(this->mapper.latestRegions);
+
+
+         /* Initialize poses and landmarks with map frame values. */
+         initFactorGraph();
+         this->fgSLAM.optimize();
+         this->fgSLAM.getResults().print();
 
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
@@ -180,13 +185,13 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
    }
 }
 
-void SLAMApplication::updateFactorGraphLandmarks()
+void SLAMApplication::updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert)
 {
-   for (int i = 0; i < this->mapper.regions.size(); i++)
+   for (int i = 0; i < regionsToInsert.size(); i++)
    {
-      shared_ptr<PlanarRegion> region = this->mapper.regions[i];
+      shared_ptr<PlanarRegion> region = regionsToInsert[i];
       Eigen::Vector4d plane;
-      plane << Vector3d(region->getNormal()), (double) -region->getNormal().dot(region->getCentroid());
+      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
       region->setId(fgSLAM.addOrientedPlaneLandmarkFactor(plane, region->getId()));
    }
 }
@@ -217,5 +222,32 @@ int main(int argc, char **argv)
          SLAMApplication app({argc, argv});
          return app.exec();
       }
+   }
+}
+
+void SLAMApplication::initFactorGraph()
+{
+   printf("Adding Initial Estimates\n");
+   /* Update total transform from map frame to current sensor pose. Required for initial value for current pose. */
+   mapToSensorTransform *= sensorPoseRelative;
+
+   /* Calculate inverse transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
+
+   Matrix4d sensorToMapTransform = Matrix4d::Identity();
+   sensorToMapTransform.block<3,3>(0,0) = mapToSensorTransform.block<3,3>(0,0).transpose();
+   sensorToMapTransform.block<3, 1>(0, 3) = - mapToSensorTransform.block<3,3>(0,0).transpose() * mapToSensorTransform.block<3, 1>(0, 3);
+
+   /* Transform and copy the latest planar regions from current sensor frame to map frame. */
+   vector<shared_ptr<PlanarRegion>> transformedRegions;
+   this->mapper.transformAndCopyLatestRegions(sensorToMapTransform.block<3, 1>(0, 3), sensorToMapTransform.block<3, 3>(0, 0), transformedRegions);
+
+   this->fgSLAM.initPoseValue(mapToSensorTransform);
+   for (int i = 0; i < transformedRegions.size(); i++)
+   {
+      shared_ptr<PlanarRegion> region = transformedRegions[i];
+      printf("Initializing Landmark:(%d)\n", region->getId());
+      Eigen::Vector4d plane;
+      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
+      this->fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);
    }
 }

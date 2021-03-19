@@ -33,14 +33,17 @@ void FactorGraphSLAM::createOrientedPlaneNoiseModel(Vector3 lmVariances)
    orientedPlaneNoise = noiseModel::Diagonal::Variances(lmVariances);
 }
 
-void FactorGraphSLAM::addPriorPoseFactor(Pose3 mean)
+int FactorGraphSLAM::addPriorPoseFactor(Pose3 mean)
 {
-   graph.add(PriorFactor<Pose3>(poseId, mean, priorNoise));
+   printf("Inserting Prior Pose: Pose(%d)\n", poseId);
+   graph.add(PriorFactor<Pose3>(Symbol('x', poseId), mean, priorNoise));
+   return poseId;
 }
 
 int FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
 {
-   graph.add(BetweenFactor<Pose3>(Symbol('x', poseId), Symbol('x', poseId), odometry, odometryNoise));
+   printf("Inserting Odometry: Pose(%d) Pose(%d)\n", poseId, poseId + 1);
+   graph.add(BetweenFactor<Pose3>(Symbol('x', poseId), Symbol('x', poseId + 1), odometry, odometryNoise));
    poseId++;
    return poseId;
 }
@@ -48,27 +51,32 @@ int FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
 int FactorGraphSLAM::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
 {
    int landmarkId = (lmId != -1) ? lmId : newLandmarkId++;
+   printf("Inserting Oriented Plane Factor: Pose(%d) Landmark(%d, %d)\n", poseId, lmId, landmarkId);
    graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, Symbol('x', poseId), Symbol('l', newLandmarkId)));
    return landmarkId;
 }
 
-void FactorGraphSLAM::initPoseValue(int index, Pose3 value)
+void FactorGraphSLAM::initPoseValue(Pose3 value)
 {
-   initial.insert(index, value);
+   printf("Initializing Pose:(%d)\n", poseId);
+   initial.insert(Symbol('x', poseId), value);
 }
 
 void FactorGraphSLAM::initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value)
 {
-   initial.insert(index, value);
+   printf("Initializing Oriented Plane Landmark:(%d)\n", index);
+   initial.insert(Symbol('l', index), value);
 }
 
 void FactorGraphSLAM::optimize()
 {
+   printf("Optimizing\n");
    result = LevenbergMarquardtOptimizer(graph, initial).optimize();
 }
 
 Values FactorGraphSLAM::getResults()
 {
+   printf("Getting Results\n");
    return result;
 }
 
