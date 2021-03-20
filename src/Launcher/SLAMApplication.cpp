@@ -16,24 +16,24 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
 
 void SLAMApplication::init(const Arguments& arguments)
 {
-   string dirName;
+   string dirPath;
    std::vector<std::string> args(arguments.argv, arguments.argv + arguments.argc);
    for (int i = 0; i < arguments.argc; i++)
    {
       if (args[i] == "--regions-dir")
       {
-         dirName = args[i + 1];
+         dirPath = args[i + 1];
       }
    }
-   // Laptop: "../../../../../src/MapSenseROS/Extras/Regions/" + dirName << endl;
-   this->mapper.getFileNames("../../../src/MapSenseROS/Extras/Regions/" + dirName);
+   // Laptop: "../../../../../src/MapSenseROS/Extras/Regions/" + dirPath << endl;
+   this->mapper.getFileNames(dirPath);
    this->mapper.loadRegions(frameIndex, this->mapper.regions);
    this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
 
    this->fgSLAM.addPriorPoseFactor(Pose3().identity());
    updateFactorGraphLandmarks(this->mapper.regions);
 
-   this->fgSLAM.initPoseValue( Pose3().identity());
+   this->fgSLAM.initPoseValue(Pose3().identity());
    for (int i = 0; i < this->mapper.regions.size(); i++)
    {
       shared_ptr<PlanarRegion> region = this->mapper.regions[i];
@@ -77,6 +77,7 @@ void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vecto
 void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color)
 {
    clear(edges);
+
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
@@ -99,12 +100,8 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
       new RedCubeDrawable{regionOrigin, &_drawables, Magnum::Primitives::cubeSolid(),
                           {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
       edges.emplace_back(&regionOrigin);
-   }
 
-   frameOrigin.scaleLocal({0.002, 0.002, 0.002});
-   new RedCubeDrawable{frameOrigin, &_drawables, Magnum::Primitives::cubeSolid(),
-                       {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
-   edges.emplace_back(&frameOrigin);
+   }
 }
 
 void SLAMApplication::keyPressEvent(KeyEvent& event)
@@ -151,20 +148,23 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          sensorPoseRelative.block<3, 3>(0, 0) = R.transpose();
          sensorPoseRelative.block<3, 1>(0, 3) = -R.transpose() * this->mapper.translationToReference;
 
-         /* Insert the latest landmarks and pose. */
-         updateFactorGraphPoses();
-         updateFactorGraphLandmarks(this->mapper.latestRegions);
-
-
-         /* Initialize poses and landmarks with map frame values. */
-         initFactorGraph();
-         this->fgSLAM.optimize();
-         this->fgSLAM.getResults().print();
+         /* Insert the latest landmarks and pose constraints into the Factor Graph for SLAM. */
+//         updateFactorGraphPoses();
+//         updateFactorGraphLandmarks(this->mapper.latestRegions);
+//
+//         /* Initialize poses and landmarks with map frame values. */
+//         initFactorGraph();
+//
+//         /* Optimize the Factor Graph and get Results. */
+//         this->fgSLAM.optimize();
+         //         this->fgSLAM.getResults().print();
 
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
 
          cout << "Registration Took: " << duration / 1000.0f << " ms" << endl;
+
+
 
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
@@ -178,8 +178,22 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
    {
       this->mapper.loadRegions(frameIndex - SKIP_REGIONS, this->mapper.regions);
       this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
+
+      for(int i = 0; i<this->mapper.regions.size(); i++){
+         cout << this->mapper.regions[i]->toString() << endl;
+      }
+      for(int i = 0; i<this->mapper.latestRegions.size(); i++){
+         cout << this->mapper.latestRegions[i]->toString() << endl;
+      }
+
+
+
       generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
       generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
+
+
+
+
       this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
       generateMatchLineMesh(mapper, matchingEdges);
    }
@@ -227,15 +241,14 @@ int main(int argc, char **argv)
 
 void SLAMApplication::initFactorGraph()
 {
-   printf("Adding Initial Estimates\n");
    /* Update total transform from map frame to current sensor pose. Required for initial value for current pose. */
    mapToSensorTransform *= sensorPoseRelative;
 
    /* Calculate inverse transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
 
    Matrix4d sensorToMapTransform = Matrix4d::Identity();
-   sensorToMapTransform.block<3,3>(0,0) = mapToSensorTransform.block<3,3>(0,0).transpose();
-   sensorToMapTransform.block<3, 1>(0, 3) = - mapToSensorTransform.block<3,3>(0,0).transpose() * mapToSensorTransform.block<3, 1>(0, 3);
+   sensorToMapTransform.block<3, 3>(0, 0) = mapToSensorTransform.block<3, 3>(0, 0).transpose();
+   sensorToMapTransform.block<3, 1>(0, 3) = -mapToSensorTransform.block<3, 3>(0, 0).transpose() * mapToSensorTransform.block<3, 1>(0, 3);
 
    /* Transform and copy the latest planar regions from current sensor frame to map frame. */
    vector<shared_ptr<PlanarRegion>> transformedRegions;
@@ -245,7 +258,6 @@ void SLAMApplication::initFactorGraph()
    for (int i = 0; i < transformedRegions.size(); i++)
    {
       shared_ptr<PlanarRegion> region = transformedRegions[i];
-      printf("Initializing Landmark:(%d)\n", region->getId());
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
       this->fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);

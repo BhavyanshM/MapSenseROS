@@ -23,6 +23,9 @@ using namespace std;
 class FactorGraphSLAM
 {
    private:
+
+      const int DEBUG = 1;
+
       ISAM2 isam2;
       Values initial, result;
       NonlinearFactorGraph graph;
@@ -55,8 +58,6 @@ class FactorGraphSLAM
       void createOdometryNoiseModel(Vector6 odomVariance);
 
       void createOrientedPlaneNoiseModel(Vector3 lmVariances);
-
-      void generateNextPoseId(int numberOfLandmarks);
 };
 
 #endif //FACTORGRAPHSLAM_H

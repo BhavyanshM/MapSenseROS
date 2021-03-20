@@ -35,9 +35,9 @@ void PlanarRegionMapHandler::registerRegions()
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
    eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
    translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
-   cout << solution << endl;
-   printf("Translation:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
-   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
+//   cout << solution << endl;
+//   printf("Translation:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
+//   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
 }
 
 void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions)

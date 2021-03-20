@@ -72,6 +72,8 @@ class PlanarRegion
       void transform(Vector3d translation, Matrix3d rotation);
 
       void transformAndCopy(Vector3d translation, Matrix3d rotation, shared_ptr<PlanarRegion> planarRegion);
+
+      string toString();
 };
 
 #endif //SRC_PLANARREGION_H

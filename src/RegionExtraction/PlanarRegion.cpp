@@ -203,3 +203,11 @@ void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, sha
    planarRegion->transform(translation, rotation);
 }
 
+string PlanarRegion::toString()
+{
+   boost::format formatter("Id(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) Plane() NumPoints(%d)");
+   formatter % this->id % this->getCentroid().x() % this->getCentroid().y() % this->getCentroid().z() % this->getNormal().x() % this->getNormal().y() %
+   this->getNormal().z() % -this->getNormal().dot(this->getCentroid()) % this->getNumOfBoundaryVertices();
+   return formatter.str();
+}
+
