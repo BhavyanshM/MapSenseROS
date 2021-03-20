@@ -25,7 +25,6 @@ void SLAMApplication::init(const Arguments& arguments)
          dirPath = args[i + 1];
       }
    }
-   // Laptop: "../../../../../src/MapSenseROS/Extras/Regions/" + dirPath << endl;
    this->mapper.getFileNames(dirPath);
    this->mapper.loadRegions(frameIndex, this->mapper.regions);
    this->mapper.loadRegions(frameIndex + SKIP_REGIONS, this->mapper.latestRegions);
@@ -100,7 +99,6 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
       new RedCubeDrawable{regionOrigin, &_drawables, Magnum::Primitives::cubeSolid(),
                           {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
       edges.emplace_back(&regionOrigin);
-
    }
 }
 
@@ -149,22 +147,20 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          sensorPoseRelative.block<3, 1>(0, 3) = -R.transpose() * this->mapper.translationToReference;
 
          /* Insert the latest landmarks and pose constraints into the Factor Graph for SLAM. */
-//         updateFactorGraphPoses();
-//         updateFactorGraphLandmarks(this->mapper.latestRegions);
-//
-//         /* Initialize poses and landmarks with map frame values. */
-//         initFactorGraph();
-//
-//         /* Optimize the Factor Graph and get Results. */
-//         this->fgSLAM.optimize();
-         //         this->fgSLAM.getResults().print();
+         updateFactorGraphPoses();
+         updateFactorGraphLandmarks(this->mapper.latestRegions);
+
+         /* Initialize poses and landmarks with map frame values. */
+         initFactorGraph();
+
+         /* Optimize the Factor Graph and get Results. */
+         this->fgSLAM.optimize();
+         this->fgSLAM.getResults().print();
 
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
 
          cout << "Registration Took: " << duration / 1000.0f << " ms" << endl;
-
-
 
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
          this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
@@ -179,20 +175,17 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       this->mapper.loadRegions(frameIndex - SKIP_REGIONS, this->mapper.regions);
       this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
 
-      for(int i = 0; i<this->mapper.regions.size(); i++){
+      for (int i = 0; i < this->mapper.regions.size(); i++)
+      {
          cout << this->mapper.regions[i]->toString() << endl;
       }
-      for(int i = 0; i<this->mapper.latestRegions.size(); i++){
+      for (int i = 0; i < this->mapper.latestRegions.size(); i++)
+      {
          cout << this->mapper.latestRegions[i]->toString() << endl;
       }
 
-
-
       generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
       generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
-
-
-
 
       this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
       generateMatchLineMesh(mapper, matchingEdges);
