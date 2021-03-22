@@ -245,8 +245,8 @@ void logPlanarRegions(vector<shared_ptr<PlanarRegion>> planarRegionList)
 {
    for (int i = 0; i < planarRegionList.size(); i++)
    {
-      ROS_DEBUG("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->getCentroid().x(),
-                planarRegionList[i]->getCentroid().y(), planarRegionList[i]->getCentroid().z(), planarRegionList[i]->getNormal().x(),
+      ROS_DEBUG("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->getCenter().x(),
+                planarRegionList[i]->getCenter().y(), planarRegionList[i]->getCenter().z(), planarRegionList[i]->getNormal().x(),
                 planarRegionList[i]->getNormal().y(), planarRegionList[i]->getNormal().z());
    }
 }
@@ -269,7 +269,7 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
    //    ROS_INFO("CurrentPlanarRegions");
    //    logPlanarRegions(previousRegionList);
 
-   //    this->matchPlanarRegionstoMap(planarRegionList, planarRegionList);
+   //    this->matchPlanarRegionsToMap(planarRegionList, planarRegionList);
 
    ROS_DEBUG("Number of Planar Regions: %d", planarRegionList.size());
    auto afterRegionsTime = high_resolution_clock::now();
@@ -294,9 +294,9 @@ void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> raw
       region.normal.y = static_cast<double>(rawRegionList[i]->getNormal().y());
       region.normal.z = static_cast<double>(rawRegionList[i]->getNormal().z());
       region.centroid = geometry_msgs::Point();
-      region.centroid.x = static_cast<double>(rawRegionList[i]->getCentroid().x());
-      region.centroid.y = static_cast<double>(rawRegionList[i]->getCentroid().y());
-      region.centroid.z = static_cast<double>(rawRegionList[i]->getCentroid().z());
+      region.centroid.x = static_cast<double>(rawRegionList[i]->getCenter().x());
+      region.centroid.y = static_cast<double>(rawRegionList[i]->getCenter().y());
+      region.centroid.z = static_cast<double>(rawRegionList[i]->getCenter().z());
 
       for (int j = 0; j < rawRegionList[i]->getVertices().size(); j++)
       {

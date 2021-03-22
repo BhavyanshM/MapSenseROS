@@ -10,7 +10,7 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
    generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
    generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
 
-   this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
+   this->mapper.matchPlanarRegionsToMap(this->mapper.latestRegions);
    generateMatchLineMesh(mapper, matchingEdges);
 }
 
@@ -37,7 +37,7 @@ void SLAMApplication::init(const Arguments& arguments)
    {
       shared_ptr<PlanarRegion> region = this->mapper.regions[i];
       Eigen::Vector4d plane;
-      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
+      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
       this->fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);
    }
 }
@@ -64,8 +64,8 @@ void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vecto
    clear(edges);
    for (int i = 0; i < mapper.matches.size(); i++)
    {
-      Vector3f first = this->mapper.regions[mapper.matches[i].first]->getCentroid();
-      Vector3f second = this->mapper.latestRegions[mapper.matches[i].second]->getCentroid();
+      Vector3f first = this->mapper.regions[mapper.matches[i].first]->getCenter();
+      Vector3f second = this->mapper.latestRegions[mapper.matches[i].second]->getCenter();
       Object3D& matchEdge = _sensor->addChild<Object3D>();
       edges.emplace_back(&matchEdge);
       new RedCubeDrawable{matchEdge, &_drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}),
@@ -94,11 +94,19 @@ void SLAMApplication::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> pl
          //                              (planarRegion->getId() * 113 % 255) / 255.0f}};
       }
       Object3D& regionOrigin = _sensor->addChild<Object3D>();
-      regionOrigin.translateLocal({planarRegion->getCentroid().x(), planarRegion->getCentroid().y(), planarRegion->getCentroid().z()});
+      regionOrigin.translateLocal({planarRegion->getCenter().x(), planarRegion->getCenter().y(), planarRegion->getCenter().z()});
       regionOrigin.scaleLocal({0.002, 0.002, 0.002});
       new RedCubeDrawable{regionOrigin, &_drawables, Magnum::Primitives::cubeSolid(),
                           {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
       edges.emplace_back(&regionOrigin);
+   }
+}
+
+void printPlanarRegions(vector<shared_ptr<PlanarRegion>> regionsToPrint, string name){
+   printf("PlanarRegions List: %s\n", name.c_str());
+   for (int i = 0; i < regionsToPrint.size(); i++)
+   {
+      cout << regionsToPrint[i]->toString() << endl;
    }
 }
 
@@ -124,7 +132,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          //         }
          this->mapper.transformLatestRegions(Vector3d(0, 0, 0), Vector3d(0.1, 0, 0));
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
-         this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
+         this->mapper.matchPlanarRegionsToMap(this->mapper.latestRegions);
          generateMatchLineMesh(mapper, matchingEdges);
          break;
       case KeyEvent::Key::R:
@@ -132,7 +140,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
 
          /* Match the previous and latest regions to copy ids and generate match indices. */
-         this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
+         this->mapper.matchPlanarRegionsToMap(this->mapper.latestRegions);
 
          /* Calculate odometry between previous and latest poses. */
          this->mapper.registerRegions();
@@ -155,7 +163,13 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
          /* Optimize the Factor Graph and get Results. */
          this->fgSLAM.optimize();
-         this->fgSLAM.getResults().print();
+
+         printPlanarRegions(this->mapper.regions, "Regions");
+         printPlanarRegions(this->mapper.latestRegions, "LatestRegions");
+
+         this->fgSLAM.getFactorGraph().print("Factor Graph:\n");
+         this->fgSLAM.getInitial().print("Initial Estimates:\n");
+         this->fgSLAM.getResults().print("Final Estimates:\n");
 
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
@@ -163,7 +177,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          cout << "Registration Took: " << duration / 1000.0f << " ms" << endl;
 
          generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
-         this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
+         this->mapper.matchPlanarRegionsToMap(this->mapper.latestRegions);
          generateMatchLineMesh(mapper, matchingEdges);
          break;
    }
@@ -175,19 +189,14 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       this->mapper.loadRegions(frameIndex - SKIP_REGIONS, this->mapper.regions);
       this->mapper.loadRegions(frameIndex, this->mapper.latestRegions);
 
-      for (int i = 0; i < this->mapper.regions.size(); i++)
-      {
-         cout << this->mapper.regions[i]->toString() << endl;
-      }
-      for (int i = 0; i < this->mapper.latestRegions.size(); i++)
-      {
-         cout << this->mapper.latestRegions[i]->toString() << endl;
-      }
+      printPlanarRegions(this->mapper.regions, "Regions");
+      printPlanarRegions(this->mapper.latestRegions, "LatestRegions");
+
 
       generateRegionLineMesh(this->mapper.regions, previousRegionEdges, 1);
       generateRegionLineMesh(this->mapper.latestRegions, regionEdges, 2);
 
-      this->mapper.matchPlanarRegionstoMap(this->mapper.latestRegions);
+      this->mapper.matchPlanarRegionsToMap(this->mapper.latestRegions);
       generateMatchLineMesh(mapper, matchingEdges);
    }
 }
@@ -198,7 +207,7 @@ void SLAMApplication::updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>
    {
       shared_ptr<PlanarRegion> region = regionsToInsert[i];
       Eigen::Vector4d plane;
-      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
+      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
       region->setId(fgSLAM.addOrientedPlaneLandmarkFactor(plane, region->getId()));
    }
 }
@@ -252,7 +261,7 @@ void SLAMApplication::initFactorGraph()
    {
       shared_ptr<PlanarRegion> region = transformedRegions[i];
       Eigen::Vector4d plane;
-      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCentroid());
+      plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
       this->fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);
    }
 }

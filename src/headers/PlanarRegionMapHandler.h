@@ -4,6 +4,7 @@
 #include <PlanarRegion.h>
 #include <GeomTools.h>
 #include <dirent.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -16,7 +17,7 @@ class PlanarRegionMapHandler
       string directory;
       Vector3d translationToReference, eulerAnglesToReference;
 
-      void matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions);
+      void matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions);
 
       void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions);
 

@@ -47,7 +47,7 @@ class PlanarRegion
 
       Vector3f getNormal();
 
-      Vector3f getCentroid();
+      Vector3f getCenter();
 
       vector<Vector3f> getVertices();
 

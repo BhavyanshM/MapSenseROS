@@ -175,6 +175,15 @@ target_link_libraries(mapsense_headless
 		tbb)
 add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
 
+add_executable(planar-slam src/examples/PlanarSLAMExample.cpp)
+target_link_libraries(planar-slam gtsam)
+
+add_executable(pose2-slam src/examples/Pose2SLAMExample.cpp)
+target_link_libraries(pose2-slam gtsam)
+
+add_executable(visual-isam2 src/examples/VisualISAM2Example.cpp)
+target_link_libraries(visual-isam2 gtsam)
+
 
 
 

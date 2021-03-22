@@ -41,7 +41,7 @@ Vector3f PlanarRegion::getNormal()
    return this->normal;
 }
 
-Vector3f PlanarRegion::getCentroid()
+Vector3f PlanarRegion::getCenter()
 {
    if (!centroidCalculated)
    {
@@ -195,7 +195,7 @@ void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)
 void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, shared_ptr<PlanarRegion> planarRegion)
 {
    planarRegion->setNormal(this->getNormal());
-   planarRegion->setNormal(this->getNormal());
+   planarRegion->setCenter(this->getCenter());
    for (int i = 0; i < this->getNumOfBoundaryVertices(); i++)
    {
       planarRegion->insertBoundaryVertex(this->boundaryVertices[i]);
@@ -205,9 +205,9 @@ void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, sha
 
 string PlanarRegion::toString()
 {
-   boost::format formatter("Id(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) Plane() NumPoints(%d)");
-   formatter % this->id % this->getCentroid().x() % this->getCentroid().y() % this->getCentroid().z() % this->getNormal().x() % this->getNormal().y() %
-   this->getNormal().z() % -this->getNormal().dot(this->getCentroid()) % this->getNumOfBoundaryVertices();
+   boost::format formatter("Id(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) NumPoints(%d)");
+   formatter % this->id % this->getCenter().x() % this->getCenter().y() % this->getCenter().z() % this->getNormal().x() % this->getNormal().y() %
+   this->getNormal().z() % -this->getNormal().dot(this->getCenter()) % this->getNumOfBoundaryVertices();
    return formatter.str();
 }
 

@@ -39,7 +39,7 @@ Trade::MeshData MeshGenerator::getPlanarRegionMesh(shared_ptr<PlanarRegion> plan
 void MeshGenerator::getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion, GL::Buffer& bufferToPack)
 {
    vector<Vector3> positions;
-   positions.emplace_back(Vector3(planarRegion->getCentroid().x(), planarRegion->getCentroid().y(), planarRegion->getCentroid().z()));
+   positions.emplace_back(Vector3(planarRegion->getCenter().x(), planarRegion->getCenter().y(), planarRegion->getCenter().z()));
 
    vector<Vector2f> circularPoints;
    planarRegion->getClockWise2D(circularPoints);
@@ -49,7 +49,7 @@ void MeshGenerator::getPlanarRegionBuffer(shared_ptr<PlanarRegion> planarRegion,
       // Vector2f meshPoint = circularPoints[i];
       positions.emplace_back(0.1f, 0.1f, 0.0f);
 
-      // Vector3f center = planarRegion->getCentroid();
+      // Vector3f center = planarRegion->getCenter();
       // Vector3f normal = planarRegion->getMeanNormal();
       // Vector3f regionPoint =  (vec - center) - ((vec - center).dot(normal)/ (normal.squaredNorm()) * normal);
       // hull.push_back(Point(regionPoint.x(), regionPoint.y()));

@@ -53,6 +53,10 @@ class FactorGraphSLAM
 
       Values getResults();
 
+      Values getInitial();
+
+      NonlinearFactorGraph getFactorGraph();
+
       void createPriorPoseNoiseModel(Vector6 variance);
 
       void createOdometryNoiseModel(Vector6 odomVariance);

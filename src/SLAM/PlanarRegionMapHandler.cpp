@@ -18,7 +18,7 @@ void PlanarRegionMapHandler::registerRegions()
       {
          Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
          //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
-         Vector3f correspondingMapCentroid = regions[matches[m].first]->getCentroid();
+         Vector3f correspondingMapCentroid = regions[matches[m].first]->getCenter();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
          Vector3f cross = latestPoint.cross(correspondingMapNormal);
          A(i, 0) = cross(0);
@@ -40,27 +40,30 @@ void PlanarRegionMapHandler::registerRegions()
 //   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
 }
 
-void PlanarRegionMapHandler::matchPlanarRegionstoMap(vector<shared_ptr<PlanarRegion>> latestRegions)
+void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions)
 {
    matches.clear();
    for (int i = 0; i < regions.size(); i++)
    {
-      if (regions[i]->getNumOfBoundaryVertices() > 50 && regions[i]->getNumOfBoundaryVertices() < 500)
+      if (regions[i]->getNumOfBoundaryVertices() > 8)
       {
          for (int j = 0; j < latestRegions.size(); j++)
          {
-            if (latestRegions[j]->getNumOfBoundaryVertices() > 50 && latestRegions[j]->getNumOfBoundaryVertices() < 500)
+            if (latestRegions[j]->getNumOfBoundaryVertices() > 8)
             {
                Vector3f prevNormal = regions[i]->getNormal();
                Vector3f curNormal = latestRegions[j]->getNormal();
                float angularDiff = fabs(prevNormal.dot(curNormal));
 
-               Vector3f prevCenter = regions[i]->getCentroid();
-               Vector3f curCenter = latestRegions[j]->getCentroid();
+               Vector3f prevCenter = regions[i]->getCenter();
+               Vector3f curCenter = latestRegions[j]->getCenter();
                float dist = (curCenter - prevCenter).norm();
                //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 
-               if (dist < 0.2 && angularDiff > 0.8)
+               int countDiff = abs(regions[i]->getNumOfBoundaryVertices() - latestRegions[j]->getNumOfBoundaryVertices());
+               int maxCount = max(regions[i]->getNumOfBoundaryVertices(), latestRegions[j]->getNumOfBoundaryVertices());
+
+               if (dist < 0.18 && angularDiff > 0.8 && ((float)countDiff/((float)maxCount)) * 100.0f < 20)
                {
                   matches.emplace_back(i, j);
                   latestRegions[j]->setId(regions[i]->getId());
