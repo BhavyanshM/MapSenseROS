@@ -222,13 +222,7 @@ int main(int argc, char **argv)
       {
          done = true;
          PlanarRegionMapTester tester;
-         if (tester.runTests())
-         {
-            printf("SUCCESS\n");
-         } else
-         {
-            printf("FAILURE\n");
-         }
+         tester.runTests(argc, argv);
       }
    }
    if (!done)

@@ -208,6 +208,10 @@ void PlanarRegion::projectToPlane(Vector4f plane)
 {
    this->normal = plane.block<3,1>(0,0);
    this->center = GeomTools::getProjectedPoint(plane, this->getCenter());
+   for(int i = 0; i<getNumOfBoundaryVertices(); i++)
+   {
+      this->boundaryVertices[i] = GeomTools::getProjectedPoint(plane, this->boundaryVertices[i]);
+   }
 }
 
 string PlanarRegion::toString()
