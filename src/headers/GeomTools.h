@@ -13,6 +13,8 @@ class GeomTools
 {
    public:
       static Matrix3f getRotationFromAngleApproximations(Vector3f eulerAngles);
+      static Vector3f getProjectedPoint(Vector4f plane, Vector3f point);
+      static void getInverseTransform(Vector3d eulerAngles, Vector3d translation, MatrixXd& transformToPack);
 };
 
 #endif //GEOMTOOLS_H

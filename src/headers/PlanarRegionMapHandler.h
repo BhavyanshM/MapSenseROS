@@ -12,10 +12,12 @@ class PlanarRegionMapHandler
 {
    public:
       vector<string> files;
-      vector<shared_ptr<PlanarRegion>> regions, latestRegions;
+      vector<shared_ptr<PlanarRegion>> regions, latestRegions, mapRegions;
       vector<pair<int, int>> matches;
       string directory;
       Vector3d translationToReference, eulerAnglesToReference;
+      MatrixXd mapToSensorTransform = Eigen::MatrixXd::Identity(4, 4);
+      MatrixXd sensorPoseRelative = Eigen::MatrixXd::Identity(4, 4);
 
       void matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions);
 

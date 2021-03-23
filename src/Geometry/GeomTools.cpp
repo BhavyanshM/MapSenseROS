@@ -19,3 +19,20 @@ Matrix3f GeomTools::getRotationFromAngleApproximations(Vector3f eulerAngles)
    rotation(2,1) = alpha;
    return rotation;
 }
+
+Vector3f GeomTools::getProjectedPoint(Vector4f plane, Vector3f point)
+{
+   Vector3f normal = plane.block<3,1>(0,0).normalized();
+   return point - normal * (normal.dot(point) + plane(3)/ plane.block<3,1>(0,0).norm());
+}
+
+void GeomTools::getInverseTransform(Vector3d eulerAngles, Vector3d translation, MatrixXd& transformToPack)
+{
+   Matrix3d R;
+   R = AngleAxisd(eulerAngles.x(), Vector3d::UnitX()) *
+       AngleAxisd(eulerAngles.y(), Vector3d::UnitY()) *
+       AngleAxisd(eulerAngles.z(), Vector3d::UnitZ());
+   transformToPack.setIdentity();
+   transformToPack.block<3, 3>(0, 0) = R.transpose();
+   transformToPack.block<3, 1>(0, 3) = -R.transpose() * translation;
+}

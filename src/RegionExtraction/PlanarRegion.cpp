@@ -1,3 +1,4 @@
+#include <GeomTools.h>
 #include "PlanarRegion.h"
 
 PlanarRegion::PlanarRegion(int id)
@@ -201,6 +202,12 @@ void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, sha
       planarRegion->insertBoundaryVertex(this->boundaryVertices[i]);
    }
    planarRegion->transform(translation, rotation);
+}
+
+void PlanarRegion::projectToPlane(Vector4f plane)
+{
+   this->normal = plane.block<3,1>(0,0);
+   this->center = GeomTools::getProjectedPoint(plane, this->getCenter());
 }
 
 string PlanarRegion::toString()

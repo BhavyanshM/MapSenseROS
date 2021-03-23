@@ -7,7 +7,7 @@ class PlanarRegionMapTester
 {
    public:
       PlanarRegionMapHandler mapper;
-      static bool testICPTransformedPair();
+      static bool runTests();
 };
 
 #endif //PLANARREGIONMAPTESTER_H
