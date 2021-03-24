@@ -18,7 +18,6 @@
 
 using namespace boost::assign;
 using namespace gtsam;
-using namespace std;
 
 class FactorGraphSLAM
 {

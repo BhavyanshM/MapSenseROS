@@ -24,6 +24,19 @@ class PlanarRegion
       bool centroidCalculated = false;
       int numPatches;
       int id;
+      int poseId = 0;
+      int numOfMeasurements = 1;
+   public:
+      int getNumOfMeasurements() const;
+
+      void setNumOfMeasurements(int numOfMeasurements);
+
+   public:
+      int getPoseId() const;
+
+      void setPoseId(int poseId);
+
+   private:
 
       Vector3f getPCANormal();
 

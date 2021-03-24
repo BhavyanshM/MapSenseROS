@@ -197,6 +197,12 @@ void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, sha
 {
    planarRegion->setNormal(this->getNormal());
    planarRegion->setCenter(this->getCenter());
+   planarRegion->centroidCalculated = true;
+   planarRegion->normalCalculated = true;
+   planarRegion->setNumOfMeasurements(this->getNumOfMeasurements());
+   planarRegion->setId(this->getId());
+   planarRegion->setPoseId(this->getPoseId());
+   planarRegion->numPatches = this->numPatches;
    for (int i = 0; i < this->getNumOfBoundaryVertices(); i++)
    {
       planarRegion->insertBoundaryVertex(this->boundaryVertices[i]);
@@ -216,9 +222,29 @@ void PlanarRegion::projectToPlane(Vector4f plane)
 
 string PlanarRegion::toString()
 {
-   boost::format formatter("Id(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) NumPoints(%d)");
-   formatter % this->id % this->getCenter().x() % this->getCenter().y() % this->getCenter().z() % this->getNormal().x() % this->getNormal().y() %
-   this->getNormal().z() % -this->getNormal().dot(this->getCenter()) % this->getNumOfBoundaryVertices();
+   boost::format formatter("Id(%d) PoseId(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) NumPoints(%d) Measured(%d)");
+   formatter % this->id % this->getPoseId() % this->getCenter().x() % this->getCenter().y() % this->getCenter().z() % this->getNormal().x() % this->getNormal().y() %
+   this->getNormal().z() % -this->getNormal().dot(this->getCenter()) % this->getNumOfBoundaryVertices() % this->getNumOfMeasurements();
    return formatter.str();
+}
+
+int PlanarRegion::getPoseId() const
+{
+   return poseId;
+}
+
+void PlanarRegion::setPoseId(int poseId)
+{
+   PlanarRegion::poseId = poseId;
+}
+
+int PlanarRegion::getNumOfMeasurements() const
+{
+   return numOfMeasurements;
+}
+
+void PlanarRegion::setNumOfMeasurements(int numOfMeasurements)
+{
+   PlanarRegion::numOfMeasurements = numOfMeasurements;
 }
 

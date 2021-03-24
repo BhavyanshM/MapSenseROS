@@ -5,14 +5,16 @@
 #include <GeomTools.h>
 #include <dirent.h>
 #include <algorithm>
+#include "../SLAM/FactorGraphSLAM.h"
 
 using namespace std;
 
 class PlanarRegionMapHandler
 {
    public:
+      FactorGraphSLAM fgSLAM;
       vector<string> files;
-      vector<shared_ptr<PlanarRegion>> regions, latestRegions, mapRegions;
+      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions;
       vector<pair<int, int>> matches;
       string directory;
       Vector3d translationToReference, eulerAnglesToReference;
@@ -32,6 +34,16 @@ class PlanarRegionMapHandler
       void transformLatestRegions(Vector3d translation, Matrix3d rotation);
 
       void transformAndCopyLatestRegions(Vector3d translation, Matrix3d rotation, vector<shared_ptr<PlanarRegion>>& transformedRegions);
+
+      void mergeLatestRegions();
+
+      void updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert, int currentPoseId);
+
+      int updateFactorGraphPoses();
+
+      void initFactorGraphState();
+
+      void updateMapRegions();
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

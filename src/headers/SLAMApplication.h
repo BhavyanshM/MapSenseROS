@@ -24,10 +24,8 @@ class SLAMApplication : public MagnumApplication
       int count = 0;
       int frameIndex = 0;
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
-      PlanarRegionMapHandler mapper;
+      PlanarRegionMapHandler _mapper;
       Object3D& frameOrigin = _sensor->addChild<Object3D>();
-
-      FactorGraphSLAM fgSLAM;
 
       SLAMApplication(const Arguments& arguments);
 
@@ -43,11 +41,7 @@ class SLAMApplication : public MagnumApplication
 
       void init(const Arguments& arguments);
 
-      void updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert);
 
-      void updateFactorGraphPoses();
-
-      void initFactorGraph();
 
 };
 

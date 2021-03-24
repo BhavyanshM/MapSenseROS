@@ -6,6 +6,9 @@
 
 using namespace Magnum;
 
+typedef Magnum::Matrix4 Mat4;
+typedef Magnum::Vector2 Vec2;
+
 MagnumApplication::MagnumApplication(const Arguments& arguments) : Platform::Application{arguments,
                                                                                          Configuration{}.setTitle("Magnum ImGui Application").setSize(
                                                                                                Magnum::Vector2i(1024, 768)).setWindowFlags(
@@ -30,8 +33,8 @@ MagnumApplication::MagnumApplication(const Arguments& arguments) : Platform::App
    _camParent = new Object3D{_camGrandParent};
    _camObject = new Object3D{_camParent};
    _camera = new SceneGraph::Camera3D(*_camObject);
-   _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
-   _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
+   _camera->setProjectionMatrix(Mat4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
+   _sensor->transformLocal(Mat4::rotationX(Rad{90.0_degf}));
 
    /* TODO: Prepare your objects here and add them to the scene */
    _sensorAxes = new Object3D{_sensor};
@@ -39,7 +42,7 @@ MagnumApplication::MagnumApplication(const Arguments& arguments) : Platform::App
    new RedCubeDrawable{*_sensorAxes, &_drawables, Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
-   _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
+   _sensor->transformLocal(Mat4::rotationX(Rad{90.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
@@ -55,20 +58,20 @@ void MagnumApplication::mouseMoveEvent(MouseMoveEvent& event)
 {
    if ((event.buttons() & MouseMoveEvent::Button::Left))
    {
-      Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
-      _camGrandParent->transformLocal(Matrix4::rotationY(-Rad{delta.x()}));
+      Vec2 delta = 4.0f * Vec2{event.relativePosition()} / Vec2{windowSize()};
+      _camGrandParent->transformLocal(Mat4::rotationY(-Rad{delta.x()}));
       _camOriginCube->transformLocal(_scene.absoluteTransformation());
-      _camParent->transformLocal(Matrix4::rotationX(-Rad{delta.y()}));
+      _camParent->transformLocal(Mat4::rotationX(-Rad{delta.y()}));
    }
    if ((event.buttons() & MouseMoveEvent::Button::Right))
    {
-      Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
+      Vec2 delta = 4.0f * Vec2{event.relativePosition()} / Vec2{windowSize()};
       _camGrandParent->translateLocal({-0.5f * delta.x(), 0, -0.5f * delta.y()});
       _camOriginCube->translateLocal({-0.5f * delta.x(), 0, -0.5f * delta.y()});
    }
    if ((event.buttons() & MouseMoveEvent::Button::Middle))
    {
-      Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
+      Vec2 delta = 4.0f * Vec2{event.relativePosition()} / Vec2{windowSize()};
       _camGrandParent->translateLocal({0, 0.8f * delta.y(), 0});
       _camOriginCube->translateLocal({0, 0.8f * delta.y(), 0});
    }
@@ -77,7 +80,7 @@ void MagnumApplication::mouseMoveEvent(MouseMoveEvent& event)
 
 void MagnumApplication::mouseScrollEvent(MouseScrollEvent& event)
 {
-   Vector2 delta = Vector2{event.offset()};
+   Vec2 delta = Vec2{event.offset()};
    _camObject->translate({0, 0, -0.5f * delta.y()});
    event.setAccepted();
 }
