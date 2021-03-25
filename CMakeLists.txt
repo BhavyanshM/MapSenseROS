@@ -80,7 +80,6 @@ set(SOURCE
 		src/RegionExtraction/PlanarRegion.cpp
 		src/Application/ApplicationState.cpp
 		src/RegionExtraction/RegionRing.cpp
-		src/SLAM/PlanarRegionMapHandler.cpp
 		src/Application/AppUtils.cpp
 		src/Geometry/GeomTools.cpp
 		)
@@ -93,7 +92,6 @@ set (HEADERS
 		src/headers/PlanarRegion.h
 		src/headers/ApplicationState.h
 		src/headers/RegionRing.h
-		src/headers/PlanarRegionMapHandler.h
 		src/headers/AppUtils.h
 		src/headers/GeomTools.h)
 
