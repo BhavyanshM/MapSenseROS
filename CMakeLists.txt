@@ -165,7 +165,7 @@ target_link_libraries(registration_and_mapping
 		${MAGNUM_GUI_LIBS}
 		gtsam)
 include_directories(${GTEST_INCLUDE_DIRS})
-target_link_libraries(registration_and_mapping ${GTEST_LIBRARIES}) # Replace ${PROJECT_NAME} with your target name
+target_link_libraries(registration_and_mapping ${GTEST_LIBRARIES})
 
 
 add_executable(mapsense_headless
@@ -185,7 +185,7 @@ target_link_libraries(planar-slam gtsam)
 add_executable(pose2-slam src/examples/Pose2SLAMExample.cpp)
 target_link_libraries(pose2-slam gtsam)
 
-add_executable(visual-isam2 src/examples/VisualISAM2Example.cpp)
+add_executable(visual-isam2 src/examples/VisualISAM2Example.cpp src/examples/SFMdata.h)
 target_link_libraries(visual-isam2 gtsam)
 
 
