@@ -283,35 +283,40 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
 
 void PlanarRegionCalculator::publishRegions(vector<shared_ptr<PlanarRegion>> rawRegionList)
 {
+   ROS_DEBUG("Publishing Regions");
    map_sense::RawGPUPlanarRegionList planarRegionsToPublish;
-   for (int i = 0; i < rawRegionList.size(); i++)
+   if (rawRegionList.size() > 0)
    {
-      map_sense::RawGPUPlanarRegion region;
-      region.numOfPatches = rawRegionList[i]->getNumPatches();
-      region.id = rawRegionList[i]->getId();
-      region.normal = geometry_msgs::Vector3();
-      region.normal.x = static_cast<double>(rawRegionList[i]->getNormal().x());
-      region.normal.y = static_cast<double>(rawRegionList[i]->getNormal().y());
-      region.normal.z = static_cast<double>(rawRegionList[i]->getNormal().z());
-      region.centroid = geometry_msgs::Point();
-      region.centroid.x = static_cast<double>(rawRegionList[i]->getCenter().x());
-      region.centroid.y = static_cast<double>(rawRegionList[i]->getCenter().y());
-      region.centroid.z = static_cast<double>(rawRegionList[i]->getCenter().z());
-
-      for (int j = 0; j < rawRegionList[i]->getVertices().size(); j++)
+      for (int i = 0; i < rawRegionList.size(); i++)
       {
-         Vector3f vertex = rawRegionList[i]->getVertices()[j];
-         geometry_msgs::Point point;
-         point.x = static_cast<double>(vertex.x());
-         point.y = static_cast<double>(vertex.y());
-         point.z = static_cast<double>(vertex.z());
-         region.vertices.emplace_back(point);
+         map_sense::RawGPUPlanarRegion region;
+         region.numOfPatches = rawRegionList[i]->getNumPatches();
+         region.id = rawRegionList[i]->getId();
+         region.normal = geometry_msgs::Vector3();
+         region.normal.x = static_cast<double>(rawRegionList[i]->getNormal().x());
+         region.normal.y = static_cast<double>(rawRegionList[i]->getNormal().y());
+         region.normal.z = static_cast<double>(rawRegionList[i]->getNormal().z());
+         region.centroid = geometry_msgs::Point();
+         region.centroid.x = static_cast<double>(rawRegionList[i]->getCenter().x());
+         region.centroid.y = static_cast<double>(rawRegionList[i]->getCenter().y());
+         region.centroid.z = static_cast<double>(rawRegionList[i]->getCenter().z());
+
+         for (int j = 0; j < rawRegionList[i]->getVertices().size(); j++)
+         {
+            Vector3f vertex = rawRegionList[i]->getVertices()[j];
+            geometry_msgs::Point point;
+            point.x = static_cast<double>(vertex.x());
+            point.y = static_cast<double>(vertex.y());
+            point.z = static_cast<double>(vertex.z());
+            region.vertices.emplace_back(point);
+         }
+         planarRegionsToPublish.regions.emplace_back(region);
       }
-      planarRegionsToPublish.regions.emplace_back(region);
+      planarRegionsToPublish.numOfRegions = rawRegionList.size();
+      planarRegionsToPublish.header.stamp.fromSec(this->_dataReceiver->depthMessage.get()->header.stamp.toSec());
+      _dataReceiver->planarRegionPub.publish(planarRegionsToPublish);
+      ROS_DEBUG("Published Regions");
    }
-   planarRegionsToPublish.numOfRegions = rawRegionList.size();
-   planarRegionsToPublish.header.stamp.fromSec(this->_dataReceiver->depthMessage.get()->header.stamp.toSec());
-   _dataReceiver->planarRegionPub.publish(planarRegionsToPublish);
 }
 
 void PlanarRegionCalculator::launch_tester(ApplicationState appState)
