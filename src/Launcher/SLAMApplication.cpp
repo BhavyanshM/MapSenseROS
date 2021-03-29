@@ -8,7 +8,7 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
 {
    this->init(arguments);
    generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
-   generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
+   //   generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
 }
 
 void SLAMApplication::init(const Arguments& arguments)
@@ -69,6 +69,21 @@ void SLAMApplication::generateMatchLineMesh(PlanarRegionMapHandler mapper, vecto
       edges.emplace_back(&matchEdge);
       new RedCubeDrawable{matchEdge, &_drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}),
                           {1.0, 1.0, 1.0}};
+   }
+}
+
+void SLAMApplication::generatePoseMesh(vector<MatrixXd> poses, vector<Object3D *>& objects)
+{
+   clear(objects);
+   for (int i = 1; i < this->_mapper.fgSLAM.getPoseId(); i++)
+   {
+      Matrix4d sensorToMapTransform = this->_mapper.fgSLAM.getResults().at<Pose3>(Symbol('x', i)).matrix();
+      Vector3d translation = sensorToMapTransform.block<3,1>(0,3);
+      Object3D& axes = _sensor->addChild<Object3D>();
+      axes.scale({0.1, 0.1, 0.1});
+      axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
+      objects.emplace_back(&axes);
+      new RedCubeDrawable{axes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.3f, 0.6f}};
    }
 }
 
@@ -172,7 +187,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
          printPlanarRegions(_mapper.mapRegions, "MapRegions");
          generateRegionLineMesh(_mapper.mapRegions, previousRegionEdges, 1);
-
+         generatePoseMesh(this->_mapper.poses, poseAxes);
 
          if (frameIndex < this->_mapper.files.size() - SKIP_REGIONS)
          {
@@ -183,9 +198,9 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          this->_mapper.loadRegions(frameIndex - SKIP_REGIONS, this->_mapper.regions);
          this->_mapper.loadRegions(frameIndex, this->_mapper.latestRegions);
 
-//         generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
-//         this->_mapper.matchPlanarRegionsToMap(this->_mapper.latestRegions);
-//         generateMatchLineMesh(_mapper, matchingEdges);
+         //         generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
+         //         this->_mapper.matchPlanarRegionsToMap(this->_mapper.latestRegions);
+         //         generateMatchLineMesh(_mapper, matchingEdges);
          break;
    }
    if (event.key() == KeyEvent::Key::Space)
@@ -196,14 +211,14 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       this->_mapper.loadRegions(frameIndex - SKIP_REGIONS, this->_mapper.regions);
       this->_mapper.loadRegions(frameIndex, this->_mapper.latestRegions);
 
-//      printPlanarRegions(this->_mapper.regions, "Regions");
-//      printPlanarRegions(this->_mapper.latestRegions, "LatestRegions");
+      //      printPlanarRegions(this->_mapper.regions, "Regions");
+      //      printPlanarRegions(this->_mapper.latestRegions, "LatestRegions");
 
-//      generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
-//      generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
+      //      generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
+      //      generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
 
       this->_mapper.matchPlanarRegionsToMap(this->_mapper.latestRegions);
-//      generateMatchLineMesh(_mapper, matchingEdges);
+      //      generateMatchLineMesh(_mapper, matchingEdges);
    }
 }
 
@@ -219,7 +234,7 @@ int main(int argc, char **argv)
          done = true;
          PlanarRegionMapTester tester;
          tester.runTests(argc, argv);
-//         tester.testKDTree();
+         //         tester.testKDTree();
       }
    }
    if (!done)

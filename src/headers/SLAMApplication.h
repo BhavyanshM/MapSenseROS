@@ -23,7 +23,7 @@ class SLAMApplication : public MagnumApplication
       const int SKIP_REGIONS = 1;
       int count = 0;
       int frameIndex = 0;
-      vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges;
+      vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges, poseAxes;
       PlanarRegionMapHandler _mapper;
       Object3D& frameOrigin = _sensor->addChild<Object3D>();
 
@@ -41,7 +41,7 @@ class SLAMApplication : public MagnumApplication
 
       void init(const Arguments& arguments);
 
-
+      void generatePoseMesh(vector<MatrixXd> poses, vector<Object3D*>& edges);
 
 };
 

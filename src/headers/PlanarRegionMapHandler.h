@@ -16,6 +16,8 @@ class PlanarRegionMapHandler
       vector<string> files;
       vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions;
       vector<pair<int, int>> matches;
+      vector<MatrixXd> poses;
+
       string directory;
       Vector3d translationToReference, eulerAnglesToReference;
       MatrixXd mapToSensorTransform = Eigen::MatrixXd::Identity(4, 4);

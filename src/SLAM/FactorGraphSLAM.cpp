@@ -4,15 +4,15 @@ FactorGraphSLAM::FactorGraphSLAM()
 {
 
    Vector6 odomVariance;
-   odomVariance << 1e-4, 1e-4, 1e-4, 1e-2, 1e-2, 1e-2;
+   odomVariance << 1e-2, 1e-2, 1e-2, 1e-1, 1e-1, 1e-1;
    createOdometryNoiseModel(odomVariance);
 
    Vector3 lmVariance;
-   lmVariance << 1e-4, 1e-4, 1e-4;
+   lmVariance << 1e-2, 1e-2, 1e-2;
    createOrientedPlaneNoiseModel(lmVariance);
 
    Vector6 priorVariance;
-   odomVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
+   odomVariance << 1e-3, 1e-3, 1e-3, 1e-2, 1e-2, 1e-2;
    createPriorPoseNoiseModel(priorVariance);
 
 }
@@ -95,5 +95,10 @@ Values FactorGraphSLAM::getInitial()
 NonlinearFactorGraph FactorGraphSLAM::getFactorGraph()
 {
    return graph;
+}
+
+int FactorGraphSLAM::getPoseId() const
+{
+   return poseId;
 }
 
