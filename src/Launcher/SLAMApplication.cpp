@@ -219,6 +219,7 @@ int main(int argc, char **argv)
          done = true;
          PlanarRegionMapTester tester;
          tester.runTests(argc, argv);
+//         tester.testKDTree();
       }
    }
    if (!done)
