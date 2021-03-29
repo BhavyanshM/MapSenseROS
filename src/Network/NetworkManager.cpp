@@ -121,7 +121,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
 
 void NetworkManager::init_ros_node(int argc, char **argv)
 {
-   ROS_INFO("Starting ROS Node");
+   ROS_INFO("Starting ROS KDNode");
    init(argc, argv, "PlanarRegionPublisher");
    nh = new NodeHandle();
 
@@ -134,7 +134,7 @@ void NetworkManager::init_ros_node(int argc, char **argv)
    subColorCamInfo = nh->subscribe("/camera/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
    subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
-   ROS_INFO("Started ROS Node");
+   ROS_INFO("Started ROS KDNode");
 }
 
 void NetworkManager::spin_ros_node()

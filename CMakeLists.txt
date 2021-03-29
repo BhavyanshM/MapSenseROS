@@ -81,7 +81,6 @@ set(SOURCE
 		src/Application/ApplicationState.cpp
 		src/RegionExtraction/RegionRing.cpp
 		src/Application/AppUtils.cpp
-		src/Geometry/GeomTools.cpp
 		)
 
 set (HEADERS
@@ -92,8 +91,7 @@ set (HEADERS
 		src/headers/PlanarRegion.h
 		src/headers/ApplicationState.h
 		src/headers/RegionRing.h
-		src/headers/AppUtils.h
-		src/headers/GeomTools.h)
+		src/headers/AppUtils.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -117,6 +115,14 @@ set(MAGNUM_GUI_LIBS
 		Magnum::Shaders
 		Magnum::Trade)
 
+set(GEOMTOOLS_SOURCE_HEADERS
+		src/Geometry/GeomTools.cpp
+		src/headers/GeomTools.h
+		src/Geometry/Structures/KDTree.cpp
+		src/headers/KDTree.h
+		src/Geometry/Structures/KDNode.cpp
+		src/headers/KDNode.h)
+
 include_directories(
 		include
 		src/headers
@@ -132,7 +138,8 @@ target_link_libraries(planar_region_publisher
 		MagnumIntegration::ImGui
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen
-		tbb)
+		tbb
+		geom-tools)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
@@ -142,6 +149,15 @@ set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE
 		${MAGNUM_GUI_LIBS})
+
+add_library(geom-tools STATIC
+		src/Geometry/GeomTools.cpp
+		src/headers/GeomTools.h
+		src/Geometry/Structures/KDTree.cpp
+		src/headers/KDTree.h
+		src/Geometry/Structures/KDNode.cpp
+		src/headers/KDNode.h)
+target_link_libraries(geom-tools Eigen3::Eigen)
 
 add_executable(registration_and_mapping
 		src/SLAM/PlanarRegionMapHandler.cpp
@@ -158,8 +174,8 @@ add_executable(registration_and_mapping
 		src/headers/PlanarRegionSimulator.h
 		src/headers/MagnumApplication.h
 		src/headers/PlanarRegionMapTester.h
-		src/headers/GeomTools.h
-		src/SLAM/FactorGraphSLAM.h)
+		src/SLAM/FactorGraphSLAM.h
+		)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${MAGNUM_GUI_LIBS}
@@ -176,7 +192,8 @@ target_link_libraries(mapsense_headless
 		${catkin_LIBRARIES}
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen
-		tbb)
+		tbb
+		geom-tools)
 add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
 
 add_executable(planar-slam src/examples/PlanarSLAMExample.cpp)

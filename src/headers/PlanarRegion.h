@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include "RegionRing.h"
+#include "KDTree.h"
 #include <memory>
 #include <boost/format.hpp>
 #include <fstream>
@@ -20,6 +21,7 @@ class PlanarRegion
       vector<Vector3f> patchCentroids;
       vector<Vector3f> boundaryVertices;
       vector<Vector2i> leafPatches;
+      KDTree tree;
       bool normalCalculated = false;
       bool centroidCalculated = false;
       int numPatches;

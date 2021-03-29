@@ -4,18 +4,20 @@
 
 #include "KDTree.h"
 
+KDTree::KDTree(){}
+
 KDTree::KDTree(Eigen::Vector3f rootPoint)
 {
-   this->root = new Node(rootPoint);
+   this->root = new KDNode(rootPoint);
 }
 
-Node *KDTree::insert(Node *node, Eigen::Vector3f point, uint8_t level)
+KDNode *KDTree::insert(KDNode *node, Eigen::Vector3f point, uint8_t level)
 {
    uint8_t indexToCheck = level % this->dim;
 
    if (node == nullptr)
    {
-      node = new Node(point);
+      node = new KDNode(point);
    } else if (point(indexToCheck) <= node->point(indexToCheck))
    {
       node->left = insert(node->left, point, level + 1);
@@ -26,7 +28,7 @@ Node *KDTree::insert(Node *node, Eigen::Vector3f point, uint8_t level)
    return node;
 }
 
-Node *KDTree::nearestNeighbor(Node *node, Eigen::Vector3f point, uint8_t level)
+KDNode *KDTree::nearestNeighbor(KDNode *node, Eigen::Vector3f point, uint8_t level)
 {
 
    if (node == nullptr)
@@ -50,8 +52,8 @@ Node *KDTree::nearestNeighbor(Node *node, Eigen::Vector3f point, uint8_t level)
       otherNode = node->left;
    }
 
-   Node *temp = nearestNeighbor(nextNode, point, level + 1);
-   Node *best = closest(point, temp, node);
+   KDNode *temp = nearestNeighbor(nextNode, point, level + 1);
+   KDNode *best = closest(point, temp, node);
 
    float radialDist = (point - best->point).squaredNorm();
    float perpDist = point(indexToCheck) - node->point(indexToCheck);
@@ -66,7 +68,7 @@ Node *KDTree::nearestNeighbor(Node *node, Eigen::Vector3f point, uint8_t level)
    return best;
 }
 
-Node *KDTree::closest(const Eigen::Vector3f& point, Node *first, Node *second)
+KDNode *KDTree::closest(const Eigen::Vector3f& point, KDNode *first, KDNode *second)
 {
    if(first == nullptr) return second;
    if(second == nullptr) return first;

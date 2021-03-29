@@ -7,8 +7,8 @@
 SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments)
 {
    this->init(arguments);
-//   generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
-//   generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
+   generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
+   generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
 }
 
 void SLAMApplication::init(const Arguments& arguments)
