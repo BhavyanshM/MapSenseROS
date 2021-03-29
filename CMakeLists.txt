@@ -179,7 +179,8 @@ add_executable(registration_and_mapping
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${MAGNUM_GUI_LIBS}
-		gtsam)
+		gtsam
+		geom-tools)
 include_directories(${GTEST_INCLUDE_DIRS})
 target_link_libraries(registration_and_mapping ${GTEST_LIBRARIES})
 
