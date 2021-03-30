@@ -325,7 +325,7 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState)
    appState.update();
    mapFrameProcessor.init(appState);
 
-   NetworkManager dataReceiver;
+   NetworkManager dataReceiver(appState);
    // dataReceiver.get_sample_depth(inputDepth, 0, 0.01);
    dataReceiver.load_sample_depth(appState.getDepthFile(), inputDepth);
    dataReceiver.load_sample_color(appState.getColorFile(), inputColor);

@@ -2,8 +2,8 @@
 // Created by quantum on 12/24/20.
 //
 
-#ifndef SRC_SCENEPRIMITIVES_H
-#define SRC_SCENEPRIMITIVES_H
+#ifndef MAPSENSE_LAUNCHER_UI_H
+#define MAPSENSE_LAUNCHER_UI_H
 
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/Platform/Sdl2Application.h>
@@ -49,12 +49,17 @@ class MyApplication : public Platform::Application
 {
    public:
       explicit MyApplication(const Arguments& arguments);
+
+      void init(int argc, char** argv);
+
       ApplicationState appState;
 
    private:
       void drawEvent() override;
 
       void tickEvent() override;
+
+      void exitEvent(ExitEvent& event) override;
 
       void mousePressEvent(MouseEvent& event) override;
 
@@ -71,7 +76,6 @@ class MyApplication : public Platform::Application
       void draw_patches();
 
       void draw_regions();
-
 
       ImGuiIntegration::Context _imgui{NoCreate};
       Color4 _clearColor = 0x72909aff_rgbaf;
@@ -155,4 +159,4 @@ class PointCloudDrawable : public SceneGraph::Drawable3D
       }
 };
 
-#endif //SRC_SCENEPRIMITIVES_H
+#endif //MAPSENSE_LAUNCHER_UI_H

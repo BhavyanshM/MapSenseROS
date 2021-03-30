@@ -1,4 +1,4 @@
-#include "ScenePrimitives.h"
+#include "MapsenseLauncherUI.h"
 
 MyApplication::MyApplication(const Arguments& arguments) : Platform::Application{arguments, Configuration{}.setTitle("Magnum ImGui Application").setSize(
       Magnum::Vector2i(1024, 768)).setWindowFlags(Configuration::WindowFlag::Resizable)}
@@ -12,11 +12,7 @@ MyApplication::MyApplication(const Arguments& arguments) : Platform::Application
    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
-   /* TODO: Instantiate the Information Processors */
-   _dataReceiver = new NetworkManager();
-   _dataReceiver->init_ros_node(arguments.argc, arguments.argv);
-   _regionCalculator = new PlanarRegionCalculator(appState);
-   _regionCalculator->initOpenCL(appState);
+
 
    /* TODO: Check that the appropriate flags for renderer are set*/
    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
@@ -52,6 +48,15 @@ MyApplication::MyApplication(const Arguments& arguments) : Platform::Application
 
 }
 
+void MyApplication::init(int argc, char** argv)
+{
+   /* TODO: Instantiate the Information Processors */
+   _dataReceiver = new NetworkManager(appState);
+   _dataReceiver->init_ros_node(argc, argv);
+   _regionCalculator = new PlanarRegionCalculator(appState);
+   _regionCalculator->initOpenCL(appState);
+}
+
 void clear(vector<Object3D *>& objects)
 {
    for (int i = 0; i < objects.size(); i++)
@@ -84,8 +89,18 @@ void MyApplication::tickEvent()
          Mat dispDepth;
          _regionCalculator->getFilteredDepth(dispDepth, appState);
          AppUtils::displayDebugOutput(dispDepth, appState);
-      }
          break;
+      }
+      case SHOW_STEREO_LEFT:
+      {
+         AppUtils::displayDebugOutput(_regionCalculator->inputStereoLeft, appState);
+         break;
+      }
+      case SHOW_STEREO_RIGHT:
+      {
+         AppUtils::displayDebugOutput(_regionCalculator->inputStereoRight, appState);
+         break;
+      }
       case -1 :
          destroyAllWindows();
          break;
@@ -95,9 +110,9 @@ void MyApplication::tickEvent()
       _dataReceiver->spin_ros_node();
       if (_dataReceiver->paramsAvailable)
       {
-          _dataReceiver->paramsAvailable = false;
-          appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
-          appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
+         _dataReceiver->paramsAvailable = false;
+         appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
+         appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
       }
       _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, appState);
       if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
@@ -108,6 +123,11 @@ void MyApplication::tickEvent()
             AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
             frameId++;
          }
+      }
+      if (appState.STEREO_DRIVER)
+      {
+         _dataReceiver->load_next_stereo_frame(_regionCalculator->inputStereoLeft, _regionCalculator->inputStereoRight, appState);
+//         AppUtils::displayDebugOutput(_regionCalculator->inputStereoLeft, appState);
       }
       if (appState.SHOW_REGION_EDGES)
       {
@@ -303,6 +323,17 @@ void MyApplication::drawEvent()
          {
             AppUtils::checkMemoryLimits();
          }
+         if (ImGui::Button("Stereo-Left"))
+         {
+            _displayItem = SHOW_STEREO_LEFT;
+         }
+         if (ImGui::Button("Stereo-Right"))
+         {
+            _displayItem = SHOW_STEREO_RIGHT;
+         }
+         if(ImGui::Button("Log OpenCV Build Info")){
+            cout << getBuildInformation() << endl;
+         }
          ImGui::EndTabItem();
       }
       ImGui::EndTabBar();
@@ -328,6 +359,13 @@ void MyApplication::drawEvent()
    redraw();
 }
 
+void MyApplication::exitEvent(ExitEvent& event)
+{
+   _dataReceiver->camLeft->release();
+   _dataReceiver->camRight->release();
+   event.setAccepted(true);
+}
+
 int main(int argc, char **argv)
 {
    MyApplication app({argc, argv});
@@ -345,8 +383,14 @@ int main(int argc, char **argv)
          printf("Setting KERNEL_LEVEL_SLIDER: %d\n", stoi(args[i + 1]));
          app.appState.KERNEL_SLIDER_LEVEL = stoi(args[i + 1]);
       }
+      if (args[i] == "--stereo-driver")
+      {
+         printf("Setting STEREO_DRIVER: true\n");
+         app.appState.STEREO_DRIVER = true;
+      }
    }
 
+   app.init(argc, argv);
    return app.exec();
 }
 

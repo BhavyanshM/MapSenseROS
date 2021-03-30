@@ -41,6 +41,7 @@ class PlanarRegionCalculator
       Mat inputDepth;
       Mat inputColor;
       Mat filteredDepth;
+      Mat inputStereoLeft, inputStereoRight;
 
       MapFrame output;
       MapFrameProcessor mapFrameProcessor;

@@ -37,6 +37,8 @@ class NetworkManager
       CompressedImageConstPtr colorCompressedMessage;
       ImageConstPtr depthMessage;
       NodeHandle *nh;
+      VideoCapture* camLeft;
+      VideoCapture* camRight;
 
       Subscriber subColorCamInfo, subDepthCamInfo;
       Subscriber subDepth;
@@ -49,6 +51,8 @@ class NetworkManager
       bool depthCamInfoSet = false;
       bool nextDepthAvailable = false;
       bool nextColorAvailable = false;
+
+      NetworkManager(ApplicationState app);
 
       void get_sample_depth(Mat depth, float mean, float stddev);
 
@@ -75,6 +79,8 @@ class NetworkManager
       void init_ros_node(int argc, char **argv);
 
       void spin_ros_node();
+
+      void load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app);
 };
 
 #endif //SRC_SENSORDATARECEIVER_H

@@ -95,13 +95,13 @@ set (HEADERS
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
-		src/Launcher/ScenePrimitives.cpp
+		src/Launcher/MapsenseLauncherUI.cpp
 		src/UI/ImGuiLayout.cpp)
 
 
 set(MAPSENSE_GUI_HEADERS
 		src/headers/MeshGenerator.h
-		src/headers/ScenePrimitives.h
+		src/headers/MapsenseLauncherUI.h
 		src/headers/ImGuiLayout.h )
 
 set(MAGNUM_GUI_LIBS

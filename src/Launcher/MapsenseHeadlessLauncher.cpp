@@ -6,7 +6,7 @@
 
 MapsenseHeadlessLauncher::MapsenseHeadlessLauncher(int argc, char **argv)
 {
-   _dataReceiver = new NetworkManager();
+   _dataReceiver = new NetworkManager(this->appState);
    _dataReceiver->init_ros_node(argc, argv);
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);

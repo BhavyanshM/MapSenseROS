@@ -11,6 +11,8 @@
 #define SHOW_FILTERED_DEPTH 2
 #define SHOW_REGION_COMPONENTS 0
 #define SHOW_INPUT_COLOR 3
+#define SHOW_STEREO_LEFT 4
+#define SHOW_STEREO_RIGHT 5
 
 using namespace std;
 
@@ -82,6 +84,8 @@ class ApplicationState
       bool SHOW_GRAPH = true;
       bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;
+
+      bool STEREO_DRIVER = false;
 
       /*  VISUALIZATION-ONLY */
       float DISPLAY_WINDOW_SIZE = 1.0f;

@@ -1,5 +1,32 @@
 #include "NetworkManager.h"
 
+NetworkManager::NetworkManager(ApplicationState app)
+{
+   if(app.STEREO_DRIVER)
+   {
+      this->camLeft = new VideoCapture(0, CAP_V4L2);
+      this->camRight = new VideoCapture(2, CAP_V4L2);
+
+      this->camLeft->set(CAP_PROP_FRAME_WIDTH, 320);
+      this->camLeft->set(CAP_PROP_FRAME_HEIGHT, 240);
+      this->camLeft->set(CAP_PROP_FPS, 30);
+      this->camLeft->set(CAP_PROP_AUTO_EXPOSURE, 0.25);
+      this->camLeft->set(CAP_PROP_AUTOFOCUS, 0);
+      this->camLeft->set(CAP_PROP_EXPOSURE, -4);
+      this->camLeft->set(CAP_PROP_MODE, CAP_OPENCV_MJPEG);
+
+      this->camRight->set(CAP_PROP_FRAME_WIDTH, 320);
+      this->camRight->set(CAP_PROP_FRAME_HEIGHT, 240);
+      this->camRight->set(CAP_PROP_FPS, 30);
+      this->camRight->set(CAP_PROP_AUTO_EXPOSURE, 0.25);
+      this->camRight->set(CAP_PROP_AUTOFOCUS, 0);
+      this->camRight->set(CAP_PROP_EXPOSURE, -4);
+      this->camRight->set(CAP_PROP_MODE, CAP_OPENCV_MJPEG);
+   }
+
+
+}
+
 void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
 {
    ROS_DEBUG("Depth Callback", depthMsg->header.seq);
@@ -35,6 +62,12 @@ void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfigurati
    paramsMessage = msg;
    paramsAvailable = true;
    ROS_DEBUG("PARAMS CALLBACK");
+}
+
+void NetworkManager::load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app)
+{
+   camLeft->read(left);
+   camRight->read(right);
 }
 
 void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& app)

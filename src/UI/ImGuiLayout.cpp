@@ -64,5 +64,6 @@ void ImGuiLayout::getImGui3DLayout(ApplicationState& appState, Color4& color)
    ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
    ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0 / Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
    ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
+
 }
 
