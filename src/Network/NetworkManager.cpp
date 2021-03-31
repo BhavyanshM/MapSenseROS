@@ -70,7 +70,7 @@ void NetworkManager::load_next_stereo_frame(Mat& left, Mat& right, ApplicationSt
    camRight->read(right);
 }
 
-void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& app)
+void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, ApplicationState& app)
 {
    cv_bridge::CvImagePtr img_ptr_depth;
    cv_bridge::CvImagePtr img_ptr_color;
@@ -81,12 +81,17 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, ApplicationState& a
       try
       {
          ROS_DEBUG("Callback: Depth:%d", depthMessage->header.stamp.sec);
+
          img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
+
          depth = img_ptr_depth->image;
+         timestamp = depthMessage.get()->header.stamp.toSec();
+
          for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
          {
             pyrDown(depth, depth);
          }
+
          ROS_DEBUG("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
       } catch (cv_bridge::Exception& e)
       {

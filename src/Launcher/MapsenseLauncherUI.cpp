@@ -114,7 +114,7 @@ void MyApplication::tickEvent()
          appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
          appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
       }
-      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, appState);
+      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
       if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
       {
          _regionCalculator->generateRegions(_dataReceiver, appState);

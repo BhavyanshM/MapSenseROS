@@ -17,7 +17,7 @@ MapsenseHeadlessLauncher::MapsenseHeadlessLauncher(int argc, char **argv)
 void MapsenseHeadlessLauncher::update()
 {
    _dataReceiver->spin_ros_node();
-   _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, appState);
+   _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
    if (_dataReceiver->depthCamInfoSet)
    {
       _regionCalculator->generateRegions(_dataReceiver, appState);

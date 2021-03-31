@@ -40,6 +40,7 @@ class PlanarRegionCalculator
 
       Mat inputDepth;
       Mat inputColor;
+      double inputTimestamp;
       Mat filteredDepth;
       Mat inputStereoLeft, inputStereoRight;
 

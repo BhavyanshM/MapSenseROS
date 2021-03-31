@@ -60,7 +60,7 @@ class NetworkManager
 
       void load_sample_depth(String filename, Mat& depth);
 
-      void load_next_frame(Mat& depth, Mat& color, ApplicationState& app);
+      void load_next_frame(Mat& depth, Mat& color, double& timestamp, ApplicationState& app);
 
       void load_sample_color(String filename, Mat& color);
 
