@@ -204,22 +204,6 @@ target_link_libraries(visual-isam2 gtsam)
 
 
 
-INSTALL(TARGETS geom-tools DESTINATION lib)
-INSTALL(FILES ${GEOMTOOLS_HEADERS} DESTINATION include)
-
-set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGE_VERSION_MAJOR "0")
-set(CPACK_PACKAGE_VERSION_MINOR "1")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "eigen3")
-set(CPACK_PACKAGE_DESCRIPTION "Geometry Tools for Robotics, Mixed Reality and Game Development.")
-set(CPACK_PACKAGE_CONTACT "computecrib.com")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/Debian/postinst")
-
-include(CPack)
-
-
-
 
 
 
