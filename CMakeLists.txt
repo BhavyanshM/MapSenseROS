@@ -116,14 +116,14 @@ set(MAGNUM_GUI_LIBS
 		Magnum::Trade)
 
 set(GEOMTOOLS_HEADERS
-		src/headers/GeomTools.h
-		src/headers/KDTree.h
-		src/headers/KDNode.h)
+		src/Geometry/include/GeomTools.h
+		src/Geometry/include/KDTree.h
+		src/Geometry/include/KDNode.h)
 
 set(GEOMTOOLS_SOURCE
-	src/Geometry/GeomTools.cpp
-	src/Geometry/Structures/KDTree.cpp
-	src/Geometry/Structures/KDNode.cpp)
+		src/Geometry/src/GeomTools.cpp
+		src/Geometry/src/Structures/KDTree.cpp
+		src/Geometry/src/Structures/KDNode.cpp)
 
 include_directories(
 		include
@@ -162,7 +162,7 @@ add_executable(registration_and_mapping
 		src/Launcher/MagnumApplication.cpp
 		src/Launcher/SLAMApplication.cpp
 		src/Application/PlanarRegionMapTester.cpp
-		src/Geometry/GeomTools.cpp
+		src/Geometry/src/GeomTools.cpp
 		src/SLAM/FactorGraphSLAM.cpp
 		src/headers/SLAMApplication.h
 		src/headers/PlanarRegionMapHandler.h

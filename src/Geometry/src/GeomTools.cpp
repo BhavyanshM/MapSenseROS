@@ -2,7 +2,7 @@
 // Created by quantum on 3/3/21.
 //
 
-#include "GeomTools.h"
+#include "../include/GeomTools.h"
 
 Matrix3f GeomTools::getRotationFromAngleApproximations(Vector3f eulerAngles)
 {

@@ -2,7 +2,7 @@
 #define PLANARREGIONMAPTESTER_H
 
 #include <PlanarRegionMapHandler.h>
-#include <KDTree.h>
+#include "../Geometry/include/KDTree.h"
 #include "gtest/gtest.h"
 
 class PlanarRegionMapTester

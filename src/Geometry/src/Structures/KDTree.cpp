@@ -2,7 +2,7 @@
 // Created by quantum on 3/28/21.
 //
 
-#include "KDTree.h"
+#include "../../include/KDTree.h"
 
 KDTree::KDTree(){}
 

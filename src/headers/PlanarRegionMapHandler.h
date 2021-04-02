@@ -2,7 +2,7 @@
 #define PLANARREGIONMAPHANDLER_H
 
 #include <PlanarRegion.h>
-#include <GeomTools.h>
+#include "../Geometry/include/GeomTools.h"
 #include <dirent.h>
 #include <algorithm>
 #include "../SLAM/FactorGraphSLAM.h"
