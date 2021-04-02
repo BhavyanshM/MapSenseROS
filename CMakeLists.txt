@@ -150,13 +150,7 @@ add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE
 		${MAGNUM_GUI_LIBS})
 
-add_library(geom-tools STATIC
-		src/Geometry/GeomTools.cpp
-		src/headers/GeomTools.h
-		src/Geometry/Structures/KDTree.cpp
-		src/headers/KDTree.h
-		src/Geometry/Structures/KDNode.cpp
-		src/headers/KDNode.h)
+add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE_HEADERS})
 target_link_libraries(geom-tools Eigen3::Eigen)
 
 add_executable(registration_and_mapping
