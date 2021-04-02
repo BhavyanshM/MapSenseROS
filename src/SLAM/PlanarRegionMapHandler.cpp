@@ -63,7 +63,7 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarReg
                int countDiff = abs(regions[i]->getNumOfBoundaryVertices() - latestRegions[j]->getNumOfBoundaryVertices());
                int maxCount = max(regions[i]->getNumOfBoundaryVertices(), latestRegions[j]->getNumOfBoundaryVertices());
 
-               if (dist < 0.18 && angularDiff > 0.8 && ((float) countDiff / ((float) maxCount)) * 100.0f < 20)
+               if (dist < 0.25 && angularDiff > 0.95 && ((float) countDiff / ((float) maxCount)) * 100.0f < 20)
                {
                   matches.emplace_back(i, j);
                   latestRegions[j]->setId(regions[i]->getId());

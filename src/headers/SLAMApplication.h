@@ -43,6 +43,8 @@ class SLAMApplication : public MagnumApplication
 
       void generatePoseMesh(vector<MatrixXd> poses, vector<Object3D*>& edges);
 
+      void slamUpdate();
+
 };
 
 #endif //SLAMAPPLICATION_H

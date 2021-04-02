@@ -78,7 +78,7 @@ void SLAMApplication::generatePoseMesh(vector<MatrixXd> poses, vector<Object3D *
    for (int i = 1; i < this->_mapper.fgSLAM.getPoseId(); i++)
    {
       Matrix4d sensorToMapTransform = this->_mapper.fgSLAM.getResults().at<Pose3>(Symbol('x', i)).matrix();
-      Vector3d translation = sensorToMapTransform.block<3,1>(0,3);
+      Vector3d translation = sensorToMapTransform.block<3, 1>(0, 3);
       Object3D& axes = _sensor->addChild<Object3D>();
       axes.scale({0.1, 0.1, 0.1});
       axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
@@ -153,32 +153,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       case KeyEvent::Key::R:
          auto start = high_resolution_clock::now();
 
-         /* Match the previous and latest regions to copy ids and generate match indices. */
-         _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-
-         /* Calculate odometry between previous and latest poses. */
-         _mapper.registerRegions();
-
-         /* Create SE(3) matrix for odometry transform. */
-         GeomTools::getInverseTransform(_mapper.eulerAnglesToReference, _mapper.translationToReference, _mapper.sensorPoseRelative);
-
-         /* Insert the latest landmarks and pose constraints into the Factor Graph for SLAM. */
-         int currentPoseId = _mapper.updateFactorGraphPoses();
-         _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
-
-         /* Initialize poses and landmarks with map frame values. */
-         _mapper.initFactorGraphState();
-
-         /* Optimize the Factor Graph and get Results. */
-         _mapper.fgSLAM.optimize();
-
-         _mapper.mergeLatestRegions();
-         _mapper.updateMapRegions();
-
-
-         //         printPlanarRegions(_mapper.regions, "Regions");
-         //         printPlanarRegions(_mapper.latestRegions, "LatestRegions");
-
+         slamUpdate();
 
          auto end = high_resolution_clock::now();
          auto duration = duration_cast<microseconds>(end - start).count();
@@ -211,15 +186,37 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       this->_mapper.loadRegions(frameIndex - SKIP_REGIONS, this->_mapper.regions);
       this->_mapper.loadRegions(frameIndex, this->_mapper.latestRegions);
 
-      //      printPlanarRegions(this->_mapper.regions, "Regions");
-      //      printPlanarRegions(this->_mapper.latestRegions, "LatestRegions");
-
-      //      generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
-      //      generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
+      generateRegionLineMesh(this->_mapper.regions, previousRegionEdges, 1);
+      generateRegionLineMesh(this->_mapper.latestRegions, regionEdges, 2);
 
       this->_mapper.matchPlanarRegionsToMap(this->_mapper.latestRegions);
-      //      generateMatchLineMesh(_mapper, matchingEdges);
+      generateMatchLineMesh(_mapper, matchingEdges);
    }
+}
+
+void SLAMApplication::slamUpdate()
+{
+   /* Match the previous and latest regions to copy ids and generate match indices. */
+   _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
+
+   /* Calculate odometry between previous and latest poses. */
+   _mapper.registerRegions();
+
+   /* Create SE(3) matrix for odometry transform. */
+   GeomTools::getInverseTransform(_mapper.eulerAnglesToReference, _mapper.translationToReference, _mapper.sensorPoseRelative);
+
+   /* Insert the latest landmarks and pose constraints into the Factor Graph for SLAM. */
+   int currentPoseId = _mapper.updateFactorGraphPoses();
+   _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
+
+   /* Initialize poses and landmarks with map frame values. */
+   _mapper.initFactorGraphState();
+
+   /* Optimize the Factor Graph and get Results. */
+   _mapper.fgSLAM.optimize();
+
+   _mapper.mergeLatestRegions();
+   _mapper.updateMapRegions();
 }
 
 int main(int argc, char **argv)
