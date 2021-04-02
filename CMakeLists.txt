@@ -115,13 +115,15 @@ set(MAGNUM_GUI_LIBS
 		Magnum::Shaders
 		Magnum::Trade)
 
-set(GEOMTOOLS_SOURCE_HEADERS
-		src/Geometry/GeomTools.cpp
+set(GEOMTOOLS_HEADERS
 		src/headers/GeomTools.h
-		src/Geometry/Structures/KDTree.cpp
 		src/headers/KDTree.h
-		src/Geometry/Structures/KDNode.cpp
 		src/headers/KDNode.h)
+
+set(GEOMTOOLS_SOURCE
+	src/Geometry/GeomTools.cpp
+	src/Geometry/Structures/KDTree.cpp
+	src/Geometry/Structures/KDNode.cpp)
 
 include_directories(
 		include
@@ -150,7 +152,7 @@ add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE
 		${MAGNUM_GUI_LIBS})
 
-add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE_HEADERS})
+add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
 target_link_libraries(geom-tools Eigen3::Eigen)
 
 add_executable(registration_and_mapping
@@ -199,6 +201,22 @@ target_link_libraries(pose2-slam gtsam)
 
 add_executable(visual-isam2 src/examples/VisualISAM2Example.cpp src/examples/SFMdata.h)
 target_link_libraries(visual-isam2 gtsam)
+
+
+
+INSTALL(TARGETS geom-tools DESTINATION lib)
+INSTALL(FILES ${GEOMTOOLS_HEADERS} DESTINATION include)
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "eigen3")
+set(CPACK_PACKAGE_DESCRIPTION "Geometry Tools for Robotics, Mixed Reality and Game Development.")
+set(CPACK_PACKAGE_CONTACT "computecrib.com")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/Debian/postinst")
+
+include(CPack)
 
 
 

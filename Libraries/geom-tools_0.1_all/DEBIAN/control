@@ -1,0 +1,10 @@
+Package: geom-tools
+Version: 1.0
+Section: custom
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 1024
+Maintainer: computecrib.com
+Description: C++ Library for Geometry Tools for Robotics, Mixed Reality, Computer Vision, Game Development, and more. 
+
