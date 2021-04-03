@@ -118,16 +118,19 @@ set(MAGNUM_GUI_LIBS
 set(GEOMTOOLS_HEADERS
 		src/Geometry/include/GeomTools.h
 		src/Geometry/include/KDTree.h
-		src/Geometry/include/KDNode.h)
+		src/Geometry/include/KDNode.h
+		src/Geometry/include/RigidBodyTransform.h)
 
 set(GEOMTOOLS_SOURCE
 		src/Geometry/src/GeomTools.cpp
 		src/Geometry/src/Structures/KDTree.cpp
-		src/Geometry/src/Structures/KDNode.cpp)
+		src/Geometry/src/Structures/KDNode.cpp
+		src/Geometry/src/Elements/RigidBodyTransform.cpp )
 
 include_directories(
 		include
 		src/headers
+		src/Geometry/include
 		${catkin_INCLUDE_DIRS}
 		/usr/include/CL/
 )
@@ -156,6 +159,7 @@ add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
 target_link_libraries(geom-tools Eigen3::Eigen)
 
 add_executable(registration_and_mapping
+		src/Rendering/MeshGenerator.cpp
 		src/SLAM/PlanarRegionMapHandler.cpp
 		src/RegionExtraction/PlanarRegion.cpp
 		src/SLAM/PlanarRegionSimulator.cpp
@@ -171,6 +175,7 @@ add_executable(registration_and_mapping
 		src/headers/MagnumApplication.h
 		src/headers/PlanarRegionMapTester.h
 		src/SLAM/FactorGraphSLAM.h
+		src/headers/MeshGenerator.h
 		)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen

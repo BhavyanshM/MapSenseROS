@@ -9,6 +9,7 @@
 #include "PlanarRegionMapTester.h"
 #include "gtsam/geometry/Pose2.h"
 #include "../SLAM/FactorGraphSLAM.h"
+#include "MeshGenerator.h"
 
 #include <chrono>
 #include <queue>
@@ -19,13 +20,15 @@ using namespace chrono;
 class SLAMApplication : public MagnumApplication
 {
    public:
-      const int SKIP_EDGES = 3;
+
       const int SKIP_REGIONS = 1;
       int count = 0;
       int frameIndex = 0;
       vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges, poseAxes;
-      PlanarRegionMapHandler _mapper;
       Object3D& frameOrigin = _sensor->addChild<Object3D>();
+
+      MeshGenerator _mesher;
+      PlanarRegionMapHandler _mapper;
 
       SLAMApplication(const Arguments& arguments);
 
@@ -35,13 +38,7 @@ class SLAMApplication : public MagnumApplication
 
       void draw() override;
 
-      void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& regionEdges, int color);
-
-      void generateMatchLineMesh(PlanarRegionMapHandler mapper, vector<Object3D *>& edges);
-
       void init(const Arguments& arguments);
-
-      void generatePoseMesh(vector<MatrixXd> poses, vector<Object3D*>& edges);
 
       void slamUpdate();
 

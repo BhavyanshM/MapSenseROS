@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include "RegionRing.h"
+#include "RigidBodyTransform.h"
 #include <memory>
 #include <boost/format.hpp>
 #include <fstream>
@@ -80,7 +81,7 @@ class PlanarRegion
 
       vector<shared_ptr<RegionRing>> rings;
 
-      void transform(Vector3d translation, Vector3d rotationAngles);
+      void transform(RigidBodyTransform transform);
 
       void transform(Vector3d translation, Matrix3d rotation);
 

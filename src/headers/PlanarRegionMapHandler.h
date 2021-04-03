@@ -12,16 +12,22 @@ using namespace std;
 class PlanarRegionMapHandler
 {
    public:
+
+      float MATCH_DIST_THRESHOLD = 0.1f;
+      float MATCH_ANGULAR_THRESHOLD = 0.9f;
+      int MATCH_PERCENT_VERTEX_THRESHOLD = 20;
+
       FactorGraphSLAM fgSLAM;
       vector<string> files;
       vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions;
       vector<pair<int, int>> matches;
-      vector<MatrixXd> poses;
+      vector<RigidBodyTransform> poses;
 
       string directory;
       Vector3d translationToReference, eulerAnglesToReference;
-      MatrixXd mapToSensorTransform = Eigen::MatrixXd::Identity(4, 4);
-      MatrixXd sensorPoseRelative = Eigen::MatrixXd::Identity(4, 4);
+
+      RigidBodyTransform _sensorToMapTransform;
+      RigidBodyTransform _sensorPoseRelative;
 
       void matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions);
 
@@ -31,7 +37,7 @@ class PlanarRegionMapHandler
 
       void registerRegions();
 
-      void transformLatestRegions(Vector3d translation, Vector3d eulerAngles);
+      void transformLatestRegions(RigidBodyTransform transform);
 
       void transformLatestRegions(Vector3d translation, Matrix3d rotation);
 
@@ -45,7 +51,7 @@ class PlanarRegionMapHandler
 
       void initFactorGraphState();
 
-      void updateMapRegions();
+      void updateMapRegionsWithSLAM();
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

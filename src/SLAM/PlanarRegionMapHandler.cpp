@@ -35,9 +35,10 @@ void PlanarRegionMapHandler::registerRegions()
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
    eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
    translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
-   //   cout << solution << endl;
-   //   printf("Translation:(%.2lf, %.2lf, %.2lf)\n", translationToReference(0), translationToReference(1), translationToReference(2));
-   //   printf("EulerAngles:(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference(0), eulerAnglesToReference(1), eulerAnglesToReference(2));
+
+   /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
+   _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
+   _sensorToMapTransform.appendRight(_sensorPoseRelative);
 }
 
 void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions)
@@ -63,7 +64,8 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarReg
                int countDiff = abs(regions[i]->getNumOfBoundaryVertices() - latestRegions[j]->getNumOfBoundaryVertices());
                int maxCount = max(regions[i]->getNumOfBoundaryVertices(), latestRegions[j]->getNumOfBoundaryVertices());
 
-               if (dist < 0.25 && angularDiff > 0.95 && ((float) countDiff / ((float) maxCount)) * 100.0f < 20)
+               if (dist < MATCH_DIST_THRESHOLD && angularDiff > MATCH_ANGULAR_THRESHOLD &&
+                   ((float) countDiff / ((float) maxCount)) * 100.0f < MATCH_PERCENT_VERTEX_THRESHOLD)
                {
                   matches.emplace_back(i, j);
                   latestRegions[j]->setId(regions[i]->getId());
@@ -153,11 +155,11 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
    }
 }
 
-void PlanarRegionMapHandler::transformLatestRegions(Vector3d translation, Vector3d eulerAngles)
+void PlanarRegionMapHandler::transformLatestRegions(RigidBodyTransform transform)
 {
    for (int i = 0; i < this->latestRegions.size(); i++)
    {
-      this->latestRegions[i]->transform(translation, eulerAngles);
+      this->latestRegions[i]->transform(transform);
    }
 }
 
@@ -193,26 +195,16 @@ void PlanarRegionMapHandler::updateFactorGraphLandmarks(vector<shared_ptr<Planar
 
 int PlanarRegionMapHandler::updateFactorGraphPoses()
 {
-   return fgSLAM.addOdometryFactor(this->sensorPoseRelative);
+   return fgSLAM.addOdometryFactor(MatrixXd(this->_sensorPoseRelative.getMatrix()));
 }
 
 void PlanarRegionMapHandler::initFactorGraphState()
 {
-   /* Update total transform from map frame to current sensor pose. Required for initial value for current pose. */
-   mapToSensorTransform *= sensorPoseRelative;
-
-   /* Calculate inverse transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
-
-   Matrix4d sensorToMapTransform = Matrix4d::Identity();
-   sensorToMapTransform.block<3, 3>(0, 0) = mapToSensorTransform.block<3, 3>(0, 0).transpose();
-   sensorToMapTransform.block<3, 1>(0, 3) =
-         -mapToSensorTransform.block<3, 3>(0, 0).transpose() * mapToSensorTransform.block<3, 1>(0, 3);
-
    /* Transform and copy the latest planar regions from current sensor frame to map frame. */
    vector<shared_ptr<PlanarRegion>> transformedRegions;
-   transformAndCopyLatestRegions(sensorToMapTransform.block<3, 1>(0, 3), sensorToMapTransform.block<3, 3>(0, 0), transformedRegions);
+   transformAndCopyLatestRegions(_sensorToMapTransform.getMatrix().block<3, 1>(0, 3), _sensorToMapTransform.getMatrix().block<3, 3>(0, 0), transformedRegions);
 
-   this->fgSLAM.initPoseValue(mapToSensorTransform);
+   this->fgSLAM.initPoseValue(MatrixXd(_sensorToMapTransform.getMatrix()));
    for (auto region : transformedRegions)
    {
       Eigen::Vector4d plane;
@@ -235,14 +227,14 @@ void PlanarRegionMapHandler::mergeLatestRegions()
    cout << "Total Measured Regions: " << measuredRegions.size() << endl;
 }
 
-void PlanarRegionMapHandler::updateMapRegions()
+void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
 {
    mapRegions.clear();
-   for(shared_ptr<PlanarRegion> region : this->measuredRegions)
+   for (shared_ptr<PlanarRegion> region : this->measuredRegions)
    {
       Matrix4d sensorToMapTransform = fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix();
       shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
-      region->transformAndCopy(sensorToMapTransform.block<3,1>(0,3), sensorToMapTransform.block<3,3>(0,0), transformedRegion);
+      region->transformAndCopy(sensorToMapTransform.block<3, 1>(0, 3), sensorToMapTransform.block<3, 3>(0, 0), transformedRegion);
       transformedRegion->projectToPlane(fgSLAM.getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);
    }

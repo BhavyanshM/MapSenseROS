@@ -175,12 +175,9 @@ void PlanarRegion::writeToFile(ofstream& file)
    }
 }
 
-void PlanarRegion::transform(Vector3d translation, Vector3d rotationAngles)
+void PlanarRegion::transform(RigidBodyTransform transform)
 {
-   Matrix3d rotation;
-   rotation = AngleAxisd((double) rotationAngles.x(), Vector3d::UnitX()) * AngleAxisd((double) rotationAngles.y(), Vector3d::UnitY()) *
-              AngleAxisd((double) rotationAngles.z(), Vector3d::UnitZ());
-   this->transform(translation, rotation);
+   this->transform(transform.getMatrix().block<3,1>(0,3), transform.getMatrix().block<3,3>(0,0));
 }
 
 void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)

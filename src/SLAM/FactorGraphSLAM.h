@@ -13,6 +13,8 @@
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
+#include "RigidBodyTransform.h"
+
 #include <boost/bind.hpp>
 #include <boost/assign/std/vector.hpp>
 
@@ -41,6 +43,8 @@ class FactorGraphSLAM
    public:
 
       FactorGraphSLAM();
+
+      void getPoses(std::vector<RigidBodyTransform>& poses);
 
       int addPriorPoseFactor(Pose3 mean);
 

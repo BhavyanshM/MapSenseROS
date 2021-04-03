@@ -1,5 +1,6 @@
 #include "FactorGraphSLAM.h"
 
+
 FactorGraphSLAM::FactorGraphSLAM()
 {
 
@@ -16,6 +17,16 @@ FactorGraphSLAM::FactorGraphSLAM()
    createPriorPoseNoiseModel(priorVariance);
 
 }
+
+void FactorGraphSLAM::getPoses(std::vector<RigidBodyTransform>& poses)
+{
+   for (int i = 1; i < this->getPoseId(); i++)
+   {
+      RigidBodyTransform sensorToMapTransform(this->getResults().at<Pose3>(Symbol('x', i)).matrix());
+      poses.emplace_back(sensorToMapTransform);
+   }
+}
+
 
 void FactorGraphSLAM::createPriorPoseNoiseModel(Vector6 variance)
 {
