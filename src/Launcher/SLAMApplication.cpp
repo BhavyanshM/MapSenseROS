@@ -107,15 +107,18 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          break;
       case KeyEvent::Key::N:
 
+         /* Match the previous and latest regions to copy ids and generate match indices. */
          _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
+
+         /* Calculate odometry between previous and latest poses. */
          _mapper.registerRegions();
 
          /* Transform and copy the latest planar regions from current sensor frame to map frame. */
-         vector<shared_ptr<PlanarRegion>> transformedRegions;
-         _mapper.transformAndCopyLatestRegions(_mapper._sensorToMapTransform.getMatrix().block<3, 1>(0, 3),
-                                               _mapper._sensorToMapTransform.getMatrix().block<3, 3>(0, 0), transformedRegions);
+         vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
+         _mapper.transformAndCopyLatestRegions(_mapper._sensorToMapTransform, regionsInMapFrame);
 
-         _mesher.generateRegionLineMesh(transformedRegions, regionEdges, frameIndex, _sensor, _drawables);
+
+         _mesher.generateRegionLineMesh(regionsInMapFrame, regionEdges, frameIndex, _sensor, _drawables);
 
          //         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, _drawables);
 
@@ -147,24 +150,14 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
    }
 }
 
-void SLAMApplication::slamUpdate()
+void SLAMApplication::slamUpdate(vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
 {
-   /* Match the previous and latest regions to copy ids and generate match indices. */
-   _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-
-   /* Calculate odometry between previous and latest poses. */
-   _mapper.registerRegions();
-
-   /* Create SE(3) matrix for odometry transform. */
-   RigidBodyTransform iTj(_mapper.eulerAnglesToReference, _mapper.translationToReference);
-   iTj.getInverseTransform(_mapper._sensorPoseRelative);
-
-   /* Insert the latest landmarks and pose constraints into the Factor Graph for SLAM. */
-   int currentPoseId = _mapper.updateFactorGraphPoses();
+   /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
+   int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative.getInverse());
    _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
 
    /* Initialize poses and landmarks with map frame values. */
-   _mapper.initFactorGraphState();
+   _mapper.initFactorGraphState(regionsInMapFrame);
 
    /* Optimize the Factor Graph and get Results. */
    _mapper.fgSLAM.optimize();

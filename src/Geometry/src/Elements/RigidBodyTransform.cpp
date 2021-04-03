@@ -26,6 +26,14 @@ void RigidBodyTransform::setToInverse()
    this->matrix.block<3, 1>(0, 3) = -this->matrix.block<3,3>(0,0).transpose() * this->matrix.block<3,1>(0,3);
 }
 
+RigidBodyTransform RigidBodyTransform::getInverse()
+{
+   RigidBodyTransform transformToPack;
+   transformToPack.matrix.block<3, 3>(0, 0) = this->matrix.block<3,3>(0,0).transpose();
+   transformToPack.matrix.block<3, 1>(0, 3) = -this->matrix.block<3,3>(0,0).transpose() * this->matrix.block<3,1>(0,3);
+   return transformToPack;
+}
+
 RigidBodyTransform::RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vector3d translation){
    Eigen::Matrix3d rotation;
    rotation = Eigen::AngleAxisd((double) eulerAngles.x(), Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd((double) eulerAngles.y(), Eigen::Vector3d::UnitY()) *

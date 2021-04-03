@@ -171,12 +171,12 @@ void PlanarRegionMapHandler::transformLatestRegions(Vector3d translation, Matrix
    }
 }
 
-void PlanarRegionMapHandler::transformAndCopyLatestRegions(Vector3d translation, Matrix3d rotation, vector<shared_ptr<PlanarRegion>>& transformedRegions)
+void PlanarRegionMapHandler::transformAndCopyLatestRegions(RigidBodyTransform transform, vector<shared_ptr<PlanarRegion>>& transformedRegions)
 {
    for (int i = 0; i < latestRegions.size(); i++)
    {
       shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(latestRegions[i]->getId());
-      this->latestRegions[i]->transformAndCopy(translation, rotation, planarRegion);
+      latestRegions[i]->transformAndCopy(transform.getMatrix().block<3, 1>(0, 3), transform.getMatrix().block<3, 3>(0, 0), planarRegion);
       transformedRegions.emplace_back(planarRegion);
    }
 }
@@ -193,19 +193,15 @@ void PlanarRegionMapHandler::updateFactorGraphLandmarks(vector<shared_ptr<Planar
    }
 }
 
-int PlanarRegionMapHandler::updateFactorGraphPoses()
+int PlanarRegionMapHandler::updateFactorGraphPoses(RigidBodyTransform odometry)
 {
-   return fgSLAM.addOdometryFactor(MatrixXd(this->_sensorPoseRelative.getMatrix()));
+   return fgSLAM.addOdometryFactor(MatrixXd(odometry.getMatrix()));
 }
 
-void PlanarRegionMapHandler::initFactorGraphState()
+void PlanarRegionMapHandler::initFactorGraphState(vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
 {
-   /* Transform and copy the latest planar regions from current sensor frame to map frame. */
-   vector<shared_ptr<PlanarRegion>> transformedRegions;
-   transformAndCopyLatestRegions(_sensorToMapTransform.getMatrix().block<3, 1>(0, 3), _sensorToMapTransform.getMatrix().block<3, 3>(0, 0), transformedRegions);
-
-   this->fgSLAM.initPoseValue(MatrixXd(_sensorToMapTransform.getMatrix()));
-   for (auto region : transformedRegions)
+   this->fgSLAM.initPoseValue(MatrixXd(_sensorToMapTransform.getInverse().getMatrix()));
+   for (auto region : regionsInMapFrame)
    {
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
@@ -217,14 +213,11 @@ void PlanarRegionMapHandler::mergeLatestRegions()
 {
    for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
-      cout << "Checking Validity: " << region->toString() << endl;
       if (region->getNumOfMeasurements() < 2 && region->getPoseId() != 0)
       {
-         cout << "Adding Regions to Map: " << region->toString() << endl;
          this->measuredRegions.emplace_back(region);
       }
    }
-   cout << "Total Measured Regions: " << measuredRegions.size() << endl;
 }
 
 void PlanarRegionMapHandler::updateMapRegionsWithSLAM()

@@ -40,7 +40,7 @@ class SLAMApplication : public MagnumApplication
 
       void init(const Arguments& arguments);
 
-      void slamUpdate();
+      void slamUpdate(vector<shared_ptr<PlanarRegion>> regionsInMapFrame);
 
 };
 

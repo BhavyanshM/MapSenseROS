@@ -41,15 +41,15 @@ class PlanarRegionMapHandler
 
       void transformLatestRegions(Vector3d translation, Matrix3d rotation);
 
-      void transformAndCopyLatestRegions(Vector3d translation, Matrix3d rotation, vector<shared_ptr<PlanarRegion>>& transformedRegions);
+      void transformAndCopyLatestRegions(RigidBodyTransform transform, vector<shared_ptr<PlanarRegion>>& transformedRegions);
 
       void mergeLatestRegions();
 
       void updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert, int currentPoseId);
 
-      int updateFactorGraphPoses();
+      int updateFactorGraphPoses(RigidBodyTransform odometry);
 
-      void initFactorGraphState();
+      void initFactorGraphState(vector<shared_ptr<PlanarRegion>> regionInMapFrame);
 
       void updateMapRegionsWithSLAM();
 };

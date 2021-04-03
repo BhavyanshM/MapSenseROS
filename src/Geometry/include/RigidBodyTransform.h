@@ -22,6 +22,8 @@ class RigidBodyTransform
 
       void setToInverse();
 
+      RigidBodyTransform getInverse();
+
       const Eigen::Matrix4d& getMatrix() const;
 
       void setMatrix(const Eigen::Matrix4d& matrix);
