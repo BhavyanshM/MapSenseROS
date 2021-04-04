@@ -31,11 +31,13 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
    for (int i = 1; i < poses.size(); i++)
    {
       Vector3d translation = poses[i].getMatrix().block<3, 1>(0, 3);
+
       Object3D& axes = parent->addChild<Object3D>();
-      axes.scaleLocal({0.1, 0.1, 0.1});
       axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
+      axes.scaleLocal({0.1, 0.1, 0.1});
+
       objects.emplace_back(&axes);
-      new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {0.5, 0.3f, 0.6f}};
+      new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {(i * 123 % 255) / 255.0f, (i * 161 % 255) / 255.0f, (i * 113 % 255) / 255.0f}};
    }
 }
 

@@ -79,6 +79,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
          int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative.getInverse());
          _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
+         _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
 
          /* Transform and copy the latest planar regions from current sensor frame to map frame. Initialize poses and landmarks with map frame values. */
          vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
@@ -95,7 +96,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          else
             _mesher.generateRegionLineMesh(regionsInMapFrame, regionEdges, frameIndex, _sensor);
 
-         //         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
+         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
 
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
