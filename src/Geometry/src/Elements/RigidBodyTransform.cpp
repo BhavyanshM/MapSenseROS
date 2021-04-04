@@ -22,8 +22,8 @@ void RigidBodyTransform::getInverseTransform(RigidBodyTransform& transformToPack
 
 void RigidBodyTransform::setToInverse()
 {
-   this->matrix.block<3, 3>(0, 0) = this->matrix.block<3,3>(0,0).transpose();
    this->matrix.block<3, 1>(0, 3) = -this->matrix.block<3,3>(0,0).transpose() * this->matrix.block<3,1>(0,3);
+   this->matrix.block<3, 3>(0, 0) = this->matrix.block<3,3>(0,0).transpose();
 }
 
 RigidBodyTransform RigidBodyTransform::getInverse()

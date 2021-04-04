@@ -225,11 +225,10 @@ void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
    mapRegions.clear();
    for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
-      RigidBodyTransform sensorToMapTransform(fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
-      sensorToMapTransform.setToInverse();
+      RigidBodyTransform mapToSensorTransform(fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
 
       shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
-      region->copyAndTransform(transformedRegion, sensorToMapTransform);
+      region->copyAndTransform(transformedRegion, mapToSensorTransform.getInverse());
 
       transformedRegion->projectToPlane(fgSLAM.getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);

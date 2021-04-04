@@ -101,15 +101,11 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
             frameIndex += SKIP_REGIONS;
-//         _mapper.loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions);
          _mapper.regions = _mapper.latestRegions;
          _mapper.loadRegions(frameIndex, _mapper.latestRegions);
 
          //         _mesher.generateMatchLineMesh(_mapper, matchingEdges, _sensor);
-
          break;
-
-
    }
    if (event.key() == KeyEvent::Key::Space)
    {
@@ -129,9 +125,6 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
 void SLAMApplication::slamUpdate(vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
 {
-
-
-
 }
 
 int main(int argc, char **argv)
