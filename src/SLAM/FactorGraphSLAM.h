@@ -18,14 +18,20 @@
 #include <boost/bind.hpp>
 #include <boost/assign/std/vector.hpp>
 
+#define _DEBUG 1
+
+#if _DEBUG == 1
+   #define LOG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#elif _DEBUG == 0
+   #define LOG(x)
+#endif
+
 using namespace boost::assign;
 using namespace gtsam;
 
 class FactorGraphSLAM
 {
    private:
-
-      const int DEBUG = 1;
 
       ISAM2 isam2;
       Values initial, result;

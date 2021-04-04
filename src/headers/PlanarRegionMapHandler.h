@@ -16,6 +16,7 @@ class PlanarRegionMapHandler
       float MATCH_DIST_THRESHOLD = 0.1f;
       float MATCH_ANGULAR_THRESHOLD = 0.9f;
       int MATCH_PERCENT_VERTEX_THRESHOLD = 20;
+      bool FACTOR_GRAPH = false;
 
       FactorGraphSLAM fgSLAM;
       vector<string> files;
@@ -49,7 +50,7 @@ class PlanarRegionMapHandler
 
       int updateFactorGraphPoses(RigidBodyTransform odometry);
 
-      void initFactorGraphState(vector<shared_ptr<PlanarRegion>> regionInMapFrame);
+      void initFactorGraphState(RigidBodyTransform sensorPose, vector<shared_ptr<PlanarRegion>> regionInMapFrame);
 
       void updateMapRegionsWithSLAM();
 };

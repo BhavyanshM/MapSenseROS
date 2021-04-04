@@ -11,8 +11,7 @@
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/Math/Color.h>
 
-using namespace Magnum;
-using namespace Math::Literals;
+using namespace Magnum::Math::Literals;
 using namespace std;
 
 class ImGuiLayout
@@ -24,7 +23,7 @@ class ImGuiLayout
 
       static void getImGui2DLayout(ApplicationState& appState, uint8_t& displayItem);
 
-      static void getImGui3DLayout(ApplicationState& appState, Color4& color);
+      static void getImGui3DLayout(ApplicationState& appState, Magnum::Color4& color);
 };
 
 #endif //PLOTTER3D_PY_IMGUILAYOUT_H

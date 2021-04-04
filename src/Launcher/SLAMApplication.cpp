@@ -1,18 +1,14 @@
-//
-// Created by quantum on 2/24/21.
-//
-
 #include "SLAMApplication.h"
 
-SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments)
+SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication(arguments), _mesher(&_drawables)
 {
    init(arguments);
-   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor, _drawables);
-   //   generateRegionLineMesh(_mapper.latestRegions, regionEdges, 2);
 }
 
 void SLAMApplication::init(const Arguments& arguments)
 {
+   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
+   //   generateRegionLineMesh(_mapper.latestRegions, regionEdges, 2);
    string dirPath;
    std::vector<std::string> args(arguments.argv, arguments.argv + arguments.argc);
    for (int i = 0; i < arguments.argc; i++)
@@ -62,37 +58,6 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 {
    switch (event.key())
    {
-//      case KeyEvent::Key::R:
-//         auto start = high_resolution_clock::now();
-//
-//         slamUpdate();
-//
-//         auto end = high_resolution_clock::now();
-//         auto duration = duration_cast<microseconds>(end - start).count();
-//
-//         cout << "Registration Took: " << duration / 1000.0f << " ms" << endl;
-//
-//         printPlanarRegions(_mapper.mapRegions, "MapRegions");
-//         _mesher.generateRegionLineMesh(_mapper.mapRegions, previousRegionEdges, 1, _sensor, _drawables);
-//
-//         _mapper.fgSLAM.getPoses(_mapper.poses);
-//
-//         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, _drawables);
-//
-//         if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
-//         {
-//            frameIndex += SKIP_REGIONS;
-//         }
-//
-//         /* Load previous and current regions. Separated by SKIP_REGIONS. */
-//         _mapper.loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions);
-//         _mapper.loadRegions(frameIndex, _mapper.latestRegions);
-//
-//         //         _mesher.generateRegionLineMesh(_mapper.latestRegions, regionEdges, 2);
-//         //         _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-//         //         _mesher.generateMatchLineMesh(_mapper, matchingEdges);
-//         break;
-
       case KeyEvent::Key::Right:
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
          {
@@ -107,28 +72,39 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          break;
       case KeyEvent::Key::N:
 
-         /* Match the previous and latest regions to copy ids and generate match indices. */
+         /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
          _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-
-         /* Calculate odometry between previous and latest poses. */
          _mapper.registerRegions();
 
-         /* Transform and copy the latest planar regions from current sensor frame to map frame. */
+         /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
+         int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative.getInverse());
+         _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
+
+         /* Transform and copy the latest planar regions from current sensor frame to map frame. Initialize poses and landmarks with map frame values. */
          vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
          _mapper.transformAndCopyLatestRegions(_mapper._sensorToMapTransform, regionsInMapFrame);
+         _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
 
+         /* Optimize the Factor Graph and get Results. */
+         _mapper.fgSLAM.optimize();
+         //   _mapper.mergeLatestRegions();
+         _mapper.updateMapRegionsWithSLAM();
 
-         _mesher.generateRegionLineMesh(regionsInMapFrame, regionEdges, frameIndex, _sensor, _drawables);
+         if(_mapper.FACTOR_GRAPH)
+            _mesher.generateRegionLineMesh(_mapper.mapRegions, regionEdges, frameIndex, _sensor);
+         else
+            _mesher.generateRegionLineMesh(regionsInMapFrame, regionEdges, frameIndex, _sensor);
 
-         //         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, _drawables);
+         //         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
 
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
             frameIndex += SKIP_REGIONS;
-         _mapper.loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions);
+//         _mapper.loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions);
+         _mapper.regions = _mapper.latestRegions;
          _mapper.loadRegions(frameIndex, _mapper.latestRegions);
 
-         //         _mesher.generateMatchLineMesh(_mapper, matchingEdges, _sensor, _drawables);
+         //         _mesher.generateMatchLineMesh(_mapper, matchingEdges, _sensor);
 
          break;
 
@@ -142,28 +118,19 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       _mapper.loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions);
       _mapper.loadRegions(frameIndex, _mapper.latestRegions);
 
-      _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor, _drawables);
-      _mesher.generateRegionLineMesh(_mapper.latestRegions, regionEdges, 2, _sensor, _drawables);
+      _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
+      _mesher.generateRegionLineMesh(_mapper.latestRegions, regionEdges, 2, _sensor);
 
       _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-      _mesher.generateMatchLineMesh(_mapper, matchingEdges, _sensor, _drawables);
+      _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
    }
 }
 
 void SLAMApplication::slamUpdate(vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
 {
-   /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
-   int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative.getInverse());
-   _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
 
-   /* Initialize poses and landmarks with map frame values. */
-   _mapper.initFactorGraphState(regionsInMapFrame);
 
-   /* Optimize the Factor Graph and get Results. */
-   _mapper.fgSLAM.optimize();
 
-   _mapper.mergeLatestRegions();
-   _mapper.updateMapRegionsWithSLAM();
 }
 
 int main(int argc, char **argv)
@@ -187,15 +154,26 @@ int main(int argc, char **argv)
       for (int i = 0; i < args.size(); i++)
       {
          if (args[i] == "--match-dist")
+         {
             app._mapper.MATCH_DIST_THRESHOLD = stof(args[i + 1]);
+            cout << "DIST:" << app._mapper.MATCH_DIST_THRESHOLD << "\t";
+         }
          if (args[i] == "--match-dot")
+         {
             app._mapper.MATCH_ANGULAR_THRESHOLD = stof(args[i + 1]);
+            cout << " ANGLE:" << app._mapper.MATCH_ANGULAR_THRESHOLD << "\t";
+         }
          if (args[i] == "--match-vert")
+         {
             app._mapper.MATCH_PERCENT_VERTEX_THRESHOLD = stoi(args[i + 1]);
+            cout << " VERT:" << app._mapper.MATCH_PERCENT_VERTEX_THRESHOLD << "\t";
+         }
+         if(args[i] == "--factor-graph"){
+            app._mapper.FACTOR_GRAPH = true;
+            cout << " Factor Graph: true" << endl;
+         }
       }
-      cout << "DIST:" << app._mapper.MATCH_DIST_THRESHOLD << endl;
-      cout << " ANGLE:" << app._mapper.MATCH_ANGULAR_THRESHOLD << endl;
-      cout << " VERT:" << app._mapper.MATCH_PERCENT_VERTEX_THRESHOLD << endl;
+      cout << endl;
       return app.exec();
    }
 }

@@ -4,12 +4,10 @@
 
 #include "MagnumApplication.h"
 
-using namespace Magnum;
-
 typedef Magnum::Matrix4 Mat4;
 typedef Magnum::Vector2 Vec2;
 
-MagnumApplication::MagnumApplication(const Arguments& arguments) : Platform::Application{arguments,
+MagnumApplication::MagnumApplication(const Arguments& arguments) : Magnum::Platform::Application{arguments,
                                                                                          Configuration{}.setTitle("Magnum ImGui Application").setSize(
                                                                                                Magnum::Vector2i(1024, 768)).setWindowFlags(
                                                                                                Configuration::WindowFlag::Resizable)}
@@ -18,40 +16,40 @@ MagnumApplication::MagnumApplication(const Arguments& arguments) : Platform::App
    /* Set up proper blending to be used by ImGui. There's a great chance
       you'll need this exact behavior for the rest of your scene. If not, set
       this only for the drawFrame() call. */
-   GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-   GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+   Magnum::GL::Renderer::setBlendEquation(Magnum::GL::Renderer::BlendEquation::Add, Magnum::GL::Renderer::BlendEquation::Add);
+   Magnum::GL::Renderer::setBlendFunction(Magnum::GL::Renderer::BlendFunction::SourceAlpha, Magnum::GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
    /* TODO: Instantiate the Information Processors */
 
    /* TODO: Check that the appropriate flags for renderer are set*/
-   GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-   // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
+   // Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::FaceCulling);
 
    /* TODO: Configure Camera in Scene Graph*/
    _camGrandParent = new Object3D{&_scene};
    _sensor = new Object3D{&_scene};
    _camParent = new Object3D{_camGrandParent};
    _camObject = new Object3D{_camParent};
-   _camera = new SceneGraph::Camera3D(*_camObject);
+   _camera = new Magnum::SceneGraph::Camera3D(*_camObject);
    _camera->setProjectionMatrix(Mat4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
-   _sensor->transformLocal(Mat4::rotationX(Rad{90.0_degf}));
+   _sensor->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
 
    /* TODO: Prepare your objects here and add them to the scene */
    _sensorAxes = new Object3D{_sensor};
    _sensorAxes->scale({0.1, 0.1, 0.1});
-   new RedCubeDrawable{*_sensorAxes, &_drawables, Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
+   new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
-   _sensor->transformLocal(Mat4::rotationX(Rad{90.0_degf}));
+   _sensor->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
-   new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
+   new RedCubeDrawable{*_camOriginCube, &_drawables, Magnum::Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 }
 
 void MagnumApplication::viewportEvent(ViewportEvent& event)
 {
-   GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+   Magnum::GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 }
 
 void MagnumApplication::mouseMoveEvent(MouseMoveEvent& event)
@@ -59,9 +57,9 @@ void MagnumApplication::mouseMoveEvent(MouseMoveEvent& event)
    if ((event.buttons() & MouseMoveEvent::Button::Left))
    {
       Vec2 delta = 4.0f * Vec2{event.relativePosition()} / Vec2{windowSize()};
-      _camGrandParent->transformLocal(Mat4::rotationY(-Rad{delta.x()}));
+      _camGrandParent->transformLocal(Mat4::rotationY(-Magnum::Rad{delta.x()}));
       _camOriginCube->transformLocal(_scene.absoluteTransformation());
-      _camParent->transformLocal(Mat4::rotationX(-Rad{delta.y()}));
+      _camParent->transformLocal(Mat4::rotationX(-Magnum::Rad{delta.y()}));
    }
    if ((event.buttons() & MouseMoveEvent::Button::Right))
    {
@@ -87,20 +85,20 @@ void MagnumApplication::mouseScrollEvent(MouseScrollEvent& event)
 
 void MagnumApplication::drawEvent()
 {
-   GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
+   Magnum::GL::defaultFramebuffer.clear(Magnum::GL::FramebufferClear::Color | Magnum::GL::FramebufferClear::Depth);
    _camera->draw(_drawables);
 
    draw();
 
-   GL::Renderer::enable(GL::Renderer::Feature::Blending);
-   GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
-   GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
-   GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::Blending);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::ScissorTest);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::DepthTest);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::FaceCulling);
 
-   GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-   // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
-   GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
-   GL::Renderer::disable(GL::Renderer::Feature::Blending);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
+   // Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::FaceCulling);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::ScissorTest);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::Blending);
 
    swapBuffers();
    redraw();

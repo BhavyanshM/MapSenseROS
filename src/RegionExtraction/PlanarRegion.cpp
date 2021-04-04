@@ -190,7 +190,7 @@ void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)
    }
 }
 
-void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, shared_ptr<PlanarRegion> planarRegion)
+void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion> planarRegion, RigidBodyTransform transform)
 {
    planarRegion->setNormal(this->getNormal());
    planarRegion->setCenter(this->getCenter());
@@ -204,7 +204,7 @@ void PlanarRegion::transformAndCopy(Vector3d translation, Matrix3d rotation, sha
    {
       planarRegion->insertBoundaryVertex(this->boundaryVertices[i]);
    }
-   planarRegion->transform(translation, rotation);
+   planarRegion->transform(transform);
 }
 
 void PlanarRegion::projectToPlane(Vector4f plane)

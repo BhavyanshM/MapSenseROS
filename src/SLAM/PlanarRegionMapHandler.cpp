@@ -176,7 +176,7 @@ void PlanarRegionMapHandler::transformAndCopyLatestRegions(RigidBodyTransform tr
    for (int i = 0; i < latestRegions.size(); i++)
    {
       shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(latestRegions[i]->getId());
-      latestRegions[i]->transformAndCopy(transform.getMatrix().block<3, 1>(0, 3), transform.getMatrix().block<3, 3>(0, 0), planarRegion);
+      latestRegions[i]->copyAndTransform(planarRegion, transform);
       transformedRegions.emplace_back(planarRegion);
    }
 }
@@ -198,9 +198,9 @@ int PlanarRegionMapHandler::updateFactorGraphPoses(RigidBodyTransform odometry)
    return fgSLAM.addOdometryFactor(MatrixXd(odometry.getMatrix()));
 }
 
-void PlanarRegionMapHandler::initFactorGraphState(vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
+void PlanarRegionMapHandler::initFactorGraphState(RigidBodyTransform sensorPose, vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
 {
-   this->fgSLAM.initPoseValue(MatrixXd(_sensorToMapTransform.getInverse().getMatrix()));
+   this->fgSLAM.initPoseValue(MatrixXd(sensorPose.getMatrix()));
    for (auto region : regionsInMapFrame)
    {
       Eigen::Vector4d plane;
@@ -223,11 +223,14 @@ void PlanarRegionMapHandler::mergeLatestRegions()
 void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
 {
    mapRegions.clear();
-   for (shared_ptr<PlanarRegion> region : this->measuredRegions)
+   for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
-      Matrix4d sensorToMapTransform = fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix();
+      RigidBodyTransform sensorToMapTransform(fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
+      sensorToMapTransform.setToInverse();
+
       shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
-      region->transformAndCopy(sensorToMapTransform.block<3, 1>(0, 3), sensorToMapTransform.block<3, 3>(0, 0), transformedRegion);
+      region->copyAndTransform(transformedRegion, sensorToMapTransform);
+
       transformedRegion->projectToPlane(fgSLAM.getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);
    }

@@ -54,15 +54,15 @@ void ImGuiLayout::getImGui2DLayout(ApplicationState& appState, uint8_t& displayI
    ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
 }
 
-void ImGuiLayout::getImGui3DLayout(ApplicationState& appState, Color4& color)
+void ImGuiLayout::getImGui3DLayout(ApplicationState& appState, Magnum::Color4& color)
 {
    if (ImGui::ColorEdit3("Color", color.data()))
    {
-      GL::Renderer::setClearColor(color);
+      Magnum::GL::Renderer::setClearColor(color);
    }
    ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
    ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
-   ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0 / Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
+   ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0 / Magnum::Double(ImGui::GetIO().Framerate), Magnum::Double(ImGui::GetIO().Framerate));
    ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
 
 }

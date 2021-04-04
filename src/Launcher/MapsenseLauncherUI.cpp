@@ -1,43 +1,43 @@
 #include "MapsenseLauncherUI.h"
 
-MyApplication::MyApplication(const Arguments& arguments) : Platform::Application{arguments, Configuration{}.setTitle("Magnum ImGui Application").setSize(
+MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::Application{arguments, Configuration{}.setTitle("Magnum ImGui Application").setSize(
       Magnum::Vector2i(1024, 768)).setWindowFlags(Configuration::WindowFlag::Resizable)}
 {
 
-   _imgui = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
+   _imgui = Magnum::ImGuiIntegration::Context(Magnum::Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
 
    /* Set up proper blending to be used by ImGui. There's a great chance
       you'll need this exact behavior for the rest of your scene. If not, set
       this only for the drawFrame() call. */
-   GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-   GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+   Magnum::GL::Renderer::setBlendEquation(Magnum::GL::Renderer::BlendEquation::Add, Magnum::GL::Renderer::BlendEquation::Add);
+   Magnum::GL::Renderer::setBlendFunction(Magnum::GL::Renderer::BlendFunction::SourceAlpha, Magnum::GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
 
 
    /* TODO: Check that the appropriate flags for renderer are set*/
-   GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-   // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
+   // Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::FaceCulling);
 
    /* TODO: Configure Camera in Scene Graph*/
    _camGrandParent = new Object3D{&_scene};
    _sensor = new Object3D{&_scene};
    _camParent = new Object3D{_camGrandParent};
    _camObject = new Object3D{_camParent};
-   _camera = new SceneGraph::Camera3D(*_camObject);
-   _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
-   _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
+   _camera = new Magnum::SceneGraph::Camera3D(*_camObject);
+   _camera->setProjectionMatrix(Magnum::Matrix4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
+   _sensor->transformLocal(Magnum::Matrix4::rotationX(Magnum::Rad{90.0_degf}));
 
    /* TODO: Prepare your objects here and add them to the scene */
    _sensorAxes = new Object3D{_sensor};
    _sensorAxes->scale({0.1, 0.1, 0.1});
-   new RedCubeDrawable{*_sensorAxes, &_drawables, Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
+   new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
-   _sensor->transformLocal(Matrix4::rotationX(Rad{90.0_degf}));
+   _sensor->transformLocal(Magnum::Matrix4::rotationX(Magnum::Rad{90.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
-   new RedCubeDrawable{*_camOriginCube, &_drawables, Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
+   new RedCubeDrawable{*_camOriginCube, &_drawables, Magnum::Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
    namedWindow("DebugOutput", WINDOW_NORMAL);
 
@@ -55,15 +55,6 @@ void MyApplication::init(int argc, char** argv)
    _dataReceiver->init_ros_node(argc, argv);
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
-}
-
-void clear(vector<Object3D *>& objects)
-{
-   for (int i = 0; i < objects.size(); i++)
-   {
-      delete objects[i];
-   }
-   objects.clear();
 }
 
 void MyApplication::tickEvent()
@@ -131,7 +122,7 @@ void MyApplication::tickEvent()
       }
       if (appState.SHOW_REGION_EDGES)
       {
-         clear(regionEdges);
+         MeshGenerator::clearMesh(regionEdges);
          draw_regions();
       }
    }
@@ -139,8 +130,8 @@ void MyApplication::tickEvent()
 
 void MyApplication::viewportEvent(ViewportEvent& event)
 {
-   GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
-   _imgui.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
+   Magnum::GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+   _imgui.relayout(Magnum::Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
 }
 
 void MyApplication::mousePressEvent(MouseEvent& event)
@@ -165,20 +156,20 @@ void MyApplication::mouseMoveEvent(MouseMoveEvent& event)
    }
    if ((event.buttons() & MouseMoveEvent::Button::Left))
    {
-      Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
-      _camGrandParent->transformLocal(Matrix4::rotationY(-Rad{delta.x()}));
+      Magnum::Vector2 delta = 4.0f * Magnum::Vector2{event.relativePosition()} / Magnum::Vector2{windowSize()};
+      _camGrandParent->transformLocal(Magnum::Matrix4::rotationY(-Magnum::Rad{delta.x()}));
       _camOriginCube->transformLocal(_scene.absoluteTransformation());
-      _camParent->transformLocal(Matrix4::rotationX(-Rad{delta.y()}));
+      _camParent->transformLocal(Magnum::Matrix4::rotationX(-Magnum::Rad{delta.y()}));
    }
    if ((event.buttons() & MouseMoveEvent::Button::Right))
    {
-      Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
+      Magnum::Vector2 delta = 4.0f * Magnum::Vector2{event.relativePosition()} / Magnum::Vector2{windowSize()};
       _camGrandParent->translateLocal({-0.5f * delta.x(), 0, -0.5f * delta.y()});
       _camOriginCube->translateLocal({-0.5f * delta.x(), 0, -0.5f * delta.y()});
    }
    if ((event.buttons() & MouseMoveEvent::Button::Middle))
    {
-      Vector2 delta = 4.0f * Vector2{event.relativePosition()} / Vector2{windowSize()};
+      Magnum::Vector2 delta = 4.0f * Magnum::Vector2{event.relativePosition()} / Magnum::Vector2{windowSize()};
       _camGrandParent->translateLocal({0, 0.8f * delta.y(), 0});
       _camOriginCube->translateLocal({0, 0.8f * delta.y(), 0});
    }
@@ -192,7 +183,7 @@ void MyApplication::mouseScrollEvent(MouseScrollEvent& event)
       /* Prevent scrolling the page */
       return;
    }
-   Vector2 delta = Vector2{event.offset()};
+   Magnum::Vector2 delta = Magnum::Vector2{event.offset()};
    _camObject->translate({0, 0, -0.5f * delta.y()});
    event.setAccepted();
 }
@@ -208,22 +199,22 @@ void MyApplication::draw_patches()
          {
             Vec6f patch = _regionCalculator->output.getRegionOutput().at<Vec6f>(i, j);
             // cout << patch << endl;
-            Vector3 up = {0, 0, 1};
-            Vector3 dir = {0.01f * patch[0], 0.01f * patch[1], 0.01f * patch[2]};
-            Vector3 axis = Math::cross(up, dir).normalized();
-            Rad angle = Math::acos(Math::dot(up, dir) / (up.length() * dir.length()));
+            Magnum::Vector3 up = {0, 0, 1};
+            Magnum::Vector3 dir = {0.01f * patch[0], 0.01f * patch[1], 0.01f * patch[2]};
+            Magnum::Vector3 axis = Magnum::Math::cross(up, dir).normalized();
+            Magnum::Rad angle = Magnum::Math::acos(Magnum::Math::dot(up, dir) / (up.length() * dir.length()));
 
             Object3D& plane = _sensor->addChild<Object3D>();
             planePatches.emplace_back(&plane);
             plane.scale({appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE});
             plane.translate({patch[3], patch[4], patch[5]});
-            // plane.transformLocal(Matrix4::rotationX(-Rad{180.0_degf}));
+            // plane.transformLocal(Magnum::Matrix4::rotationX(-Magnum::Rad{180.0_degf}));
             if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()))
             {
                Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-               plane.transformLocal(Matrix4(quat.toMatrix()));
+               plane.transformLocal(Magnum::Matrix4(quat.toMatrix()));
             }
-            new RedCubeDrawable{plane, &_drawables, Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
+            new RedCubeDrawable{plane, &_drawables, Magnum::Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
          }
       }
    }
@@ -235,14 +226,14 @@ void MyApplication::draw_regions()
    for (int i = 0; i < _regionCalculator->planarRegionList.size(); i++)
    {
       shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-      vector<Vector3f> vertices = planarRegion->getVertices();
+      vector<Eigen::Vector3f> vertices = planarRegion->getVertices();
       for (int j = appState.NUM_SKIP_EDGES; j < vertices.size(); j += appState.NUM_SKIP_EDGES)
       {
          Object3D& edge = _sensor->addChild<Object3D>();
-         Vector3f prevPoint = vertices[j - appState.NUM_SKIP_EDGES];
-         Vector3f curPoint = vertices[j];
+         Eigen::Vector3f prevPoint = vertices[j - appState.NUM_SKIP_EDGES];
+         Eigen::Vector3f curPoint = vertices[j];
          regionEdges.emplace_back(&edge);
-         new RedCubeDrawable{edge, &_drawables, Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
+         new RedCubeDrawable{edge, &_drawables, Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
                              {(planarRegion->getId() * 123 % 255) / 255.0f, (planarRegion->getId() * 161 % 255) / 255.0f,
                               (planarRegion->getId() * 113 % 255) / 255.0f}};
       }
@@ -260,7 +251,7 @@ void MyApplication::generate_patches()
 
 void MyApplication::drawEvent()
 {
-   GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
+   Magnum::GL::defaultFramebuffer.clear(Magnum::GL::FramebufferClear::Color | Magnum::GL::FramebufferClear::Depth);
    _camera->draw(_drawables);
 
    _imgui.newFrame();
@@ -296,13 +287,13 @@ void MyApplication::drawEvent()
          ImGuiLayout::getImGui3DLayout(appState, _clearColor);
          if (ImGui::Button("Generate Patches"))
          {
-            clear(planePatches);
+            MeshGenerator::clearMesh(planePatches);
             generate_patches();
          }
          ImGui::SameLine(180);
          if (ImGui::Button("Clear Patches"))
          {
-            clear(planePatches);
+            MeshGenerator::clearMesh(planePatches);
          }
          ImGui::EndTabItem();
       }
@@ -343,17 +334,17 @@ void MyApplication::drawEvent()
    /* Update application cursor */
    _imgui.updateApplicationCursor(*this);
 
-   GL::Renderer::enable(GL::Renderer::Feature::Blending);
-   GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
-   GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
-   GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::Blending);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::ScissorTest);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::DepthTest);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::FaceCulling);
 
    _imgui.drawFrame();
 
-   GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-   // GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
-   GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
-   GL::Renderer::disable(GL::Renderer::Feature::Blending);
+   Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
+   // Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::FaceCulling);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::ScissorTest);
+   Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::Blending);
 
    swapBuffers();
    redraw();
