@@ -79,22 +79,29 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
          int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative.getInverse());
          _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
-         _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
 
-         /* Transform and copy the latest planar regions from current sensor frame to map frame. Initialize poses and landmarks with map frame values. */
+         /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
          vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
          _mapper.transformAndCopyLatestRegions(_mapper._sensorToMapTransform, regionsInMapFrame);
-         _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
-
-         /* Optimize the Factor Graph and get Results. */
-         _mapper.fgSLAM.optimize();
-         //   _mapper.mergeLatestRegions();
-         _mapper.updateMapRegionsWithSLAM();
 
          if(_mapper.FACTOR_GRAPH)
+         {
+            /* Initialize poses and landmarks with map frame values. */
+            _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
+
+            /* Optimize the Factor Graph and get Results. */
+            _mapper.fgSLAM.optimize();
+            //   _mapper.mergeLatestRegions();
+            _mapper.updateMapRegionsWithSLAM();
             _mesher.generateRegionLineMesh(_mapper.mapRegions, regionEdges, frameIndex, _sensor);
+            _mapper.fgSLAM.getPoses(_mapper.poses);
+//            _mapper.fgSLAM.clearISAM2();
+         }
          else
+         {
+            _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
             _mesher.generateRegionLineMesh(regionsInMapFrame, regionEdges, frameIndex, _sensor);
+         }
 
          _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
 
@@ -104,7 +111,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          _mapper.regions = _mapper.latestRegions;
          _mapper.loadRegions(frameIndex, _mapper.latestRegions);
 
-         //         _mesher.generateMatchLineMesh(_mapper, matchingEdges, _sensor);
+//         _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
          break;
    }
    if (event.key() == KeyEvent::Key::Space)

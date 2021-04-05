@@ -70,11 +70,6 @@ void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> plan
    }
 }
 
-void MeshGenerator::setDrawables(Magnum::SceneGraph::DrawableGroup3D* drawables)
-{
-   drawables = drawables;
-}
-
 MeshGenerator::MeshGenerator(Magnum::SceneGraph::DrawableGroup3D* drawables) : drawables(drawables)
 {
 }

@@ -2,17 +2,19 @@
 
 FactorGraphSLAM::FactorGraphSLAM()
 {
+   /* Set ISAM2 parameters here. */
+   this->isam = ISAM2(parameters);
 
    Vector6 odomVariance;
-   odomVariance << 1e-4, 1e-4, 1e-4, 1e-2, 1e-2, 1e-2;
+   odomVariance << 1e-2, 1e-2, 1e-2, 1e-1, 1e-1, 1e-1;
    createOdometryNoiseModel(odomVariance);
 
    Vector3 lmVariance;
-   lmVariance << 1e-4, 1e-4, 1e-4;
+   lmVariance << 1e-2, 1e-2, 1e-2;
    createOrientedPlaneNoiseModel(lmVariance);
 
    Vector6 priorVariance;
-   odomVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
+//   priorVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
    createPriorPoseNoiseModel(priorVariance);
 
 }
@@ -21,8 +23,8 @@ void FactorGraphSLAM::getPoses(std::vector<RigidBodyTransform>& poses)
 {
    for (int i = 1; i < this->getPoseId(); i++)
    {
-      RigidBodyTransform sensorToMapTransform(this->getResults().at<Pose3>(Symbol('x', i)).matrix());
-      poses.emplace_back(sensorToMapTransform);
+      RigidBodyTransform mapToSensorTransform(this->getResults().at<Pose3>(Symbol('x', i)).matrix());
+      poses.emplace_back(mapToSensorTransform.getInverse());
    }
 }
 
@@ -84,6 +86,19 @@ void FactorGraphSLAM::optimize()
 {
    LOG("Optimizing\n");
    result = LevenbergMarquardtOptimizer(graph, initial).optimize();
+}
+
+void FactorGraphSLAM::optimizeISAM2()
+{
+   LOG("Optimizing Using ISAM2.\n");
+   isam.update(graph, initial);
+   result = isam.calculateEstimate();
+}
+
+void FactorGraphSLAM::clearISAM2()
+{
+   graph.resize(0);
+   initial.clear();
 }
 
 Values FactorGraphSLAM::getResults()

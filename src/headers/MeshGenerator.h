@@ -56,12 +56,11 @@ typedef Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D> Sc
 class MeshGenerator
 {
    private:
-      const int SKIP_EDGES = 12;
+      const int SKIP_EDGES = 8;
 
       Magnum::SceneGraph::DrawableGroup3D* drawables;
 
    public:
-      void setDrawables(Magnum::SceneGraph::DrawableGroup3D* drawables);
 
       void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& regionEdges, int color, Object3D* parent);
 

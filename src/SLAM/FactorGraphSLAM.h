@@ -33,7 +33,9 @@ class FactorGraphSLAM
 {
    private:
 
-      ISAM2 isam2;
+      ISAM2Params parameters;
+      ISAM2 isam;
+
       Values initial, result;
       NonlinearFactorGraph graph;
       noiseModel::Diagonal::shared_ptr priorNoise;
@@ -59,6 +61,10 @@ class FactorGraphSLAM
       int addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId);
 
       void optimize();
+
+      void optimizeISAM2();
+
+      void clearISAM2();
 
       void initPoseValue(Pose3 value);
 
