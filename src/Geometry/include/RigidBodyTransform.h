@@ -18,8 +18,6 @@ class RigidBodyTransform
 
       RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vector3d translation);
 
-      void getInverseTransform(RigidBodyTransform& transformToPack);
-
       void setToInverse();
 
       RigidBodyTransform getInverse();
@@ -32,7 +30,6 @@ class RigidBodyTransform
 
       void appendRight(RigidBodyTransform& transform);
 
-   public:
 };
 
 #endif //RIGIDBODYTRANSFORM_H

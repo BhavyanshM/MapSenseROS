@@ -13,13 +13,6 @@ RigidBodyTransform::RigidBodyTransform(Eigen::Matrix4d matrix){
    this->matrix = matrix;
 }
 
-void RigidBodyTransform::getInverseTransform(RigidBodyTransform& transformToPack)
-{
-   transformToPack.matrix.setIdentity();
-   transformToPack.matrix.block<3, 3>(0, 0) = this->matrix.block<3,3>(0,0).transpose();
-   transformToPack.matrix.block<3, 1>(0, 3) = -this->matrix.block<3,3>(0,0).transpose() * this->matrix.block<3,1>(0,3);
-}
-
 void RigidBodyTransform::setToInverse()
 {
    this->matrix.block<3, 1>(0, 3) = -this->matrix.block<3,3>(0,0).transpose() * this->matrix.block<3,1>(0,3);

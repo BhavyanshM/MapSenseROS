@@ -123,7 +123,11 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/GeomTools.cpp
 		src/Geometry/src/Structures/KDTree.cpp
 		src/Geometry/src/Structures/KDNode.cpp
-		src/Geometry/src/Elements/RigidBodyTransform.cpp )
+		src/Geometry/src/Elements/RigidBodyTransform.cpp
+		src/Geometry/src/Elements/Rotation.cpp
+		src/Geometry/include/Rotation.h
+		src/Geometry/src/Elements/LieAlgebra.cpp
+		src/Geometry/include/LieAlgebra.h)
 
 include_directories(
 		include
