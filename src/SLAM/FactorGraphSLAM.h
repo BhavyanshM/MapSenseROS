@@ -39,6 +39,7 @@ class FactorGraphSLAM
       Values initial, result;
       NonlinearFactorGraph graph;
       noiseModel::Diagonal::shared_ptr priorNoise;
+      noiseModel::Diagonal::shared_ptr priorNoise2;
       noiseModel::Diagonal::shared_ptr odometryNoise;
       noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
       int poseId = 1;
@@ -54,7 +55,7 @@ class FactorGraphSLAM
 
       void getPoses(std::vector<RigidBodyTransform>& poses);
 
-      int addPriorPoseFactor(Pose3 mean);
+      int addPriorPoseFactor(Pose3 mean, int poseId);
 
       int addOdometryFactor(Pose3 odometry);
 
@@ -75,8 +76,6 @@ class FactorGraphSLAM
       Values getInitial();
 
       NonlinearFactorGraph getFactorGraph();
-
-      void createPriorPoseNoiseModel(Vector6 variance);
 
       void createOdometryNoiseModel(Vector6 odomVariance);
 

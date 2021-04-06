@@ -228,7 +228,7 @@ void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
       RigidBodyTransform mapToSensorTransform(fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
 
       shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
-      region->copyAndTransform(transformedRegion, mapToSensorTransform.getInverse());
+      region->copyAndTransform(transformedRegion, mapToSensorTransform);
 
       transformedRegion->projectToPlane(fgSLAM.getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);

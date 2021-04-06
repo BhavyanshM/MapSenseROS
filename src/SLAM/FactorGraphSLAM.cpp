@@ -14,25 +14,26 @@ FactorGraphSLAM::FactorGraphSLAM()
    createOrientedPlaneNoiseModel(lmVariance);
 
    Vector6 priorVariance;
-//   priorVariance << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4;
-   createPriorPoseNoiseModel(priorVariance);
+   priorVariance << 1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4;
+   priorNoise = noiseModel::Diagonal::Variances(priorVariance);
+   priorNoise->print("Prior Noise Model\n");
+
+   Vector6 priorVariance2;
+   priorVariance2 << 1e2, 1e2, 1e2, 1e2, 1e2, 1e2;
+   priorNoise2 = noiseModel::Diagonal::Variances(priorVariance2);
 
 }
 
 void FactorGraphSLAM::getPoses(std::vector<RigidBodyTransform>& poses)
 {
+   poses.clear();
    for (int i = 1; i < this->getPoseId(); i++)
    {
       RigidBodyTransform mapToSensorTransform(this->getResults().at<Pose3>(Symbol('x', i)).matrix());
-      poses.emplace_back(mapToSensorTransform.getInverse());
+      poses.emplace_back(mapToSensorTransform);
    }
 }
 
-
-void FactorGraphSLAM::createPriorPoseNoiseModel(Vector6 variance)
-{
-   priorNoise = noiseModel::Diagonal::Variances(variance);
-}
 
 void FactorGraphSLAM::createOdometryNoiseModel(Vector6 odomVariance)
 {
@@ -44,10 +45,11 @@ void FactorGraphSLAM::createOrientedPlaneNoiseModel(Vector3 lmVariances)
    orientedPlaneNoise = noiseModel::Diagonal::Variances(lmVariances);
 }
 
-int FactorGraphSLAM::addPriorPoseFactor(Pose3 mean)
+int FactorGraphSLAM::addPriorPoseFactor(Pose3 mean, int poseId)
 {
    LOG("Inserting Prior Pose: Pose(%d)\n", poseId);
-   graph.add(PriorFactor<Pose3>(Symbol('x', poseId), mean, priorNoise));
+   graph.add(PriorFactor<Pose3>(Symbol('x', poseId), mean, poseId == 1 ? priorNoise : priorNoise2));
+   poseId == 1 ? priorNoise->print("Prior Noise Model\n") : priorNoise2->print("Prior Noise Model 2\n");
    return poseId;
 }
 

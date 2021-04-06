@@ -22,7 +22,7 @@ void SLAMApplication::init(const Arguments& arguments)
    _mapper.loadRegions(frameIndex, _mapper.regions);
    _mapper.loadRegions(frameIndex + SKIP_REGIONS, _mapper.latestRegions);
 
-   _mapper.fgSLAM.addPriorPoseFactor(Pose3().identity());
+   _mapper.fgSLAM.addPriorPoseFactor(Pose3().identity(), 1);
    _mapper.updateFactorGraphLandmarks(_mapper.regions, 1);
 
    _mapper.fgSLAM.initPoseValue(Pose3().identity());
@@ -77,7 +77,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          _mapper.registerRegions();
 
          /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
-         int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative.getInverse());
+         int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative);
          _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
 
          /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
@@ -88,10 +88,11 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          {
             /* Initialize poses and landmarks with map frame values. */
             _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
+//            _mapper.fgSLAM.addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
 
             /* Optimize the Factor Graph and get Results. */
             _mapper.fgSLAM.optimize();
-            //   _mapper.mergeLatestRegions();
+            //_mapper.mergeLatestRegions();
             _mapper.updateMapRegionsWithSLAM();
             _mesher.generateRegionLineMesh(_mapper.mapRegions, regionEdges, frameIndex, _sensor);
             _mapper.fgSLAM.getPoses(_mapper.poses);
