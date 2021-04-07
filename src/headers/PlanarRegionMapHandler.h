@@ -17,6 +17,8 @@ class PlanarRegionMapHandler
       float MATCH_ANGULAR_THRESHOLD = 0.9f;
       int MATCH_PERCENT_VERTEX_THRESHOLD = 20;
       bool FACTOR_GRAPH = false;
+      bool ISAM2 = false;
+      uint8_t ISAM2_NUM_STEPS = 4;
 
       FactorGraphSLAM fgSLAM;
       vector<string> files;

@@ -91,12 +91,14 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 //            _mapper.fgSLAM.addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
 
             /* Optimize the Factor Graph and get Results. */
-            _mapper.fgSLAM.optimize();
+            _mapper.ISAM2 ? _mapper.fgSLAM.optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM.optimize();
             //_mapper.mergeLatestRegions();
             _mapper.updateMapRegionsWithSLAM();
             _mesher.generateRegionLineMesh(_mapper.mapRegions, regionEdges, frameIndex, _sensor);
             _mapper.fgSLAM.getPoses(_mapper.poses);
-//            _mapper.fgSLAM.clearISAM2();
+
+            if(_mapper.ISAM2)
+               _mapper.fgSLAM.clearISAM2();
          }
          else
          {
@@ -163,16 +165,21 @@ int main(int argc, char **argv)
          if (args[i] == "--match-dot")
          {
             app._mapper.MATCH_ANGULAR_THRESHOLD = stof(args[i + 1]);
-            cout << " ANGLE:" << app._mapper.MATCH_ANGULAR_THRESHOLD << "\t";
+            cout << "ANGLE:" << app._mapper.MATCH_ANGULAR_THRESHOLD << "\t";
          }
          if (args[i] == "--match-vert")
          {
             app._mapper.MATCH_PERCENT_VERTEX_THRESHOLD = stoi(args[i + 1]);
-            cout << " VERT:" << app._mapper.MATCH_PERCENT_VERTEX_THRESHOLD << "\t";
+            cout << "VERT:" << app._mapper.MATCH_PERCENT_VERTEX_THRESHOLD << "\t";
          }
          if(args[i] == "--factor-graph"){
             app._mapper.FACTOR_GRAPH = true;
-            cout << " Factor Graph: true" << endl;
+            cout << "Factor Graph: true" << endl;
+         }
+         if(args[i] == "--isam"){
+            app._mapper.ISAM2 = true;
+            app._mapper.ISAM2_NUM_STEPS = stoi(args[i + 1]);
+            cout << "Incremental SAM2: true \nSTEPS: " << app._mapper.ISAM2_NUM_STEPS << endl;
          }
       }
       cout << endl;

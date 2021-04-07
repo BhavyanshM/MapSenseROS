@@ -17,6 +17,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/assign/std/vector.hpp>
+#include <bits/stdc++.h>
 
 #define _DEBUG 1
 
@@ -36,6 +37,7 @@ class FactorGraphSLAM
       ISAM2Params parameters;
       ISAM2 isam;
 
+      std::unordered_set<std::string> structure;
       Values initial, result;
       NonlinearFactorGraph graph;
       noiseModel::Diagonal::shared_ptr priorNoise;
@@ -63,7 +65,7 @@ class FactorGraphSLAM
 
       void optimize();
 
-      void optimizeISAM2();
+      void optimizeISAM2(uint8_t numberOfUpdates);
 
       void clearISAM2();
 
