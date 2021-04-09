@@ -65,9 +65,9 @@ WORKDIR /home/robotlab
 USER root
 RUN mkdir -p Downloads \
  && cd Downloads \
- && curl -sL https://download.jetbrains.com/cpp/CLion-2020.3.2.tar.gz -o clion.tar.gz \
+ && curl -sL https://download.jetbrains.com/cpp/CLion-2021.1.tar.gz -o clion.tar.gz \
  && tar -xzf clion.tar.gz \
- && mv clion-2020.3.2/ /opt/clion \
+ && mv clion-2021.1/ /opt/clion \
  && ln -s /opt/clion/bin/clion.sh /usr/local/bin/clion \
  && cd .. \
  && rm -rf Downloads
