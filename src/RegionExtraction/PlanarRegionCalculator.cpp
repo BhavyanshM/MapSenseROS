@@ -28,7 +28,7 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    float params[] = {(float) appState.FILTER_DISPARITY_THRESHOLD, appState.MERGE_ANGULAR_THRESHOLD, appState.MERGE_DISTANCE_THRESHOLD,
                      (float) appState.PATCH_HEIGHT, (float) appState.PATCH_WIDTH, (float) appState.SUB_H, (float) appState.SUB_W, appState.DEPTH_FX,
                      appState.DEPTH_FY, appState.DEPTH_CX, appState.DEPTH_CY, (float) appState.FILTER_KERNEL_SIZE, (float) appState.FILTER_SUB_H,
-                     (float) appState.FILTER_SUB_W};
+                     (float) appState.FILTER_SUB_W, (float) appState.INPUT_HEIGHT, (float) appState.INPUT_WIDTH};
 
    ROS_DEBUG("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT,
              appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W, appState.FILTER_SUB_H, appState.FILTER_SUB_W, appState.FILTER_KERNEL_SIZE);
@@ -36,6 +36,9 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
 
    Mat depthMat = inputDepth.clone();
    Mat colorMat = inputColor.clone();
+
+   medianBlur(depthMat, depthMat, 5);
+//   GaussianBlur(depthMat, depthMat, Size(7,7), 10.0);
 
    /* Input Data OpenCL Buffers */
    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);

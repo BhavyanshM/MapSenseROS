@@ -117,7 +117,12 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/GeomTools.h
 		src/Geometry/include/KDTree.h
 		src/Geometry/include/KDNode.h
-		src/Geometry/include/RigidBodyTransform.h)
+		src/Geometry/include/RigidBodyTransform.h
+		src/Geometry/include/LieAlgebra.h
+		src/Geometry/include/Rotation.h
+		src/Geometry/include/Line3D.h
+		src/Geometry/include/Plane3D.h
+		src/Geometry/include/Point3D.h)
 
 set(GEOMTOOLS_SOURCE
 		src/Geometry/src/GeomTools.cpp
@@ -125,9 +130,10 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Structures/KDNode.cpp
 		src/Geometry/src/Elements/RigidBodyTransform.cpp
 		src/Geometry/src/Elements/Rotation.cpp
-		src/Geometry/include/Rotation.h
 		src/Geometry/src/Elements/LieAlgebra.cpp
-		src/Geometry/include/LieAlgebra.h)
+		src/Geometry/src/Elements/Point3D.cpp
+		src/Geometry/src/Elements/Line3D.cpp
+		src/Geometry/src/Elements/Plane3D.cpp)
 
 include_directories(
 		include

@@ -37,32 +37,21 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
    /* For initial development only. Delete all old previous regions before inserting new ones. Old and new regions should be fused instead. */
    planarRegionList.clear();
-
-   //    printPatchGraph();
-
    uint8_t components = 0;
-
    visited.setZero();
    region.setZero();
    boundary.setZero();
-
-   ROS_DEBUG("PATCH_DATA:(%d,%d), App:(%d, %d, %.2f, %.2f, %.2f, %.2f)\n", this->frame.patchData.cols, this->frame.patchData.rows, app.SUB_W, app.SUB_H,
-             app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY);
-   //    uint8_t* framePatch = reinterpret_cast<uint8_t *>(inputFrame.patchData.data);
    debug = Scalar(0);
    for (uint16_t i = 0; i < app.SUB_H; i++)
    {
       for (uint16_t j = 0; j < app.SUB_W; j++)
       {
          uint8_t patch = inputFrame.patchData.at<uint8_t>(i, j);
-         //            printf("REACHED______________________________________________(%d,%d)\n", i,j);
          if (!visited(i, j) && patch == 255)
          {
             int num = 0;
             shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
-            //                printf("------DFS-------------------------------------(%d,%d)\n", i,j);
             dfs(i, j, components, num, debug, planarRegion);
-            //                printf("--------------AFTER_DFS-----------------------(%d,%d)\n", i,j);
             if (num > app.REGION_MIN_PATCHES && num - planarRegion->getNumOfBoundaryVertices() > app.REGION_BOUNDARY_DIFF)
             {
                planarRegionList.emplace_back(planarRegion);
@@ -78,8 +67,6 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
 void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion)
 {
-   //    printf("---------------------VISIT-----------(%d,%d)\n", x,y);
-
    if (visited(x, y))
       return;
 
@@ -92,8 +79,6 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
       circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
              Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);
 
-   //    printf("---------------------BEFORE-----------(%d,%d)\n", x,y);
-
    int count = 0;
    for (int i = 0; i < 8; i++)
    {
@@ -103,7 +88,6 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
          if (newPatch == 255)
          {
             count++;
-            //                printf("---------------------REACHED-----------(%d,%d,%d)\n", x,y, num);
             dfs(x + adx[i], y + ady[i], component, num, debug, planarRegion);
          }
       }

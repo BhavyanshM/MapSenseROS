@@ -111,7 +111,7 @@ void MyApplication::tickEvent()
          _regionCalculator->generateRegions(_dataReceiver, appState);
          if (appState.EXPORT_REGIONS)
          {
-            if(frameId % 20 == 0)
+            if(frameId % 10 == 0)
             {
                AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
             }

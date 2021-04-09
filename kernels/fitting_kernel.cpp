@@ -13,6 +13,8 @@
 #define FILTER_KERNEL_SIZE 11
 #define FILTER_SUB_H 12
 #define FILTER_SUB_W 13
+#define INPUT_HEIGHT 14
+#define INPUT_WIDTH 15
 
 float4 back_project(int2 pos, float Z, global float* params){
     float px = (pos.x - params[DEPTH_CX])/(params[DEPTH_FX]) * Z;
@@ -91,14 +93,14 @@ bool isConnected(float3 ag, float3 an, float3 bg, float3 bn, global float* param
     float dist = length(vec);
     float sim = fabs(dot(an, bn));
     float perpDist = fabs(dot(ag-bg, bn)) + fabs(dot(bg-ag, an));
-    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] && sim > params[MERGE_ANGULAR_THRESHOLD]){
+    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] * dist * 40 && sim > params[MERGE_ANGULAR_THRESHOLD]){
         return true;
     }else {
         return false;
     }
 }
 
-int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0, global float* params){
+int fill_dead_pixels(read_only image2d_t in, int x, int y, write_only image2d_t out0, global float* params){
     uint Z = 0;
     int count = 0;
     int xs[8], ys[8], values[8];
@@ -177,7 +179,40 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
             write_imageui(out0, pos, (uint4)(Z,0,0,0));
         }
     }
+}
 
+int smooth_non_boundary(read_only image2d_t in, int x, int y, write_only image2d_t out0, global float* params){
+   uint Z = 0;
+   int m = 5;
+   int left = 0;
+   int right = 0;
+   for(int i = 0; i<(int)params[FILTER_KERNEL_SIZE]; i++)
+   {
+      for (int j = 0; j < (int) params[FILTER_KERNEL_SIZE]; j++)
+      {
+         int gx = x * ((int) params[FILTER_KERNEL_SIZE]) + i;
+         int gy = y * ((int) params[FILTER_KERNEL_SIZE]) + j;
+
+
+         if(gx-m >= 0 && gx+m < params[INPUT_HEIGHT]){
+            int2 pos = (int2)(gx, gy);
+            Z = read_imageui(in, pos).x;
+
+            pos = (int2)(gx-m, gy);
+            left = read_imageui(in, pos).x;
+
+            pos = (int2)(gx+m, gy);
+            right = read_imageui(in, pos).x;
+
+            if( abs((Z - left) - (right - Z)) < 50){
+               Z = (left + right) / 2;
+               write_imageui(out0, pos, (uint4)(Z,0,0,0));
+            }
+
+         }
+
+      }
+   }
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++ OPEN_CL KERNELS BEGIN HERE ++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -193,8 +228,8 @@ int filter_depth(read_only image2d_t in, int x, int y, write_only image2d_t out0
 //    if(x==0 && y==0) printf("FilterKernel\n");
     if(y >= 0 && y < (int)params[FILTER_SUB_H] && x >= 0 && x < (int)params[FILTER_SUB_W]){
 
-        filter_depth(in, x, y, out0, params);
-
+        fill_dead_pixels(in, x, y, out0, params);
+//        smooth_non_boundary(in, x, y, out0, params);
     }
 }
 

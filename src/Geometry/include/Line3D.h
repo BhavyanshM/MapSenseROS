@@ -11,7 +11,6 @@ class Line3D
 {
    private:
       Eigen::Vector4d data;
-      void 
 };
 
 #endif //LINE3D_H

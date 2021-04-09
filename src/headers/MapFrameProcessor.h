@@ -20,6 +20,7 @@ class MapFrameProcessor
       MatrixXi boundary;
       MatrixXi region;
       ApplicationState app;
+      Vector2i connect[8] = {Vector2i(-1,-1), Vector2i(1,0),Vector2i(2,0),Vector2i(0,1),Vector2i(2,1),Vector2i(0,2),Vector2i(1,2), Vector2i(2,2)};
 
       void init(ApplicationState& app);
 
@@ -35,8 +36,8 @@ class MapFrameProcessor
 
       void displayDebugger(int delay);
 
-      int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
-      int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
+      int adx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+      int ady[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
 };
 
 #endif //SRC_MAPFRAMEPROCESSOR_H
