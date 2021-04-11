@@ -29,7 +29,7 @@ if [[ "$OS_NAME" == *"Arch"* ]]; then
   	--privileged \
   	--gpus all \
   	--device /dev/dri:/dev/dri \
-  	ihmcrobotics/mapsense-nvidia-ros:0.6 /home/robotlab/dev/mapsense_ws/src/MapSenseROS/scripts/startMapSenseCLion.sh
+  	ihmcrobotics/mapsense-nvidia-ros:0.7 /home/robotlab/dev/mapsense_ws/src/MapSenseROS/scripts/startMapSenseCLion.sh
 else
   sudo -u root docker run -it \
     --name mapsense \
@@ -43,5 +43,5 @@ else
     --runtime=nvidia \
     --gpus all \
     --device /dev/dri:/dev/dri \
-    ihmcrobotics/mapsense-nvidia-ros:0.6 /home/robotlab/dev/mapsense_ws/src/MapSenseROS/scripts/startMapSenseCLion.sh
+    ihmcrobotics/mapsense-nvidia-ros:0.7 /home/robotlab/dev/mapsense_ws/src/MapSenseROS/scripts/startMapSenseCLion.sh
 fi

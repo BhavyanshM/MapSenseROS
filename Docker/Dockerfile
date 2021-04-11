@@ -1,68 +1,12 @@
+# Current version: 0.7
+FROM ihmcrobotics/nvidia-ros:0.1
 
-# Refer to the NVIDIA/CUDA base image here: (https://hub.docker.com/r/nvidia/cuda/)
-
-FROM nvidia/cuda:11.2.0-base
+USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install commonly required libraries and packages
-RUN apt-get --quiet 2 --yes update  \
- && apt-get --quiet 2 --yes install \
-    nano \
-    git \
-    wget \
-    curl \
-    unzip \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common \
-    python3-opencv \
-    > /dev/null
-
-# Setup ROS Noetic
-RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
- && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
- && apt-get update --quiet 2 --yes \
- && apt-get install --quiet 2 --yes \
-    ros-noetic-desktop \
-    ros-noetic-ddynamic-reconfigure \
-    > /dev/null
-
-# Install OpenGL libraries on nvidia-docker2 
-# Reference: (https://medium.com/@benjamin.botto/opengl-and-cuda-applications-in-docker-af0eece000f1)
-RUN apt-get install --quiet 2 --yes \
-    opencl-headers \
-    ocl-icd-opencl-dev \
-    libgflags-dev \
-    libglvnd-dev \
-    libgl1-mesa-dev \
-    libegl1-mesa-dev \
-    libgles2-mesa-dev \
-    libxext6 \
-    libx11-6 \
-    freeglut3-dev \
-    mesa-utils \
-    > /dev/null
-
-# Configure OpenCL (https://stackoverflow.com/questions/54243119/how-to-run-opencl-opengl-inside-a-docker-container)
-RUN apt-get install --quiet 2 --yes clinfo > /dev/null \
- && mkdir -p /etc/OpenCL/vendors \
- && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
-
-#Configure NVIDIA runtime for Docker
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
-
-RUN addgroup robotlab \
- && adduser --home /home/robotlab --gecos "Rosie Robot,1117,1234567,2345678" --ingroup robotlab --disabled-password robotlab \
- && chown -R robotlab /home/robotlab
-USER robotlab
-WORKDIR /home/robotlab
-
 # TODO: Use (https://code.visualstudio.com/docs/remote/containers) to configure VSCode for containers
 # CLion (https://www.jetbrains.com/clion/download/#section=linux)
-USER root
 RUN mkdir -p Downloads \
  && cd Downloads \
  && curl -sL https://download.jetbrains.com/cpp/CLion-2021.1.tar.gz -o clion.tar.gz \
@@ -74,7 +18,8 @@ RUN mkdir -p Downloads \
 
 # Setup MapSenseROS Dependencies (Magnum, Corrade and MagnumIntegration for GUI and Rendering)
 # Reference: [https://doc.magnum.graphics/magnum/getting-started.html]
-RUN apt-get install --quiet 2 --yes \
+RUN apt-get --quiet 2 --yes update \
+ && apt-get --quiet 2 --yes install \
     libopenal-dev \
     libglfw3-dev \
     libsdl2-dev \
@@ -82,7 +27,9 @@ RUN apt-get install --quiet 2 --yes \
     dpkg-dev \
     debhelper \
     libbullet-dev \
-    > /dev/null
+    > /dev/null \
+ && rm -rf /var/lib/apt/lists/*
+
 # Install graphics and UI tools magnum and ImGui
 USER robotlab
 RUN mkdir dev
@@ -123,9 +70,11 @@ RUN mkdir magnum-integration \
  && rm -rf magnum-integration
 
 # Setup Catkin Workspace and MapSenseROS C++ node
-RUN apt-get install --quiet 2 --yes \
+RUN apt-get --quiet 2 --yes update \
+ && apt-get --quiet 2 --yes install \
     libvtk7-dev \
-    > /dev/null
+    > /dev/null \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install latest GTSAM from source
 RUN cd /tmp && \
@@ -135,17 +84,21 @@ RUN cd /tmp && \
     cd - && \
     wget https://apt.repos.intel.com/setup/intelproducts.list -O /etc/apt/sources.list.d/intelproducts.list
 
-RUN apt-get update --quiet 2 --yes && \
-    apt-get install --quiet 2 --yes \
+RUN apt-get --quiet 2 --yes update \
+ && apt-get --quiet 2 --yes install \
     libboost-all-dev \
     libtbb-dev \
-    intel-mkl
+    intel-mkl \
+    > /dev/null \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN add-apt-repository ppa:borglab/gtsam-develop && \
-    apt-get install --quiet 2 --yes \
+RUN add-apt-repository ppa:borglab/gtsam-develop \
+ && apt-get --quiet 2 --yes update \
+ && apt-get --quiet 2 --yes install \
     libgtsam-dev \
-    libgtsam-unstable-dev
-
+    libgtsam-unstable-dev \
+    > /dev/null \
+ && rm -rf /var/lib/apt/lists/*
 
 USER robotlab
 RUN mkdir -p /home/robotlab/dev/mapsense_ws/src
