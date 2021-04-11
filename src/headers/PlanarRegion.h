@@ -9,6 +9,7 @@
 #include <memory>
 #include <boost/format.hpp>
 #include <fstream>
+#include "KDTree.h"
 
 using namespace Eigen;
 using namespace std;
@@ -21,6 +22,7 @@ class PlanarRegion
       vector<Vector3f> patchCentroids;
       vector<Vector3f> boundaryVertices;
       vector<Vector2i> leafPatches;
+      KDTree tree;
       bool normalCalculated = false;
       bool centroidCalculated = false;
       int numPatches;

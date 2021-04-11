@@ -24,7 +24,7 @@ class SLAMApplication : public MagnumApplication
       const int SKIP_REGIONS = 1;
       int count = 0;
       int frameIndex = 0;
-      vector<Object3D *> regionEdges, previousRegionEdges, matchingEdges, poseAxes;
+      vector<Object3D *> latestRegionEdges, previousRegionEdges, matchingEdges, poseAxes;
       Object3D& frameOrigin = _sensor->addChild<Object3D>();
 
       MeshGenerator _mesher;
