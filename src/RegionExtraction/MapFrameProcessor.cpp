@@ -92,7 +92,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
          }
       }
    }
-   if (count != 8)
+   if (count <= 6)
    {
       boundary(x, y) = 1;
       planarRegion->insertLeafPatch(Vector2i(x, y));

@@ -22,24 +22,13 @@ class PlanarRegion
       vector<Vector3f> patchCentroids;
       vector<Vector3f> boundaryVertices;
       vector<Vector2i> leafPatches;
-      KDTree tree;
+
       bool normalCalculated = false;
       bool centroidCalculated = false;
       int numPatches;
       int id;
       int poseId = 0;
       int numOfMeasurements = 1;
-   public:
-      int getNumOfMeasurements() const;
-
-      void setNumOfMeasurements(int numOfMeasurements);
-
-   public:
-      int getPoseId() const;
-
-      void setPoseId(int poseId);
-
-   private:
 
       Vector3f getPCANormal();
 
@@ -48,6 +37,14 @@ class PlanarRegion
       Vector3f getMeanNormal();
 
    public:
+
+      int getNumOfMeasurements() const;
+
+      void setNumOfMeasurements(int numOfMeasurements);
+
+      int getPoseId() const;
+
+      void setPoseId(int poseId);
 
       PlanarRegion(int id);
 

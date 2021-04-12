@@ -88,12 +88,16 @@ float4 back_project(int2 pos, float Z, global float* params){
     return (1/(float)(count)) * centroid;
  }
 
-bool isConnected(float3 ag, float3 an, float3 bg, float3 bn, global float* params){
+bool isConnected(float3 ag, float3 an, float3 bg, float3 bn, global float* params, int x, int y){
     float3 vec = ag - bg;
-    float dist = length(vec);
+    float radialDistSq = ((x-params[SUB_W]/2)*(x-params[SUB_W]/2) + (y-params[SUB_H]/2)*(y-params[SUB_H]/2));
+    float radialDist = sqrt(radialDistSq);
+   float dist = length(vec);
     float sim = fabs(dot(an, bn));
     float perpDist = fabs(dot(ag-bg, bn)) + fabs(dot(bg-ag, an));
-    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] * dist * 40 && sim > params[MERGE_ANGULAR_THRESHOLD]){
+    //if (perpDist < params[MERGE_DISTANCE_THRESHOLD] * radialDist * 10 && sim > params[MERGE_ANGULAR_THRESHOLD]){
+    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] * (1 + radialDist * 0.002 + 0.01) &&
+          sim > params[MERGE_ANGULAR_THRESHOLD] * (1 + 1 / radialDist - 0.1)){
         return true;
     }else {
         return false;
@@ -307,7 +311,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
                      float3 g_b = (float3)(g1_b,g2_b,g3_b);
                      float3 n_b = (float3)(n1_b,n2_b,n3_b);
 
-                     if(isConnected(g_a, normalize(n_a), g_b, normalize(n_b), params)){
+                     if(isConnected(g_a, normalize(n_a), g_b, normalize(n_b), params, x, y)){
                          // printf("Connected: (%d,%d)\n",x+i, y+j);
                          patch = (1 << count) | patch;
                      }

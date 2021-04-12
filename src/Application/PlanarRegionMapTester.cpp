@@ -37,7 +37,7 @@ TEST(TestSuite, testCase3)
    Vector3f bestPoint;
    for(Vector3f point : points)
    {
-      tree.root = tree.insert(tree.root, point, 0);
+      tree.insert(tree.root, point, 0);
       float dsq = (queryPoint - point).squaredNorm();
       if(dsq < dist){
          dist = dsq;

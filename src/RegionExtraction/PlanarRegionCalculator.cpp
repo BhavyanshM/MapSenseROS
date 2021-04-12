@@ -37,8 +37,8 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    Mat depthMat = inputDepth.clone();
    Mat colorMat = inputColor.clone();
 
-   medianBlur(depthMat, depthMat, 5);
-//   GaussianBlur(depthMat, depthMat, Size(7,7), 10.0);
+//   medianBlur(depthMat, depthMat, 5);
+   GaussianBlur(depthMat, depthMat, Size(7,7), 5.0);
 
    /* Input Data OpenCL Buffers */
    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);

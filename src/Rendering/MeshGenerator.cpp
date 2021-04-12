@@ -25,6 +25,14 @@ MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shar
    }
 }
 
+void MeshGenerator::generateLineMesh(Eigen::Vector3f first, Eigen::Vector3f second, vector<Object3D *>& edges, Object3D *parent)
+{
+   Object3D& matchEdge = parent->addChild<Object3D>();
+   edges.emplace_back(&matchEdge);
+   new RedCubeDrawable{matchEdge, drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}),
+                       {1.0, 1.0, 1.0}};
+}
+
 void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent)
 {
    clearMesh(objects);
@@ -41,9 +49,11 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
    }
 }
 
-void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
+void
+MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
 {
-   if(erase) clearMesh(edges);
+   if (erase)
+      clearMesh(edges);
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
@@ -69,7 +79,7 @@ void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> plan
    }
 }
 
-MeshGenerator::MeshGenerator(Magnum::SceneGraph::DrawableGroup3D* drawables) : drawables(drawables)
+MeshGenerator::MeshGenerator(Magnum::SceneGraph::DrawableGroup3D *drawables) : drawables(drawables)
 {
 }
 

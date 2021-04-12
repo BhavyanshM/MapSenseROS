@@ -11,6 +11,19 @@ KDTree::KDTree(Eigen::Vector3f rootPoint)
    this->root = new KDNode(rootPoint);
 }
 
+void KDTree::insert(Eigen::Vector3f point)
+{
+   if(this->root == nullptr)
+      this->root = new KDNode(point);
+   else
+      this->insert(this->root, point, 0);
+}
+
+Eigen::Vector3f KDTree::nearestNeighbor(Eigen::Vector3f point)
+{
+   return nearestNeighbor(this->root, point, 0)->point;
+}
+
 KDNode *KDTree::insert(KDNode *node, Eigen::Vector3f point, uint8_t level)
 {
    uint8_t indexToCheck = level % this->dim;

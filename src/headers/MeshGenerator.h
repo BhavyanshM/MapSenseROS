@@ -62,6 +62,8 @@ class MeshGenerator
 
    public:
 
+      void generateLineMesh(Eigen::Vector3f first, Eigen::Vector3f second, vector<Object3D *>& edges, Object3D *parent);
+
       void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& regionEdges, int color, Object3D* parent, bool erase = false);
 
       void generateMatchLineMesh(vector<pair<int,int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
