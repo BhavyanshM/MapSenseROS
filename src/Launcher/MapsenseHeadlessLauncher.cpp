@@ -7,11 +7,9 @@
 MapsenseHeadlessLauncher::MapsenseHeadlessLauncher(int argc, char **argv)
 {
    _dataReceiver = new NetworkManager(this->appState);
-   _dataReceiver->init_ros_node(argc, argv);
+   _dataReceiver->init_ros_node(argc, argv, this->appState);
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
-
-   namedWindow("DebugOutput", WINDOW_NORMAL);
 }
 
 void MapsenseHeadlessLauncher::update()
@@ -41,6 +39,11 @@ int main(int argc, char **argv)
       {
          printf("Setting KERNEL_LEVEL_SLIDER: %d\n", stoi(args[i + 1]));
          mapsense.appState.KERNEL_SLIDER_LEVEL = stoi(args[i + 1]);
+      }
+      if (args[i] == "--depth-aligned")
+      {
+         printf("Setting DEPTH_ALIGNED: true\n");
+         mapsense.appState.DEPTH_ALIGNED = true;
       }
    }
 

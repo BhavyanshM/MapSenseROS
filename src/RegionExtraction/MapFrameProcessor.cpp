@@ -113,7 +113,7 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
       {
          int num = 0;
          shared_ptr<RegionRing> regionRing = make_shared<RegionRing>(components);
-         boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), components, num, debug, regionRing);
+         boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), planarRegionList[i]->getId(), components, num, debug, regionRing);
          if (num > 3)
          {
             planarRegionList[i]->rings.emplace_back(regionRing);
@@ -133,7 +133,7 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
    }
 }
 
-void MapFrameProcessor::boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing)
+void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing)
 {
    if (visited(x, y))
       return;
@@ -149,9 +149,9 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int component, int& num, Mat&
    {
       if (x + adx[i] < app.SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < app.SUB_W - 1 && y + ady[i] > 1)
       {
-         if (boundary(x + adx[i], y + ady[i]) == 1)
+         if (boundary(x + adx[i], y + ady[i]) == 1 && regionId == region(x + adx[i], y + ady[i]))
          {
-            boundary_dfs(x + adx[i], y + ady[i], component, num, debug, regionRing);
+            boundary_dfs(x + adx[i], y + ady[i], regionId, component, num, debug, regionRing);
          }
       }
    }

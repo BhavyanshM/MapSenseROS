@@ -32,14 +32,23 @@ void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredD
    write_regions(regions, 0);
 }
 
-void AppUtils::displayDebugOutput(Mat disp, ApplicationState appState)
+void AppUtils::appendToDebugOutput(Mat disp)
 {
-   if (disp.cols > 0 && disp.rows > 0 && !disp.empty())
+   if(disp.type() == CV_16UC3) disp.convertTo(disp, CV_8U, 0.00390625);
+   images.emplace_back(disp);
+}
+
+void AppUtils::displayDebugOutput(ApplicationState appState)
+{
+   hconcat(images, debugOutput);
+   if (debugOutput.cols > 0 && debugOutput.rows > 0 && !debugOutput.empty())
    {
-      resizeWindow("DebugOutput", (int) (disp.cols * appState.DISPLAY_WINDOW_SIZE), (int) (disp.rows * appState.DISPLAY_WINDOW_SIZE));
-      imshow("DebugOutput", disp);
+      namedWindow("DebugOutput", WINDOW_NORMAL);
+      resizeWindow("DebugOutput", (int) (debugOutput.cols * appState.DISPLAY_WINDOW_SIZE), (int) (debugOutput.rows * appState.DISPLAY_WINDOW_SIZE));
+      imshow("DebugOutput", debugOutput);
       waitKey(1);
    }
+   images.clear();
 }
 
 void AppUtils::checkMemoryLimits()

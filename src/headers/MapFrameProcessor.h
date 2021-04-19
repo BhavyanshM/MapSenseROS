@@ -28,7 +28,7 @@ class MapFrameProcessor
 
       void dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion);
 
-      void boundary_dfs(int x, int y, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing);
+      void boundary_dfs(int x, int y, int regionId, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing);
 
       void findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList);
 
@@ -36,8 +36,8 @@ class MapFrameProcessor
 
       void displayDebugger(int delay);
 
-      int adx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
-      int ady[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+      int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
+      int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
 };
 
 #endif //SRC_MAPFRAMEPROCESSOR_H

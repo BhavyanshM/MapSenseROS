@@ -1,4 +1,4 @@
-#include "../Geometry/include/GeomTools.h"
+#include "GeomTools.h"
 #include "PlanarRegion.h"
 
 PlanarRegion::PlanarRegion(int id)
@@ -38,6 +38,12 @@ Vector3f PlanarRegion::getNormal()
       this->normal = getPCANormal();
       this->normal.normalize();
       this->normal *= -this->normal.z() / fabs(this->normal.z());
+
+      float angle = acos(this->normal.dot(Vector3f(0,0,1)));
+      Vector3f axis = Vector3f(0,0,1).cross(this->normal);
+      AngleAxisf angleAxis(angle, axis);
+      Matrix3d rotation = angleAxis.toRotationMatrix();
+      transformToWorldFrame = RigidBodyTransform(rotation);
    }
    return this->normal;
 }
@@ -85,6 +91,11 @@ void PlanarRegion::addPatch(Vector3f normal, Vector3f center)
 void PlanarRegion::insertBoundaryVertex(Vector3f vertex)
 {
    this->boundaryVertices.push_back(vertex);
+}
+
+vector<Vector3f> PlanarRegion::getBoundaryVertices()
+{
+   return this->boundaryVertices;
 }
 
 void PlanarRegion::insertLeafPatch(Vector2i pos)
@@ -243,5 +254,15 @@ int PlanarRegion::getNumOfMeasurements() const
 void PlanarRegion::setNumOfMeasurements(int numOfMeasurements)
 {
    PlanarRegion::numOfMeasurements = numOfMeasurements;
+}
+
+void PlanarRegion::computePlanarPatchCentroids()
+{
+   RigidBodyTransform transformToLocal = transformToWorldFrame.getInverse();
+   for(int i = 0; i<patchCentroids.size(); i++)
+   {
+      Vector3f localPoint = transformToLocal.transformEuclidean(patchCentroids[i]);
+      this->planarPatchCentroids.emplace_back(Vector2f(localPoint.x(), localPoint.y()));
+   }
 }
 

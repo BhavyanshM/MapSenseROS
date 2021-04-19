@@ -37,8 +37,9 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    Mat depthMat = inputDepth.clone();
    Mat colorMat = inputColor.clone();
 
-   medianBlur(depthMat, depthMat, 5);
-//   GaussianBlur(depthMat, depthMat, Size(7,7), 10.0);
+//   medianBlur(depthMat, depthMat, 5);
+
+   if(appState.EARLY_GAUSSIAN_BLUR) GaussianBlur(depthMat, depthMat, Size(appState.GAUSSIAN_SIZE * 2 + 1,appState.GAUSSIAN_SIZE * 2 + 1), appState.GAUSSIAN_SIGMA);
 
    /* Input Data OpenCL Buffers */
    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);
@@ -51,19 +52,20 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    /* Output Data OpenCL Buffers */
    // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
    cl::Image2D clFilterDepth(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
-   cl::Image2D clOutput_0(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clOutput_1(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clOutput_2(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clOutput_3(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clOutput_4(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clOutput_5(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clOutput_6(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_nx(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_ny(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_nz(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_gx(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_gy(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_gz(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+   cl::Image2D clBuffer_graph(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), appState.SUB_W, appState.SUB_H);
 
    /* Setting Kernel arguments for patch-packing kernel */
    filterKernel.setArg(0, clDepth);
    filterKernel.setArg(1, clColor);
    filterKernel.setArg(2, clFilterDepth);
-   filterKernel.setArg(3, paramsBuffer);
+   filterKernel.setArg(3, clBuffer_nx);
+   filterKernel.setArg(4, paramsBuffer);
 
    if (appState.FILTER_SELECTED)
    {
@@ -72,21 +74,21 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    {
       packKernel.setArg(0, clDepth);
    }
-   packKernel.setArg(1, clOutput_0);
-   packKernel.setArg(2, clOutput_1);
-   packKernel.setArg(3, clOutput_2);
-   packKernel.setArg(4, clOutput_3);
-   packKernel.setArg(5, clOutput_4);
-   packKernel.setArg(6, clOutput_5);
+   packKernel.setArg(1, clBuffer_nx); // Output: nx
+   packKernel.setArg(2, clBuffer_ny); // Output: ny
+   packKernel.setArg(3, clBuffer_nz); // Output: nz
+   packKernel.setArg(4, clBuffer_gx); // Output: gx
+   packKernel.setArg(5, clBuffer_gy); // Output: gy
+   packKernel.setArg(6, clBuffer_gz); // Output: gz
    packKernel.setArg(7, paramsBuffer);
 
-   mergeKernel.setArg(0, clOutput_0);
-   mergeKernel.setArg(1, clOutput_1);
-   mergeKernel.setArg(2, clOutput_2);
-   mergeKernel.setArg(3, clOutput_3);
-   mergeKernel.setArg(4, clOutput_4);
-   mergeKernel.setArg(5, clOutput_5);
-   mergeKernel.setArg(6, clOutput_6);
+   mergeKernel.setArg(0, clBuffer_nx); // Input: nx
+   mergeKernel.setArg(1, clBuffer_ny); // Input: ny
+   mergeKernel.setArg(2, clBuffer_nz); // Input: nz
+   mergeKernel.setArg(3, clBuffer_gx); // Input: gx
+   mergeKernel.setArg(4, clBuffer_gy); // Input: gy
+   mergeKernel.setArg(5, clBuffer_gz); // Input: gz
+   mergeKernel.setArg(6, clBuffer_graph);  // Output: graph
    mergeKernel.setArg(7, paramsBuffer);
 
    // kernel.setArg(4, clDebug); /* For whenever clDebug may be required. */
@@ -125,13 +127,13 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    /* Read the output data from OpenCL buffers into CPU buffers */
    // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
    commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, filteredDepth.data);
-   commandQueue.enqueueReadImage(clOutput_0, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
-   commandQueue.enqueueReadImage(clOutput_1, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
-   commandQueue.enqueueReadImage(clOutput_2, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
-   commandQueue.enqueueReadImage(clOutput_3, CL_TRUE, origin, regionOutputSize, 0, 0, output_3.data);
-   commandQueue.enqueueReadImage(clOutput_4, CL_TRUE, origin, regionOutputSize, 0, 0, output_4.data);
-   commandQueue.enqueueReadImage(clOutput_5, CL_TRUE, origin, regionOutputSize, 0, 0, output_5.data);
-   commandQueue.enqueueReadImage(clOutput_6, CL_TRUE, origin, regionOutputSize, 0, 0, output_6.data);
+   commandQueue.enqueueReadImage(clBuffer_nx, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
+   commandQueue.enqueueReadImage(clBuffer_ny, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
+   commandQueue.enqueueReadImage(clBuffer_nz, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
+   commandQueue.enqueueReadImage(clBuffer_gx, CL_TRUE, origin, regionOutputSize, 0, 0, output_3.data);
+   commandQueue.enqueueReadImage(clBuffer_gy, CL_TRUE, origin, regionOutputSize, 0, 0, output_4.data);
+   commandQueue.enqueueReadImage(clBuffer_gz, CL_TRUE, origin, regionOutputSize, 0, 0, output_5.data);
+   commandQueue.enqueueReadImage(clBuffer_graph, CL_TRUE, origin, regionOutputSize, 0, 0, output_6.data);
 
    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
    commandQueue.finish();

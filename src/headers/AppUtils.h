@@ -2,8 +2,8 @@
 // Created by quantum on 2/16/21.
 //
 
-#ifndef PLOTTER3D_PY_APPUTILS_H
-#define PLOTTER3D_PY_APPUTILS_H
+#ifndef APPUTILS_H
+#define APPUTILS_H
 
 #include <iostream>
 #include "PlanarRegionCalculator.h"
@@ -16,14 +16,20 @@ using namespace cv;
 class AppUtils
 {
    public:
+
+      vector<Mat> images;
+      Mat debugOutput;
+
       static void
       capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
 
-      static void displayDebugOutput(Mat disp, ApplicationState appState);
+      void appendToDebugOutput(Mat disp);
+
+      void displayDebugOutput(ApplicationState appState);
 
       static void checkMemoryLimits();
 
       static void write_regions(vector<shared_ptr<PlanarRegion>> regions, int frameId);
 };
 
-#endif //PLOTTER3D_PY_APPUTILS_H
+#endif //APPUTILS_H

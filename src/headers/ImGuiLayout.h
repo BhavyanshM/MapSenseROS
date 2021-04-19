@@ -21,7 +21,7 @@ class ImGuiLayout
 
       static void getImGuiParamsLayout(ApplicationState& appState);
 
-      static void getImGui2DLayout(ApplicationState& appState, uint8_t& displayItem);
+      static void getImGui2DLayout(ApplicationState& appState);
 
       static void getImGui3DLayout(ApplicationState& appState, Magnum::Color4& color);
 };

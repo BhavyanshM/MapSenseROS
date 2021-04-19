@@ -1,7 +1,9 @@
 #include "MapsenseLauncherUI.h"
 
-MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::Application{arguments, Configuration{}.setTitle("Magnum ImGui Application").setSize(
-      Magnum::Vector2i(1024, 768)).setWindowFlags(Configuration::WindowFlag::Resizable)}
+MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::Application{arguments,
+                                                                                         Configuration{}.setTitle("Magnum ImGui Application").setSize(
+                                                                                               Magnum::Vector2i(1024, 768)).setWindowFlags(
+                                                                                               Configuration::WindowFlag::Resizable)}
 {
 
    _imgui = Magnum::ImGuiIntegration::Context(Magnum::Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
@@ -39,8 +41,6 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
    new RedCubeDrawable{*_camOriginCube, &_drawables, Magnum::Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 
-   namedWindow("DebugOutput", WINDOW_NORMAL);
-
    // setMinimalLoopPeriod(32); /* Needs to be less than 30-32 milliseconds for real-time performance */
 
    /* --------------------------------------- For Testing Purposes Only --------------------------------------------*/
@@ -48,11 +48,11 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
 
 }
 
-void MyApplication::init(int argc, char** argv)
+void MyApplication::init(int argc, char **argv)
 {
    /* TODO: Instantiate the Information Processors */
    _dataReceiver = new NetworkManager(appState);
-   _dataReceiver->init_ros_node(argc, argv);
+   _dataReceiver->init_ros_node(argc, argv, appState);
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
 }
@@ -60,42 +60,33 @@ void MyApplication::init(int argc, char** argv)
 void MyApplication::tickEvent()
 {
    //     cout << "TickEvent:" << count++ << endl;
-   switch (_displayItem)
+   if (appState.SHOW_INPUT_COLOR)
+      appUtils.appendToDebugOutput(_regionCalculator->inputColor);
+   if (appState.SHOW_INPUT_DEPTH)
    {
-      case SHOW_INPUT_COLOR :
-         AppUtils::displayDebugOutput(_regionCalculator->inputColor, appState);
-         break;
-      case SHOW_INPUT_DEPTH :
-      {
-         Mat dispDepth;
-         _regionCalculator->getInputDepth(dispDepth, appState);
-         AppUtils::displayDebugOutput(dispDepth, appState);
-         break;
-      }
-      case SHOW_REGION_COMPONENTS :
-         AppUtils::displayDebugOutput(_regionCalculator->mapFrameProcessor.debug, appState);
-         break;
-      case SHOW_FILTERED_DEPTH :
-      {
-         Mat dispDepth;
-         _regionCalculator->getFilteredDepth(dispDepth, appState);
-         AppUtils::displayDebugOutput(dispDepth, appState);
-         break;
-      }
-      case SHOW_STEREO_LEFT:
-      {
-         AppUtils::displayDebugOutput(_regionCalculator->inputStereoLeft, appState);
-         break;
-      }
-      case SHOW_STEREO_RIGHT:
-      {
-         AppUtils::displayDebugOutput(_regionCalculator->inputStereoRight, appState);
-         break;
-      }
-      case -1 :
-         destroyAllWindows();
-         break;
+      Mat dispDepth;
+      _regionCalculator->getInputDepth(dispDepth, appState);
+      appUtils.appendToDebugOutput(dispDepth);
    }
+   if (appState.SHOW_FILTERED_DEPTH)
+   {
+      Mat dispDepth;
+      _regionCalculator->getFilteredDepth(dispDepth, appState);
+      appUtils.appendToDebugOutput(dispDepth);
+   }
+   if (appState.SHOW_REGION_COMPONENTS)
+      appUtils.appendToDebugOutput(_regionCalculator->mapFrameProcessor.debug);
+
+   if (appState.SHOW_STEREO_LEFT)
+   {
+      appUtils.appendToDebugOutput(_regionCalculator->inputStereoLeft);
+   }
+   if (appState.SHOW_STEREO_RIGHT)
+   {
+      appUtils.appendToDebugOutput(_regionCalculator->inputStereoRight);
+   }
+   appUtils.displayDebugOutput(appState);
+
    if (appState.ROS_ENABLED)
    {
       _dataReceiver->spin_ros_node();
@@ -111,7 +102,7 @@ void MyApplication::tickEvent()
          _regionCalculator->generateRegions(_dataReceiver, appState);
          if (appState.EXPORT_REGIONS)
          {
-            if(frameId % 10 == 0)
+            if (frameId % 10 == 0)
             {
                AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
             }
@@ -121,7 +112,7 @@ void MyApplication::tickEvent()
       if (appState.STEREO_DRIVER)
       {
          _dataReceiver->load_next_stereo_frame(_regionCalculator->inputStereoLeft, _regionCalculator->inputStereoRight, appState);
-//         AppUtils::displayDebugOutput(_regionCalculator->inputStereoLeft, appState);
+         //         AppUtils::displayDebugOutput(_regionCalculator->inputStereoLeft, appState);
       }
       if (appState.SHOW_REGION_EDGES)
       {
@@ -236,7 +227,8 @@ void MyApplication::draw_regions()
          Eigen::Vector3f prevPoint = vertices[j - appState.NUM_SKIP_EDGES];
          Eigen::Vector3f curPoint = vertices[j];
          regionEdges.emplace_back(&edge);
-         new RedCubeDrawable{edge, &_drawables, Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
+         new RedCubeDrawable{edge, &_drawables,
+                             Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),
                              {(planarRegion->getId() * 123 % 255) / 255.0f, (planarRegion->getId() * 161 % 255) / 255.0f,
                               (planarRegion->getId() * 113 % 255) / 255.0f}};
       }
@@ -281,7 +273,7 @@ void MyApplication::drawEvent()
       if (ImGui::BeginTabItem("2D"))
       {
          /* Display 2D */
-         ImGuiLayout::getImGui2DLayout(appState, _displayItem);
+         ImGuiLayout::getImGui2DLayout(appState);
          ImGui::EndTabItem();
       }
       if (ImGui::BeginTabItem("3D"))
@@ -295,9 +287,7 @@ void MyApplication::drawEvent()
          }
          ImGui::SameLine(180);
          if (ImGui::Button("Clear Patches"))
-         {
             MeshGenerator::clearMesh(planePatches);
-         }
          ImGui::EndTabItem();
       }
       if (ImGui::BeginTabItem("Beta"))
@@ -314,18 +304,13 @@ void MyApplication::drawEvent()
             frameId++;
          }
          if (ImGui::Button("Configure Memory"))
-         {
             AppUtils::checkMemoryLimits();
-         }
-         if (ImGui::Button("Stereo-Left"))
+
+         ImGui::Checkbox("Stereo-Left", &appState.SHOW_STEREO_LEFT);
+         ImGui::Checkbox("Stereo-Right", &appState.SHOW_STEREO_RIGHT);
+
+         if (ImGui::Button("Log OpenCV Build Info"))
          {
-            _displayItem = SHOW_STEREO_LEFT;
-         }
-         if (ImGui::Button("Stereo-Right"))
-         {
-            _displayItem = SHOW_STEREO_RIGHT;
-         }
-         if(ImGui::Button("Log OpenCV Build Info")){
             cout << getBuildInformation() << endl;
          }
          ImGui::EndTabItem();
@@ -381,6 +366,11 @@ int main(int argc, char **argv)
       {
          printf("Setting STEREO_DRIVER: true\n");
          app.appState.STEREO_DRIVER = true;
+      }
+      if (args[i] == "--depth-aligned")
+      {
+         printf("Setting DEPTH_ALIGNED: true\n");
+         app.appState.DEPTH_ALIGNED = true;
       }
    }
 

@@ -151,6 +151,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
          getNextLineSplit(regionFile, subStrings);
          region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
+      GeomTools::compressPointSetLinear(region);
       regions.emplace_back(region);
    }
 }

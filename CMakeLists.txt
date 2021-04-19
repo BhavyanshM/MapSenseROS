@@ -75,9 +75,9 @@ set(SOURCE
 		src/Network/NetworkManager.cpp
 		src/RegionExtraction/MapFrame.cpp
 		src/RegionExtraction/MapFrameProcessor.cpp
-		src/RegionExtraction/PlanarRegion.cpp
+        src/Geometry/src/Elements/PlanarRegion.cpp
 		src/Application/ApplicationState.cpp
-		src/RegionExtraction/RegionRing.cpp
+		src/Geometry/src/Elements/RegionRing.cpp
 		src/Application/AppUtils.cpp
 		)
 
@@ -169,7 +169,7 @@ target_link_libraries(geom-tools Eigen3::Eigen)
 add_executable(registration_and_mapping
 		src/Rendering/MeshGenerator.cpp
 		src/SLAM/PlanarRegionMapHandler.cpp
-		src/RegionExtraction/PlanarRegion.cpp
+        src/Geometry/src/Elements/PlanarRegion.cpp
 		src/SLAM/PlanarRegionSimulator.cpp
 		src/Launcher/MagnumApplication.cpp
 		src/Launcher/SLAMApplication.cpp

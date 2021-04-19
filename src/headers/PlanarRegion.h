@@ -20,7 +20,9 @@ class PlanarRegion
       Vector3f normal;
       Vector3f center;
       vector<Vector3f> patchCentroids;
-      vector<Vector3f> boundaryVertices;
+      vector<Vector2f> planarPatchCentroids;
+      RigidBodyTransform transformToWorldFrame;
+
       vector<Vector2i> leafPatches;
       KDTree tree;
       bool normalCalculated = false;
@@ -29,25 +31,25 @@ class PlanarRegion
       int id;
       int poseId = 0;
       int numOfMeasurements = 1;
+
    public:
+      vector<Vector3f> boundaryVertices;
+
+      void computePlanarPatchCentroids();
+
       int getNumOfMeasurements() const;
 
       void setNumOfMeasurements(int numOfMeasurements);
 
-   public:
       int getPoseId() const;
 
       void setPoseId(int poseId);
-
-   private:
 
       Vector3f getPCANormal();
 
       Vector3f getMeanCenter();
 
       Vector3f getMeanNormal();
-
-   public:
 
       PlanarRegion(int id);
 
@@ -58,6 +60,8 @@ class PlanarRegion
       void insertLeafPatch(Vector2i pos);
 
       void getClockWise2D(vector<Vector2f>& points);
+
+      vector<Vector3f> getBoundaryVertices();
 
       int getNumOfBoundaryVertices();
 

@@ -41,8 +41,6 @@
 
 using namespace Magnum::Math::Literals;
 
-
-
    class MyApplication : public Magnum::Platform::Application
 {
    public:
@@ -51,6 +49,8 @@ using namespace Magnum::Math::Literals;
       void init(int argc, char** argv);
 
       ApplicationState appState;
+
+      AppUtils appUtils;
 
    private:
       void drawEvent() override;
@@ -78,8 +78,6 @@ using namespace Magnum::Math::Literals;
       Magnum::ImGuiIntegration::Context _imgui{Magnum::NoCreate};
       Magnum::Color4 _clearColor = 0x72909aff_rgbaf;
       float _floatValue = 0.0f;
-
-      uint8_t _displayItem = -1;
 
       Scene3D _scene;
       Object3D *_camGrandParent;

@@ -16,6 +16,8 @@ class RigidBodyTransform
 
       RigidBodyTransform(Eigen::Matrix4d matrix);
 
+      RigidBodyTransform(Eigen::Matrix3d rotation, Eigen::Vector3d translation);
+
       RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vector3d translation);
 
       void setToInverse();
@@ -29,6 +31,8 @@ class RigidBodyTransform
       void appendLeft(RigidBodyTransform& transform);
 
       void appendRight(RigidBodyTransform& transform);
+
+      Eigen::Vector3d transformEuclidean(Eigen::Vector3d vector);
 
 };
 

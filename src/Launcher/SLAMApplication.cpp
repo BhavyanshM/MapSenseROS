@@ -76,6 +76,8 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
       case KeyEvent::Key::N: // Next
 
+         auto start = high_resolution_clock::now();
+
          /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
          _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
          _mapper.registerRegions();
@@ -98,6 +100,11 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             _mapper.ISAM2 ? _mapper.fgSLAM.optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM.optimize();
             //_mapper.mergeLatestRegions();
             _mapper.updateMapRegionsWithSLAM();
+
+            auto end = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(end - start).count();
+            printf("SLAM Update Took: %.2lf ms\n", duration/(float)1000);
+
             _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
             _mapper.fgSLAM.getPoses(_mapper.poses);
 
@@ -109,15 +116,22 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
          }
 
+
+
          _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
+
 
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
+         {
             frameIndex += SKIP_REGIONS;
+         }
          _mapper.regions = _mapper.latestRegions;
          _mapper.loadRegions(frameIndex, _mapper.latestRegions);
 
          //         _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
+
+
          break;
 
    }
@@ -126,7 +140,8 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       Vector4f plane;
       plane << _mapper.regions[0]->getNormal(), -_mapper.regions[0]->getNormal().dot(_mapper.regions[0]->getCenter());
       _mapper.latestRegions[0]->projectToPlane(plane);
-      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor, true);
+      GeomTools::compressPointSetLinear(_mapper.latestRegions[0]);
+      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor, false);
    }
 
    if (event.key() == KeyEvent::Key::Space)

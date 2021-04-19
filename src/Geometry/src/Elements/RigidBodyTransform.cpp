@@ -36,6 +36,12 @@ RigidBodyTransform::RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vecto
    this->matrix.block<3,1>(0,3) = translation;
 }
 
+RigidBodyTransform::RigidBodyTransform(Eigen::Matrix3d rotation, Eigen::Vector3d translation){
+   this->matrix.setIdentity();
+   this->matrix.block<3,3>(0,0) = rotation;
+   this->matrix.block<3,1>(0,3) = translation;
+}
+
 const Eigen::Matrix4d& RigidBodyTransform::getMatrix() const
 {
    return matrix;
@@ -54,4 +60,9 @@ void RigidBodyTransform::appendLeft(RigidBodyTransform& transform)
 void RigidBodyTransform::appendRight(RigidBodyTransform& transform)
 {
    this->matrix = transform.matrix * this->matrix;
+}
+
+Eigen::Vector3d RigidBodyTransform::transformEuclidean(Eigen::Vector3d vector)
+{
+   return this->matrix.block<3,3>(0,0) * vector + this->matrix.block<3,1>(0,3);
 }

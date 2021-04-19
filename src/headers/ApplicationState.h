@@ -7,13 +7,6 @@
 
 #include <string>
 
-#define SHOW_INPUT_DEPTH 1
-#define SHOW_FILTERED_DEPTH 2
-#define SHOW_REGION_COMPONENTS 0
-#define SHOW_INPUT_COLOR 3
-#define SHOW_STEREO_LEFT 4
-#define SHOW_STEREO_RIGHT 5
-
 using namespace std;
 
 class ApplicationState
@@ -34,7 +27,7 @@ class ApplicationState
       string colorFile = "/data/Color_L515.png";
 
    public:
-      float MERGE_DISTANCE_THRESHOLD = 0.02;
+      float MERGE_DISTANCE_THRESHOLD = 0.016;
       float MERGE_ANGULAR_THRESHOLD = 0.82;
 
       bool FILTER_SELECTED = false;
@@ -80,12 +73,23 @@ class ApplicationState
       bool SHOW_BOUNDARIES = false;
       bool SHOW_PATCHES = true;
       bool VISUAL_DEBUG = false;
+      bool SHOW_INPUT_COLOR = false;
+      bool SHOW_INPUT_DEPTH = false;
+      bool SHOW_FILTERED_DEPTH = false;
+      bool SHOW_REGION_COMPONENTS = false;
+      bool SHOW_STEREO_LEFT = false;
+      bool SHOW_STEREO_RIGHT = false;
 
       bool SHOW_GRAPH = true;
       bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;
 
       bool STEREO_DRIVER = false;
+      bool DEPTH_ALIGNED = false;
+      bool EARLY_GAUSSIAN_BLUR = true;
+
+      int GAUSSIAN_SIZE = 3;
+      float GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
       float DISPLAY_WINDOW_SIZE = 1.0f;

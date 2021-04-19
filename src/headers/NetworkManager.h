@@ -76,7 +76,7 @@ class NetworkManager
 
       void mapSenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
 
-      void init_ros_node(int argc, char **argv);
+      void init_ros_node(int argc, char **argv, ApplicationState& app);
 
       void spin_ros_node();
 

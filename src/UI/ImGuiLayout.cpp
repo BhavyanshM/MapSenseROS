@@ -11,6 +11,9 @@ void ImGuiLayout::getImGuiParamsLayout(ApplicationState& appState)
    ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT, appState.PATCH_WIDTH,
                appState.KERNEL_SLIDER_LEVEL);
    ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
+   ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
+   ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 4);
+   ImGui::SliderFloat("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1.0f, 20.0f);
    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
    
@@ -23,21 +26,14 @@ void ImGuiLayout::getImGuiParamsLayout(ApplicationState& appState)
    //    appState.update();
 }
 
-void ImGuiLayout::getImGui2DLayout(ApplicationState& appState, uint8_t& displayItem)
+void ImGuiLayout::getImGui2DLayout(ApplicationState& appState)
 {
-   if (ImGui::Button("Input Color"))
-      displayItem = 3;
-
-   if (ImGui::Button("Input Depth"))
-      displayItem = 1;
-
-   if (ImGui::Button("Filtered Depth"))
-      displayItem = 2;
+   ImGui::Checkbox("Input Color", &appState.SHOW_INPUT_COLOR);
+   ImGui::Checkbox("Input Depth", &appState.SHOW_INPUT_DEPTH);
    ImGui::SameLine(180);
    ImGui::Checkbox("Graph", &appState.SHOW_GRAPH);
-
-   if (ImGui::Button("Region Components"))
-      displayItem = 0;
+   ImGui::Checkbox("Filtered Depth", &appState.SHOW_FILTERED_DEPTH);
+   ImGui::Checkbox("Region Components", &appState.SHOW_REGION_COMPONENTS);
    ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
    ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
 
@@ -45,7 +41,6 @@ void ImGuiLayout::getImGui2DLayout(ApplicationState& appState, uint8_t& displayI
    {
       destroyAllWindows();
       destroyAllWindows();
-      displayItem = -1;
    }
    ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
    ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
