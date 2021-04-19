@@ -56,7 +56,7 @@ typedef Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D> Sc
 class MeshGenerator
 {
    private:
-      const int SKIP_EDGES = 1;
+      const int SKIP_EDGES = 5;
 
       Magnum::SceneGraph::DrawableGroup3D* drawables;
 

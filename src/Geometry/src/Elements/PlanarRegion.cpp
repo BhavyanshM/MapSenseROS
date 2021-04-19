@@ -42,8 +42,8 @@ Vector3f PlanarRegion::getNormal()
       float angle = acos(this->normal.dot(Vector3f(0,0,1)));
       Vector3f axis = Vector3f(0,0,1).cross(this->normal);
       AngleAxisf angleAxis(angle, axis);
-      Matrix3d rotation = angleAxis.toRotationMatrix();
-      transformToWorldFrame = RigidBodyTransform(rotation);
+      Matrix3d rotation = angleAxis.toRotationMatrix().cast<double>();
+      transformToWorldFrame = RigidBodyTransform(rotation, this->center.cast<double>());
    }
    return this->normal;
 }
@@ -261,7 +261,7 @@ void PlanarRegion::computePlanarPatchCentroids()
    RigidBodyTransform transformToLocal = transformToWorldFrame.getInverse();
    for(int i = 0; i<patchCentroids.size(); i++)
    {
-      Vector3f localPoint = transformToLocal.transformEuclidean(patchCentroids[i]);
+      Vector3f localPoint = transformToLocal.transformEuclidean(patchCentroids[i].cast<double>()).cast<float>();
       this->planarPatchCentroids.emplace_back(Vector2f(localPoint.x(), localPoint.y()));
    }
 }
