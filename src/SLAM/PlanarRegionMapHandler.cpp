@@ -1,6 +1,47 @@
 #include "PlanarRegionMapHandler.h"
 
-void PlanarRegionMapHandler::registerRegions()
+void PlanarRegionMapHandler::registerRegionsPointToPlane()
+{
+   Matrix4f T = Matrix4f::Identity();
+   int totalNumOfBoundaryPoints = 0;
+   for (int i = 0; i < this->matches.size(); i++)
+   {
+      totalNumOfBoundaryPoints += this->latestRegions[this->matches[i].second]->getNumOfBoundaryVertices();
+   }
+   MatrixXf A(totalNumOfBoundaryPoints, 6);
+   VectorXf b(totalNumOfBoundaryPoints);
+
+   int i = 0;
+   for (int m = 0; m < this->matches.size(); m++)
+   {
+      for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
+      {
+         Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
+         //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
+         Vector3f correspondingMapCentroid = regions[matches[m].first]->getCenter();
+         Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
+         Vector3f cross = latestPoint.cross(correspondingMapNormal);
+         A(i, 0) = cross(0);
+         A(i, 1) = cross(1);
+         A(i, 2) = cross(2);
+         A(i, 3) = correspondingMapNormal(0);
+         A(i, 4) = correspondingMapNormal(1);
+         A(i, 5) = correspondingMapNormal(2);
+         b(i) = -(latestPoint - correspondingMapCentroid).dot(correspondingMapNormal);
+         i++;
+      }
+   }
+   VectorXf solution(6);
+   solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
+   eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
+   translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
+
+   /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
+   _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
+   _sensorToMapTransform.appendRight(_sensorPoseRelative);
+}
+
+void PlanarRegionMapHandler::registerRegionsPointToPoint()
 {
    Matrix4f T = Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
@@ -151,7 +192,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
          getNextLineSplit(regionFile, subStrings);
          region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
-      GeomTools::compressPointSetLinear(region);
+//      GeomTools::compressPointSetLinear(region);
       regions.emplace_back(region);
    }
 }

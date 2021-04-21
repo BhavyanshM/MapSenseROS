@@ -38,7 +38,9 @@ class PlanarRegionMapHandler
 
       void getFileNames(string dirName);
 
-      void registerRegions();
+      void registerRegionsPointToPlane();
+
+      void registerRegionsPointToPoint();
 
       void transformLatestRegions(RigidBodyTransform transform);
 

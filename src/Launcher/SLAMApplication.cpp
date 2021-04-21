@@ -80,7 +80,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
          /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
          _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-         _mapper.registerRegions();
+         _mapper.registerRegionsPointToPlane();
 
          /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
          int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative);
