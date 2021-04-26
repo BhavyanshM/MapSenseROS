@@ -6,9 +6,12 @@
 #define APPUTILS_H
 
 #include <iostream>
-#include "PlanarRegionCalculator.h"
 #include "ApplicationState.h"
 #include "sys/resource.h"
+#include <dirent.h>
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/core/core.hpp"
+#include "PlanarRegion.h"
 
 using namespace std;
 using namespace cv;
@@ -21,7 +24,9 @@ class AppUtils
       Mat debugOutput;
 
       static void
-      capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
+      capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
+
+      static void getFileNames(string dirName, vector<string>& files);
 
       void appendToDebugOutput(Mat disp);
 
@@ -29,7 +34,7 @@ class AppUtils
 
       static void checkMemoryLimits();
 
-      static void write_regions(vector<shared_ptr<PlanarRegion>> regions, int frameId);
+      static void write_regions(vector<shared_ptr<PlanarRegion>> regions, string fileName);
 };
 
 #endif //APPUTILS_H

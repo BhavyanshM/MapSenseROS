@@ -10,7 +10,8 @@
 #include "gtsam/geometry/Pose2.h"
 #include "../SLAM/FactorGraphSLAM.h"
 #include "MeshGenerator.h"
-
+#include "AppUtils.h"
+#include "StructureFromMotion.h"
 #include <chrono>
 #include <queue>
 

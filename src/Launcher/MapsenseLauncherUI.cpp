@@ -104,7 +104,8 @@ void MyApplication::tickEvent()
          {
             if (frameId % 10 == 0)
             {
-               AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
+               AppUtils::write_regions(_regionCalculator->planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                                                            string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
             }
             frameId++;
          }
@@ -295,12 +296,13 @@ void MyApplication::drawEvent()
          /* Beta Features */
          if (ImGui::Button("Save All"))
          {
-            AppUtils::capture_data("/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
+            AppUtils::capture_data(ros::package::getPath("map_sense"),"/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
                                    _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
          }
          if (ImGui::Button("Save Regions"))
          {
-            AppUtils::write_regions(_regionCalculator->planarRegionList, frameId);
+            AppUtils::write_regions(_regionCalculator->planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                                                         string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
             frameId++;
          }
          if (ImGui::Button("Configure Memory"))

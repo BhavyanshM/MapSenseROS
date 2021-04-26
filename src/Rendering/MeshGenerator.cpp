@@ -44,7 +44,7 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
 void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
 {
    if(erase) clearMesh(edges);
-   for (int i = 0; i < planarRegionList.size(); i++)
+   for (int i = 0; i < planarRegionList.size(); i+=1)
    {
       shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
       vector<Vector3f> vertices = planarRegion->getVertices();

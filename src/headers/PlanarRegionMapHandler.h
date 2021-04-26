@@ -3,7 +3,6 @@
 
 #include <PlanarRegion.h>
 #include "../Geometry/include/GeomTools.h"
-#include <dirent.h>
 #include <algorithm>
 #include "../SLAM/FactorGraphSLAM.h"
 
@@ -31,6 +30,8 @@ class PlanarRegionMapHandler
 
       RigidBodyTransform _sensorToMapTransform;
       RigidBodyTransform _sensorPoseRelative;
+
+      void setDirectory(const string& directory);
 
       void matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions);
 

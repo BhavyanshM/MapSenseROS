@@ -18,7 +18,8 @@ void SLAMApplication::init(const Arguments& arguments)
          dirPath = args[i + 1];
       }
    }
-   _mapper.getFileNames(dirPath);
+   AppUtils::getFileNames(dirPath, _mapper.files);
+   _mapper.setDirectory(dirPath);
    _mapper.loadRegions(frameIndex, _mapper.regions);
    _mapper.loadRegions(frameIndex + SKIP_REGIONS, _mapper.latestRegions);
 
@@ -37,7 +38,7 @@ void SLAMApplication::init(const Arguments& arguments)
    }
 
    _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
-   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor);
+//   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor);
 }
 
 void SLAMApplication::draw()
@@ -105,6 +106,8 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             auto duration = duration_cast<microseconds>(end - start).count();
             printf("SLAM Update Took: %.2lf ms\n", duration/(float)1000);
 
+            for(shared_ptr<PlanarRegion> region : _mapper.mapRegions) GeomTools::compressPointSetLinear(region);
+
             _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
             _mapper.fgSLAM.getPoses(_mapper.poses);
 
@@ -116,10 +119,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
          }
 
-
-
          _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
-
 
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
@@ -130,10 +130,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          _mapper.loadRegions(frameIndex, _mapper.latestRegions);
 
          //         _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
-
-
          break;
-
    }
 
    if (event.key() == KeyEvent::Key::P){ // Project Plane
@@ -178,6 +175,10 @@ int main(int argc, char **argv)
          tester.runTests(argc, argv);
          //         tester.testKDTree();
       }
+      if(args[i] == "--sfm")
+      {
+         StructureFromMotion sfm(args[i + 1]);
+      }
    }
    if (!done)
    {
@@ -210,6 +211,7 @@ int main(int argc, char **argv)
             app._mapper.ISAM2_NUM_STEPS = stoi(args[i + 1]);
             cout << "Incremental SAM2: true \nSTEPS: " << app._mapper.ISAM2_NUM_STEPS << endl;
          }
+
       }
       cout << endl;
       return app.exec();

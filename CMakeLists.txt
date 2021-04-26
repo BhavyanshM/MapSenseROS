@@ -122,7 +122,8 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/Rotation.h
 		src/Geometry/include/Line3D.h
 		src/Geometry/include/Plane3D.h
-		src/Geometry/include/Point3D.h)
+		src/Geometry/include/Point3D.h
+		src/Geometry/include/StructureFromMotion.h)
 
 set(GEOMTOOLS_SOURCE
 		src/Geometry/src/GeomTools.cpp
@@ -133,7 +134,8 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/LieAlgebra.cpp
 		src/Geometry/src/Elements/Point3D.cpp
 		src/Geometry/src/Elements/Line3D.cpp
-		src/Geometry/src/Elements/Plane3D.cpp)
+		src/Geometry/src/Elements/Plane3D.cpp
+		src/Geometry/src/Modules/StructureFromMotion.cpp )
 
 include_directories(
 		include
@@ -167,6 +169,7 @@ add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
 target_link_libraries(geom-tools Eigen3::Eigen)
 
 add_executable(registration_and_mapping
+		src/Application/AppUtils.cpp
 		src/Rendering/MeshGenerator.cpp
 		src/SLAM/PlanarRegionMapHandler.cpp
         src/Geometry/src/Elements/PlanarRegion.cpp
@@ -176,6 +179,7 @@ add_executable(registration_and_mapping
 		src/Application/PlanarRegionMapTester.cpp
 		src/Geometry/src/GeomTools.cpp
 		src/SLAM/FactorGraphSLAM.cpp
+		src/headers/AppUtils.h
 		src/headers/SLAMApplication.h
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
@@ -184,9 +188,11 @@ add_executable(registration_and_mapping
 		src/headers/PlanarRegionMapTester.h
 		src/SLAM/FactorGraphSLAM.h
 		src/headers/MeshGenerator.h
+		src/
 		)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
+		${OpenCV_LIBS}
 		${MAGNUM_GUI_LIBS}
 		gtsam
 		geom-tools)

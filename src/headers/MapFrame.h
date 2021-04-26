@@ -2,8 +2,8 @@
 #define SRC_MAPFRAME_H
 
 #include "opencv2/core/core.hpp"
-#include "ApplicationState.h"
 #include <opencv2/imgproc.hpp>
+#include "ApplicationState.h"
 #include <iostream>
 
 using namespace std;

@@ -4,11 +4,27 @@
 
 #include "AppUtils.h"
 
-void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, int frameId)
+void AppUtils::getFileNames(string dirName, vector<string>& files)
+{
+   /* Get the sorted list of file names for planar regions at different frames. */
+   if (auto dir = opendir(dirName.c_str()))
+   {
+      while (auto f = readdir(dir))
+      {
+         //         cout << f->d_name << endl;
+         if (!f->d_name || f->d_name[0] == '.')
+            continue;
+         files.emplace_back(f->d_name);
+      }
+      closedir(dir);
+   }
+   sort(files.begin(), files.end());
+}
+
+void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
 {
    ofstream file;
-   string filename = ros::package::getPath("map_sense") + "/Extras/Regions/" + string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt";
-   file.open(filename, fstream::in | fstream::out | fstream::app);
+   file.open(fileName, fstream::in | fstream::out | fstream::app);
    file << "NumRegions:" << regions.size() << endl;
    for (shared_ptr<PlanarRegion> region : regions)
    {
@@ -16,20 +32,20 @@ void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, int frame
    }
    file.close();
    cout << "Writing Regions to:"
-        << ros::package::getPath("map_sense") + "/Extras/Regions/" + string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt" << endl;
+        << fileName << endl;
 }
 
-void AppUtils::capture_data(String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,
+void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,
                             vector<shared_ptr<PlanarRegion>> regions)
 {
    Mat finalDepth, finalFilteredDepth;
    depth.convertTo(finalDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
    filteredDepth.convertTo(finalFilteredDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
-   imwrite(ros::package::getPath("map_sense") + filename + "_Depth.png", finalDepth);
-   imwrite(ros::package::getPath("map_sense") + filename + "_Color.png", color);
-   imwrite(ros::package::getPath("map_sense") + filename + "_FilteredDepth.png", finalFilteredDepth);
-   imwrite(ros::package::getPath("map_sense") + filename + "_Components.png", components);
-   write_regions(regions, 0);
+   imwrite(projectPath + filename + "_Depth.png", finalDepth);
+   imwrite(projectPath + filename + "_Color.png", color);
+   imwrite(projectPath + filename + "_FilteredDepth.png", finalFilteredDepth);
+   imwrite(projectPath + filename + "_Components.png", components);
+   write_regions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
 }
 
 void AppUtils::appendToDebugOutput(Mat disp)

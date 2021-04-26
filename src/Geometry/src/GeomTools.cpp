@@ -28,14 +28,15 @@ Vector3f GeomTools::getProjectedPoint(Vector4f plane, Vector3f point)
 
 void GeomTools::compressPointSetLinear(shared_ptr<PlanarRegion> region)
 {
-//   printf("Extended Boundary Size: %d\n", region->getNumOfBoundaryVertices());
+   printf("Extended Boundary Size: %d\t|\t", region->getNumOfBoundaryVertices());
    vector<Vector3f> boundary = region->getBoundaryVertices();
    region->boundaryVertices.clear();
-   for(uint16_t i = 0; i<boundary.size() - 12; i++){
-      if( ((boundary[i] - boundary[i+12/2]).normalized().dot((boundary[i+12/2] - boundary[i+12]).normalized())) < 0.5f)
+   uint8_t SKIP = 10;
+   for(uint16_t i = 0; i<boundary.size() - SKIP; i++){
+      if( ((boundary[i] - boundary[i+SKIP/2]).normalized().dot((boundary[i+SKIP/2] - boundary[i+SKIP]).normalized())) < 0.5f)
       {
          region->boundaryVertices.emplace_back(boundary[i+1]);
       }
    }
-//   printf("Reduced Boundary Size: %d\n", region->getNumOfBoundaryVertices());
+   printf("Reduced Boundary Size: %d\n", region->getNumOfBoundaryVertices());
 }

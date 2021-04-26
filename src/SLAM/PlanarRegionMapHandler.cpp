@@ -120,23 +120,7 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarReg
    }
 }
 
-void PlanarRegionMapHandler::getFileNames(string dirName)
-{
-   /* Get the sorted list of file names for planar regions at different frames. */
-   this->directory = dirName;
-   if (auto dir = opendir(dirName.c_str()))
-   {
-      while (auto f = readdir(dir))
-      {
-         //         cout << f->d_name << endl;
-         if (!f->d_name || f->d_name[0] == '.')
-            continue;
-         files.emplace_back(f->d_name);
-      }
-      closedir(dir);
-   }
-   sort(files.begin(), files.end());
-}
+
 
 Vector3f getVec3f(string csv)
 {
@@ -276,6 +260,11 @@ void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
       mapRegions.emplace_back(transformedRegion);
    }
    cout << "Total Map Regions: " << mapRegions.size() << endl;
+}
+
+void PlanarRegionMapHandler::setDirectory(const string& directory)
+{
+   this->directory = directory;
 }
 
 
