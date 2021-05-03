@@ -6,6 +6,7 @@
 #define RIGIDBODYTRANSFORM_H
 
 #include "Eigen/Dense"
+#include "iostream"
 
 class RigidBodyTransform
 {
@@ -24,7 +25,7 @@ class RigidBodyTransform
 
       RigidBodyTransform getInverse();
 
-      const Eigen::Matrix4d& getMatrix() const;
+      Eigen::Matrix4d getMatrix();
 
       void setMatrix(const Eigen::Matrix4d& matrix);
 
@@ -32,7 +33,7 @@ class RigidBodyTransform
 
       void appendRight(RigidBodyTransform& transform);
 
-      Eigen::Vector3d transformEuclidean(Eigen::Vector3d vector);
+      Eigen::Vector3d transformVector(Eigen::Vector3d vector);
 
 };
 

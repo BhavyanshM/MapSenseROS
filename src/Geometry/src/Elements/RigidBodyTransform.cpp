@@ -28,21 +28,25 @@ RigidBodyTransform RigidBodyTransform::getInverse()
 }
 
 RigidBodyTransform::RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vector3d translation){
+
    Eigen::Matrix3d rotation;
    rotation = Eigen::AngleAxisd((double) eulerAngles.x(), Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd((double) eulerAngles.y(), Eigen::Vector3d::UnitY()) *
               Eigen::AngleAxisd((double) eulerAngles.z(), Eigen::Vector3d::UnitZ());
    this->matrix.setIdentity();
    this->matrix.block<3,3>(0,0) = rotation;
    this->matrix.block<3,1>(0,3) = translation;
+
 }
 
 RigidBodyTransform::RigidBodyTransform(Eigen::Matrix3d rotation, Eigen::Vector3d translation){
+   printf("Creating RBT\n");
    this->matrix.setIdentity();
    this->matrix.block<3,3>(0,0) = rotation;
    this->matrix.block<3,1>(0,3) = translation;
+   printf("Done Creating RBT\n");
 }
 
-const Eigen::Matrix4d& RigidBodyTransform::getMatrix() const
+Eigen::Matrix4d RigidBodyTransform::getMatrix()
 {
    return matrix;
 }
@@ -62,7 +66,7 @@ void RigidBodyTransform::appendRight(RigidBodyTransform& transform)
    this->matrix = transform.matrix * this->matrix;
 }
 
-Eigen::Vector3d RigidBodyTransform::transformEuclidean(Eigen::Vector3d vector)
+Eigen::Vector3d RigidBodyTransform::transformVector(Eigen::Vector3d vector)
 {
    return this->matrix.block<3,3>(0,0) * vector + this->matrix.block<3,1>(0,3);
 }
