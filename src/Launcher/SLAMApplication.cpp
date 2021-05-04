@@ -36,7 +36,7 @@ void SLAMApplication::init(const Arguments& arguments)
       _mapper.measuredRegions.emplace_back(region);
    }
 
-   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
+//   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
    _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor);
 }
 
@@ -136,22 +136,23 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       Vector4f plane;
       plane << _mapper.regions[0]->getNormal(), -_mapper.regions[0]->getNormal().dot(_mapper.regions[0]->getCenter());
       _mapper.latestRegions[0]->projectToPlane(plane);
-//      GeomTools::compressPointSetLinear(_mapper.latestRegions[0]);
-//      _mapper.latestRegions[0]->computePlanarPatchCentroids();
       _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor, true);
 
-      vector<Vector2f> points;
-      points.emplace_back(Vector2f(1,1));
-      points.emplace_back(Vector2f(1,-1));
-      points.emplace_back(Vector2f(-1,1));
-      points.emplace_back(Vector2f(-1,-1));
-      points.emplace_back(Vector2f(0,0));
-      points.emplace_back(Vector2f(0,-2));
-      points.emplace_back(Vector2f(0.5,-0.5));
-      points.emplace_back(Vector2f(0.2,0.1));
-      points.emplace_back(Vector2f(-1.5,0));
+//      vector<Vector2f> points;
+//      points.emplace_back(Vector2f(1,1));
+//      points.emplace_back(Vector2f(1,-1));
+//      points.emplace_back(Vector2f(-1,1));
+//      points.emplace_back(Vector2f(-1,-1));
+//      points.emplace_back(Vector2f(0,0));
+//      points.emplace_back(Vector2f(0,-2));
+//      points.emplace_back(Vector2f(0.5,-0.5));
+//      points.emplace_back(Vector2f(0.2,0.1));
+//      points.emplace_back(Vector2f(-1.5,0));
+//
+//      vector<Vector2f> convexHull = GeomTools::grahamScanConvexHull(points);
 
-      GeomTools::grahamScanConvexHull(points);
+      _mapper.latestRegions[0]->retainConvexHull();
+      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _sensor, true);
 
 
    }

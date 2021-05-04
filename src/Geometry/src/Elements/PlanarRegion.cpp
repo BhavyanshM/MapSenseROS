@@ -250,7 +250,7 @@ void PlanarRegion::setNumOfMeasurements(int numOfMeasurements)
    PlanarRegion::numOfMeasurements = numOfMeasurements;
 }
 
-void PlanarRegion::computePlanarPatchCentroids()
+void PlanarRegion::computeBoundaryVerticesPlanar()
 {
    float angle = acos(this->getNormal().dot(Vector3f(0,0,1)));
    Vector3f axis = -this->getNormal().cross(Vector3f(0,0,1)).normalized();
@@ -264,5 +264,23 @@ void PlanarRegion::computePlanarPatchCentroids()
       Vector3f localPoint = transformToWorldFrame.getInverse().transformVector(boundaryVertices[i].cast<double>()).cast<float>();
       this->planarPatchCentroids.emplace_back(Vector2f(localPoint.x(), localPoint.y()));
    }
+}
+
+void PlanarRegion::computeBoundaryVertices3D(vector<Vector2f> points2D)
+{
+   vector<Vector3f> points3D;
+   for(int i = 0; i<points2D.size(); i++)
+   {
+      points3D.emplace_back(transformToWorldFrame.transformVector(Vector3d((double)points2D[i].x(), (double)points2D[i].y(), 0)).cast<float>());
+   }
+   this->boundaryVertices.clear();
+   this->boundaryVertices = points3D;
+}
+
+void PlanarRegion::retainConvexHull()
+{
+   computeBoundaryVerticesPlanar();
+   vector<Vector2f> convexHull = GeomTools::grahamScanConvexHull(this->planarPatchCentroids);
+   computeBoundaryVertices3D(convexHull);
 }
 

@@ -35,7 +35,11 @@ class PlanarRegion
    public:
       vector<Vector3f> boundaryVertices;
 
-      void computePlanarPatchCentroids();
+      void computeBoundaryVerticesPlanar();
+
+      void computeBoundaryVertices3D(vector<Vector2f> points2D);
+
+      void retainConvexHull();
 
       int getNumOfMeasurements() const;
 

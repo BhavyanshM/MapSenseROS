@@ -48,11 +48,11 @@ void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> plan
    {
       shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
       vector<Vector3f> vertices = planarRegion->getVertices();
-      for (int j = SKIP_EDGES; j < vertices.size(); j += SKIP_EDGES)
+      for (int j = SKIP_EDGES; j < vertices.size() + SKIP_EDGES; j += SKIP_EDGES)
       {
          Object3D& edge = parent->addChild<Object3D>();
-         Vector3f prevPoint = vertices[j - SKIP_EDGES];
-         Vector3f curPoint = vertices[j];
+         Vector3f prevPoint = vertices[(j - SKIP_EDGES) % vertices.size()];
+         Vector3f curPoint = vertices[j % vertices.size()];
          edges.emplace_back(&edge);
          new RedCubeDrawable{edge, drawables,
                              Magnum::Primitives::line3D({prevPoint.x(), prevPoint.y(), prevPoint.z()}, {curPoint.x(), curPoint.y(), curPoint.z()}),

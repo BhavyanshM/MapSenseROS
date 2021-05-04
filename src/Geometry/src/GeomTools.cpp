@@ -58,8 +58,9 @@ int orientation(Vector2f p, Vector2f q, Vector2f r)
    pq << (q - p), 0;
    qr << (r - q), 0;
    float val = pq.cross(qr).z();
-   if (val == 0) return 0;  // colinear
-   return (val > 0)? 1: 2; // clock or counterclock wise
+   if (val == 0)
+      return 0;  // colinear
+   return (val > 0) ? 1 : 2; // clock or counterclock wise
 }
 
 void swap(Vector2f& a, Vector2f& b)
@@ -74,17 +75,28 @@ void printHull(stack<int> convexHull, vector<Vector2f> points)
    while (!convexHull.empty())
    {
       Vector2f p = points[convexHull.top()];
-      cout << "(" << p.x() << ", " << p.y() <<")";
+      cout << "(" << p.x() << ", " << p.y() << ")";
       convexHull.pop();
    }
    cout << endl;
+}
+
+vector<Vector2f> getConvexHullPoints(stack<int> indices, vector<Vector2f> points)
+{
+   vector<Vector2f> convexHull;
+   while (!indices.empty())
+   {
+      convexHull.emplace_back(points[indices.top()]);
+      indices.pop();
+   }
+   return convexHull;
 }
 
 vector<Vector2f> GeomTools::grahamScanConvexHull(vector<Vector2f> points)
 {
    Vector2f minY(10000, 10000);
    int minYIndex = 0;
-   for (int i = 0; i<points.size(); i++)
+   for (int i = 0; i < points.size(); i++)
       if (points[i].y() < minY.y())
       {
          minY = points[i];
@@ -103,18 +115,15 @@ vector<Vector2f> GeomTools::grahamScanConvexHull(vector<Vector2f> points)
    convexHull.push(1);
    convexHull.push(2);
 
-//   for(Vector2f point : points) printf("%.2lf, %.2lf\n", point.x(), point.y());
-
    vector<int> popels;
-   for(int i = 3; i<points.size(); i++)
+   for (int i = 3; i < points.size(); i++)
    {
-      while (convexHull.size()>1 && orientation(points[nextToTop(convexHull)], points[convexHull.top()], points[i]) != 1)
+      while (convexHull.size() > 1 && orientation(points[nextToTop(convexHull)], points[convexHull.top()], points[i]) != 1)
       {
          convexHull.pop();
       }
       convexHull.push(i);
    }
 
-   printHull(convexHull, points);
-   return points;
+   return getConvexHullPoints(convexHull, points);
 }
