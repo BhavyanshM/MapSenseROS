@@ -257,7 +257,7 @@ void PlanarRegion::computeBoundaryVerticesPlanar()
    AngleAxisf angleAxis(angle, axis);
    Matrix3d rotation = angleAxis.toRotationMatrix().cast<double>();
    Vector3d translation = Vector3d(this->center.cast<double>());
-   transformToWorldFrame = RigidBodyTransform(rotation, translation);
+   transformToWorldFrame.setRotationAndTranslation(rotation, translation);
 
    for(int i = 0; i<boundaryVertices.size(); i++)
    {

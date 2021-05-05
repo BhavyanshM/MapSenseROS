@@ -58,9 +58,10 @@ int orientation(Vector2f p, Vector2f q, Vector2f r)
    pq << (q - p), 0;
    qr << (r - q), 0;
    float val = pq.cross(qr).z();
+   float normalizedInnerProduct = pq.normalized().dot(qr.normalized());
    if (val == 0)
       return 0;  // colinear
-   return (val > 0) ? 1 : 2; // clock or counterclock wise
+   return (val > 0 || (normalizedInnerProduct > 1)) ? 1 : 2;
 }
 
 void swap(Vector2f& a, Vector2f& b)

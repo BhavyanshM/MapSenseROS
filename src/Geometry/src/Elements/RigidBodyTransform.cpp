@@ -38,12 +38,10 @@ RigidBodyTransform::RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vecto
 
 }
 
-RigidBodyTransform::RigidBodyTransform(Eigen::Matrix3d rotation, Eigen::Vector3d translation){
-   printf("Creating RBT\n");
+void RigidBodyTransform::setRotationAndTranslation(Eigen::Matrix3d rotation, Eigen::Vector3d translation){
    this->matrix.setIdentity();
    this->matrix.block<3,3>(0,0) = rotation;
    this->matrix.block<3,1>(0,3) = translation;
-   printf("Done Creating RBT\n");
 }
 
 Eigen::Matrix4d RigidBodyTransform::getMatrix()
@@ -69,4 +67,9 @@ void RigidBodyTransform::appendRight(RigidBodyTransform& transform)
 Eigen::Vector3d RigidBodyTransform::transformVector(Eigen::Vector3d vector)
 {
    return this->matrix.block<3,3>(0,0) * vector + this->matrix.block<3,1>(0,3);
+}
+
+void RigidBodyTransform::print()
+{
+   std::cout << this->matrix << std::endl;
 }

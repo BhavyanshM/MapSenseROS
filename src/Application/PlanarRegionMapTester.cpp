@@ -14,6 +14,21 @@ TEST(TestSuite, testCase2)
    EXPECT_NEAR((GeomTools::getProjectedPoint(Vector4f(1, 1, 0, -1), Vector3f(-6, -6, 1)) - Vector3f(0.5f, 0.5f, 1)).norm(), 0, 1e-5f);
 }
 
+TEST(TestSuite, testCase4){
+         vector<Vector2f> points;
+         points.emplace_back(Vector2f(1,1));
+         points.emplace_back(Vector2f(1,-1));
+         points.emplace_back(Vector2f(-1,1));
+         points.emplace_back(Vector2f(-1,-1));
+         points.emplace_back(Vector2f(0,0));
+         points.emplace_back(Vector2f(0,-2));
+         points.emplace_back(Vector2f(0.5,-0.5));
+         points.emplace_back(Vector2f(0.2,0.1));
+         points.emplace_back(Vector2f(-1.5,0));
+
+         vector<Vector2f> convexHull = GeomTools::grahamScanConvexHull(points);
+}
+
 TEST(TestSuite, testCase3)
 {
    KDTree tree(Vector3f(0, 0, 0));

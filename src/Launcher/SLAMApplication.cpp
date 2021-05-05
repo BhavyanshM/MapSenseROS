@@ -138,21 +138,9 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       _mapper.latestRegions[0]->projectToPlane(plane);
       _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor, true);
 
-//      vector<Vector2f> points;
-//      points.emplace_back(Vector2f(1,1));
-//      points.emplace_back(Vector2f(1,-1));
-//      points.emplace_back(Vector2f(-1,1));
-//      points.emplace_back(Vector2f(-1,-1));
-//      points.emplace_back(Vector2f(0,0));
-//      points.emplace_back(Vector2f(0,-2));
-//      points.emplace_back(Vector2f(0.5,-0.5));
-//      points.emplace_back(Vector2f(0.2,0.1));
-//      points.emplace_back(Vector2f(-1.5,0));
-//
-//      vector<Vector2f> convexHull = GeomTools::grahamScanConvexHull(points);
-
+      cout << "Reached" << endl;
       _mapper.latestRegions[0]->retainConvexHull();
-      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _sensor, true);
+      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _sensor, false);
 
 
    }
