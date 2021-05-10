@@ -284,3 +284,9 @@ void PlanarRegion::retainConvexHull()
    computeBoundaryVertices3D(convexHull);
 }
 
+void PlanarRegion::retainLinearApproximation()
+{
+   computeBoundaryVerticesPlanar();
+   vector<Vector2f> concaveHull = GeomTools::canvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
+   computeBoundaryVertices3D(concaveHull);
+}

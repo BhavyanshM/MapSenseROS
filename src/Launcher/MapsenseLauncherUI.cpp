@@ -374,6 +374,11 @@ int main(int argc, char **argv)
          printf("Setting DEPTH_ALIGNED: true\n");
          app.appState.DEPTH_ALIGNED = true;
       }
+      if (args[i] == "--camera-name")
+      {
+         printf("Setting TOPIC_CAMERA_NAME: %s\n", args[i+1].c_str());
+         app.appState.TOPIC_CAMERA_NAME = args[i+1];
+      }
    }
 
    app.init(argc, argv);

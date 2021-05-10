@@ -14,6 +14,7 @@ using namespace Eigen;
 class GeomTools
 {
    public:
+      static vector<Vector2f> canvasApproximateConcaveHull(vector<Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
       static Matrix3f getRotationFromAngleApproximations(Vector3f eulerAngles);
       static Vector3f getProjectedPoint(Vector4f plane, Vector3f point);
       static vector<Vector2f> grahamScanConvexHull(vector<Vector2f> points);

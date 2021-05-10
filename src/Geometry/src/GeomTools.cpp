@@ -128,3 +128,66 @@ vector<Vector2f> GeomTools::grahamScanConvexHull(vector<Vector2f> points)
 
    return getConvexHullPoints(convexHull, points);
 }
+
+void printCanvas(Eigen::Matrix<bool, Dynamic, Dynamic> canvas, Vector2i windowPos)
+{
+   for(int i = 0; i<canvas.rows(); i++)
+   {
+      for(int j = 0; j<canvas.cols(); j++)
+      {
+         if(canvas(i,j) == 1)
+            printf("o ");
+         else if(windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - 4 && i < windowPos.x() + 4 && j > windowPos.y() - 4 && j < windowPos.y() + 4)
+            printf("X ");
+         else
+            printf(". ");
+      }
+      printf("\n");
+   }
+
+}
+
+/* Novel algorithm for approximating concave hull by drawing a list of 2D points
+ * on a canvas, and traversing the hull with a moving window. */
+vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points, uint16_t windowHeight, uint16_t windowWidth)
+{
+
+   int r = 120;
+   int c = 120;
+   Eigen::Matrix<bool, Dynamic, Dynamic> canvas(r,c);
+   canvas.setZero();
+   bool loopComplete = false;
+
+   /* Find centroid for concave hull. */
+   Vector2f centroid;
+   for(int i = 0; i<points.size(); i++)
+   {
+      centroid += points[i];
+   }
+   centroid /= points.size();
+
+   /* Draw points on canvas using origin and bounding box dimensions. */
+   int scale = 45;
+   for(int i = 0; i<points.size(); i++)
+   {
+      canvas((int)(r/2 + points[i].x() * scale), (int)(c/2 + points[i].y() * scale)) = 1;
+   }
+
+   printCanvas(canvas, Vector2i((int)(r/2 + points[0].x() * scale), (int)(c/2 + points[0].y() * scale)));
+
+   /* Traverse the canvas from an initial point and find the concave hull linear approximation and ordering. */
+   Vector2i windowPos((int)(r/2 + points[0].x() * scale), (int)(c/2 + points[0].y() * scale));
+   while(!loopComplete)
+   {
+      for(int i = 0; i<windowHeight; i++)
+      {
+         for(int j = 0; j<windowWidth; j++)
+         {
+            loopComplete = true;
+         }
+      }
+   }
+
+   return points;
+
+}

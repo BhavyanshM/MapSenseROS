@@ -139,7 +139,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor, true);
 
       cout << "Reached" << endl;
-      _mapper.latestRegions[0]->retainConvexHull();
+      _mapper.latestRegions[0]->retainLinearApproximation();
       _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _sensor, false);
 
 

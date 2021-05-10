@@ -39,6 +39,8 @@ class PlanarRegion
 
       void computeBoundaryVertices3D(vector<Vector2f> points2D);
 
+      void retainLinearApproximation();
+
       void retainConvexHull();
 
       int getNumOfMeasurements() const;

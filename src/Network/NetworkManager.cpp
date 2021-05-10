@@ -167,15 +167,14 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
 
    // ROSTopic Subscribers
-   string cameraName = "chest_l515";
-   string depthTopicName = app.DEPTH_ALIGNED ? "/" + cameraName + "/aligned_depth_to_color/image_raw" : "/" + cameraName + "/depth/image_rect_raw";
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + cameraName + "/aligned_depth_to_color/camera_info" : "/" + cameraName + "/depth/camera_info";
+   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME + "/depth/image_rect_raw";
+   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME + "/depth/camera_info";
    subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
-   subColor = nh->subscribe("/" + cameraName + "/color/image_raw", 3, &NetworkManager::colorCallback, this);
-   subColorCompressed = nh->subscribe("/" + cameraName + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
-   subColorCamInfo = nh->subscribe("/" + cameraName + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
+   subColor = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw", 3, &NetworkManager::colorCallback, this);
+   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
+   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
 
    subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
