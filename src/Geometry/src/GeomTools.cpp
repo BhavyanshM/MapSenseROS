@@ -129,21 +129,60 @@ vector<Vector2f> GeomTools::grahamScanConvexHull(vector<Vector2f> points)
    return getConvexHullPoints(convexHull, points);
 }
 
-void printCanvas(Eigen::Matrix<bool, Dynamic, Dynamic> canvas, Vector2i windowPos)
+void printCanvas(BoolDynamicMatrix canvas, Vector2i windowPos)
 {
-   for(int i = 0; i<canvas.rows(); i++)
+   for (int i = 0; i < canvas.rows(); i++)
    {
-      for(int j = 0; j<canvas.cols(); j++)
+      for (int j = 0; j < canvas.cols(); j++)
       {
-         if(canvas(i,j) == 1)
+         if (canvas(i, j) == 1)
             printf("o ");
-         else if(windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - 4 && i < windowPos.x() + 4 && j > windowPos.y() - 4 && j < windowPos.y() + 4)
+         else if (windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - 3 && i < windowPos.x() + 3 && j > windowPos.y() - 3 &&
+                  j < windowPos.y() + 3)
             printf("X ");
          else
             printf(". ");
       }
       printf("\n");
    }
+}
+
+void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull)
+{
+   if (visited(x, y))
+      return;
+
+   visited(x, y) = 1;
+
+   /* Insert this node to data structure here. */
+//   printf("DFS(%d,%d)\n", x, y);
+   Vector2f diff = (concaveHull.back() - Vector2f(x,y));
+   if(diff.norm() < 3)
+      concaveHull.emplace_back(Vector2f(x,y));
+   else
+      printf("(%.2lf, %.2lf) -> (%d, %d) = %.2lf\n", concaveHull.back().x(), concaveHull.back().y(), x, y, diff.norm());
+
+
+//   printCanvas(canvas, Vector2i(x,y));
+
+   /* If debugging, add conditionals here. */
+
+   for (int i = -3; i < 3; i++)
+   {
+      for (int j = -3; j < 3; j++)
+      {
+         if (x + i < canvas.rows() - 1 && x + i > 1 && y + j < canvas.cols() - 1 && y + j > 1)
+         {
+            if (canvas(x + i, y + j) == 1)
+            {
+               printf("Going Into:(%d,%d)\n", x+i, y+j);
+               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull);
+            }
+         }
+      }
+   }
+
+   printf("Leaving:(%d,%d)\n", x, y);
 
 }
 
@@ -151,43 +190,26 @@ void printCanvas(Eigen::Matrix<bool, Dynamic, Dynamic> canvas, Vector2i windowPo
  * on a canvas, and traversing the hull with a moving window. */
 vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points, uint16_t windowHeight, uint16_t windowWidth)
 {
-
    int r = 120;
    int c = 120;
-   Eigen::Matrix<bool, Dynamic, Dynamic> canvas(r,c);
+   BoolDynamicMatrix canvas(r, c);
    canvas.setZero();
-   bool loopComplete = false;
-
-   /* Find centroid for concave hull. */
-   Vector2f centroid;
-   for(int i = 0; i<points.size(); i++)
-   {
-      centroid += points[i];
-   }
-   centroid /= points.size();
+   BoolDynamicMatrix visited(r, c);
+   visited.setZero();
 
    /* Draw points on canvas using origin and bounding box dimensions. */
    int scale = 45;
-   for(int i = 0; i<points.size(); i++)
+   for (int i = 0; i < points.size(); i++)
    {
-      canvas((int)(r/2 + points[i].x() * scale), (int)(c/2 + points[i].y() * scale)) = 1;
+      canvas((int) (r / 2 + points[i].x() * scale), (int) (c / 2 + points[i].y() * scale)) = 1;
    }
 
-   printCanvas(canvas, Vector2i((int)(r/2 + points[0].x() * scale), (int)(c/2 + points[0].y() * scale)));
+   vector<Vector2f> concaveHull;
+   concaveHull.emplace_back(Vector2f(r / 2 + points[0].x() * scale, c / 2 + points[0].y() * scale));
 
-   /* Traverse the canvas from an initial point and find the concave hull linear approximation and ordering. */
-   Vector2i windowPos((int)(r/2 + points[0].x() * scale), (int)(c/2 + points[0].y() * scale));
-   while(!loopComplete)
-   {
-      for(int i = 0; i<windowHeight; i++)
-      {
-         for(int j = 0; j<windowWidth; j++)
-         {
-            loopComplete = true;
-         }
-      }
-   }
+   /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
+   canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull);
 
    return points;
-
 }
+
