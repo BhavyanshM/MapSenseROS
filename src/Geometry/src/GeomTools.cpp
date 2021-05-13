@@ -147,7 +147,7 @@ void printCanvas(BoolDynamicMatrix canvas, Vector2i windowPos)
    }
 }
 
-void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull)
+void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, AppUtils& appUtils)
 {
    if (visited(x, y))
       return;
@@ -162,6 +162,7 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
    else
       printf("(%.2lf, %.2lf) -> (%d, %d) = %.2lf\n", concaveHull.back().x(), concaveHull.back().y(), x, y, diff.norm());
 
+   appUtils.display( canvas, Vector2i(x,y), 3);
 
 //   printCanvas(canvas, Vector2i(x,y));
 
@@ -176,7 +177,7 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
             if (canvas(x + i, y + j) == 1)
             {
                printf("Going Into:(%d,%d)\n", x+i, y+j);
-               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull);
+               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, appUtils);
             }
          }
       }
@@ -197,6 +198,9 @@ vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points
    BoolDynamicMatrix visited(r, c);
    visited.setZero();
 
+   AppUtils appUtils;
+   appUtils.setDisplayResolution(canvas.rows() * 6, canvas.cols() * 6);
+
    /* Draw points on canvas using origin and bounding box dimensions. */
    int scale = 45;
    for (int i = 0; i < points.size(); i++)
@@ -208,7 +212,7 @@ vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points
    concaveHull.emplace_back(Vector2f(r / 2 + points[0].x() * scale, c / 2 + points[0].y() * scale));
 
    /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
-   canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull);
+   canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull, appUtils);
 
    return points;
 }

@@ -166,7 +166,7 @@ target_link_libraries(factorGraph2D PRIVATE
 		${MAGNUM_GUI_LIBS})
 
 add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
-target_link_libraries(geom-tools Eigen3::Eigen)
+target_link_libraries(geom-tools Eigen3::Eigen ${OpenCV_LIBS})
 
 add_executable(registration_and_mapping
 		src/Application/AppUtils.cpp
