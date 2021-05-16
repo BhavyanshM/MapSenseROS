@@ -16,7 +16,7 @@
 #include <Magnum/Primitives/Line.h>
 #include <Magnum/Primitives/Axis.h>
 #include <Magnum/Trade/MeshData.h>
-#include <Magnum/Shaders/Phong.h>
+#include <Magnum/Shaders/PhongGL.h>
 #include <Magnum/MeshTools/Compile.h>
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/Math/Color.h>

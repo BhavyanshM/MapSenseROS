@@ -198,9 +198,13 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app,
    blackflyMonoReceiver->setAppUtils(appUtils);
    receivers.emplace_back(blackflyMonoReceiver);
 
-   this->subColorCamInfo = nh->subscribe("/camera/camera_info", 2, &ImageReceiver::cameraInfoCallback, blackflyMonoReceiver);
-   this->subColor = nh->subscribe("/camera/image_mono", 2, &ImageReceiver::imageCallback, blackflyMonoReceiver);
+   Subscriber* subscriberImage = new Subscriber();
+   *subscriberImage = nh->subscribe("/camera/camera_info", 2, &ImageReceiver::cameraInfoCallback, blackflyMonoReceiver);
+   subscribers.emplace_back(subscriberImage);
 
+   Subscriber* subscriberInfo = new Subscriber();
+   *subscriberInfo = nh->subscribe("/camera/image_mono", 2, &ImageReceiver::imageCallback, blackflyMonoReceiver);
+   subscribers.emplace_back(subscriberInfo);
 
 //   subColor = nh->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
 //   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);

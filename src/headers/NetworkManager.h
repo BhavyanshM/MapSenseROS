@@ -42,7 +42,7 @@ class NetworkManager
       vector<ROS1TopicReceiver*> receivers;
 //      ImageReceiver blackflyMonoReceiver;
 
-      vector<Subscriber> subscribers;
+      vector<Subscriber*> subscribers;
       Subscriber subColorCamInfo, subDepthCamInfo;
       Subscriber subDepth;
       Subscriber subColor;
