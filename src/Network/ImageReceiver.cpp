@@ -9,12 +9,22 @@ ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 
 }
 
-ImageReceiver::ImageReceiver(String imageTopic, String imageEncoding, String cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
+ImageReceiver::ImageReceiver(NodeHandle* nh, String imageTopic, String imageEncoding, String cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
 {
    this->compressed = compressed;
    this->imageEncoding = imageEncoding;
 
-//   this->cameraInfoSubscriber = nh->subscribe(cameraInfoTopic, 3, &ImageReceiver::cameraInfoCallback, this);
+   this->imageSubscriber = new Subscriber();
+   this->cameraInfoSubscriber = new Subscriber();
+
+   if(!compressed)
+   {
+      *(this->imageSubscriber) = nh->subscribe(imageTopic, 2, &ImageReceiver::imageCallback, this);
+      *(this->cameraInfoSubscriber) = nh->subscribe(cameraInfoTopic, 2, &ImageReceiver::cameraInfoCallback, this);
+   }else
+   {
+      *(this->imageSubscriber) = nh->subscribe(imageTopic, 2, &ImageReceiver::compressedImageCallback, this);
+   }
 }
 
 void ImageReceiver::compressedImageCallback(const CompressedImageConstPtr& compressedMsg)
@@ -53,12 +63,13 @@ void ImageReceiver::processMessage(ApplicationState& app)
          if (compressed)
          {
             image = imdecode(cv::Mat(compressedImageMessage->data), 1);
+            timestampLastReceived = compressedImageMessage.get()->header.stamp.toSec();
          } else
          {
             img_ptr = cv_bridge::toCvCopy(*imageMessage, imageEncoding);
             image = img_ptr->image;
+            timestampLastReceived = imageMessage.get()->header.stamp.toSec();
          }
-         timestampLastReceived = imageMessage.get()->header.stamp.toSec();
          ROS_INFO("Image Processed:", image.rows, image.cols);
       } catch (cv_bridge::Exception& e)
       {

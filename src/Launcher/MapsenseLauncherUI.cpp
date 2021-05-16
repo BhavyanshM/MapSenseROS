@@ -14,7 +14,8 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
    Magnum::GL::Renderer::setBlendEquation(Magnum::GL::Renderer::BlendEquation::Add, Magnum::GL::Renderer::BlendEquation::Add);
    Magnum::GL::Renderer::setBlendFunction(Magnum::GL::Renderer::BlendFunction::SourceAlpha, Magnum::GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
-
+   ImGuiIO& io = ImGui::GetIO();
+   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
    /* TODO: Check that the appropriate flags for renderer are set*/
    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
@@ -259,6 +260,27 @@ void MyApplication::drawEvent()
 
    ImGui::Text("MapSense");
 
+   static ImGuiID dockspaceID = 0;
+   bool active = true;
+   if (ImGui::Begin("Master Window", &active))
+   {
+      ImGui::TextUnformatted("DockSpace below");
+   }
+   if (active)
+   {
+      // Declare Central dockspace
+      dockspaceID = ImGui::GetID("HUB_DockSpace");
+      ImGui::DockSpace(dockspaceID , ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None|ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
+   }
+   ImGui::End();
+
+   ImGui::SetNextWindowDockID(dockspaceID , ImGuiCond_FirstUseEver);
+   if (ImGui::Begin("Dockable Window"))
+   {
+      ImGui::TextUnformatted("Test");
+   }
+   ImGui::End();
+
    if (ImGui::BeginTabBar("Configuration"))
    {
       if (ImGui::BeginTabItem("Params"))
@@ -312,14 +334,14 @@ void MyApplication::drawEvent()
          }
 
          /* Testing Combo Drop Downs */
-         vector<string> topicNames = _dataReceiver->getROSTopicList();
-         if (ImGui::BeginCombo("ROS Topics", current_item.c_str()))
+         vector<ros::master::TopicInfo> topics = _dataReceiver->getROSTopicList();
+         if (ImGui::BeginCombo("ROS Topics", current_item.name.c_str()))
          {
-            for (int n = 0; n < topicNames.size(); n++)
+            for (int n = 0; n < topics.size(); n++)
             {
-               bool is_selected = (current_item.c_str() == topicNames[n].c_str());
-               if (ImGui::Selectable(topicNames[n].c_str(), is_selected))
-                  current_item = topicNames[n];
+               bool is_selected = (current_item.name.c_str() == topics[n].name.c_str());
+               if (ImGui::Selectable(topics[n].name.c_str(), is_selected))
+                  current_item = topics[n];
                if (is_selected)
                   ImGui::SetItemDefaultFocus();
             }

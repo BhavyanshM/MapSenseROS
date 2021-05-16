@@ -2,7 +2,7 @@
 
 NetworkManager::NetworkManager(ApplicationState app)
 {
-   if(app.STEREO_DRIVER)
+   if (app.STEREO_DRIVER)
    {
       this->camLeft = new VideoCapture(0, CAP_V4L2);
       this->camRight = new VideoCapture(2, CAP_V4L2);
@@ -23,18 +23,16 @@ NetworkManager::NetworkManager(ApplicationState app)
       this->camRight->set(CAP_PROP_EXPOSURE, -4);
       this->camRight->set(CAP_PROP_MODE, CAP_OPENCV_MJPEG);
    }
-
-
 }
 
-vector<string> NetworkManager::getROSTopicList()
+vector<ros::master::TopicInfo> NetworkManager::getROSTopicList()
 {
    ros::master::V_TopicInfo topic_infos;
    ros::master::getTopics(topic_infos);
-   vector<string> names;
-   for(int i = 0; i<topic_infos.size(); i++)
+   vector<ros::master::TopicInfo> names;
+   for (int i = 0; i < topic_infos.size(); i++)
    {
-      names.emplace_back(topic_infos[i].name);
+      names.emplace_back(topic_infos[i]);
    }
    return names;
 }
@@ -179,7 +177,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    ROS_DEBUG("Data Frame Loaded");
 }
 
-void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app, AppUtils* appUtils)
+void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app, AppUtils *appUtils)
 {
    ROS_DEBUG("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
@@ -189,35 +187,37 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app,
    planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
 
    // ROSTopic Subscribers
-   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME + "/depth/image_rect_raw";
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME + "/depth/camera_info";
-//   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
-//   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
+   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
+                                                                                                                   "/depth/image_rect_raw";
+   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
+                                                                                                                         "/depth/camera_info";
+   //   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
+   //   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
-   ImageReceiver* blackflyMonoReceiver = new ImageReceiver("/camera/image_mono", sensor_msgs::image_encodings::MONO8, "/camera/color/camera_info", false);
-   blackflyMonoReceiver->setAppUtils(appUtils);
-   receivers.emplace_back(blackflyMonoReceiver);
+   addReceiver(appUtils, TopicInfo("/camera/image_mono", "sensor_msgs/Image"), TopicInfo("camera/camera_info", ""));
 
-   Subscriber* subscriberImage = new Subscriber();
-   *subscriberImage = nh->subscribe("/camera/camera_info", 2, &ImageReceiver::cameraInfoCallback, blackflyMonoReceiver);
-   subscribers.emplace_back(subscriberImage);
-
-   Subscriber* subscriberInfo = new Subscriber();
-   *subscriberInfo = nh->subscribe("/camera/image_mono", 2, &ImageReceiver::imageCallback, blackflyMonoReceiver);
-   subscribers.emplace_back(subscriberInfo);
-
-//   subColor = nh->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
-//   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
-//   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
-//
-//   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+   //   subColor = nh->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
+   //   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
+   //   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
+   //
+   //   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
    ROS_DEBUG("Started ROS Node");
 }
 
+void NetworkManager::addReceiver(AppUtils *appUtils, TopicInfo data, TopicInfo info)
+{
+   if (data.datatype == "sensor_msgs/Image")
+   {
+      ImageReceiver *blackflyMonoReceiver = new ImageReceiver(nh, data.name, sensor_msgs::image_encodings::MONO8, info.name, false);
+      blackflyMonoReceiver->setAppUtils(appUtils);
+      receivers.emplace_back(blackflyMonoReceiver);
+   }
+}
+
 void NetworkManager::receiverUpdate(ApplicationState& app)
 {
-   for(int i = 0; i<receivers.size(); i++)
+   for (int i = 0; i < receivers.size(); i++)
    {
       ROS_INFO("RenderUpdate");
       receivers[i]->processMessage(app);

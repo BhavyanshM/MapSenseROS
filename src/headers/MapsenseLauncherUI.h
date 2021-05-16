@@ -53,7 +53,7 @@ using namespace Magnum::Math::Literals;
       AppUtils appUtils;
 
    private:
-      string current_item = "Select Topic";
+      ros::master::TopicInfo current_item;
 
    private:
       void drawEvent() override;

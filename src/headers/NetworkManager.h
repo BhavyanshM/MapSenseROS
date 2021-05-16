@@ -27,6 +27,8 @@ using namespace chrono;
 using namespace cv;
 using namespace sensor_msgs;
 
+typedef ros::master::TopicInfo TopicInfo;
+
 class NetworkManager
 {
    public:
@@ -57,7 +59,9 @@ class NetworkManager
 
       NetworkManager(ApplicationState app);
 
-      vector<string> getROSTopicList();
+      vector<ros::master::TopicInfo> getROSTopicList();
+
+      void addReceiver(AppUtils* appUtils, TopicInfo data, TopicInfo info = TopicInfo());
 
       void receiverUpdate(ApplicationState& app);
 
