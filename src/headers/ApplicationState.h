@@ -87,7 +87,7 @@ class ApplicationState
       bool STEREO_DRIVER = false;
       bool DEPTH_ALIGNED = false;
       bool EARLY_GAUSSIAN_BLUR = true;
-      string TOPIC_CAMERA_NAME = "chest_l515";
+      string TOPIC_CAMERA_NAME = "camera";
 
       int GAUSSIAN_SIZE = 3;
       float GAUSSIAN_SIGMA = 20;
@@ -98,7 +98,7 @@ class ApplicationState
       float DEPTH_DISPLAY_OFFSET = 100;
 
       bool EXPORT_REGIONS = false;
-      bool GENERATE_REGIONS = true;
+      bool GENERATE_REGIONS = false;
 
 };
 

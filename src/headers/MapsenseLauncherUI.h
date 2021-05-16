@@ -53,6 +53,9 @@ using namespace Magnum::Math::Literals;
       AppUtils appUtils;
 
    private:
+      string current_item = "Select Topic";
+
+   private:
       void drawEvent() override;
 
       void tickEvent() override;

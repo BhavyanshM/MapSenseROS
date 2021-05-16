@@ -28,11 +28,15 @@ class AppUtils
       Mat debugOutput;
       uint16_t rows, cols;
 
+      void display();
+
+      void displayPointSet2D(vector<Vector2f> points);
+
       void setDisplayResolution(uint16_t rows, uint16_t cols);
 
       void canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize);
 
-      void display(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize);
+      void displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize);
 
       static void
       capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);

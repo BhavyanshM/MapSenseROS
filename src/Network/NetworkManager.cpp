@@ -27,13 +27,25 @@ NetworkManager::NetworkManager(ApplicationState app)
 
 }
 
+vector<string> NetworkManager::getROSTopicList()
+{
+   ros::master::V_TopicInfo topic_infos;
+   ros::master::getTopics(topic_infos);
+   vector<string> names;
+   for(int i = 0; i<topic_infos.size(); i++)
+   {
+      names.emplace_back(topic_infos[i].name);
+   }
+   return names;
+}
+
 void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
 {
    ROS_DEBUG("Depth Callback", depthMsg->header.seq);
    depthMessage = depthMsg;
 }
 
-void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg)
+void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, String name)
 {
    colorMessage = colorMsg;
    ROS_DEBUG("COLOR CALLBACK");
@@ -81,9 +93,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
       try
       {
          ROS_DEBUG("Callback: Depth:%d", depthMessage->header.stamp.sec);
-
          img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
-
          depth = img_ptr_depth->image;
          timestamp = depthMessage.get()->header.stamp.toSec();
 
@@ -103,8 +113,20 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
       try
       {
          ROS_DEBUG("Callback: Color:%d", colorMessage->header.stamp.sec);
-         img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::TYPE_8UC3);
+         img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::MONO8);
          color = img_ptr_color->image;
+
+         /*
+            image_width: 1280
+            image_height: 1024
+            camera_name: 12502226
+            camera_matrix: (3, 3): data: [305.6744323977819, 0, 640.9175104495503, 0, 307.6945377439216, 512.9095529465322, 0, 0, 1]
+            distortion_model: rational_polynomial
+            distortion_coefficients: (1, 8): data: [-0.1304880574839372, 0.0343337720836711, 0, 0, 0.002347490605947351, 0.163868408051474, -0.02493286434834704, 0.01394671162254435]
+            rectification_matrix: (3, 3): data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+            projection_matrix: (3, 4): data: [59.01958465576172, 0, 640.8088034578032, 0, 0, 72.80045318603516, 513.8869098299074, 0, 0, 0, 1, 0]
+         */
+
          for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
          {
             pyrDown(color, color);
@@ -157,9 +179,9 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    ROS_DEBUG("Data Frame Loaded");
 }
 
-void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
+void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app, AppUtils* appUtils)
 {
-   ROS_INFO("Starting ROS Node");
+   ROS_DEBUG("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
    nh = new NodeHandle();
 
@@ -169,63 +191,38 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    // ROSTopic Subscribers
    string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME + "/depth/image_rect_raw";
    string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME + "/depth/camera_info";
-   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
-   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
+//   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
+//   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
-   subColor = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw", 3, &NetworkManager::colorCallback, this);
-   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
-   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
+   ImageReceiver* blackflyMonoReceiver = new ImageReceiver("/camera/image_mono", sensor_msgs::image_encodings::MONO8, "/camera/color/camera_info", false);
+   blackflyMonoReceiver->setAppUtils(appUtils);
+   receivers.emplace_back(blackflyMonoReceiver);
 
-   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+   this->subColorCamInfo = nh->subscribe("/camera/camera_info", 2, &ImageReceiver::cameraInfoCallback, blackflyMonoReceiver);
+   this->subColor = nh->subscribe("/camera/image_mono", 2, &ImageReceiver::imageCallback, blackflyMonoReceiver);
 
-   ROS_INFO("Started ROS Node");
+
+//   subColor = nh->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
+//   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
+//   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
+//
+//   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+
+   ROS_DEBUG("Started ROS Node");
+}
+
+void NetworkManager::receiverUpdate(ApplicationState& app)
+{
+   for(int i = 0; i<receivers.size(); i++)
+   {
+      ROS_INFO("RenderUpdate");
+      receivers[i]->processMessage(app);
+      receivers[i]->render();
+   }
 }
 
 void NetworkManager::spin_ros_node()
 {
    ROS_DEBUG("SpinOnce");
    spinOnce();
-}
-
-void NetworkManager::load_sample_depth(String filename, Mat& depth)
-{
-   depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
-}
-
-void NetworkManager::load_sample_color(String filename, Mat& color)
-{
-   color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
-}
-
-void NetworkManager::get_sample_depth(Mat depth, float mean, float stddev)
-{
-   std::default_random_engine generator;
-   std::normal_distribution<double> distribution(mean, stddev);
-   for (int i = 0; i < depth.cols; i++)
-   {
-      for (int j = 0; j < depth.rows; j++)
-      {
-         float d = 10.04;
-         d += distribution(generator);
-         if (160 < i && i < 350 && 200 < j && j < 390)
-         {
-            // d = 0.008 * i + 0.014 * j;
-            depth.at<short>(j, i) = (d - 2.0f) * 1000;
-         } else
-         {
-            depth.at<short>(j, i) = d * 1000;
-         }
-      }
-   }
-}
-
-void NetworkManager::get_sample_color(Mat color)
-{
-   for (int i = 0; i < color.rows; i++)
-   {
-      for (int j = 0; j < color.cols; j++)
-      {
-         color.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
-      }
-   }
 }

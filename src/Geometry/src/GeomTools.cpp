@@ -156,13 +156,15 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
 
    /* Insert this node to data structure here. */
 //   printf("DFS(%d,%d)\n", x, y);
-   Vector2f diff = (concaveHull.back() - Vector2f(x,y));
-   if(diff.norm() < 3)
-      concaveHull.emplace_back(Vector2f(x,y));
-   else
-      printf("(%.2lf, %.2lf) -> (%d, %d) = %.2lf\n", concaveHull.back().x(), concaveHull.back().y(), x, y, diff.norm());
+   Vector2f candidate(x,y);
+   Vector2f current = concaveHull.rbegin()[0];
+   Vector2f previous = concaveHull.rbegin()[1];
 
-   appUtils.display( canvas, Vector2i(x,y), 3);
+   concaveHull.emplace_back(candidate);
+   printf("(%.2lf, %.2lf) -> (%d, %d) = %.2lf\n", concaveHull.back().x(), concaveHull.back().y(), x, y, ((current - previous).normalized()).dot((candidate - current).normalized()));
+
+   appUtils.displayCanvasWithWindow(canvas, Vector2i(x, y), 3);
+
 
 //   printCanvas(canvas, Vector2i(x,y));
 
@@ -213,6 +215,8 @@ vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points
 
    /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
    canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull, appUtils);
+
+   appUtils.displayPointSet2D(concaveHull);
 
    return points;
 }

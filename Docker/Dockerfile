@@ -35,6 +35,7 @@ USER robotlab
 RUN mkdir dev
 WORKDIR /home/robotlab/dev
 USER root
+
 RUN mkdir corrade \
  && cd corrade \
  && git clone git://github.com/mosra/corrade \
@@ -44,6 +45,7 @@ RUN mkdir corrade \
  && dpkg -i ../corrade*.deb \
  && cd ../.. \
  && rm -rf corrade
+
 RUN mkdir magnum \
  && cd magnum \
  && git clone git://github.com/mosra/magnum \
@@ -53,6 +55,7 @@ RUN mkdir magnum \
  && dpkg -i ../magnum*.deb \
  && cd ../.. \
  && rm -rf magnum
+
 RUN mkdir magnum-integration \
  && cd magnum-integration \
  && git clone git://github.com/mosra/magnum-integration \

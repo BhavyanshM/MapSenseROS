@@ -18,7 +18,7 @@
 #include <random>
 #include "map_sense/RawGPUPlanarRegionList.h"
 #include "map_sense/MapsenseConfiguration.h"
-
+#include "ImageReceiver.h"
 #include <ApplicationState.h>
 
 using namespace ros;
@@ -32,37 +32,36 @@ class NetworkManager
    public:
       CameraInfoConstPtr depthCameraInfo, colorCameraInfo;
       ImageConstPtr colorMessage;
-      map_sense::MapsenseConfiguration paramsMessage;
-      bool paramsAvailable = false;
       CompressedImageConstPtr colorCompressedMessage;
+      map_sense::MapsenseConfiguration paramsMessage;
       ImageConstPtr depthMessage;
       NodeHandle *nh;
-      VideoCapture* camLeft;
-      VideoCapture* camRight;
+      VideoCapture *camLeft;
+      VideoCapture *camRight;
 
+      vector<ROS1TopicReceiver*> receivers;
+//      ImageReceiver blackflyMonoReceiver;
+
+      vector<Subscriber> subscribers;
       Subscriber subColorCamInfo, subDepthCamInfo;
       Subscriber subDepth;
       Subscriber subColor;
       Subscriber subColorCompressed;
       Subscriber subMapSenseParams;
-
       Publisher planarRegionPub;
 
       bool depthCamInfoSet = false;
+      bool paramsAvailable = false;
       bool nextDepthAvailable = false;
       bool nextColorAvailable = false;
 
       NetworkManager(ApplicationState app);
 
-      void get_sample_depth(Mat depth, float mean, float stddev);
+      vector<string> getROSTopicList();
 
-      void get_sample_color(Mat color);
-
-      void load_sample_depth(String filename, Mat& depth);
+      void receiverUpdate(ApplicationState& app);
 
       void load_next_frame(Mat& depth, Mat& color, double& timestamp, ApplicationState& app);
-
-      void load_sample_color(String filename, Mat& color);
 
       void depthCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& message);
 
@@ -70,13 +69,13 @@ class NetworkManager
 
       void depthCallback(const ImageConstPtr& depthMsg);
 
-      void colorCallback(const sensor_msgs::ImageConstPtr& colorMsg);
+      void colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, String name);
 
       void colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& colorMsg);
 
       void mapSenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
 
-      void init_ros_node(int argc, char **argv, ApplicationState& app);
+      void init_ros_node(int argc, char **argv, ApplicationState& app, AppUtils* appUtils);
 
       void spin_ros_node();
 

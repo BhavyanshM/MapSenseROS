@@ -62,7 +62,7 @@ void AppUtils::displayDebugOutput(ApplicationState appState)
       namedWindow("DebugOutput", WINDOW_NORMAL);
       resizeWindow("DebugOutput", (int) (debugOutput.cols * appState.DISPLAY_WINDOW_SIZE), (int) (debugOutput.rows * appState.DISPLAY_WINDOW_SIZE));
       imshow("DebugOutput", debugOutput);
-      waitKey(100);
+      waitKey(1);
    }
    images.clear();
 }
@@ -80,25 +80,40 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t
       for (int j = 0; j < canvas.cols(); j++)
       {
          if (canvas(i, j) == 1)
-            circle(AppUtils::displayOutput, Point(i * 6, j * 6), 3, Scalar(255, 0, 0), -1);
+            circle(AppUtils::displayOutput, Point(i * 6, j * 6), 2, Scalar(255, 0, 0), -1);
          else if (windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - windowSize && i < windowPos.x() + windowSize && j > windowPos.y() - windowSize &&
              j < windowPos.y() + windowSize)
          {
-            circle(AppUtils::displayOutput, Point(i * 6, j * 6), 3, Scalar(0, 0, 255), -1);
+            circle(AppUtils::displayOutput, Point(i * 6, j * 6), 2, Scalar(0, 0, 255), -1);
          }
       }
    }
 }
 
-void AppUtils::display(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize)
+void AppUtils::displayPointSet2D(vector<Vector2f> points)
+{
+   displayOutput.setTo(0);
+   for(int i = 0; i<points.size(); i++)
+   {
+      circle(AppUtils::displayOutput, Point((int)points[i].x() * 6, (int)points[i].y() * 6), 2, Scalar(255, 0, 0), -1);
+      display();
+   }
+}
+
+void AppUtils::displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize)
 {
    canvasToMat(canvas, windowPos, windowSize);
+   display();
+}
+
+void AppUtils::display()
+{
    if (displayOutput.cols > 0 && displayOutput.rows > 0 && !displayOutput.empty())
    {
       namedWindow("Display", WINDOW_NORMAL);
       resizeWindow("Display", (int) (displayOutput.cols), (int) (displayOutput.rows));
       imshow("Display", displayOutput);
-      waitKey(40);
+      waitKey(1);
    }
 }
 

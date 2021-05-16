@@ -79,6 +79,10 @@ set(SOURCE
 		src/Application/ApplicationState.cpp
 		src/Geometry/src/Elements/RegionRing.cpp
 		src/Application/AppUtils.cpp
+		src/ImageProcessing/ImageTools.cpp
+		src/Network/ROS1TopicReceiver.cpp
+        src/Network/ImageReceiver.cpp
+
 		)
 
 set (HEADERS
@@ -89,12 +93,16 @@ set (HEADERS
 		src/headers/PlanarRegion.h
 		src/headers/ApplicationState.h
 		src/headers/RegionRing.h
-		src/headers/AppUtils.h)
+		src/headers/AppUtils.h
+		src/ImageProcessing/ImageTools.h
+		src/headers/ImageReceiver.h
+		src/headers/ROS1TopicReceiver.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
 		src/Launcher/MapsenseLauncherUI.cpp
-		src/UI/ImGuiLayout.cpp)
+		src/UI/ImGuiLayout.cpp
+		)
 
 
 set(MAPSENSE_GUI_HEADERS
@@ -145,7 +153,7 @@ include_directories(
 		/usr/include/CL/
 )
 
-add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS})
+add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} src/FileManager.cpp src/headers/FileManager.h)
 target_link_libraries(planar_region_publisher
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}
@@ -202,7 +210,8 @@ target_link_libraries(registration_and_mapping ${GTEST_LIBRARIES})
 
 add_executable(mapsense_headless
         ${SOURCE} ${HEADERS}
-		src/Launcher/MapsenseHeadlessLauncher.cpp src/headers/MapsenseHeadlessLauncher.h)
+		src/Launcher/MapsenseHeadlessLauncher.cpp
+		src/headers/MapsenseHeadlessLauncher.h)
 target_link_libraries(mapsense_headless
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}

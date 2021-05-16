@@ -52,16 +52,20 @@ void MyApplication::init(int argc, char **argv)
 {
    /* TODO: Instantiate the Information Processors */
    _dataReceiver = new NetworkManager(appState);
-   _dataReceiver->init_ros_node(argc, argv, appState);
+   _dataReceiver->init_ros_node(argc, argv, appState, &appUtils);
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
 }
 
 void MyApplication::tickEvent()
 {
-   //     cout << "TickEvent:" << count++ << endl;
+   cout << "TickEvent:" << count++ << endl;
    if (appState.SHOW_INPUT_COLOR)
-      appUtils.appendToDebugOutput(_regionCalculator->inputColor);
+   {
+//      _dataReceiver->blackflyMonoReceiver.processMessage(appState);
+//      _dataReceiver->blackflyMonoReceiver.render();
+      _dataReceiver->receiverUpdate(appState);
+   }
    if (appState.SHOW_INPUT_DEPTH)
    {
       Mat dispDepth;
@@ -96,7 +100,8 @@ void MyApplication::tickEvent()
          appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
          appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
       }
-      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
+//      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
+
       if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
       {
          _regionCalculator->generateRegions(_dataReceiver, appState);
@@ -296,8 +301,8 @@ void MyApplication::drawEvent()
          /* Beta Features */
          if (ImGui::Button("Save All"))
          {
-            AppUtils::capture_data(ros::package::getPath("map_sense"),"/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
-                                   _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
+            AppUtils::capture_data(ros::package::getPath("map_sense"), "/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor,
+                                   _regionCalculator->filteredDepth, _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
          }
          if (ImGui::Button("Save Regions"))
          {
@@ -305,6 +310,22 @@ void MyApplication::drawEvent()
                                                                          string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
             frameId++;
          }
+
+         /* Testing Combo Drop Downs */
+         vector<string> topicNames = _dataReceiver->getROSTopicList();
+         if (ImGui::BeginCombo("ROS Topics", current_item.c_str()))
+         {
+            for (int n = 0; n < topicNames.size(); n++)
+            {
+               bool is_selected = (current_item.c_str() == topicNames[n].c_str());
+               if (ImGui::Selectable(topicNames[n].c_str(), is_selected))
+                  current_item = topicNames[n];
+               if (is_selected)
+                  ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+         }
+
          if (ImGui::Button("Configure Memory"))
             AppUtils::checkMemoryLimits();
 
@@ -376,8 +397,8 @@ int main(int argc, char **argv)
       }
       if (args[i] == "--camera-name")
       {
-         printf("Setting TOPIC_CAMERA_NAME: %s\n", args[i+1].c_str());
-         app.appState.TOPIC_CAMERA_NAME = args[i+1];
+         printf("Setting TOPIC_CAMERA_NAME: %s\n", args[i + 1].c_str());
+         app.appState.TOPIC_CAMERA_NAME = args[i + 1];
       }
    }
 
