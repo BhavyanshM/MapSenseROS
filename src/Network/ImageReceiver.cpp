@@ -8,7 +8,7 @@ ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 {
 }
 
-ImageReceiver::ImageReceiver(NodeHandle *nh, String imageTopic, String imageEncoding, String cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
+ImageReceiver::ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
 {
    this->topicName = imageTopic;
    this->compressed = compressed;
@@ -47,15 +47,22 @@ void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 
 void ImageReceiver::render()
 {
-   ROS_DEBUG("Render");
+   ROS_DEBUG("Render: %s", this->topicName.c_str());
    if (renderingEnabled)
+   {
+      if(imageEncoding == sensor_msgs::image_encodings::TYPE_16UC1)
+      {
+         this->image.convertTo(this->image, -1, this->imageBrightness, this->imageOffset);
+         cvtColor(this->image, this->image, COLOR_GRAY2BGR);
+      }
       appUtils->appendToDebugOutput(this->image);
+   }
 }
 
 void ImageReceiver::ImGuiUpdate()
 {
    ImGui::Text("%s", (String("ROS1 Receiver: ") + topicName).c_str());
-   ImGui::Checkbox("Render", &renderingEnabled);
+   ImGui::Checkbox((String("Render: ") + topicName).c_str(), &renderingEnabled);
 }
 
 void ImageReceiver::processMessage(ApplicationState& app)
@@ -69,10 +76,17 @@ void ImageReceiver::processMessage(ApplicationState& app)
       {
          if (compressed)
          {
+            ROS_INFO("Compressed Image Being Decoded.", compressedImageMessage->header.stamp);
             image = imdecode(cv::Mat(compressedImageMessage->data), 1);
             timestampLastReceived = compressedImageMessage.get()->header.stamp.toSec();
          } else
          {
+            if(imageMessage->encoding == "mono8")
+               this->imageEncoding = sensor_msgs::image_encodings::MONO8;
+            if(imageMessage->encoding == "16UC1")
+               this->imageEncoding = sensor_msgs::image_encodings::TYPE_16UC1;
+            if(imageMessage->encoding.find("rgb8") != string::npos)
+               this->imageEncoding = sensor_msgs::image_encodings::TYPE_16UC3;
             img_ptr = cv_bridge::toCvCopy(*imageMessage, imageEncoding);
             image = img_ptr->image;
             timestampLastReceived = imageMessage.get()->header.stamp.toSec();

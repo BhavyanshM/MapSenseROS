@@ -49,8 +49,12 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
 
 void AppUtils::appendToDebugOutput(Mat disp)
 {
-   if (disp.type() == CV_16UC3)
+   if (disp.type() == CV_16UC3 || disp.type() == CV_16UC1)
       disp.convertTo(disp, CV_8U, 0.00390625);
+   if(disp.type() == CV_8UC1 )
+      cvtColor(disp, disp, COLOR_GRAY2BGR);
+   cout << "Image Type: " << disp.type() << endl;
+   cv::resize(disp, disp, Size(640, 480));
    images.emplace_back(disp);
 }
 

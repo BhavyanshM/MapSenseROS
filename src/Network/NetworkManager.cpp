@@ -206,11 +206,20 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
 void NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
+
+   ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
+      receiver = new ImageReceiver(nh, data.name, info.name, false);
+   if (data.datatype == "sensor_msgs/CompressedImage")
+      receiver = new ImageReceiver(nh, data.name, info.name, true);
+
+   if (receiver != nullptr)
    {
-      ImageReceiver *blackflyMonoReceiver = new ImageReceiver(nh, data.name, sensor_msgs::image_encodings::MONO8, info.name, false);
-      blackflyMonoReceiver->setAppUtils(this->appUtils);
-      receivers.emplace_back(blackflyMonoReceiver);
+      receiver->setAppUtils(this->appUtils);
+      receivers.emplace_back(receiver);
+   }else
+   {
+      printf("Request to add receiver: %s\n", data.name.c_str());
    }
 }
 

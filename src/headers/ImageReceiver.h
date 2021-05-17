@@ -16,14 +16,17 @@ class ImageReceiver : public ROS1TopicReceiver
       CompressedImageConstPtr compressedImageMessage;
       Subscriber* imageSubscriber;
       Subscriber* cameraInfoSubscriber;
+      float imageBrightness = 40;
+      float imageOffset = 100;
       bool compressed = false;
       bool cameraInfoSet = false;
+
 
    public:
       Mat image;
 
    public:
-      ImageReceiver(NodeHandle* nh, String imageTopic, String imageEncoding, String cameraInfoTopic, bool compressed = false);
+      ImageReceiver(NodeHandle* nh, String imageTopic, String cameraInfoTopic, bool compressed = false);
 
       void processMessage(ApplicationState& app) override;
 
