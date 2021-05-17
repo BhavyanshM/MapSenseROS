@@ -1,7 +1,8 @@
 #include "NetworkManager.h"
 
-NetworkManager::NetworkManager(ApplicationState app)
+NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
 {
+   this->appUtils = appUtils;
    if (app.STEREO_DRIVER)
    {
       this->camLeft = new VideoCapture(0, CAP_V4L2);
@@ -25,11 +26,11 @@ NetworkManager::NetworkManager(ApplicationState app)
    }
 }
 
-vector<ros::master::TopicInfo> NetworkManager::getROSTopicList()
+vector<TopicInfo> NetworkManager::getROSTopicList()
 {
    ros::master::V_TopicInfo topic_infos;
    ros::master::getTopics(topic_infos);
-   vector<ros::master::TopicInfo> names;
+   vector<TopicInfo> names;
    for (int i = 0; i < topic_infos.size(); i++)
    {
       names.emplace_back(topic_infos[i]);
@@ -177,7 +178,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    ROS_DEBUG("Data Frame Loaded");
 }
 
-void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app, AppUtils *appUtils)
+void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
    ROS_DEBUG("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
@@ -194,25 +195,50 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app,
    //   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    //   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
-   addReceiver(appUtils, TopicInfo("/camera/image_mono", "sensor_msgs/Image"), TopicInfo("camera/camera_info", ""));
-
    //   subColor = nh->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
    //   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
    //   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
    //
-   //   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
    ROS_DEBUG("Started ROS Node");
 }
 
-void NetworkManager::addReceiver(AppUtils *appUtils, TopicInfo data, TopicInfo info)
+void NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
    if (data.datatype == "sensor_msgs/Image")
    {
       ImageReceiver *blackflyMonoReceiver = new ImageReceiver(nh, data.name, sensor_msgs::image_encodings::MONO8, info.name, false);
-      blackflyMonoReceiver->setAppUtils(appUtils);
+      blackflyMonoReceiver->setAppUtils(this->appUtils);
       receivers.emplace_back(blackflyMonoReceiver);
    }
+}
+
+void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic)
+{
+   if (ImGui::BeginCombo("ROS Topics", currentTopic.name.c_str()))
+   {
+      for (int n = 0; n < topics.size(); n++)
+      {
+         bool is_selected = (currentTopic.name.c_str() == topics[n].name.c_str());
+         if (ImGui::Selectable(topics[n].name.c_str(), is_selected))
+            currentTopic = topics[n];
+         if (is_selected)
+            ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+   }
+}
+
+void NetworkManager::ImGuiUpdate()
+{
+   /* Testing Combo Drop Downs */
+   vector<TopicInfo> topics = getROSTopicList();
+   getTopicSelection(topics, currentDataTopic);
+   if (ImGui::Button("Add Receiver"))
+      addReceiver(currentDataTopic);
+   for (int i = 0; i < receivers.size(); i++)
+      receivers[i]->ImGuiUpdate();
 }
 
 void NetworkManager::receiverUpdate(ApplicationState& app)

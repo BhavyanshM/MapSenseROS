@@ -53,9 +53,6 @@ using namespace Magnum::Math::Literals;
       AppUtils appUtils;
 
    private:
-      ros::master::TopicInfo current_item;
-
-   private:
       void drawEvent() override;
 
       void tickEvent() override;

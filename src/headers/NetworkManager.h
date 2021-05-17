@@ -11,6 +11,7 @@
 #include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
 
+#include "imgui.h"
 #include <iostream>
 #include <CL/cl.hpp>
 #include "math.h"
@@ -31,7 +32,11 @@ typedef ros::master::TopicInfo TopicInfo;
 
 class NetworkManager
 {
+   private:
+      TopicInfo currentDataTopic, currentInfoTopic;
+
    public:
+      AppUtils* appUtils;
       CameraInfoConstPtr depthCameraInfo, colorCameraInfo;
       ImageConstPtr colorMessage;
       CompressedImageConstPtr colorCompressedMessage;
@@ -57,11 +62,15 @@ class NetworkManager
       bool nextDepthAvailable = false;
       bool nextColorAvailable = false;
 
-      NetworkManager(ApplicationState app);
+      NetworkManager(ApplicationState app, AppUtils* appUtils);
 
-      vector<ros::master::TopicInfo> getROSTopicList();
+      vector<TopicInfo> getROSTopicList();
 
-      void addReceiver(AppUtils* appUtils, TopicInfo data, TopicInfo info = TopicInfo());
+      void getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic);
+
+      void ImGuiUpdate();
+
+      void addReceiver(TopicInfo data, TopicInfo info = TopicInfo());
 
       void receiverUpdate(ApplicationState& app);
 
@@ -79,7 +88,7 @@ class NetworkManager
 
       void mapSenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
 
-      void init_ros_node(int argc, char **argv, ApplicationState& app, AppUtils* appUtils);
+      void init_ros_node(int argc, char **argv, ApplicationState& app);
 
       void spin_ros_node();
 

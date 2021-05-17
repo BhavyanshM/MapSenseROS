@@ -17,6 +17,7 @@
 #include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "AppUtils.h"
+#include "imgui.h"
 
 using namespace ros;
 using namespace std;
@@ -27,11 +28,14 @@ class ROS1TopicReceiver
 {
    protected:
       AppUtils* appUtils;
+      String topicName;
       bool messageReceived = false;
+      bool renderingEnabled = false;
       double timestampLastReceived = 0.0;
 
    public:
       virtual void render(){};
+      virtual void ImGuiUpdate(){};
       virtual void processMessage(ApplicationState& app){};
       void setAppUtils(AppUtils* appUtils);
 };

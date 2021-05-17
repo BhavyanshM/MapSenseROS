@@ -52,8 +52,8 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
 void MyApplication::init(int argc, char **argv)
 {
    /* TODO: Instantiate the Information Processors */
-   _dataReceiver = new NetworkManager(appState);
-   _dataReceiver->init_ros_node(argc, argv, appState, &appUtils);
+   _dataReceiver = new NetworkManager(appState, &appUtils);
+   _dataReceiver->init_ros_node(argc, argv, appState);
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
 }
@@ -65,7 +65,7 @@ void MyApplication::tickEvent()
    {
 //      _dataReceiver->blackflyMonoReceiver.processMessage(appState);
 //      _dataReceiver->blackflyMonoReceiver.render();
-      _dataReceiver->receiverUpdate(appState);
+
    }
    if (appState.SHOW_INPUT_DEPTH)
    {
@@ -95,6 +95,7 @@ void MyApplication::tickEvent()
    if (appState.ROS_ENABLED)
    {
       _dataReceiver->spin_ros_node();
+      _dataReceiver->receiverUpdate(appState);
       if (_dataReceiver->paramsAvailable)
       {
          _dataReceiver->paramsAvailable = false;
@@ -333,20 +334,7 @@ void MyApplication::drawEvent()
             frameId++;
          }
 
-         /* Testing Combo Drop Downs */
-         vector<ros::master::TopicInfo> topics = _dataReceiver->getROSTopicList();
-         if (ImGui::BeginCombo("ROS Topics", current_item.name.c_str()))
-         {
-            for (int n = 0; n < topics.size(); n++)
-            {
-               bool is_selected = (current_item.name.c_str() == topics[n].name.c_str());
-               if (ImGui::Selectable(topics[n].name.c_str(), is_selected))
-                  current_item = topics[n];
-               if (is_selected)
-                  ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-         }
+         _dataReceiver->ImGuiUpdate();
 
          if (ImGui::Button("Configure Memory"))
             AppUtils::checkMemoryLimits();

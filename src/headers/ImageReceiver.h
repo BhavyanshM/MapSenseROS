@@ -32,6 +32,8 @@ class ImageReceiver : public ROS1TopicReceiver
    public:
       void render() override;
 
+      void ImGuiUpdate() override;
+
       void imageCallback(const sensor_msgs::ImageConstPtr& colorMsg);
 
       void compressedImageCallback(const sensor_msgs::CompressedImageConstPtr& compressedMsg);
