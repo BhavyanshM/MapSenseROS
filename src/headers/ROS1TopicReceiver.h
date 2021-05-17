@@ -11,7 +11,7 @@
 #include "iostream"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
-
+#include "ImageTools.h"
 #include "image_transport/image_transport.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
@@ -31,6 +31,7 @@ class ROS1TopicReceiver
       String topicName;
       bool messageReceived = false;
       bool renderingEnabled = false;
+      bool undistortEnabled = false;
       double timestampLastReceived = 0.0;
 
    public:

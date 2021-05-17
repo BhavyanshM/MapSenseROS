@@ -12,7 +12,6 @@ ImageReceiver::ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInf
 {
    this->topicName = imageTopic;
    this->compressed = compressed;
-   this->imageEncoding = imageEncoding;
 
    this->imageSubscriber = new Subscriber();
    this->cameraInfoSubscriber = new Subscriber();
@@ -55,7 +54,12 @@ void ImageReceiver::render()
          this->image.convertTo(this->image, -1, this->imageBrightness, this->imageOffset);
          cvtColor(this->image, this->image, COLOR_GRAY2BGR);
       }
-      appUtils->appendToDebugOutput(this->image);
+      Mat disp;
+      if(undistortEnabled){
+         disp = ImageTools::cvUndistort(this->image, Mat(), Mat());
+      } else
+         disp = this->image;
+      appUtils->appendToDebugOutput(disp);
    }
 }
 
@@ -63,6 +67,7 @@ void ImageReceiver::ImGuiUpdate()
 {
    ImGui::Text("%s", (String("ROS1 Receiver: ") + topicName).c_str());
    ImGui::Checkbox((String("Render: ") + topicName).c_str(), &renderingEnabled);
+   ImGui::Checkbox((String("Undistort: ") + topicName).c_str(), &undistortEnabled);
 }
 
 void ImageReceiver::processMessage(ApplicationState& app)
@@ -83,9 +88,9 @@ void ImageReceiver::processMessage(ApplicationState& app)
          {
             if(imageMessage->encoding == "mono8")
                this->imageEncoding = sensor_msgs::image_encodings::MONO8;
-            if(imageMessage->encoding == "16UC1")
+            else if(imageMessage->encoding == "16UC1")
                this->imageEncoding = sensor_msgs::image_encodings::TYPE_16UC1;
-            if(imageMessage->encoding.find("rgb8") != string::npos)
+            else if(imageMessage->encoding.find("rgb8") != string::npos)
                this->imageEncoding = sensor_msgs::image_encodings::TYPE_16UC3;
             img_ptr = cv_bridge::toCvCopy(*imageMessage, imageEncoding);
             image = img_ptr->image;

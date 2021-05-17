@@ -94,7 +94,7 @@ set (HEADERS
 		src/headers/ApplicationState.h
 		src/headers/RegionRing.h
 		src/headers/AppUtils.h
-		src/ImageProcessing/ImageTools.h
+        src/headers/ImageTools.h
 		src/headers/ImageReceiver.h
 		src/headers/ROS1TopicReceiver.h)
 
