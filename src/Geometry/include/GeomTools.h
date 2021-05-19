@@ -17,7 +17,7 @@ typedef Eigen::Matrix<bool, Dynamic, Dynamic> BoolDynamicMatrix;
 class GeomTools
 {
    public:
-      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, AppUtils& appUtils);
+      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2i start, AppUtils& appUtils);
 
       static vector<Vector2f> canvasApproximateConcaveHull(vector<Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
 

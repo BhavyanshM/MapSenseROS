@@ -28,7 +28,7 @@ class AppUtils
       Mat debugOutput;
       uint16_t rows, cols;
 
-      void display();
+      void display(uint16_t delay);
 
       void displayPointSet2D(vector<Vector2f> points);
 

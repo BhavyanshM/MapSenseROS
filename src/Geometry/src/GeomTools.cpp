@@ -147,28 +147,61 @@ void printCanvas(BoolDynamicMatrix canvas, Vector2i windowPos)
    }
 }
 
-void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, AppUtils& appUtils)
+int getVisitedCount(BoolDynamicMatrix& visited, int x, int y)
 {
-   if (visited(x, y))
+   int count = 0;
+   for (int i = -3; i < 3; i++)
+   {
+      for (int j = -3; j < 3; j++)
+      {
+         if (x + i < visited.rows() - 1 && x + i > 1 && y + j < visited.cols() - 1 && y + j > 1)
+         {
+            if (visited(x + i, y + j) == 1)
+            {
+               count += 1;
+            }
+         }
+      }
+   }
+   printf("Visited:(%d)\n", count);
+   return count;
+}
+
+bool loopComplete(Vector2i current, Vector2i start, int concaveHullSize)
+{
+   return (current - start).norm() < 3 && concaveHullSize > 10;
+}
+
+float checkConcavity(vector<Vector2f> concaveHull, Vector2i node)
+{
+   Vector2f candidate(node.x(), node.y());
+   Vector2f current = concaveHull.rbegin()[0];
+   Vector2f previous = concaveHull.rbegin()[1];
+   return ((current - previous).normalized()).dot((candidate - current).normalized());
+}
+
+void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2i start,
+                                  AppUtils& appUtils)
+{
+   if (visited(x, y) || loopComplete(concaveHull.rbegin()[0].cast<int>(), start, concaveHull.size()))
       return;
 
    visited(x, y) = 1;
 
-   /* Insert this node to data structure here. */
-//   printf("DFS(%d,%d)\n", x, y);
-   Vector2f candidate(x,y);
-   Vector2f current = concaveHull.rbegin()[0];
-   Vector2f previous = concaveHull.rbegin()[1];
+   printCanvas(visited, Vector2i(-1, -1));
 
-   concaveHull.emplace_back(candidate);
-   printf("(%.2lf, %.2lf) -> (%d, %d) = %.2lf\n", concaveHull.back().x(), concaveHull.back().y(), x, y, ((current - previous).normalized()).dot((candidate - current).normalized()));
+   /* Insert this node to data structure here. */
+   //   printf("DFS(%d,%d)\n", x, y);
+
+   if(checkConcavity(concaveHull, Vector2i(x,y)) > -0.9)
+      concaveHull.emplace_back(Vector2f(x,y));
 
    appUtils.displayCanvasWithWindow(canvas, Vector2i(x, y), 3);
-
-
-//   printCanvas(canvas, Vector2i(x,y));
+   //   printCanvas(canvas, Vector2i(x,y));
 
    /* If debugging, add conditionals here. */
+
+
 
    for (int i = -3; i < 3; i++)
    {
@@ -178,15 +211,17 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
          {
             if (canvas(x + i, y + j) == 1)
             {
-               printf("Going Into:(%d,%d)\n", x+i, y+j);
-               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, appUtils);
+//               printf("Going Into:(%d,%d)\n", x + i, y + j);
+               if (getVisitedCount(visited, x + i, y + j) > 24)
+                  continue;
+               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, start, appUtils);
             }
+            visited(x + i, y + j) = 1;
          }
       }
    }
 
-   printf("Leaving:(%d,%d)\n", x, y);
-
+//   printf("Leaving:(%d,%d)\n", x, y);
 }
 
 /* Novel algorithm for approximating concave hull by drawing a list of 2D points
@@ -214,10 +249,14 @@ vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points
    concaveHull.emplace_back(Vector2f(r / 2 + points[0].x() * scale, c / 2 + points[0].y() * scale));
 
    /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
-   canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull, appUtils);
+   canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull,
+                     Vector2i((r / 2 + points[0].x() * scale), (c / 2 + points[0].y() * scale)), appUtils);
 
    appUtils.displayPointSet2D(concaveHull);
 
-   return points;
+   printf("Original Point Set Size: %d\n", points.size());
+   printf("Final Concave Hull Size: %d\n", concaveHull.size());
+
+   return concaveHull;
 }
 

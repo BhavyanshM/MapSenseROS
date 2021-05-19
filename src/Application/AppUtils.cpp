@@ -100,24 +100,24 @@ void AppUtils::displayPointSet2D(vector<Vector2f> points)
    for(int i = 0; i<points.size(); i++)
    {
       circle(AppUtils::displayOutput, Point((int)points[i].x() * 6, (int)points[i].y() * 6), 2, Scalar(255, 0, 0), -1);
-      display();
+      display(40);
    }
 }
 
 void AppUtils::displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize)
 {
    canvasToMat(canvas, windowPos, windowSize);
-   display();
+   display(40);
 }
 
-void AppUtils::display()
+void AppUtils::display(uint16_t delay)
 {
    if (displayOutput.cols > 0 && displayOutput.rows > 0 && !displayOutput.empty())
    {
       namedWindow("Display", WINDOW_NORMAL);
       resizeWindow("Display", (int) (displayOutput.cols), (int) (displayOutput.rows));
       imshow("Display", displayOutput);
-      waitKey(1);
+      waitKey(delay);
    }
 }
 
