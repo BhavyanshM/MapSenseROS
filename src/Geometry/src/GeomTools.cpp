@@ -163,7 +163,7 @@ int getVisitedCount(BoolDynamicMatrix& visited, int x, int y)
          }
       }
    }
-   printf("Visited:(%d)\n", count);
+//   printf("Visited:(%d)\n", count);
    return count;
 }
 
