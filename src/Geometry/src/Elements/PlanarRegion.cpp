@@ -288,5 +288,11 @@ void PlanarRegion::retainLinearApproximation()
 {
    computeBoundaryVerticesPlanar();
    vector<Vector2f> concaveHull = GeomTools::canvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
+   MatrixXf parametricCurve(2,14);
+
+   GeomTools::getParametricCurve(concaveHull, 13, parametricCurve);
    computeBoundaryVertices3D(concaveHull);
+
+   cout << "Parameters:" << endl << parametricCurve << endl;
 }
+

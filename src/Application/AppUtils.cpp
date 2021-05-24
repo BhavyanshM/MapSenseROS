@@ -94,20 +94,20 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t
    }
 }
 
-void AppUtils::displayPointSet2D(vector<Vector2f> points)
+void AppUtils::displayPointSet2D(vector<Vector2f> points, Vector2f offset, int scale)
 {
    displayOutput.setTo(0);
    for(int i = 0; i<points.size(); i++)
    {
-      circle(AppUtils::displayOutput, Point((int)points[i].x() * 6, (int)points[i].y() * 6), 2, Scalar(255, 0, 0), -1);
-      display(40);
+      circle(AppUtils::displayOutput, Point((int) (points[i].x() * scale + offset.x()) * 6, (int) (points[i].y() * scale + offset.y()) * 6), 2, Scalar(255, 0, 0), -1);
+      display(20);
    }
 }
 
 void AppUtils::displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize)
 {
    canvasToMat(canvas, windowPos, windowSize);
-   display(40);
+   display(20);
 }
 
 void AppUtils::display(uint16_t delay)

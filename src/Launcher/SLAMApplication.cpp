@@ -136,7 +136,6 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       Vector4f plane;
       plane << _mapper.regions[0]->getNormal(), -_mapper.regions[0]->getNormal().dot(_mapper.regions[0]->getCenter());
       _mapper.latestRegions[0]->projectToPlane(plane);
-      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor, true);
 
       cout << "Reached" << endl;
       _mapper.latestRegions[0]->retainLinearApproximation();

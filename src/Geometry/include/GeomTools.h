@@ -17,7 +17,7 @@ typedef Eigen::Matrix<bool, Dynamic, Dynamic> BoolDynamicMatrix;
 class GeomTools
 {
    public:
-      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2i start, AppUtils& appUtils);
+      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2f start, AppUtils& appUtils, float scale);
 
       static vector<Vector2f> canvasApproximateConcaveHull(vector<Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
 
@@ -26,6 +26,8 @@ class GeomTools
       static Vector3f getProjectedPoint(Vector4f plane, Vector3f point);
 
       static vector<Vector2f> grahamScanConvexHull(vector<Vector2f> points);
+
+      static void getParametricCurve(vector<Vector2f> points, uint8_t m, MatrixXf& params);
 
       static void compressPointSetLinear(shared_ptr<PlanarRegion> region);
 };

@@ -167,12 +167,12 @@ int getVisitedCount(BoolDynamicMatrix& visited, int x, int y)
    return count;
 }
 
-bool loopComplete(Vector2i current, Vector2i start, int concaveHullSize)
+bool loopComplete(Vector2f current, Vector2f start, int concaveHullSize)
 {
-   return (current - start).norm() < 3 && concaveHullSize > 10;
+   return (current - start).norm() < 0.1 && concaveHullSize > 10;
 }
 
-float checkConcavity(vector<Vector2f> concaveHull, Vector2i node)
+float checkConcavity(vector<Vector2f> concaveHull, Vector2f node)
 {
    Vector2f candidate(node.x(), node.y());
    Vector2f current = concaveHull.rbegin()[0];
@@ -180,28 +180,20 @@ float checkConcavity(vector<Vector2f> concaveHull, Vector2i node)
    return ((current - previous).normalized()).dot((candidate - current).normalized());
 }
 
-void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2i start,
-                                  AppUtils& appUtils)
+void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2f start,
+                                  AppUtils& appUtils, float scale)
 {
-   if (visited(x, y) || loopComplete(concaveHull.rbegin()[0].cast<int>(), start, concaveHull.size()))
+   if (visited(x, y) || loopComplete(concaveHull.rbegin()[0], Vector2f((start.x() - canvas.rows()/2) / scale, (start.y() - canvas.cols()/2) / scale), concaveHull.size()))
       return;
 
    visited(x, y) = 1;
 
-   printCanvas(visited, Vector2i(-1, -1));
+   if(concaveHull.size() < 2 || checkConcavity(concaveHull, Vector2f(((float) x - canvas.rows()/2) / (float) scale  , ((float)y - canvas.cols()/2) / (float)scale)) > -0.9)
+   {
+      concaveHull.emplace_back(Vector2f(((float) x - canvas.rows()/2) / (float) scale  , ((float)y - canvas.cols()/2) / (float)scale));
+   }
 
-   /* Insert this node to data structure here. */
-   //   printf("DFS(%d,%d)\n", x, y);
-
-   if(checkConcavity(concaveHull, Vector2i(x,y)) > -0.9)
-      concaveHull.emplace_back(Vector2f(x,y));
-
-   appUtils.displayCanvasWithWindow(canvas, Vector2i(x, y), 3);
-   //   printCanvas(canvas, Vector2i(x,y));
-
-   /* If debugging, add conditionals here. */
-
-
+//   appUtils.displayCanvasWithWindow(canvas, Vector2i(x, y), 3);
 
    for (int i = -3; i < 3; i++)
    {
@@ -211,17 +203,14 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
          {
             if (canvas(x + i, y + j) == 1)
             {
-//               printf("Going Into:(%d,%d)\n", x + i, y + j);
                if (getVisitedCount(visited, x + i, y + j) > 24)
                   continue;
-               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, start, appUtils);
+               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, start, appUtils, scale);
             }
             visited(x + i, y + j) = 1;
          }
       }
    }
-
-//   printf("Leaving:(%d,%d)\n", x, y);
 }
 
 /* Novel algorithm for approximating concave hull by drawing a list of 2D points
@@ -246,17 +235,58 @@ vector<Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Vector2f> points
    }
 
    vector<Vector2f> concaveHull;
-   concaveHull.emplace_back(Vector2f(r / 2 + points[0].x() * scale, c / 2 + points[0].y() * scale));
+   concaveHull.emplace_back(Vector2f(points[0].x(), points[0].y()));
 
    /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
    canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull,
-                     Vector2i((r / 2 + points[0].x() * scale), (c / 2 + points[0].y() * scale)), appUtils);
+                     Vector2f((r / 2 + points[0].x() * scale), (c / 2 + points[0].y() * scale)), appUtils, scale);
 
-   appUtils.displayPointSet2D(concaveHull);
+//   appUtils.displayPointSet2D(concaveHull, Vector2f(r/2, c/2), scale);
+
+
+   vector<Vector2f> finalConcaveHull;
+   for(int i = 0; i<concaveHull.size(); i++)
+      if(i % 2 == 0)
+         finalConcaveHull.emplace_back(concaveHull[i]);
+
 
    printf("Original Point Set Size: %d\n", points.size());
-   printf("Final Concave Hull Size: %d\n", concaveHull.size());
+   printf("Final Concave Hull Size: %d\n", finalConcaveHull.size());
 
-   return concaveHull;
+   return finalConcaveHull;
+}
+
+void GeomTools::getParametricCurve(vector<Vector2f> points, uint8_t m, MatrixXf& params)
+{
+   MatrixXf A(points.size(), m + 1);
+   for(int i = 0; i<points.size(); i++)
+   {
+      double t = (double) i / (double) 200.0;
+      for(int j = 0; j<m + 1; j++)
+      {
+         A(i,j) = pow(t, m - j);
+      }
+   }
+   VectorXf b(points.size());
+
+   /* Get parameters for X regression. */
+   for(int i = 0; i<points.size(); i++)
+   {
+      b(i) = points[i].x();
+   }
+   VectorXf params_x(m);
+   params_x = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
+
+   /* Get parameters for Y regression. */
+   for(int i = 0; i<points.size(); i++)
+   {
+      b(i) = points[i].y();
+   }
+   VectorXf params_y(m);
+   params_y = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
+
+   /* Collect params into a vector to be returned. */
+   params.row(0) = params_x;
+   params.row(1) = params_y;
 }
 

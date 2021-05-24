@@ -30,7 +30,7 @@ class AppUtils
 
       void display(uint16_t delay);
 
-      void displayPointSet2D(vector<Vector2f> points);
+      void displayPointSet2D(vector<Vector2f> points, Vector2f offset, int scale);
 
       void setDisplayResolution(uint16_t rows, uint16_t cols);
 
