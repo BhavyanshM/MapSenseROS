@@ -54,31 +54,18 @@ void MyApplication::init(int argc, char **argv)
    /* TODO: Instantiate the Information Processors */
    _dataReceiver = new NetworkManager(appState, &appUtils);
    _dataReceiver->init_ros_node(argc, argv, appState);
+
+
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
+
+   ROS_INFO("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
 {
    cout << "TickEvent:" << count++ << endl;
-   if (appState.SHOW_INPUT_COLOR)
-   {
-//      _dataReceiver->blackflyMonoReceiver.processMessage(appState);
-//      _dataReceiver->blackflyMonoReceiver.render();
 
-   }
-   if (appState.SHOW_INPUT_DEPTH)
-   {
-      Mat dispDepth;
-      _regionCalculator->getInputDepth(dispDepth, appState);
-      appUtils.appendToDebugOutput(dispDepth);
-   }
-   if (appState.SHOW_FILTERED_DEPTH)
-   {
-      Mat dispDepth;
-      _regionCalculator->getFilteredDepth(dispDepth, appState);
-      appUtils.appendToDebugOutput(dispDepth);
-   }
    if (appState.SHOW_REGION_COMPONENTS)
       appUtils.appendToDebugOutput(_regionCalculator->mapFrameProcessor.debug);
 
@@ -102,10 +89,12 @@ void MyApplication::tickEvent()
          appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
          appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
       }
-//      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
-
-      if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
+      //      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
+      ImageReceiver* depthReceiver = ((ImageReceiver*)_dataReceiver->receivers[0]);
+      if (depthReceiver->cameraInfoSet && appState.GENERATE_REGIONS)
       {
+         ROS_INFO("Loading Data into Depth Receiver");
+         depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
          _regionCalculator->generateRegions(_dataReceiver, appState);
          if (appState.EXPORT_REGIONS)
          {
@@ -271,11 +260,11 @@ void MyApplication::drawEvent()
    {
       // Declare Central dockspace
       dockspaceID = ImGui::GetID("HUB_DockSpace");
-      ImGui::DockSpace(dockspaceID , ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None|ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
+      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
    }
    ImGui::End();
 
-   ImGui::SetNextWindowDockID(dockspaceID , ImGuiCond_FirstUseEver);
+   ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
    if (ImGui::Begin("Dockable Window"))
    {
       ImGui::TextUnformatted("Test");

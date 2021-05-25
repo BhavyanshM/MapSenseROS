@@ -54,7 +54,7 @@ void AppUtils::appendToDebugOutput(Mat disp)
    if(disp.type() == CV_8UC1 )
       cvtColor(disp, disp, COLOR_GRAY2BGR);
    cout << "Image Type: " << disp.type() << endl;
-   cv::resize(disp, disp, Size(640, 480));
+//   cv::resize(disp, disp, Size(640, 480));
    images.emplace_back(disp);
 }
 

@@ -2,6 +2,7 @@
 
 void MapFrameProcessor::init(ApplicationState& app)
 {
+   ROS_INFO("Initializing MapFrameProcessor");
    this->app = app;
    this->debug = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
    this->visited = MatrixXi(app.SUB_H, app.SUB_W).setZero();

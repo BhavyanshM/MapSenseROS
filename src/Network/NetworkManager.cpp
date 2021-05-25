@@ -40,39 +40,39 @@ vector<TopicInfo> NetworkManager::getROSTopicList()
 
 void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
 {
-   ROS_DEBUG("Depth Callback", depthMsg->header.seq);
+   ROS_INFO("Depth Callback", depthMsg->header.seq);
    depthMessage = depthMsg;
 }
 
 void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, String name)
 {
    colorMessage = colorMsg;
-   ROS_DEBUG("COLOR CALLBACK");
+   ROS_INFO("COLOR CALLBACK");
 }
 
 void NetworkManager::colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& compressedMsg)
 {
    colorCompressedMessage = compressedMsg;
-   ROS_DEBUG("COLOR CALLBACK");
+   ROS_INFO("COLOR CALLBACK");
 }
 
 void NetworkManager::depthCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
 {
    depthCameraInfo = infoMsg;
-   ROS_DEBUG("DEPTH_CAM_INFO CALLBACK");
+   ROS_INFO("DEPTH_CAM_INFO CALLBACK");
 }
 
 void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
 {
    colorCameraInfo = infoMsg;
-   ROS_DEBUG("COLOR_CAM_INFO CALLBACK");
+   ROS_INFO("COLOR_CAM_INFO CALLBACK");
 }
 
 void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
 {
    paramsMessage = msg;
    paramsAvailable = true;
-   ROS_DEBUG("PARAMS CALLBACK");
+   ROS_INFO("PARAMS CALLBACK");
 }
 
 void NetworkManager::load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app)
@@ -86,12 +86,12 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    cv_bridge::CvImagePtr img_ptr_depth;
    cv_bridge::CvImagePtr img_ptr_color;
    cv_bridge::CvImagePtr img_ptr_color_compressed;
-   ROS_DEBUG("Process Data Callback");
+   ROS_INFO("Process Data Callback");
    if (depthMessage != nullptr)
    {
       try
       {
-         ROS_DEBUG("Callback: Depth:%d", depthMessage->header.stamp.sec);
+         ROS_INFO("Callback: Depth:%d", depthMessage->header.stamp.sec);
          img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
          depth = img_ptr_depth->image;
          timestamp = depthMessage.get()->header.stamp.toSec();
@@ -101,7 +101,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
             pyrDown(depth, depth);
          }
 
-         ROS_DEBUG("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
+         ROS_INFO("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
       } catch (cv_bridge::Exception& e)
       {
          ROS_ERROR("Could not convert to image! %s", e.what());
@@ -111,7 +111,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    {
       try
       {
-         ROS_DEBUG("Callback: Color:%d", colorMessage->header.stamp.sec);
+         ROS_INFO("Callback: Color:%d", colorMessage->header.stamp.sec);
          img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::MONO8);
          color = img_ptr_color->image;
 
@@ -127,7 +127,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    {
       try
       {
-         ROS_DEBUG("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
+         ROS_INFO("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
          //            img_ptr_color = cv_bridge::toCvCopy(*colorCompressedMessage, image_encodings::TYPE_8UC3);
          color = imdecode(cv::Mat(colorCompressedMessage->data), 1);
          for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
@@ -141,7 +141,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
    }
    if (depthCameraInfo != nullptr)
    {
-      ROS_DEBUG("DEPTH_SET:", depthCamInfoSet);
+      ROS_INFO("DEPTH_SET:", depthCamInfoSet);
       //      if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
@@ -152,8 +152,8 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
          app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
-         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH,
-                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+         ROS_INFO("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH,
+                  app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
       }
       //        app.PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
       //        app.PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
@@ -161,15 +161,15 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
       //        app.SUB_W = (int) app.INPUT_WIDTH / app.PATCH_WIDTH;
 
 
-      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.SUB_W, app.SUB_H,
-                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+      ROS_INFO("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.SUB_W, app.SUB_H,
+               app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
    }
-   ROS_DEBUG("Data Frame Loaded");
+   ROS_INFO("Data Frame Loaded");
 }
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
-   ROS_DEBUG("Starting ROS Node");
+   ROS_INFO("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
    nh = new NodeHandle();
 
@@ -178,9 +178,13 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    // ROSTopic Subscribers
    string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                   "/depth/image_rect_raw";
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                         "/depth/camera_info";
+                                                                                                                             "/depth/image_rect_raw";
+   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" +
+                                                                                                                                   app.TOPIC_CAMERA_NAME +
+                                                                                                                                   "/depth/camera_info";
+
+   addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
+
    //   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    //   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
@@ -190,12 +194,12 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    //
    subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
-   ROS_DEBUG("Started ROS Node");
+   ROS_INFO("Started ROS Node");
 }
 
-void NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
+int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
-
+   ROS_INFO("Adding Receiver: (%s), (%s)", data.name.c_str(), info.name.c_str());
    ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
       receiver = new ImageReceiver(nh, data.name, info.name, false);
@@ -206,10 +210,12 @@ void NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
    {
       receiver->setAppUtils(this->appUtils);
       receivers.emplace_back(receiver);
-   }else
+   } else
    {
       printf("Request to add receiver: %s\n", data.name.c_str());
    }
+   ROS_INFO("Receiver Added Successfully");
+   return receivers.size() - 1;
 }
 
 void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic)
@@ -251,6 +257,6 @@ void NetworkManager::receiverUpdate(ApplicationState& app)
 
 void NetworkManager::spin_ros_node()
 {
-   ROS_DEBUG("SpinOnce");
+   ROS_INFO("SpinOnce");
    spinOnce();
 }

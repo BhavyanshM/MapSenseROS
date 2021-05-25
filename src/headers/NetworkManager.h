@@ -70,7 +70,7 @@ class NetworkManager
 
       void ImGuiUpdate();
 
-      void addReceiver(TopicInfo data, TopicInfo info = TopicInfo());
+      int addReceiver(TopicInfo data, TopicInfo info = TopicInfo());
 
       void receiverUpdate(ApplicationState& app);
 

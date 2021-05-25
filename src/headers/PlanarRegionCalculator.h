@@ -48,6 +48,8 @@ class PlanarRegionCalculator
       MapFrameProcessor mapFrameProcessor;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
 
+      int depthReceiverId = -1;
+
       explicit PlanarRegionCalculator(ApplicationState& app);
 
       void generatePatchGraph(ApplicationState appState);
@@ -59,8 +61,6 @@ class PlanarRegionCalculator
       void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
 
       void getFilteredDepth(Mat& dispDepth, ApplicationState appState);
-
-      void getInputDepth(Mat& dispDepth, ApplicationState appState);
 
       static void onMouse(int event, int x, int y, int flags, void *userdata);
 };

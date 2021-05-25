@@ -98,7 +98,7 @@ class ApplicationState
       float DEPTH_DISPLAY_OFFSET = 100;
 
       bool EXPORT_REGIONS = false;
-      bool GENERATE_REGIONS = false;
+      bool GENERATE_REGIONS = true;
 
 };
 

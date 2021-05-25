@@ -14,25 +14,28 @@ class ImageReceiver : public ROS1TopicReceiver
       ImageConstPtr imageMessage;
       CameraInfoConstPtr cameraInfoMessage;
       CompressedImageConstPtr compressedImageMessage;
-      Subscriber* imageSubscriber;
-      Subscriber* cameraInfoSubscriber;
+      Subscriber *imageSubscriber;
+      Subscriber *cameraInfoSubscriber;
       float imageBrightness = 40;
       float imageOffset = 100;
-      bool compressed = false;
-      bool cameraInfoSet = false;
-
 
    public:
+
+      bool compressed = false;
+      bool cameraInfoSet = false;
       Mat image;
 
    public:
-      ImageReceiver(NodeHandle* nh, String imageTopic, String cameraInfoTopic, bool compressed = false);
+      ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInfoTopic, bool compressed = false);
 
       void processMessage(ApplicationState& app) override;
 
       ImageReceiver();
 
    public:
+
+      void getData(Mat& image, ApplicationState& app, double& timestamp);
+
       void render() override;
 
       void ImGuiUpdate() override;
