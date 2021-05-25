@@ -36,6 +36,7 @@ class PlanarRegionCalculator
       cl::size_t<3> origin;
 
       ApplicationState app;
+      AppUtils appUtils;
       NetworkManager *_dataReceiver;
 
       Mat inputDepth;
@@ -52,7 +53,11 @@ class PlanarRegionCalculator
 
       explicit PlanarRegionCalculator(ApplicationState& app);
 
+      void render();
+
       void generatePatchGraph(ApplicationState appState);
+
+      void ImGuiUpdate(ApplicationState& appState);
 
       void initOpenCL(ApplicationState app);
 

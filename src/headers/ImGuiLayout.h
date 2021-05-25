@@ -17,9 +17,7 @@ using namespace std;
 class ImGuiLayout
 {
    public:
-      static void getImGuiROSLayout(ApplicationState& appState);
-
-      static void getImGuiParamsLayout(ApplicationState& appState);
+      static void getImGuiAppLayout(ApplicationState& appState);
 
       static void getImGui2DLayout(ApplicationState& appState);
 

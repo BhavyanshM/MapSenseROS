@@ -59,25 +59,14 @@ void MyApplication::init(int argc, char **argv)
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
 
-   ROS_INFO("Application Initialized Successfully");
+   ROS_DEBUG("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
 {
-   cout << "TickEvent:" << count++ << endl;
+   ROS_DEBUG("TickEvent: %d", count++);
 
-   if (appState.SHOW_REGION_COMPONENTS)
-      appUtils.appendToDebugOutput(_regionCalculator->mapFrameProcessor.debug);
-
-   if (appState.SHOW_STEREO_LEFT)
-   {
-      appUtils.appendToDebugOutput(_regionCalculator->inputStereoLeft);
-   }
-   if (appState.SHOW_STEREO_RIGHT)
-   {
-      appUtils.appendToDebugOutput(_regionCalculator->inputStereoRight);
-   }
-   appUtils.displayDebugOutput(appState);
+   _regionCalculator->render();
 
    if (appState.ROS_ENABLED)
    {
@@ -91,7 +80,7 @@ void MyApplication::tickEvent()
       }
       //      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
       ImageReceiver* depthReceiver = ((ImageReceiver*)_dataReceiver->receivers[0]);
-      ROS_INFO("Loading Data into Depth Receiver");
+      ROS_DEBUG("Loading Data into Depth Receiver");
       depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
       if (depthReceiver->cameraInfoSet && appState.GENERATE_REGIONS)
       {
@@ -273,31 +262,24 @@ void MyApplication::drawEvent()
 
    if (ImGui::BeginTabBar("Configuration"))
    {
-      if (ImGui::BeginTabItem("Params"))
+      if (ImGui::BeginTabItem("Application"))
       {
-         /* Params */
-         ImGuiLayout::getImGuiParamsLayout(appState);
-         ImGui::EndTabItem();
-      }
-      if (ImGui::BeginTabItem("ROS"))
-      {
-         ImGuiLayout::getImGuiROSLayout(appState);
+         ImGuiLayout::getImGuiAppLayout(appState);
          ImGui::EndTabItem();
       }
       ImGui::EndTabBar();
    }
-   if (ImGui::BeginTabBar("Visualization"))
+   if (ImGui::BeginTabBar("Modules"))
    {
-      if (ImGui::BeginTabItem("2D"))
+      if (ImGui::BeginTabItem("Planar Regions"))
       {
          /* Display 2D */
-         ImGuiLayout::getImGui2DLayout(appState);
+         _regionCalculator->ImGuiUpdate(appState);
          ImGui::EndTabItem();
       }
-      if (ImGui::BeginTabItem("3D"))
+      if (ImGui::BeginTabItem("Extras"))
       {
          /* Display 3D */
-         ImGuiLayout::getImGui3DLayout(appState, _clearColor);
          if (ImGui::Button("Generate Patches"))
          {
             MeshGenerator::clearMesh(planePatches);
@@ -306,10 +288,7 @@ void MyApplication::drawEvent()
          ImGui::SameLine(180);
          if (ImGui::Button("Clear Patches"))
             MeshGenerator::clearMesh(planePatches);
-         ImGui::EndTabItem();
-      }
-      if (ImGui::BeginTabItem("Beta"))
-      {
+
          /* Beta Features */
          if (ImGui::Button("Save All"))
          {
@@ -335,6 +314,7 @@ void MyApplication::drawEvent()
          {
             cout << getBuildInformation() << endl;
          }
+
          ImGui::EndTabItem();
       }
       ImGui::EndTabBar();
