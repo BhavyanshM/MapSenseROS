@@ -28,19 +28,19 @@ ImageReceiver::ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInf
 
 void ImageReceiver::compressedImageCallback(const CompressedImageConstPtr& compressedMsg)
 {
-   ROS_INFO("Compressed Image Callback: ", compressedMsg->header.stamp);
+   ROS_INFO("Compressed Image Callback: %.2lf", compressedMsg->header.stamp);
    compressedImageMessage = compressedMsg;
 }
 
 void ImageReceiver::imageCallback(const ImageConstPtr& colorMsg)
 {
-   ROS_INFO("Image Callback; ", colorMsg->header.stamp);
+   ROS_INFO("Image Callback: %.2lf", colorMsg->header.stamp);
    imageMessage = colorMsg;
 }
 
 void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 {
-   ROS_INFO("Camera Info Callback: ", message->header.stamp);
+   ROS_INFO("Camera Info Callback: %s", message->distortion_model.c_str());
    cameraInfoMessage = message;
 }
 

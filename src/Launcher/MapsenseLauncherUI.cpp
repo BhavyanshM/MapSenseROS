@@ -91,10 +91,10 @@ void MyApplication::tickEvent()
       }
       //      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
       ImageReceiver* depthReceiver = ((ImageReceiver*)_dataReceiver->receivers[0]);
+      ROS_INFO("Loading Data into Depth Receiver");
+      depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
       if (depthReceiver->cameraInfoSet && appState.GENERATE_REGIONS)
       {
-         ROS_INFO("Loading Data into Depth Receiver");
-         depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
          _regionCalculator->generateRegions(_dataReceiver, appState);
          if (appState.EXPORT_REGIONS)
          {
