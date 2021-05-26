@@ -31,7 +31,7 @@ void MapFrameProcessor::printPatchGraph()
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
-   ROS_DEBUG("Starting DFS for Segmentation\n");
+   ROS_INFO("Starting DFS for Segmentation\n");
    this->app = app;
    this->frame = inputFrame;
 
@@ -60,7 +60,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
          }
       }
    }
-   ROS_DEBUG("DFS Generated %d Regions\n", components);
+   ROS_INFO("DFS Generated %d Regions\n", components);
    visited.setZero();
    findBoundaryAndHoles(planarRegionList);
 }

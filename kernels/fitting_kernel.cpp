@@ -278,7 +278,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
      int y = get_global_id(0);
      int x = get_global_id(1);
 
-     int m = 2;
+     int m = 1;
 
 //     if(x==0 && y==0) printf("MergeKernel:(%d,%d)\n", (int)params[SUB_H], (int)params[SUB_W]);
      if(y >= m && y < (int)params[SUB_H]-m && x >= m && x < (int)params[SUB_W]-m){

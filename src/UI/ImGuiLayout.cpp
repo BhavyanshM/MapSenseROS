@@ -16,7 +16,9 @@ void ImGuiLayout::getImGuiParamsLayout(ApplicationState& appState)
    ImGui::SliderFloat("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1.0f, 20.0f);
    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
-   
+
+   ImGui::SliderInt("Ouster Column", &appState.OUSTER_COLUMN_START, 0, 1792);
+
    //    ImGui::SliderInt("Region Boundary Diff", &appState.REGION_BOUNDARY_DIFF, 10, 40);
    //    ImGui::SliderInt("Region Min Patches", &appState.REGION_MIN_PATCHES, 4, 100);
 
@@ -43,7 +45,8 @@ void ImGuiLayout::getImGui2DLayout(ApplicationState& appState)
       destroyAllWindows();
    }
    ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
-   ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
+   ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 0.1, 100.0);
+   ImGui::SliderFloat("Depth Offset", &appState.DEPTH_DISPLAY_OFFSET, 0.1, 100.0);
 
    ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
    ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);

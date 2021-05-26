@@ -43,6 +43,7 @@ class ApplicationState
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
 
+      int OUSTER_COLUMN_START = 0;
       int INPUT_HEIGHT = 0;
       int INPUT_WIDTH = 0;
       int KERNEL_SLIDER_LEVEL = 2;
@@ -95,7 +96,7 @@ class ApplicationState
       /*  VISUALIZATION-ONLY */
       float DISPLAY_WINDOW_SIZE = 1.0f;
       float DEPTH_BRIGHTNESS = 40;
-      float DEPTH_DISPLAY_OFFSET = 100;
+      float DEPTH_DISPLAY_OFFSET = 10;
 
       bool EXPORT_REGIONS = false;
       bool GENERATE_REGIONS = true;

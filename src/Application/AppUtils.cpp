@@ -41,7 +41,7 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
    depth.convertTo(finalDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
    filteredDepth.convertTo(finalFilteredDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
    imwrite(projectPath + filename + "_Depth.png", finalDepth);
-   imwrite(projectPath + filename + "_Color.png", color);
+//   imwrite(projectPath + filename + "_Color.png", color);
    imwrite(projectPath + filename + "_FilteredDepth.png", finalFilteredDepth);
    imwrite(projectPath + filename + "_Components.png", components);
    write_regions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
