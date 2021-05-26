@@ -61,21 +61,29 @@ void MyApplication::tickEvent()
 {
    //     cout << "TickEvent:" << count++ << endl;
    if (appState.SHOW_INPUT_COLOR)
+   {
       appUtils.appendToDebugOutput(_regionCalculator->inputColor);
+      ROS_INFO("Appending Input Color: (%d, %d)", _regionCalculator->inputColor.rows, _regionCalculator->inputColor.cols);
+   }
    if (appState.SHOW_INPUT_DEPTH)
    {
       Mat dispDepth;
       _regionCalculator->getInputDepth(dispDepth, appState);
       appUtils.appendToDebugOutput(dispDepth);
+      ROS_INFO("Appending Input Depth: (%d, %d)", _regionCalculator->inputDepth.rows, _regionCalculator->inputDepth.cols);
    }
    if (appState.SHOW_FILTERED_DEPTH)
    {
       Mat dispDepth;
       _regionCalculator->getFilteredDepth(dispDepth, appState);
       appUtils.appendToDebugOutput(dispDepth);
+      ROS_INFO("Appending Filtered Depth: (%d, %d)", _regionCalculator->filteredDepth.rows, _regionCalculator->filteredDepth.cols);
    }
    if (appState.SHOW_REGION_COMPONENTS)
+   {
       appUtils.appendToDebugOutput(_regionCalculator->mapFrameProcessor.debug);
+      ROS_INFO("Appending Components: (%d, %d)", _regionCalculator->mapFrameProcessor.debug.rows, _regionCalculator->mapFrameProcessor.debug.cols);
+   }
 
    if (appState.SHOW_STEREO_LEFT)
    {
