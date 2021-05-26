@@ -175,6 +175,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    // ROSTopic Publishers
    planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
+   slamPosePub = nh->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
 
    // ROSTopic Subscribers
    string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
@@ -259,4 +260,16 @@ void NetworkManager::spin_ros_node()
 {
    ROS_DEBUG("SpinOnce");
    spinOnce();
+}
+
+void NetworkManager::publishSLAMPose(int count)
+{
+   geometry_msgs::PoseStamped pose;
+   pose.pose.position = geometry_msgs::Point();
+   pose.pose.position.x = sin((double) count / (double) 100);
+   pose.pose.position.y = sin((double) count / (double) 200);
+
+   pose.pose.orientation = geometry_msgs::Quaternion();
+
+   this->slamPosePub.publish(pose);
 }

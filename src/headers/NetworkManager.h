@@ -47,15 +47,9 @@ class NetworkManager
       VideoCapture *camRight;
 
       vector<ROS1TopicReceiver*> receivers;
-//      ImageReceiver blackflyMonoReceiver;
-
-      vector<Subscriber*> subscribers;
-      Subscriber subColorCamInfo, subDepthCamInfo;
-      Subscriber subDepth;
-      Subscriber subColor;
-      Subscriber subColorCompressed;
       Subscriber subMapSenseParams;
       Publisher planarRegionPub;
+      Publisher slamPosePub;
 
       bool depthCamInfoSet = false;
       bool paramsAvailable = false;
@@ -65,6 +59,8 @@ class NetworkManager
       NetworkManager(ApplicationState app, AppUtils* appUtils);
 
       vector<TopicInfo> getROSTopicList();
+
+      void publishSLAMPose(int count);
 
       void getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic);
 

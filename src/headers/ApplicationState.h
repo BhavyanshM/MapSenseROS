@@ -80,7 +80,7 @@ class ApplicationState
       bool SHOW_STEREO_LEFT = false;
       bool SHOW_STEREO_RIGHT = false;
 
-      bool SHOW_GRAPH = true;
+      bool SHOW_GRAPH = false;
       bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;
 

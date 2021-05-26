@@ -64,7 +64,7 @@ void MyApplication::init(int argc, char **argv)
 
 void MyApplication::tickEvent()
 {
-   ROS_DEBUG("TickEvent: %d", count++);
+   ROS_INFO("TickEvent: %d", count++);
 
    _regionCalculator->render();
 
@@ -95,6 +95,9 @@ void MyApplication::tickEvent()
             frameId++;
          }
       }
+
+      _dataReceiver->publishSLAMPose(count);
+
       if (appState.STEREO_DRIVER)
       {
          _dataReceiver->load_next_stereo_frame(_regionCalculator->inputStereoLeft, _regionCalculator->inputStereoRight, appState);
@@ -239,26 +242,29 @@ void MyApplication::drawEvent()
 
    ImGui::Text("MapSense");
 
-   static ImGuiID dockspaceID = 0;
-   bool active = true;
-   if (ImGui::Begin("Master Window", &active))
-   {
-      ImGui::TextUnformatted("DockSpace below");
-   }
-   if (active)
-   {
-      // Declare Central dockspace
-      dockspaceID = ImGui::GetID("HUB_DockSpace");
-      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
-   }
-   ImGui::End();
 
-   ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-   if (ImGui::Begin("Dockable Window"))
-   {
-      ImGui::TextUnformatted("Test");
-   }
-   ImGui::End();
+   /* Use for docking. */
+
+//   static ImGuiID dockspaceID = 0;
+//   bool active = true;
+//   if (ImGui::Begin("Master Window", &active))
+//   {
+//      ImGui::TextUnformatted("DockSpace below");
+//   }
+//   if (active)
+//   {
+//      // Declare Central dockspace
+//      dockspaceID = ImGui::GetID("HUB_DockSpace");
+//      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
+//   }
+//   ImGui::End();
+//
+//   ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+//   if (ImGui::Begin("Dockable Window"))
+//   {
+//      ImGui::TextUnformatted("Test");
+//   }
+//   ImGui::End();
 
    if (ImGui::BeginTabBar("Configuration"))
    {
@@ -275,6 +281,16 @@ void MyApplication::drawEvent()
       {
          /* Display 2D */
          _regionCalculator->ImGuiUpdate(appState);
+         ImGui::EndTabItem();
+      }
+      if(ImGui::BeginTabItem("SLAM"))
+      {
+
+         ImGui::EndTabItem();
+      }
+      if(ImGui::BeginTabItem("Network"))
+      {
+         _dataReceiver->ImGuiUpdate();
          ImGui::EndTabItem();
       }
       if (ImGui::BeginTabItem("Extras"))
@@ -302,7 +318,7 @@ void MyApplication::drawEvent()
             frameId++;
          }
 
-         _dataReceiver->ImGuiUpdate();
+
 
          if (ImGui::Button("Configure Memory"))
             AppUtils::checkMemoryLimits();

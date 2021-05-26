@@ -25,11 +25,11 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
    ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
    ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
 
-   ImGui::Checkbox("Color", &appState.SHOW_INPUT_COLOR);
-   ImGui::Checkbox("Depth", &appState.SHOW_INPUT_DEPTH);
-   ImGui::SameLine(180);
-   ImGui::Checkbox("Graph", &appState.SHOW_GRAPH);
-   ImGui::Checkbox("Filtered", &appState.SHOW_FILTERED_DEPTH);
+//   ImGui::Checkbox("Color", &appState.SHOW_INPUT_COLOR);
+//   ImGui::Checkbox("Depth", &appState.SHOW_INPUT_DEPTH);
+//   ImGui::Checkbox("Filtered", &appState.SHOW_FILTERED_DEPTH);
+//   ImGui::SameLine(180);
+//   ImGui::Checkbox("Graph", &appState.SHOW_GRAPH);
    ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
    ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
    ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
