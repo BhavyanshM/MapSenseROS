@@ -267,7 +267,8 @@ void NetworkManager::publishSLAMPose(int count)
    geometry_msgs::PoseStamped pose;
    pose.pose.position = geometry_msgs::Point();
    pose.pose.position.x = sin((double) count / (double) 100);
-   pose.pose.position.y = sin((double) count / (double) 200);
+   pose.pose.position.y = cos((double) count / (double) 200);
+   pose.pose.position.z = sin((double) count / (double) 300);
 
    pose.pose.orientation = geometry_msgs::Quaternion();
 
