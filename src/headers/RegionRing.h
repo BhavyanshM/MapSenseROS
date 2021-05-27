@@ -15,12 +15,15 @@ using namespace std;
 class RegionRing
 {
    public:
-      vector<Vector3f> boundaryIndices;
+      vector<Vector3f> boundaryVertices;
+      vector<Vector2i> boundaryIndices;
       int id;
 
       RegionRing(int id);
 
       void insertBoundaryVertex(Vector3f pos);
+
+      void insertBoundaryIndex(Vector2i pos);
 
       int getNumOfVertices() const;
 

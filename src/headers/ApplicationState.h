@@ -100,6 +100,8 @@ class ApplicationState
       bool EXPORT_REGIONS = false;
       bool GENERATE_REGIONS = true;
 
+      float REGION_GROWTH_FACTOR = 0.01;
+
 };
 
 #endif //SRC_APPLICATIONSTATE_H
