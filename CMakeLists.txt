@@ -82,7 +82,9 @@ set(SOURCE
 		src/ImageProcessing/ImageTools.cpp
 		src/Network/ROS1TopicReceiver.cpp
         src/Network/ImageReceiver.cpp
-
+		src/SLAM/PlanarRegionMapHandler.cpp
+		src/SLAM/FactorGraphHandler.cpp
+		src/SLAM/SLAMModule.cpp
 		)
 
 set (HEADERS
@@ -96,7 +98,10 @@ set (HEADERS
 		src/headers/AppUtils.h
         src/headers/ImageTools.h
 		src/headers/ImageReceiver.h
-		src/headers/ROS1TopicReceiver.h)
+		src/headers/ROS1TopicReceiver.h
+		src/headers/SLAMModule.h
+		src/headers/PlanarRegionMapHandler.h
+		src/headers/FactorGraphHandler.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -179,25 +184,23 @@ target_link_libraries(geom-tools Eigen3::Eigen ${OpenCV_LIBS})
 add_executable(registration_and_mapping
 		src/Application/AppUtils.cpp
 		src/Rendering/MeshGenerator.cpp
-		src/SLAM/PlanarRegionMapHandler.cpp
         src/Geometry/src/Elements/PlanarRegion.cpp
 		src/SLAM/PlanarRegionSimulator.cpp
 		src/Launcher/MagnumApplication.cpp
 		src/Launcher/SLAMApplication.cpp
 		src/Application/PlanarRegionMapTester.cpp
 		src/Geometry/src/GeomTools.cpp
-		src/SLAM/FactorGraphSLAM.cpp
+		src/SLAM/PlanarRegionMapHandler.cpp
+		src/SLAM/FactorGraphHandler.cpp
 		src/headers/AppUtils.h
 		src/headers/SLAMApplication.h
-		src/headers/PlanarRegionMapHandler.h
 		src/headers/PlanarRegion.h
 		src/headers/PlanarRegionSimulator.h
 		src/headers/MagnumApplication.h
 		src/headers/PlanarRegionMapTester.h
-		src/SLAM/FactorGraphSLAM.h
 		src/headers/MeshGenerator.h
-		src/
-		)
+		src/headers/PlanarRegionMapHandler.h
+		src/headers/FactorGraphHandler.h)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${OpenCV_LIBS}

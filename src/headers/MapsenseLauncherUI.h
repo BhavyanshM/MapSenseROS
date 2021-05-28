@@ -34,6 +34,7 @@
 #include <imgui.h>
 
 #include "MeshGenerator.h"
+#include "SLAMModule.h"
 #include "PlanarRegionCalculator.h"
 #include "ApplicationState.h"
 #include "ImGuiLayout.h"
@@ -94,7 +95,8 @@ using namespace Magnum::Math::Literals;
       Magnum::SceneGraph::DrawableGroup3D _drawables;
 
       PlanarRegionCalculator *_regionCalculator;
-      NetworkManager *_dataReceiver;
+      SLAMModule *_slamModule;
+      NetworkManager *_networkManager;
       int count, frameId = 0;
 };
 

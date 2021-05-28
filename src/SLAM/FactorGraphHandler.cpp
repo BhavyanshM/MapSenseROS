@@ -1,6 +1,6 @@
-#include "FactorGraphSLAM.h"
+#include "FactorGraphHandler.h"
 
-FactorGraphSLAM::FactorGraphSLAM()
+FactorGraphHandler::FactorGraphHandler()
 {
    /* Set ISAM2 parameters here. */
    parameters.relinearizeThreshold = 0.01;
@@ -24,7 +24,7 @@ FactorGraphSLAM::FactorGraphSLAM()
    priorNoise2 = noiseModel::Diagonal::Variances(priorVariance2);
 }
 
-void FactorGraphSLAM::getPoses(std::vector<RigidBodyTransform>& poses)
+void FactorGraphHandler::getPoses(std::vector<RigidBodyTransform>& poses)
 {
    poses.clear();
    for (int i = 1; i < this->getPoseId(); i++)
@@ -34,24 +34,24 @@ void FactorGraphSLAM::getPoses(std::vector<RigidBodyTransform>& poses)
    }
 }
 
-void FactorGraphSLAM::createOdometryNoiseModel(Vector6 odomVariance)
+void FactorGraphHandler::createOdometryNoiseModel(Vector6 odomVariance)
 {
    odometryNoise = noiseModel::Diagonal::Variances(odomVariance);
 }
 
-void FactorGraphSLAM::createOrientedPlaneNoiseModel(Vector3 lmVariances)
+void FactorGraphHandler::createOrientedPlaneNoiseModel(Vector3 lmVariances)
 {
    orientedPlaneNoise = noiseModel::Diagonal::Variances(lmVariances);
 }
 
-int FactorGraphSLAM::addPriorPoseFactor(Pose3 mean, int poseId)
+int FactorGraphHandler::addPriorPoseFactor(Pose3 mean, int poseId)
 {
    LOG("Inserting Prior Pose: Pose(%d)\n", poseId);
    graph.add(PriorFactor<Pose3>(Symbol('x', poseId), mean, priorNoise));
    return poseId;
 }
 
-int FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
+int FactorGraphHandler::addOdometryFactor(Pose3 odometry)
 {
    LOG("Inserting Odometry: Pose(%d) Pose(%d)\n", poseId, poseId + 1);
    graph.add(BetweenFactor<Pose3>(Symbol('x', poseId), Symbol('x', poseId + 1), odometry, odometryNoise));
@@ -59,7 +59,7 @@ int FactorGraphSLAM::addOdometryFactor(Pose3 odometry)
    return poseId;
 }
 
-int FactorGraphSLAM::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
+int FactorGraphHandler::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
 {
    int landmarkId = (lmId != -1) ? lmId : newLandmarkId++;
    LOG("Inserting Oriented Plane Factor: Pose(%d) Landmark(%d, %d)\n", poseId, lmId, landmarkId);
@@ -67,7 +67,7 @@ int FactorGraphSLAM::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
    return landmarkId;
 }
 
-void FactorGraphSLAM::initPoseValue(Pose3 value)
+void FactorGraphHandler::initPoseValue(Pose3 value)
 {
    if (structure.find('x' + std::to_string(poseId)) == structure.end())
    {
@@ -77,7 +77,7 @@ void FactorGraphSLAM::initPoseValue(Pose3 value)
    }
 }
 
-void FactorGraphSLAM::initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value)
+void FactorGraphHandler::initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value)
 {
    if (!initial.exists(Symbol('l', index)) && structure.find('l' + std::to_string(index)) == structure.end())
    {
@@ -87,13 +87,13 @@ void FactorGraphSLAM::initOrientedPlaneLandmarkValue(int index, OrientedPlane3 v
    }
 }
 
-void FactorGraphSLAM::optimize()
+void FactorGraphHandler::optimize()
 {
    LOG("Optimizing\n");
    result = LevenbergMarquardtOptimizer(graph, initial).optimize();
 }
 
-void FactorGraphSLAM::optimizeISAM2(uint8_t numberOfUpdates)
+void FactorGraphHandler::optimizeISAM2(uint8_t numberOfUpdates)
 {
    LOG("Optimizing Graph Using ISAM2.\n");
    isam.update(graph, initial);
@@ -104,28 +104,28 @@ void FactorGraphSLAM::optimizeISAM2(uint8_t numberOfUpdates)
    result = isam.calculateEstimate();
 }
 
-void FactorGraphSLAM::clearISAM2()
+void FactorGraphHandler::clearISAM2()
 {
    initial.clear();
    graph.resize(0);
 }
 
-Values FactorGraphSLAM::getResults()
+Values FactorGraphHandler::getResults()
 {
    return result;
 }
 
-Values FactorGraphSLAM::getInitial()
+Values FactorGraphHandler::getInitial()
 {
    return initial;
 }
 
-NonlinearFactorGraph FactorGraphSLAM::getFactorGraph()
+NonlinearFactorGraph FactorGraphHandler::getFactorGraph()
 {
    return graph;
 }
 
-int FactorGraphSLAM::getPoseId() const
+int FactorGraphHandler::getPoseId() const
 {
    return poseId;
 }

@@ -8,7 +8,7 @@
 #include "MagnumApplication.h"
 #include "PlanarRegionMapTester.h"
 #include "gtsam/geometry/Pose2.h"
-#include "../SLAM/FactorGraphSLAM.h"
+#include "FactorGraphHandler.h"
 #include "MeshGenerator.h"
 #include "AppUtils.h"
 #include "StructureFromMotion.h"

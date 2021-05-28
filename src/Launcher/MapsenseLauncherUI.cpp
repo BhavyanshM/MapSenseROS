@@ -52,12 +52,14 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
 void MyApplication::init(int argc, char **argv)
 {
    /* TODO: Instantiate the Information Processors */
-   _dataReceiver = new NetworkManager(appState, &appUtils);
-   _dataReceiver->init_ros_node(argc, argv, appState);
+   _networkManager = new NetworkManager(appState, &appUtils);
+   _networkManager->init_ros_node(argc, argv, appState);
 
 
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
+
+   _slamModule = new SLAMModule(argc, argv);
 
    ROS_DEBUG("Application Initialized Successfully");
 }
@@ -70,21 +72,21 @@ void MyApplication::tickEvent()
 
    if (appState.ROS_ENABLED)
    {
-      _dataReceiver->spin_ros_node();
-      _dataReceiver->receiverUpdate(appState);
-      if (_dataReceiver->paramsAvailable)
+      _networkManager->spin_ros_node();
+      _networkManager->receiverUpdate(appState);
+      if (_networkManager->paramsAvailable)
       {
-         _dataReceiver->paramsAvailable = false;
-         appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
-         appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
+         _networkManager->paramsAvailable = false;
+         appState.MERGE_DISTANCE_THRESHOLD = _networkManager->paramsMessage.mergeDistanceThreshold;
+         appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
       }
-      //      _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
-      ImageReceiver* depthReceiver = ((ImageReceiver*)_dataReceiver->receivers[0]);
+      //      _networkManager->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
+      ImageReceiver* depthReceiver = ((ImageReceiver*)_networkManager->receivers[0]);
       ROS_DEBUG("Loading Data into Depth Receiver");
       depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
       if (depthReceiver->cameraInfoSet && appState.GENERATE_REGIONS)
       {
-         _regionCalculator->generateRegions(_dataReceiver, appState);
+         _regionCalculator->generateRegions(_networkManager, appState);
          if (appState.EXPORT_REGIONS)
          {
             if (frameId % 10 == 0)
@@ -96,11 +98,12 @@ void MyApplication::tickEvent()
          }
       }
 
-      _dataReceiver->publishSLAMPose(count);
+      _slamModule->slamUpdate(_regionCalculator->planarRegionList);
+      _networkManager->publishSLAMPose(count);
 
       if (appState.STEREO_DRIVER)
       {
-         _dataReceiver->load_next_stereo_frame(_regionCalculator->inputStereoLeft, _regionCalculator->inputStereoRight, appState);
+         _networkManager->load_next_stereo_frame(_regionCalculator->inputStereoLeft, _regionCalculator->inputStereoRight, appState);
          //         AppUtils::displayDebugOutput(_regionCalculator->inputStereoLeft, appState);
       }
       if (appState.SHOW_REGION_EDGES)
@@ -229,7 +232,7 @@ void MyApplication::draw_regions()
 
 void MyApplication::generate_patches()
 {
-   _regionCalculator->generateRegions(_dataReceiver, appState);
+   _regionCalculator->generateRegions(_networkManager, appState);
    draw_patches();
 }
 
@@ -290,7 +293,7 @@ void MyApplication::drawEvent()
       }
       if(ImGui::BeginTabItem("Network"))
       {
-         _dataReceiver->ImGuiUpdate();
+         _networkManager->ImGuiUpdate();
          ImGui::EndTabItem();
       }
       if (ImGui::BeginTabItem("Extras"))
@@ -358,8 +361,8 @@ void MyApplication::drawEvent()
 
 void MyApplication::exitEvent(ExitEvent& event)
 {
-   _dataReceiver->camLeft->release();
-   _dataReceiver->camRight->release();
+   _networkManager->camLeft->release();
+   _networkManager->camRight->release();
    event.setAccepted(true);
 }
 

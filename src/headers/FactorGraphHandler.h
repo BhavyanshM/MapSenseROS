@@ -30,7 +30,7 @@
 using namespace boost::assign;
 using namespace gtsam;
 
-class FactorGraphSLAM
+class FactorGraphHandler
 {
    private:
 
@@ -53,7 +53,7 @@ class FactorGraphSLAM
 
    public:
 
-      FactorGraphSLAM();
+      FactorGraphHandler();
 
       void getPoses(std::vector<RigidBodyTransform>& poses);
 
