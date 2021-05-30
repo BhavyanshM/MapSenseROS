@@ -73,3 +73,14 @@ void RigidBodyTransform::print()
 {
    std::cout << this->matrix << std::endl;
 }
+
+Eigen::Vector3d RigidBodyTransform::getTranslation()
+{
+   return this->matrix.block<3,1>(0,3);
+}
+
+Eigen::Quaterniond RigidBodyTransform::getQuaternion()
+{
+   return Eigen::Quaterniond(this->matrix.block<3,3>(0,0));
+}
+

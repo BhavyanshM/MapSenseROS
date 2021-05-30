@@ -77,8 +77,8 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
       auto duration = duration_cast<microseconds>(end - start).count();
       printf("SLAM Update Took: %.2lf ms\n", duration / (float) 1000);
 
-      for (shared_ptr<PlanarRegion> region : _mapper.mapRegions)
-         GeomTools::compressPointSetLinear(region);
+//      for (shared_ptr<PlanarRegion> region : _mapper.mapRegions)
+//         GeomTools::compressPointSetLinear(region);
 
       //      _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
       _mapper.fgSLAM.getPoses(_mapper.poses);

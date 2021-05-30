@@ -262,7 +262,7 @@ void NetworkManager::spin_ros_node()
    spinOnce();
 }
 
-void NetworkManager::publishSLAMPose(int count)
+void NetworkManager::publishSamplePose(int count)
 {
    geometry_msgs::PoseStamped pose;
    pose.pose.position = geometry_msgs::Point();
@@ -271,6 +271,26 @@ void NetworkManager::publishSLAMPose(int count)
    pose.pose.position.z = sin((double) count / (double) 300);
 
    pose.pose.orientation = geometry_msgs::Quaternion();
+
+   this->slamPosePub.publish(pose);
+}
+
+void NetworkManager::publishSLAMPose(RigidBodyTransform worldToSensorTransform)
+{
+   Quaterniond quaternion = worldToSensorTransform.getQuaternion();
+   Vector3d position = worldToSensorTransform.getTranslation();
+
+   geometry_msgs::PoseStamped pose;
+   pose.pose.position = geometry_msgs::Point();
+   pose.pose.position.x = position.x();
+   pose.pose.position.y = position.y();
+   pose.pose.position.z = position.z();
+
+   pose.pose.orientation = geometry_msgs::Quaternion();
+   pose.pose.orientation.x = quaternion.x();
+   pose.pose.orientation.y = quaternion.y();
+   pose.pose.orientation.z = quaternion.z();
+   pose.pose.orientation.w = quaternion.w();
 
    this->slamPosePub.publish(pose);
 }

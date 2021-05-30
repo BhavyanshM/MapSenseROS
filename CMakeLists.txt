@@ -167,6 +167,7 @@ target_link_libraries(planar_region_publisher
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen
 		tbb
+		gtsam
 		geom-tools)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)

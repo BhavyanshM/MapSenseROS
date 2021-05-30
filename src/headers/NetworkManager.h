@@ -60,7 +60,7 @@ class NetworkManager
 
       vector<TopicInfo> getROSTopicList();
 
-      void publishSLAMPose(int count);
+      void publishSamplePose(int count);
 
       void getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic);
 
@@ -89,6 +89,8 @@ class NetworkManager
       void spin_ros_node();
 
       void load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app);
+
+      void publishSLAMPose(RigidBodyTransform pose);
 };
 
 #endif //SRC_SENSORDATARECEIVER_H

@@ -16,6 +16,7 @@ class SLAMModule
    private:
       vector<Object3D *> latestRegionEdges, previousRegionEdges, matchingEdges, poseAxes;
 
+   public:
       PlanarRegionMapHandler _mapper;
 //      MeshGenerator _mesher;
 

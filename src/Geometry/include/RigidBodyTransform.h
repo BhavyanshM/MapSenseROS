@@ -38,6 +38,10 @@ class RigidBodyTransform
       void print();
 
       void setRotationAndTranslation(Eigen::Matrix3d rotation, Eigen::Vector3d translation);
+
+      Eigen::Vector3d getTranslation();
+
+      Eigen::Quaterniond getQuaternion();
 };
 
 #endif //RIGIDBODYTRANSFORM_H

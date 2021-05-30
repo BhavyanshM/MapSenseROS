@@ -98,8 +98,13 @@ void MyApplication::tickEvent()
          }
       }
 
-      _slamModule->slamUpdate(_regionCalculator->planarRegionList);
-      _networkManager->publishSLAMPose(count);
+      ROS_INFO("Latest Regions for SLAM: %d", _regionCalculator->planarRegionList.size());
+      if(_regionCalculator->planarRegionList.size() > 4)
+      {
+         _slamModule->slamUpdate(_regionCalculator->planarRegionList);
+         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
+         _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+      }
 
       if (appState.STEREO_DRIVER)
       {
