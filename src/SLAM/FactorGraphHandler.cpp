@@ -44,16 +44,14 @@ void FactorGraphHandler::createOrientedPlaneNoiseModel(Vector3 lmVariances)
    orientedPlaneNoise = noiseModel::Diagonal::Variances(lmVariances);
 }
 
-int FactorGraphHandler::addPriorPoseFactor(const Pose3& mean, const int& poseId)
+int FactorGraphHandler::addPriorPoseFactor(Pose3 mean, int poseId)
 {
-   LOG("%s: Inserting Prior Pose: Pose(%d)\n", poseId, __func__);
    graph.add(PriorFactor<Pose3>(Symbol('x', poseId), mean, priorNoise));
    return poseId;
 }
 
 int FactorGraphHandler::addOdometryFactor(Pose3 odometry)
 {
-   LOG("%s: Inserting Odometry: Pose(%d) Pose(%d)\n", poseId, poseId + 1, __func__);
    graph.add(BetweenFactor<Pose3>(Symbol('x', poseId), Symbol('x', poseId + 1), odometry, odometryNoise));
    poseId++;
    return poseId;
@@ -62,7 +60,6 @@ int FactorGraphHandler::addOdometryFactor(Pose3 odometry)
 int FactorGraphHandler::addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId)
 {
    int landmarkId = (lmId != -1) ? lmId : newLandmarkId++;
-   LOG("%s: Inserting Oriented Plane Factor: Pose(%d) Landmark(%d, %d)\n", poseId, lmId, landmarkId, __func__);
    graph.add(OrientedPlane3Factor(lmMean, orientedPlaneNoise, Symbol('x', poseId), Symbol('l', landmarkId)));
    return landmarkId;
 }
@@ -71,7 +68,6 @@ void FactorGraphHandler::initPoseValue(Pose3 value)
 {
    if (structure.find('x' + std::to_string(poseId)) == structure.end())
    {
-      LOG("%s: Initializing Pose:(%d)\n", poseId, __func__);
       structure.insert('x' + std::to_string(poseId));
       initial.insert(Symbol('x', poseId), value);
    }
@@ -81,7 +77,6 @@ void FactorGraphHandler::initOrientedPlaneLandmarkValue(int index, OrientedPlane
 {
    if (!initial.exists(Symbol('l', index)) && structure.find('l' + std::to_string(index)) == structure.end())
    {
-      LOG("%s: Initializing Oriented Plane Landmark:(%d)\n", index, __func__);
       structure.insert('l' + std::to_string(index));
       initial.insert(Symbol('l', index), value);
    }
@@ -89,20 +84,17 @@ void FactorGraphHandler::initOrientedPlaneLandmarkValue(int index, OrientedPlane
 
 void FactorGraphHandler::optimize()
 {
-   LOG("%s: Optimizing\n", __func__);
    result = LevenbergMarquardtOptimizer(graph, initial).optimize();
 }
 
 void FactorGraphHandler::optimizeISAM2(uint8_t numberOfUpdates)
 {
-   LOG("%s: Optimizing Graph Using ISAM2.\n", __func__);
    isam.update(graph, initial);
    for(uint8_t i = 1; i< numberOfUpdates; i++)
    {
       isam.update();
    }
    result = isam.calculateEstimate();
-   LOG("%s: Optimization Successful.", __func__);
 }
 
 void FactorGraphHandler::clearISAM2()

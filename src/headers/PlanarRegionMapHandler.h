@@ -31,6 +31,8 @@ class PlanarRegionMapHandler
       RigidBodyTransform _sensorToMapTransform;
       RigidBodyTransform _sensorPoseRelative;
 
+      PlanarRegionMapHandler();
+
       void setDirectory(const string& directory);
 
       void matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions);

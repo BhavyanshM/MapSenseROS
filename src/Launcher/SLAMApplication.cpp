@@ -22,8 +22,7 @@ void SLAMApplication::init(const Arguments& arguments)
    _mapper.loadRegions(frameIndex, _mapper.regions);
    _mapper.loadRegions(frameIndex + SKIP_REGIONS, _mapper.latestRegions);
 
-   printf("Creating FactorGraphHandler\n");
-   _mapper.fgSLAM = new FactorGraphHandler();
+
 
    printf("Creating Prior Factors\n");
    printf("PoseId:(%d)", _mapper.fgSLAM->getPoseId());

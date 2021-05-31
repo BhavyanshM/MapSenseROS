@@ -42,28 +42,24 @@ void SLAMModule::extractArgs(int argc, char** argv)
          printf("Incremental SAM2: true \nSTEPS: %d\n", _mapper.ISAM2_NUM_STEPS);
       }
    }
-   LOG("%s: All arguments extracted.\n", __func__);
 }
 
 void SLAMModule::init()
 {
-   LOG("%s: Initializing SLAM Module.\n", __func__);
-   LOG("Mapper: (%d)\n", _mapper.ISAM2_NUM_STEPS);
-//   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
-//   _mapper.fgSLAM->initPoseValue(Pose3().identity());
-   LOG("%s: SLAM Module Initialized.\n", __func__);
+   printf("Initializing SLAM Module\n");
+   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
+   _mapper.fgSLAM->initPoseValue(Pose3().identity());
+   printf("SLAM Module Initialized \n");
 }
 
-void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>>& latestRegions)
+void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
 {
-
-
-
    printf("SLAM Update Begins\n");
 
    if(_mapper.regions.size() == 0) {
       printf("Setting Regions to Latest: %d\n", latestRegions.size());
       _mapper.regions = latestRegions;
+      printf("Regions Copied into SLAMModule.\n");
       return;
    }
 

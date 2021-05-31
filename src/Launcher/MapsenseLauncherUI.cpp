@@ -55,7 +55,6 @@ void MyApplication::init(int argc, char **argv)
    _networkManager = new NetworkManager(appState, &appUtils);
    _networkManager->init_ros_node(argc, argv, appState);
 
-
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
 
@@ -81,7 +80,7 @@ void MyApplication::tickEvent()
          appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
       }
       //      _networkManager->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
-      ImageReceiver* depthReceiver = ((ImageReceiver*)_networkManager->receivers[0]);
+      ImageReceiver *depthReceiver = ((ImageReceiver *) _networkManager->receivers[0]);
       ROS_DEBUG("Loading Data into Depth Receiver");
       depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
       if (depthReceiver->cameraInfoSet && appState.GENERATE_REGIONS)
@@ -99,13 +98,16 @@ void MyApplication::tickEvent()
       }
 
       ROS_INFO("Latest Regions for SLAM: %d", _regionCalculator->planarRegionList.size());
-      if(_regionCalculator->planarRegionList.size() > 0)
+      if (_regionCalculator->planarRegionList.size() > 0)
       {
          _slamModule->slamUpdate(_regionCalculator->planarRegionList);
-         printf("After SLAM Update.");
+         printf("After SLAM Update.\n");
          vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
-//         _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
-//         printf("After SLAM Publisher.");
+         if (sensorTransforms.size() > 0)
+         {
+            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+            printf("After SLAM Publisher.\n");
+         }
       }
       ROS_INFO("SLAM Pose Published.");
 
@@ -256,26 +258,26 @@ void MyApplication::drawEvent()
 
    /* Use for docking. */
 
-//   static ImGuiID dockspaceID = 0;
-//   bool active = true;
-//   if (ImGui::Begin("Master Window", &active))
-//   {
-//      ImGui::TextUnformatted("DockSpace below");
-//   }
-//   if (active)
-//   {
-//      // Declare Central dockspace
-//      dockspaceID = ImGui::GetID("HUB_DockSpace");
-//      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
-//   }
-//   ImGui::End();
-//
-//   ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-//   if (ImGui::Begin("Dockable Window"))
-//   {
-//      ImGui::TextUnformatted("Test");
-//   }
-//   ImGui::End();
+   //   static ImGuiID dockspaceID = 0;
+   //   bool active = true;
+   //   if (ImGui::Begin("Master Window", &active))
+   //   {
+   //      ImGui::TextUnformatted("DockSpace below");
+   //   }
+   //   if (active)
+   //   {
+   //      // Declare Central dockspace
+   //      dockspaceID = ImGui::GetID("HUB_DockSpace");
+   //      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
+   //   }
+   //   ImGui::End();
+   //
+   //   ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+   //   if (ImGui::Begin("Dockable Window"))
+   //   {
+   //      ImGui::TextUnformatted("Test");
+   //   }
+   //   ImGui::End();
 
    if (ImGui::BeginTabBar("Configuration"))
    {
@@ -294,12 +296,12 @@ void MyApplication::drawEvent()
          _regionCalculator->ImGuiUpdate(appState);
          ImGui::EndTabItem();
       }
-      if(ImGui::BeginTabItem("SLAM"))
+      if (ImGui::BeginTabItem("SLAM"))
       {
 
          ImGui::EndTabItem();
       }
-      if(ImGui::BeginTabItem("Network"))
+      if (ImGui::BeginTabItem("Network"))
       {
          _networkManager->ImGuiUpdate();
          ImGui::EndTabItem();
@@ -328,8 +330,6 @@ void MyApplication::drawEvent()
                                                                          string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
             frameId++;
          }
-
-
 
          if (ImGui::Button("Configure Memory"))
             AppUtils::checkMemoryLimits();

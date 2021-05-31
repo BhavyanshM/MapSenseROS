@@ -57,7 +57,7 @@ class FactorGraphHandler
 
       void getPoses(std::vector<RigidBodyTransform>& poses);
 
-      int addPriorPoseFactor(const Pose3& mean, const int& poseId);
+      int addPriorPoseFactor(Pose3 mean, int poseId);
 
       int addOdometryFactor(Pose3 odometry);
 

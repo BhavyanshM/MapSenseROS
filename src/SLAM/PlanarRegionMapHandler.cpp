@@ -1,5 +1,11 @@
 #include "PlanarRegionMapHandler.h"
 
+PlanarRegionMapHandler::PlanarRegionMapHandler()
+{
+   printf("Creating FactorGraphHandler\n");
+   this->fgSLAM = new FactorGraphHandler();
+}
+
 void PlanarRegionMapHandler::registerRegionsPointToPlane()
 {
    Matrix4f T = Matrix4f::Identity();
