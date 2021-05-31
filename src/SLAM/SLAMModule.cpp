@@ -6,6 +6,12 @@
 
 SLAMModule::SLAMModule(int argc, char **argv)
 {
+   this->extractArgs(argc, argv);
+   this->init();
+}
+
+void SLAMModule::extractArgs(int argc, char** argv)
+{
    std::vector<std::string> args(argv, argv + argc);
    for (int i = 0; i < args.size(); i++)
    {
@@ -22,7 +28,7 @@ SLAMModule::SLAMModule(int argc, char **argv)
       if (args[i] == "--match-vert")
       {
          _mapper.MATCH_PERCENT_VERTEX_THRESHOLD = stoi(args[i + 1]);
-         cout << "VERT:" << _mapper.MATCH_PERCENT_VERTEX_THRESHOLD << "\t";
+         cout << "VERT:" << _mapper.MATCH_PERCENT_VERTEX_THRESHOLD << "\n";
       }
       if (args[i] == "--factor-graph")
       {
@@ -33,30 +39,52 @@ SLAMModule::SLAMModule(int argc, char **argv)
       {
          _mapper.ISAM2 = true;
          _mapper.ISAM2_NUM_STEPS = stoi(args[i + 1]);
-         cout << "Incremental SAM2: true \nSTEPS: " << _mapper.ISAM2_NUM_STEPS << endl;
+         printf("Incremental SAM2: true \nSTEPS: %d\n", _mapper.ISAM2_NUM_STEPS);
       }
    }
+   LOG("%s: All arguments extracted.\n", __func__);
 }
 
 void SLAMModule::init()
 {
-   _mapper.fgSLAM.addPriorPoseFactor(Pose3().identity(), 1);
-   _mapper.fgSLAM.initPoseValue(Pose3().identity());
+   LOG("%s: Initializing SLAM Module.\n", __func__);
+   LOG("Mapper: (%d)\n", _mapper.ISAM2_NUM_STEPS);
+//   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
+//   _mapper.fgSLAM->initPoseValue(Pose3().identity());
+   LOG("%s: SLAM Module Initialized.\n", __func__);
 }
 
-void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
+void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>>& latestRegions)
 {
+
+
+
+   printf("SLAM Update Begins\n");
+
+   if(_mapper.regions.size() == 0) {
+      printf("Setting Regions to Latest: %d\n", latestRegions.size());
+      _mapper.regions = latestRegions;
+      return;
+   }
+
    auto start = high_resolution_clock::now();
 
    _mapper.latestRegions = latestRegions;
 
    /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
    _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
+
+   printf("SLAM Update: (Region Matches Found: %d)\n", _mapper.matches.size());
+
    _mapper.registerRegionsPointToPlane();
+
+   printf("SLAM Update: (Regions Registered)\n");
 
    /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
    int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative);
    _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
+
+   printf("SLAM Update: (Factors Inserted)\n");
 
    /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
    vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
@@ -66,10 +94,10 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
    {
       /* Initialize poses and landmarks with map frame values. */
       _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
-      //            _mapper.fgSLAM.addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
+      //            _mapper.fgSLAM->addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
 
       /* Optimize the Factor Graph and get Results. */
-      _mapper.ISAM2 ? _mapper.fgSLAM.optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM.optimize();
+      _mapper.ISAM2 ? _mapper.fgSLAM->optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM->optimize();
       //_mapper.mergeLatestRegions();
       _mapper.updateMapRegionsWithSLAM();
 
@@ -81,15 +109,17 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
 //         GeomTools::compressPointSetLinear(region);
 
       //      _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
-      _mapper.fgSLAM.getPoses(_mapper.poses);
+      _mapper.fgSLAM->getPoses(_mapper.poses);
 
       if (_mapper.ISAM2)
-         _mapper.fgSLAM.clearISAM2();
+         _mapper.fgSLAM->clearISAM2();
    } else
    {
       _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
       //      _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
    }
+
+   printf("SLAM Update: (Factor Graph Optimized)\n");
 
    //   _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
 
@@ -98,4 +128,5 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
 
    //   _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
 
+   printf("SLAM Update Ends\n");
 }

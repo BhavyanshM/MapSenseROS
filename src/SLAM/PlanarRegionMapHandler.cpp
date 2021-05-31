@@ -31,13 +31,22 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane()
          i++;
       }
    }
+
+   printf("PlanarICP: (A:(%d, %d), b:(%d))\n", A.rows(), A.cols(), b.rows());
+
    VectorXf solution(6);
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
    eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
    translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
 
+   printf("ICP Result: Rotation(%.2lf, %.2lf, %.2lf) Translation(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference.x(), eulerAnglesToReference.y(),
+          eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
+
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
-   _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
+   _sensorPoseRelative.setRotationAndTranslation(eulerAnglesToReference, translationToReference);
+
+   printf("Appending to Sensor-Map Transform\n");
+
    _sensorToMapTransform.appendRight(_sensorPoseRelative);
 }
 
@@ -120,8 +129,6 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarReg
    }
 }
 
-
-
 Vector3f getVec3f(string csv)
 {
    vector<string> CSVSubStrings;
@@ -176,7 +183,7 @@ void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRe
          getNextLineSplit(regionFile, subStrings);
          region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
-//      GeomTools::compressPointSetLinear(region);
+      //      GeomTools::compressPointSetLinear(region);
       regions.emplace_back(region);
    }
 }
@@ -214,24 +221,24 @@ void PlanarRegionMapHandler::updateFactorGraphLandmarks(vector<shared_ptr<Planar
       shared_ptr<PlanarRegion> region = regionsToInsert[i];
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      region->setId(fgSLAM.addOrientedPlaneLandmarkFactor(plane, region->getId()));
+      region->setId(fgSLAM->addOrientedPlaneLandmarkFactor(plane, region->getId()));
       region->setPoseId(currentPoseId);
    }
 }
 
 int PlanarRegionMapHandler::updateFactorGraphPoses(RigidBodyTransform odometry)
 {
-   return fgSLAM.addOdometryFactor(MatrixXd(odometry.getMatrix()));
+   return fgSLAM->addOdometryFactor(MatrixXd(odometry.getMatrix()));
 }
 
 void PlanarRegionMapHandler::initFactorGraphState(RigidBodyTransform sensorPose, vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
 {
-   this->fgSLAM.initPoseValue(MatrixXd(sensorPose.getMatrix()));
+   this->fgSLAM->initPoseValue(MatrixXd(sensorPose.getMatrix()));
    for (auto region : regionsInMapFrame)
    {
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      this->fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);
+      this->fgSLAM->initOrientedPlaneLandmarkValue(region->getId(), plane);
    }
 }
 
@@ -251,12 +258,12 @@ void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
    mapRegions.clear();
    for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
-      RigidBodyTransform mapToSensorTransform(fgSLAM.getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
+      RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
 
       shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
       region->copyAndTransform(transformedRegion, mapToSensorTransform);
 
-      transformedRegion->projectToPlane(fgSLAM.getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
+      transformedRegion->projectToPlane(fgSLAM->getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);
    }
    cout << "Total Map Regions: " << mapRegions.size() << endl;

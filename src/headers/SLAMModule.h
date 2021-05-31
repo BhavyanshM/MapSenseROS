@@ -23,9 +23,11 @@ class SLAMModule
    public:
       SLAMModule(int argc, char** argv);
 
-      void slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions);
+      void slamUpdate(vector<shared_ptr<PlanarRegion>>& latestRegions);
 
       void init();
+
+      void extractArgs(int argc, char** argv);
 };
 
 #endif //SLAMMODULE_H

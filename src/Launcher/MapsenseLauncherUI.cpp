@@ -99,12 +99,15 @@ void MyApplication::tickEvent()
       }
 
       ROS_INFO("Latest Regions for SLAM: %d", _regionCalculator->planarRegionList.size());
-      if(_regionCalculator->planarRegionList.size() > 4)
+      if(_regionCalculator->planarRegionList.size() > 0)
       {
          _slamModule->slamUpdate(_regionCalculator->planarRegionList);
+         printf("After SLAM Update.");
          vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
-         _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+//         _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+//         printf("After SLAM Publisher.");
       }
+      ROS_INFO("SLAM Pose Published.");
 
       if (appState.STEREO_DRIVER)
       {

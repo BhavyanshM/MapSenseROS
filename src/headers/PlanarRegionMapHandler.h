@@ -19,7 +19,7 @@ class PlanarRegionMapHandler
       bool ISAM2 = false;
       uint8_t ISAM2_NUM_STEPS = 4;
 
-      FactorGraphHandler fgSLAM;
+      FactorGraphHandler* fgSLAM;
       vector<string> files;
       vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions;
       vector<pair<int, int>> matches;

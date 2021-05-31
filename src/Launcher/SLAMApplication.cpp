@@ -22,16 +22,21 @@ void SLAMApplication::init(const Arguments& arguments)
    _mapper.loadRegions(frameIndex, _mapper.regions);
    _mapper.loadRegions(frameIndex + SKIP_REGIONS, _mapper.latestRegions);
 
-   _mapper.fgSLAM.addPriorPoseFactor(Pose3().identity(), 1);
+   printf("Creating FactorGraphHandler\n");
+   _mapper.fgSLAM = new FactorGraphHandler();
+
+   printf("Creating Prior Factors\n");
+   printf("PoseId:(%d)", _mapper.fgSLAM->getPoseId());
+   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
    _mapper.updateFactorGraphLandmarks(_mapper.regions, 1);
 
-   _mapper.fgSLAM.initPoseValue(Pose3().identity());
+   _mapper.fgSLAM->initPoseValue(Pose3().identity());
    for (int i = 0; i < _mapper.regions.size(); i++)
    {
       shared_ptr<PlanarRegion> region = _mapper.regions[i];
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      _mapper.fgSLAM.initOrientedPlaneLandmarkValue(region->getId(), plane);
+      _mapper.fgSLAM->initOrientedPlaneLandmarkValue(region->getId(), plane);
       _mapper.mapRegions.emplace_back(region);
       _mapper.measuredRegions.emplace_back(region);
    }
@@ -97,7 +102,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             //            _mapper.fgSLAM.addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
 
             /* Optimize the Factor Graph and get Results. */
-            _mapper.ISAM2 ? _mapper.fgSLAM.optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM.optimize();
+            _mapper.ISAM2 ? _mapper.fgSLAM->optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM->optimize();
             //_mapper.mergeLatestRegions();
             _mapper.updateMapRegionsWithSLAM();
 
@@ -108,10 +113,10 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             for(shared_ptr<PlanarRegion> region : _mapper.mapRegions) GeomTools::compressPointSetLinear(region);
 
             _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
-            _mapper.fgSLAM.getPoses(_mapper.poses);
+            _mapper.fgSLAM->getPoses(_mapper.poses);
 
             if (_mapper.ISAM2)
-               _mapper.fgSLAM.clearISAM2();
+               _mapper.fgSLAM->clearISAM2();
          } else
          {
             _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));

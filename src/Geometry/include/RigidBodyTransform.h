@@ -15,11 +15,13 @@ class RigidBodyTransform
    public:
       RigidBodyTransform();
 
-      RigidBodyTransform(Eigen::Matrix4d matrix);
+      RigidBodyTransform(const Eigen::Matrix4d& matrix);
 
-      RigidBodyTransform(Eigen::Matrix3d rotation, Eigen::Vector3d translation);
+      RigidBodyTransform(const RigidBodyTransform& other) : matrix(other.matrix){}
 
-      RigidBodyTransform(Eigen::Vector3d eulerAngles, Eigen::Vector3d translation);
+      RigidBodyTransform(const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation);
+
+      RigidBodyTransform(const Eigen::Vector3d& eulerAngles, const Eigen::Vector3d& translation);
 
       void setToInverse();
 
@@ -29,15 +31,17 @@ class RigidBodyTransform
 
       void setMatrix(const Eigen::Matrix4d& matrix);
 
-      void appendLeft(RigidBodyTransform& transform);
+      void appendLeft(const RigidBodyTransform& transform);
 
-      void appendRight(RigidBodyTransform& transform);
+      void appendRight(const RigidBodyTransform& transform);
 
-      Eigen::Vector3d transformVector(Eigen::Vector3d vector);
+      Eigen::Vector3d transformVector(const Eigen::Vector3d& vector);
 
       void print();
 
-      void setRotationAndTranslation(Eigen::Matrix3d rotation, Eigen::Vector3d translation);
+      void setRotationAndTranslation(const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation);
+
+      void setRotationAndTranslation(const Eigen::Vector3d& eulerAngles, const Eigen::Vector3d& translation);
 
       Eigen::Vector3d getTranslation();
 
