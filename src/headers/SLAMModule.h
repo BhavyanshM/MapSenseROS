@@ -8,6 +8,8 @@
 #include "PlanarRegionMapHandler.h"
 #include "MeshGenerator.h"
 #include <chrono>
+#include "imgui.h"
+#include "implot/implot.h"
 
 using namespace chrono;
 
@@ -15,11 +17,13 @@ class SLAMModule
 {
    private:
       vector<Object3D *> latestRegionEdges, previousRegionEdges, matchingEdges, poseAxes;
+      vector<int> matchCountVec;
 
    public:
       PlanarRegionMapHandler _mapper;
 //      MeshGenerator _mesher;
 
+      bool enabled = false;
    public:
       SLAMModule(int argc, char** argv);
 
@@ -28,6 +32,8 @@ class SLAMModule
       void init();
 
       void extractArgs(int argc, char** argv);
+
+      void ImGuiUpdate();
 };
 
 #endif //SLAMMODULE_H

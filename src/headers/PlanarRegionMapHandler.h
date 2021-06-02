@@ -41,7 +41,7 @@ class PlanarRegionMapHandler
 
       void getFileNames(string dirName);
 
-      void registerRegionsPointToPlane();
+      void registerRegionsPointToPlane(uint8_t iterations);
 
       void registerRegionsPointToPoint();
 

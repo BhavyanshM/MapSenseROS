@@ -7,6 +7,7 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
 {
 
    _imgui = Magnum::ImGuiIntegration::Context(Magnum::Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
+   ImPlot::CreateContext();
 
    /* Set up proper blending to be used by ImGui. There's a great chance
       you'll need this exact behavior for the rest of your scene. If not, set
@@ -97,19 +98,19 @@ void MyApplication::tickEvent()
          }
       }
 
-//      ROS_INFO("Latest Regions for SLAM: %d", _regionCalculator->planarRegionList.size());
-//      if (_regionCalculator->planarRegionList.size() > 0)
-//      {
-//         _slamModule->slamUpdate(_regionCalculator->planarRegionList);
-//         printf("After SLAM Update.\n");
-//         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
-//         if (sensorTransforms.size() > 0)
-//         {
-//            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
-//            printf("After SLAM Publisher.\n");
-//         }
-//      }
-//      ROS_INFO("SLAM Pose Published.");
+      ROS_INFO("Latest Regions for SLAM: %d", _regionCalculator->planarRegionList.size());
+      if (_regionCalculator->planarRegionList.size() > 0)
+      {
+         _slamModule->slamUpdate(_regionCalculator->planarRegionList);
+         printf("After SLAM Update.\n");
+         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
+         if (sensorTransforms.size() > 0 && _slamModule->enabled)
+         {
+            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+            printf("After SLAM Publisher.\n");
+         }
+      }
+      ROS_INFO("SLAM Pose Published.");
 
       if (appState.STEREO_DRIVER)
       {
@@ -298,7 +299,7 @@ void MyApplication::drawEvent()
       }
       if (ImGui::BeginTabItem("SLAM"))
       {
-
+         _slamModule->ImGuiUpdate();
          ImGui::EndTabItem();
       }
       if (ImGui::BeginTabItem("Network"))

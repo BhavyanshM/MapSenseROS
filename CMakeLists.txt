@@ -85,6 +85,9 @@ set(SOURCE
 		src/SLAM/PlanarRegionMapHandler.cpp
 		src/SLAM/FactorGraphHandler.cpp
 		src/SLAM/SLAMModule.cpp
+		src/ImPlot/implot.cpp
+		src/ImPlot/implot_demo.cpp
+		src/ImPlot/implot_items.cpp
 		)
 
 set (HEADERS

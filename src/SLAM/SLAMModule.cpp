@@ -10,7 +10,7 @@ SLAMModule::SLAMModule(int argc, char **argv)
    this->init();
 }
 
-void SLAMModule::extractArgs(int argc, char** argv)
+void SLAMModule::extractArgs(int argc, char **argv)
 {
    std::vector<std::string> args(argv, argv + argc);
    for (int i = 0; i < args.size(); i++)
@@ -54,9 +54,13 @@ void SLAMModule::init()
 
 void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
 {
+   if (!enabled)
+      return;
+
    printf("SLAM Update Begins\n");
 
-   if(_mapper.regions.size() == 0) {
+   if (_mapper.regions.size() == 0)
+   {
       printf("Setting Regions to Latest: %d\n", latestRegions.size());
       _mapper.regions = latestRegions;
       printf("Regions Copied into SLAMModule.\n");
@@ -70,9 +74,12 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
    /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
    _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
 
+   this->matchCountVec.emplace_back(_mapper.matches.size());
+
    printf("SLAM Update: (Region Matches Found: %d)\n", _mapper.matches.size());
 
-   _mapper.registerRegionsPointToPlane();
+   if (_mapper.matches.size() > 0)
+      _mapper.registerRegionsPointToPlane(1);
 
    printf("SLAM Update: (Regions Registered)\n");
 
@@ -101,8 +108,8 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
       auto duration = duration_cast<microseconds>(end - start).count();
       printf("SLAM Update Took: %.2lf ms\n", duration / (float) 1000);
 
-//      for (shared_ptr<PlanarRegion> region : _mapper.mapRegions)
-//         GeomTools::compressPointSetLinear(region);
+      //      for (shared_ptr<PlanarRegion> region : _mapper.mapRegions)
+      //         GeomTools::compressPointSetLinear(region);
 
       //      _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
       _mapper.fgSLAM->getPoses(_mapper.poses);
@@ -125,4 +132,20 @@ void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
    //   _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
 
    printf("SLAM Update Ends\n");
+}
+
+void SLAMModule::ImGuiUpdate()
+{
+   ImGui::Checkbox("Enabled", &this->enabled);
+   if (this->matchCountVec.size() > 20)
+   {
+      printf("Plotting ImGui (%d)\n", this->matchCountVec.size());
+      this->matchCountVec.erase(this->matchCountVec.begin());
+      int *data = this->matchCountVec.data();
+      if (ImPlot::BeginPlot("SLAM Plots"))
+      {
+         ImPlot::PlotLine("Line Plot", data, 10);
+         ImPlot::EndPlot();
+      }
+   }
 }

@@ -6,7 +6,7 @@ PlanarRegionMapHandler::PlanarRegionMapHandler()
    this->fgSLAM = new FactorGraphHandler();
 }
 
-void PlanarRegionMapHandler::registerRegionsPointToPlane()
+void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
 {
    Matrix4f T = Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
