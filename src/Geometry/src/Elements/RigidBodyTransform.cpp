@@ -52,6 +52,12 @@ void RigidBodyTransform::setRotationAndTranslation(const Eigen::Vector3d& eulerA
    std::cout << this->matrix << std::endl;
 }
 
+void RigidBodyTransform::setRotationAndTranslation(const Eigen::Quaterniond& orientation, const Eigen::Vector3d& translation)
+{
+   this->matrix.block<3,3>(0,0) = orientation.toRotationMatrix();
+   this->matrix.block<3,1>(0,3) = translation;
+}
+
 void RigidBodyTransform::setRotationAndTranslation(const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation)
 {
    this->matrix.setIdentity();

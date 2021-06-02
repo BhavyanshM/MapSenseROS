@@ -30,6 +30,7 @@ class PlanarRegionMapHandler
 
       RigidBodyTransform _sensorToMapTransform;
       RigidBodyTransform _sensorPoseRelative;
+      RigidBodyTransform _atlasSensorPose;
 
       PlanarRegionMapHandler();
 

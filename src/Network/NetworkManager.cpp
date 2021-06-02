@@ -171,11 +171,11 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
    ROS_DEBUG("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
-   nh = new NodeHandle();
+   rosNode = new NodeHandle();
 
    // ROSTopic Publishers
-   planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
-   slamPosePub = nh->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
+   planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
+   slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
 
    // ROSTopic Subscribers
    string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
@@ -186,14 +186,14 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
 
-   //   subDepth = nh->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
-   //   subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
+   //   subDepth = rosNode->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
+   //   subDepthCamInfo = rosNode->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
-   //   subColor = nh->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
-   //   subColorCompressed = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
-   //   subColorCamInfo = nh->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
+   //   subColor = rosNode->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
+   //   subColorCompressed = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
+   //   subColorCamInfo = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
    //
-   subMapSenseParams = nh->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+   subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
    ROS_DEBUG("Started ROS Node");
 }
@@ -203,9 +203,9 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
    ROS_DEBUG("Adding Receiver: (%s), (%s)", data.name.c_str(), info.name.c_str());
    ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
-      receiver = new ImageReceiver(nh, data.name, info.name, false);
+      receiver = new ImageReceiver(rosNode, data.name, info.name, false);
    if (data.datatype == "sensor_msgs/CompressedImage")
-      receiver = new ImageReceiver(nh, data.name, info.name, true);
+      receiver = new ImageReceiver(rosNode, data.name, info.name, true);
 
    if (receiver != nullptr)
    {

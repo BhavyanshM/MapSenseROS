@@ -43,6 +43,8 @@ class RigidBodyTransform
 
       void setRotationAndTranslation(const Eigen::Vector3d& eulerAngles, const Eigen::Vector3d& translation);
 
+      void setRotationAndTranslation(const Eigen::Quaterniond& orientation, const Eigen::Vector3d& translation);
+
       Eigen::Vector3d getTranslation();
 
       Eigen::Quaterniond getQuaternion();

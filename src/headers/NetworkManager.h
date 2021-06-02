@@ -42,7 +42,7 @@ class NetworkManager
       CompressedImageConstPtr colorCompressedMessage;
       map_sense::MapsenseConfiguration paramsMessage;
       ImageConstPtr depthMessage;
-      NodeHandle *nh;
+      NodeHandle *rosNode;
       VideoCapture *camLeft;
       VideoCapture *camRight;
 

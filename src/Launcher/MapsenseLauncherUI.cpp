@@ -59,7 +59,7 @@ void MyApplication::init(int argc, char **argv)
    _regionCalculator = new PlanarRegionCalculator(appState);
    _regionCalculator->initOpenCL(appState);
 
-   _slamModule = new SLAMModule(argc, argv);
+   _slamModule = new SLAMModule(argc, argv, _networkManager);
 
    ROS_DEBUG("Application Initialized Successfully");
 }

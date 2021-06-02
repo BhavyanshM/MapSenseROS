@@ -4,8 +4,13 @@
 
 #include "SLAMModule.h"
 
-SLAMModule::SLAMModule(int argc, char **argv)
+SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager)
 {
+   this->network = networkManager;
+
+   this->sensorPoseSub = new Subscriber();
+   *(this->sensorPoseSub) = networkManager->rosNode->subscribe("/atlas/sensors/chest_l515/pose", 3, &SLAMModule::sensorPoseCallback, this);
+
    this->extractArgs(argc, argv);
    this->init();
 }
@@ -149,3 +154,17 @@ void SLAMModule::ImGuiUpdate()
       }
    }
 }
+
+void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose)
+{
+   this->sensorPoseMessage = pose;
+   this->_mapper._atlasSensorPose.setRotationAndTranslation(Eigen::Quaterniond(this->sensorPoseMessage->pose.orientation.x,
+                                                                               this->sensorPoseMessage->pose.orientation.y,
+                                                                               this->sensorPoseMessage->pose.orientation.z,
+                                                                               this->sensorPoseMessage->pose.orientation.w),
+                                                            Eigen::Vector3d(this->sensorPoseMessage->pose.position.x,
+                                                                            this->sensorPoseMessage->pose.position.y,
+                                                                            this->sensorPoseMessage->pose.position.z));
+   ROS_INFO("Sensor Pose Received.");
+   this->_mapper._atlasSensorPose.print();
+};
