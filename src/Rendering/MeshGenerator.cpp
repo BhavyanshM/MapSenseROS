@@ -25,7 +25,7 @@ MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shar
    }
 }
 
-void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent)
+void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent, int color)
 {
    clearMesh(objects);
    for (int i = 1; i < poses.size(); i++)
@@ -37,8 +37,20 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
       axes.scaleLocal({0.1, 0.1, 0.1});
 
       objects.emplace_back(&axes);
-      new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {(i * 123 % 255) / 255.0f, (i * 161 % 255) / 255.0f, (i * 113 % 255) / 255.0f}};
+      new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
    }
+}
+
+void MeshGenerator::appendPoseMesh(RigidBodyTransform pose, vector<Object3D*>& objects, Object3D *parent, int color)
+{
+   Vector3d translation = pose.getMatrix().block<3, 1>(0, 3);
+
+   Object3D& axes = parent->addChild<Object3D>();
+   axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
+   axes.scaleLocal({0.1, 0.1, 0.1});
+
+   objects.emplace_back(&axes);
+   new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
 }
 
 void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)

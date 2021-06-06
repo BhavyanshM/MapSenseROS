@@ -290,3 +290,94 @@ void GeomTools::getParametricCurve(vector<Vector2f> points, uint8_t m, MatrixXf&
    params.row(1) = params_y;
 }
 
+Vector3f getVec3f(string csv)
+{
+   vector<string> CSVSubStrings;
+   stringstream csvStream(csv);
+   string csvStr;
+   while (getline(csvStream, csvStr, ','))
+   {
+      CSVSubStrings.push_back(csvStr);
+   }
+   //   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
+   return Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
+}
+
+void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings)
+{
+   subStrings.clear();
+   string regionText;
+   getline(regionFile, regionText);
+   stringstream ss(regionText);
+   string str;
+   while (getline(ss, str, ':'))
+   {
+      //      cout << str << '\t';
+      subStrings.push_back(str);
+   }
+   //   cout << endl;
+}
+
+void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files)
+{
+   /* Generate planar region objects from the sorted list of files. */
+   regions.clear();
+   ifstream regionFile(directory + files[frameId]);
+   cout << "Loading Regions From: " << directory + files[frameId] << endl;
+   vector<string> subStrings;
+   getNextLineSplit(regionFile, subStrings); // Get number of regions
+   int numRegions = stoi(subStrings[1]);
+   for (int r = 0; r < numRegions; r++) // For each region
+   {
+      shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
+      getNextLineSplit(regionFile, subStrings); // Get regionId
+      region->setId(-1);
+      //      region->setId(stoi(subStrings[1]));
+      getNextLineSplit(regionFile, subStrings); // Get regionCenter
+      region->setCenter(getVec3f(subStrings[1]));
+      getNextLineSplit(regionFile, subStrings); // Get regionNormal
+      region->setNormal(getVec3f(subStrings[1]));
+      getNextLineSplit(regionFile, subStrings); // Get numBoundaryVertices
+      int length = stoi(subStrings[1]);
+      for (int i = 0; i < length; i++)
+      {
+         getNextLineSplit(regionFile, subStrings);
+         region->insertBoundaryVertex(getVec3f(subStrings[0]));
+      }
+      //      GeomTools::compressPointSetLinear(region);
+      regions.emplace_back(region);
+   }
+}
+
+void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform)
+{
+   for (int i = 0; i < regions.size(); i++)
+   {
+      regions[i]->transform(transform);
+   }
+}
+
+void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Vector3d translation, Matrix3d rotation)
+{
+   for (int i = 0; i < regions.size(); i++)
+   {
+      regions[i]->transform(translation, rotation);
+   }
+}
+
+void GeomTools::transformAndCopyRegions(vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>>& transformedRegions, RigidBodyTransform transform)
+{
+   printf("TransformAndCopy(%d)\n", regions.size());
+//   transformedRegions.clear();
+   for (int i = 0; i < regions.size(); i++)
+   {
+      shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(regions[i]->getId());
+      regions[i]->copyAndTransform(planarRegion, transform);
+      transformedRegions.emplace_back(planarRegion);
+   }
+   printf("TransformAndCopyRegions(");
+   for(auto region : regions) printf("%d, ",region.use_count());
+   printf(")\n");
+}
+
+

@@ -57,11 +57,11 @@ class FactorGraphHandler
 
       void getPoses(std::vector<RigidBodyTransform>& poses);
 
-      int addPriorPoseFactor(Pose3 mean, int poseId);
+      int addPriorPoseFactor(Pose3 mean);
 
       int addOdometryFactor(Pose3 odometry);
 
-      int addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId);
+      int addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId, int poseIndex);
 
       void optimize();
 
@@ -69,9 +69,9 @@ class FactorGraphHandler
 
       void clearISAM2();
 
-      void initPoseValue(Pose3 value);
+      void setPoseInitialValue(int index, Pose3 value);
 
-      void initOrientedPlaneLandmarkValue(int index, OrientedPlane3 value);
+      void setOrientedPlaneInitialValue(int index, OrientedPlane3 value);
 
       Values getResults();
 
@@ -82,6 +82,8 @@ class FactorGraphHandler
       void createOdometryNoiseModel(Vector6 odomVariance);
 
       void createOrientedPlaneNoiseModel(Vector3 lmVariances);
+
+      void incrementPoseId();
 };
 
 #endif //FACTORGRAPHSLAM_H

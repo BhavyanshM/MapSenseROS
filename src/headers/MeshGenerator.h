@@ -66,11 +66,13 @@ class MeshGenerator
 
       void generateMatchLineMesh(vector<pair<int,int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
 
-      void generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D*>& edges, Object3D* parent);
+      void generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D*>& edges, Object3D* parent, int color);
 
       explicit MeshGenerator(Magnum::SceneGraph::DrawableGroup3D* drawables);
 
       static void clearMesh(vector<Object3D *>& objects);
+
+      void appendPoseMesh(RigidBodyTransform pose, vector<Object3D*>& objects, Object3D *parent, int color);
 };
 
 class RedCubeDrawable : public Magnum::SceneGraph::Drawable3D

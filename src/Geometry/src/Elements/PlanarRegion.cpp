@@ -195,7 +195,7 @@ void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)
    }
 }
 
-void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion> planarRegion, RigidBodyTransform transform)
+void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegion, RigidBodyTransform transform)
 {
    planarRegion->setNormal(this->getNormal());
    planarRegion->setCenter(this->getCenter());

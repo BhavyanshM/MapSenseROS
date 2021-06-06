@@ -4,7 +4,8 @@
 
 #include "SLAMModule.h"
 
-SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager)
+SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager, Magnum::SceneGraph::DrawableGroup3D *_drawables, Object3D *sensor) : _mesher(
+      _drawables), _sensor(sensor)
 {
    this->network = networkManager;
 
@@ -12,7 +13,6 @@ SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager)
    *(this->sensorPoseSub) = networkManager->rosNode->subscribe("/atlas/sensors/chest_l515/pose", 3, &SLAMModule::sensorPoseCallback, this);
 
    this->extractArgs(argc, argv);
-   this->init();
 }
 
 void SLAMModule::extractArgs(int argc, char **argv)
@@ -49,102 +49,103 @@ void SLAMModule::extractArgs(int argc, char **argv)
    }
 }
 
-void SLAMModule::init()
-{
-   printf("Initializing SLAM Module\n");
-   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
-   _mapper.fgSLAM->initPoseValue(Pose3().identity());
-   printf("SLAM Module Initialized \n");
-}
-
-void SLAMModule::slamUpdate(vector<shared_ptr<PlanarRegion>> latestRegions)
+void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegions)
 {
    if (!enabled)
       return;
 
-   printf("SLAM Update Begins\n");
+   //   if (_mapper.regions.size() == 0)
+   //   {
+   //      _mapper.regions = latestRegions;
+   //      return;
+   //   }
 
-   if (_mapper.regions.size() == 0)
-   {
-      printf("Setting Regions to Latest: %d\n", latestRegions.size());
-      _mapper.regions = latestRegions;
-      printf("Regions Copied into SLAMModule.\n");
-      return;
-   }
-
-   auto start = high_resolution_clock::now();
 
    _mapper.latestRegions = latestRegions;
 
    /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
-   _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-
+   _mapper.matchPlanarRegionsToMap();
    this->matchCountVec.emplace_back(_mapper.matches.size());
 
-   printf("SLAM Update: (Region Matches Found: %d)\n", _mapper.matches.size());
+   printf("Regions Matched: (%d).\n", _mapper.matches.size());
 
-   if (_mapper.matches.size() > 0)
+   if (ICPEnabled && _mapper.matches.size() > 0)
       _mapper.registerRegionsPointToPlane(1);
 
-   printf("SLAM Update: (Regions Registered)\n");
-
+   int currentPoseId = 1;
    /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
-   int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative);
-   _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
-
-   printf("SLAM Update: (Factors Inserted)\n");
-
-   /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
-   vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
-   _mapper.transformAndCopyLatestRegions(_mapper._sensorToMapTransform, regionsInMapFrame);
-
-   if (_mapper.FACTOR_GRAPH)
+   if (initial)
    {
-      /* Initialize poses and landmarks with map frame values. */
-      _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
-      //            _mapper.fgSLAM->addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
+      printf("Initialization\n");
+      initial = false;
+      _mapper._atlasSensorPose.print();
 
-      /* Optimize the Factor Graph and get Results. */
-      _mapper.ISAM2 ? _mapper.fgSLAM->optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM->optimize();
-      //_mapper.mergeLatestRegions();
-      _mapper.updateMapRegionsWithSLAM();
-
-      auto end = high_resolution_clock::now();
-      auto duration = duration_cast<microseconds>(end - start).count();
-      printf("SLAM Update Took: %.2lf ms\n", duration / (float) 1000);
-
-      //      for (shared_ptr<PlanarRegion> region : _mapper.mapRegions)
-      //         GeomTools::compressPointSetLinear(region);
-
-      //      _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
-      _mapper.fgSLAM->getPoses(_mapper.poses);
-
-      if (_mapper.ISAM2)
-         _mapper.fgSLAM->clearISAM2();
+      _mapper._atlasPreviousSensorPose = _mapper._atlasSensorPose;
+      _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+      _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
    } else
    {
-      _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
-      //      _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
+      /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
+         GeomTools::transformAndCopyRegions(_mapper.latestRegions, _mapper.regionsInMapFrame, _mapper._atlasSensorPose.getInverse());
+
+      if (_mapper.FACTOR_GRAPH)
+      {
+
+         RigidBodyTransform odometry(_mapper._atlasSensorPose);
+         odometry.multiplyLeft(_mapper._atlasPreviousSensorPose.getInverse());
+
+         currentPoseId = _mapper.fgSLAM->addOdometryFactor(MatrixXd(odometry.getMatrix()));
+         _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+         _mapper._atlasPreviousSensorPose = _mapper._atlasSensorPose;
+
+         /* Initialize poses and landmarks with map frame values. */
+         //      _mapper.insertOrientedPlaneFactors(currentPoseId);
+         //      _mapper.setOrientedPlaneInitialValues();
+
+//         _mapper.printRefCounts();
+
+         /* Optimize the Factor Graph and get Results. */
+         _mapper.optimize();
+         //_mapper.mergeLatestRegions();
+
+//         printf("Extracting Factor Graph Landmarks\n");
+//         _mapper.extractFactorGraphLandmarks();
+
+//         printf("Generating Region Mesh\n");
+//         _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _sensor);
+         _mapper.fgSLAM->getPoses(_mapper.poses);
+
+         printf("Clearing ISAM2.\n");
+
+         if (_mapper.ISAM2)
+            _mapper.fgSLAM->clearISAM2();
+      } else
+      {
+         _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
+         //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
+      }
+
+      printf("Appending Pose Mesh\n");
+//      _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _sensor, 1);
+      _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, 2);
+
+      printf("Recycling Region Lists.\n");
+      /* Load previous and current regions. Separated by SKIP_REGIONS. */
+      _mapper.regions = _mapper.latestRegions;
+
+      printf("SLAM Update Complete.\n");
+
+//      _mapper.printRefCounts();
    }
-
-   printf("SLAM Update: (Factor Graph Optimized)\n");
-
-   //   _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
-
-   /* Load previous and current regions. Separated by SKIP_REGIONS. */
-   _mapper.regions = _mapper.latestRegions;
-
-   //   _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
-
-   printf("SLAM Update Ends\n");
 }
 
 void SLAMModule::ImGuiUpdate()
 {
-   ImGui::Checkbox("Enabled", &this->enabled);
+   ImGui::Checkbox("SLAM Enabled", &this->enabled);
+   ImGui::Checkbox("ICP Enabled", &this->ICPEnabled);
    if (this->matchCountVec.size() > 20)
    {
-      printf("Plotting ImGui (%d)\n", this->matchCountVec.size());
+
       this->matchCountVec.erase(this->matchCountVec.begin());
       int *data = this->matchCountVec.data();
       if (ImPlot::BeginPlot("SLAM Plots"))
@@ -157,14 +158,14 @@ void SLAMModule::ImGuiUpdate()
 
 void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose)
 {
-   this->sensorPoseMessage = pose;
-   this->_mapper._atlasSensorPose.setRotationAndTranslation(Eigen::Quaterniond(this->sensorPoseMessage->pose.orientation.x,
-                                                                               this->sensorPoseMessage->pose.orientation.y,
-                                                                               this->sensorPoseMessage->pose.orientation.z,
-                                                                               this->sensorPoseMessage->pose.orientation.w),
-                                                            Eigen::Vector3d(this->sensorPoseMessage->pose.position.x,
-                                                                            this->sensorPoseMessage->pose.position.y,
-                                                                            this->sensorPoseMessage->pose.position.z));
+      this->sensorPoseMessage = pose;
+      this->_mapper._atlasSensorPose.setRotationAndTranslation(Eigen::Quaterniond(this->sensorPoseMessage->pose.orientation.x,
+                                                                                  this->sensorPoseMessage->pose.orientation.y,
+                                                                                  this->sensorPoseMessage->pose.orientation.z,
+                                                                                  this->sensorPoseMessage->pose.orientation.w),
+                                                               Eigen::Vector3d(this->sensorPoseMessage->pose.position.y,
+                                                                               this->sensorPoseMessage->pose.position.z,
+                                                                               this->sensorPoseMessage->pose.position.x));
    ROS_INFO("Sensor Pose Received.");
-   this->_mapper._atlasSensorPose.print();
+   //   this->_mapper._atlasSensorPose.print();
 };

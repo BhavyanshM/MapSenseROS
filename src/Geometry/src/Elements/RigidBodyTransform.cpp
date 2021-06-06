@@ -75,14 +75,14 @@ void RigidBodyTransform::setMatrix(const Eigen::Matrix4d& matrix)
    this->matrix = matrix;
 }
 
-void RigidBodyTransform::appendLeft(const RigidBodyTransform& transform)
-{
-   this->matrix = this->matrix * transform.matrix;
-}
-
-void RigidBodyTransform::appendRight(const RigidBodyTransform& transform)
+void RigidBodyTransform::multiplyLeft(const RigidBodyTransform& transform)
 {
    this->matrix = transform.matrix * this->matrix;
+}
+
+void RigidBodyTransform::multiplyRight(const RigidBodyTransform& transform)
+{
+   this->matrix = this->matrix * transform.matrix;
 }
 
 Eigen::Vector3d RigidBodyTransform::transformVector(const Eigen::Vector3d& vector)

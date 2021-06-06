@@ -31,9 +31,9 @@ class RigidBodyTransform
 
       void setMatrix(const Eigen::Matrix4d& matrix);
 
-      void appendLeft(const RigidBodyTransform& transform);
+      void multiplyLeft(const RigidBodyTransform& transform);
 
-      void appendRight(const RigidBodyTransform& transform);
+      void multiplyRight(const RigidBodyTransform& transform);
 
       Eigen::Vector3d transformVector(const Eigen::Vector3d& vector);
 

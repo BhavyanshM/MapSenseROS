@@ -21,7 +21,9 @@ class PlanarRegionMapHandler
 
       FactorGraphHandler* fgSLAM;
       vector<string> files;
-      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions;
+
+      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame;
+
       vector<pair<int, int>> matches;
       vector<RigidBodyTransform> poses;
 
@@ -31,14 +33,13 @@ class PlanarRegionMapHandler
       RigidBodyTransform _sensorToMapTransform;
       RigidBodyTransform _sensorPoseRelative;
       RigidBodyTransform _atlasSensorPose;
+      RigidBodyTransform _atlasPreviousSensorPose;
 
       PlanarRegionMapHandler();
 
       void setDirectory(const string& directory);
 
-      void matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions);
-
-      void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions);
+      void matchPlanarRegionsToMap();
 
       void getFileNames(string dirName);
 
@@ -46,21 +47,21 @@ class PlanarRegionMapHandler
 
       void registerRegionsPointToPoint();
 
-      void transformLatestRegions(RigidBodyTransform transform);
-
-      void transformLatestRegions(Vector3d translation, Matrix3d rotation);
-
-      void transformAndCopyLatestRegions(RigidBodyTransform transform, vector<shared_ptr<PlanarRegion>>& transformedRegions);
-
       void mergeLatestRegions();
 
-      void updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert, int currentPoseId);
+      void insertOrientedPlaneFactors(int currentPoseId);
 
-      int updateFactorGraphPoses(RigidBodyTransform odometry);
+      int insertOdometryFactor(RigidBodyTransform odometry);
 
-      void initFactorGraphState(RigidBodyTransform sensorPose, vector<shared_ptr<PlanarRegion>> regionInMapFrame);
+      int insertPosePriorFactor(RigidBodyTransform pose);
 
-      void updateMapRegionsWithSLAM();
+      void setOrientedPlaneInitialValues();
+
+      void extractFactorGraphLandmarks();
+
+      void optimize();
+
+      void printRefCounts();
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

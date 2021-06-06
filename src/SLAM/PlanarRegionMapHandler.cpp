@@ -2,7 +2,6 @@
 
 PlanarRegionMapHandler::PlanarRegionMapHandler()
 {
-   printf("Creating FactorGraphHandler\n");
    this->fgSLAM = new FactorGraphHandler();
 }
 
@@ -23,7 +22,6 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
       for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
       {
          Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
-         //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
          Vector3f correspondingMapCentroid = regions[matches[m].first]->getCenter();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
          Vector3f cross = latestPoint.cross(correspondingMapNormal);
@@ -38,22 +36,19 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
       }
    }
 
-   printf("PlanarICP: (A:(%d, %d), b:(%d))\n", A.rows(), A.cols(), b.rows());
+//   printf("PlanarICP: (A:(%d, %d), b:(%d))\n", A.rows(), A.cols(), b.rows());
 
    VectorXf solution(6);
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
    eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
    translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
 
-   printf("ICP Result: Rotation(%.2lf, %.2lf, %.2lf) Translation(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference.x(), eulerAnglesToReference.y(),
-          eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
+//   printf("ICP Result: Rotation(%.2lf, %.2lf, %.2lf) Translation(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference.x(), eulerAnglesToReference.y(),
+//          eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
    _sensorPoseRelative.setRotationAndTranslation(eulerAnglesToReference, translationToReference);
-
-   printf("Appending to Sensor-Map Transform\n");
-
-   _sensorToMapTransform.appendRight(_sensorPoseRelative);
+   _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
 }
 
 void PlanarRegionMapHandler::registerRegionsPointToPoint()
@@ -94,10 +89,10 @@ void PlanarRegionMapHandler::registerRegionsPointToPoint()
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
    _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
-   _sensorToMapTransform.appendRight(_sensorPoseRelative);
+   _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
 }
 
-void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarRegion>> latestRegions)
+void PlanarRegionMapHandler::matchPlanarRegionsToMap()
 {
    matches.clear();
    for (int i = 0; i < regions.size(); i++)
@@ -135,116 +130,26 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap(vector<shared_ptr<PlanarReg
    }
 }
 
-Vector3f getVec3f(string csv)
-{
-   vector<string> CSVSubStrings;
-   stringstream csvStream(csv);
-   string csvStr;
-   while (getline(csvStream, csvStr, ','))
-   {
-      CSVSubStrings.push_back(csvStr);
-   }
-   //   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
-   return Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
-}
 
-void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings)
-{
-   subStrings.clear();
-   string regionText;
-   getline(regionFile, regionText);
-   stringstream ss(regionText);
-   string str;
-   while (getline(ss, str, ':'))
-   {
-      //      cout << str << '\t';
-      subStrings.push_back(str);
-   }
-   //   cout << endl;
-}
-
-void PlanarRegionMapHandler::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions)
-{
-   /* Generate planar region objects from the sorted list of files. */
-   regions.clear();
-   ifstream regionFile(directory + files[frameId]);
-   cout << "Loading Regions From: " << directory + files[frameId] << endl;
-   vector<string> subStrings;
-   getNextLineSplit(regionFile, subStrings); // Get number of regions
-   int numRegions = stoi(subStrings[1]);
-   for (int r = 0; r < numRegions; r++) // For each region
-   {
-      shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
-      getNextLineSplit(regionFile, subStrings); // Get regionId
-      region->setId(-1);
-      //      region->setId(stoi(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings); // Get regionCenter
-      region->setCenter(getVec3f(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings); // Get regionNormal
-      region->setNormal(getVec3f(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings); // Get numBoundaryVertices
-      int length = stoi(subStrings[1]);
-      for (int i = 0; i < length; i++)
-      {
-         getNextLineSplit(regionFile, subStrings);
-         region->insertBoundaryVertex(getVec3f(subStrings[0]));
-      }
-      //      GeomTools::compressPointSetLinear(region);
-      regions.emplace_back(region);
-   }
-}
-
-void PlanarRegionMapHandler::transformLatestRegions(RigidBodyTransform transform)
-{
-   for (int i = 0; i < this->latestRegions.size(); i++)
-   {
-      this->latestRegions[i]->transform(transform);
-   }
-}
-
-void PlanarRegionMapHandler::transformLatestRegions(Vector3d translation, Matrix3d rotation)
-{
-   for (int i = 0; i < this->latestRegions.size(); i++)
-   {
-      this->latestRegions[i]->transform(translation, rotation);
-   }
-}
-
-void PlanarRegionMapHandler::transformAndCopyLatestRegions(RigidBodyTransform transform, vector<shared_ptr<PlanarRegion>>& transformedRegions)
+void PlanarRegionMapHandler::insertOrientedPlaneFactors(int currentPoseId)
 {
    for (int i = 0; i < latestRegions.size(); i++)
    {
-      shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(latestRegions[i]->getId());
-      latestRegions[i]->copyAndTransform(planarRegion, transform);
-      transformedRegions.emplace_back(planarRegion);
-   }
-}
-
-void PlanarRegionMapHandler::updateFactorGraphLandmarks(vector<shared_ptr<PlanarRegion>>& regionsToInsert, int currentPoseId)
-{
-   for (int i = 0; i < regionsToInsert.size(); i++)
-   {
-      shared_ptr<PlanarRegion> region = regionsToInsert[i];
+      shared_ptr<PlanarRegion> region = latestRegions[i];
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      region->setId(fgSLAM->addOrientedPlaneLandmarkFactor(plane, region->getId()));
+      region->setId(fgSLAM->addOrientedPlaneLandmarkFactor(plane, region->getId(), currentPoseId));
       region->setPoseId(currentPoseId);
    }
 }
 
-int PlanarRegionMapHandler::updateFactorGraphPoses(RigidBodyTransform odometry)
+void PlanarRegionMapHandler::setOrientedPlaneInitialValues()
 {
-   return fgSLAM->addOdometryFactor(MatrixXd(odometry.getMatrix()));
-}
-
-void PlanarRegionMapHandler::initFactorGraphState(RigidBodyTransform sensorPose, vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
-{
-   this->fgSLAM->initPoseValue(MatrixXd(sensorPose.getMatrix()));
    for (auto region : regionsInMapFrame)
    {
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      this->fgSLAM->initOrientedPlaneLandmarkValue(region->getId(), plane);
+      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), plane);
    }
 }
 
@@ -259,9 +164,10 @@ void PlanarRegionMapHandler::mergeLatestRegions()
    }
 }
 
-void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
+void PlanarRegionMapHandler::extractFactorGraphLandmarks()
 {
-   mapRegions.clear();
+//   mapRegions.clear();
+//   printRefCounts();
    for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
       RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
@@ -273,11 +179,35 @@ void PlanarRegionMapHandler::updateMapRegionsWithSLAM()
       mapRegions.emplace_back(transformedRegion);
    }
    cout << "Total Map Regions: " << mapRegions.size() << endl;
+
+}
+
+void PlanarRegionMapHandler::optimize()
+{
+   this->ISAM2 ? this->fgSLAM->optimizeISAM2(this->ISAM2_NUM_STEPS) : this->fgSLAM->optimize();
 }
 
 void PlanarRegionMapHandler::setDirectory(const string& directory)
 {
    this->directory = directory;
+}
+
+void PlanarRegionMapHandler::printRefCounts()
+{
+   printf("---------- REF Counts ----------\n");
+   printf("Regions(");
+   for(auto region : this->regions) printf("%d, ",region.use_count());
+   printf(")\n");
+   printf("LatestRegions(");
+   for(auto region : this->latestRegions) printf("%d, ",region.use_count());
+   printf(")\n");
+   printf("MapRegions(");
+   for(auto region : this->mapRegions) printf("%d, ",region.use_count());
+   printf(")\n");
+   printf("RegionsInMapFrame(");
+   for(auto region : this->regionsInMapFrame) printf("%d, ",region.use_count());
+   printf(")\n");
+   printf("---------- REF Counts End ----------\n\n");
 }
 
 

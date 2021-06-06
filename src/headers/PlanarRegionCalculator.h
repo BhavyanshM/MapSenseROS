@@ -49,9 +49,10 @@ class PlanarRegionCalculator
       MapFrameProcessor mapFrameProcessor;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
 
+      int frameId = 0;
       int depthReceiverId = -1;
 
-      explicit PlanarRegionCalculator(ApplicationState& app);
+      explicit PlanarRegionCalculator(int argc, char** argv, NetworkManager* network, ApplicationState& app);
 
       void render();
 
@@ -61,7 +62,7 @@ class PlanarRegionCalculator
 
       void initOpenCL(ApplicationState app);
 
-      void generateRegions(NetworkManager *receiver, ApplicationState appState);
+      void generateRegions(ApplicationState appState);
 
       void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
 

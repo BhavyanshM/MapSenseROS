@@ -24,12 +24,13 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
 
    /* TODO: Configure Camera in Scene Graph*/
    _camGrandParent = new Object3D{&_scene};
-   _sensor = new Object3D{&_scene};
    _camParent = new Object3D{_camGrandParent};
    _camObject = new Object3D{_camParent};
    _camera = new Magnum::SceneGraph::Camera3D(*_camObject);
    _camera->setProjectionMatrix(Magnum::Matrix4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
-   _sensor->transformLocal(Magnum::Matrix4::rotationX(Magnum::Rad{90.0_degf}));
+
+   _sensor = new Object3D{&_scene};
+   _sensor->transformLocal(Magnum::Matrix4::rotationY(Magnum::Rad{180.0_degf}));
 
    /* TODO: Prepare your objects here and add them to the scene */
    _sensorAxes = new Object3D{_sensor};
@@ -37,7 +38,6 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
    new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
-   _sensor->transformLocal(Magnum::Matrix4::rotationX(Magnum::Rad{90.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
@@ -56,19 +56,17 @@ void MyApplication::init(int argc, char **argv)
    _networkManager = new NetworkManager(appState, &appUtils);
    _networkManager->init_ros_node(argc, argv, appState);
 
-   _regionCalculator = new PlanarRegionCalculator(appState);
+   _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
    _regionCalculator->initOpenCL(appState);
 
-   _slamModule = new SLAMModule(argc, argv, _networkManager);
+   _slamModule = new SLAMModule(argc, argv, _networkManager, &_drawables, _sensor);
 
-   ROS_DEBUG("Application Initialized Successfully");
+   ROS_INFO("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
 {
    ROS_INFO("TickEvent: %d", count++);
-
-   _regionCalculator->render();
 
    if (appState.ROS_ENABLED)
    {
@@ -80,35 +78,19 @@ void MyApplication::tickEvent()
          appState.MERGE_DISTANCE_THRESHOLD = _networkManager->paramsMessage.mergeDistanceThreshold;
          appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
       }
-      //      _networkManager->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
-      ImageReceiver *depthReceiver = ((ImageReceiver *) _networkManager->receivers[0]);
-      ROS_DEBUG("Loading Data into Depth Receiver");
-      depthReceiver->getData(_regionCalculator->inputDepth, appState, _regionCalculator->inputTimestamp);
-      if (depthReceiver->cameraInfoSet && appState.GENERATE_REGIONS)
-      {
-         _regionCalculator->generateRegions(_networkManager, appState);
-         if (appState.EXPORT_REGIONS)
-         {
-            if (frameId % 10 == 0)
-            {
-               AppUtils::write_regions(_regionCalculator->planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-                                                                            string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
-            }
-            frameId++;
-         }
-      }
 
-      ROS_INFO("Latest Regions for SLAM: %d", _regionCalculator->planarRegionList.size());
+      _regionCalculator->generateRegions(appState);
+      _regionCalculator->render();
+
       if (_regionCalculator->planarRegionList.size() > 0)
       {
          _slamModule->slamUpdate(_regionCalculator->planarRegionList);
-         printf("After SLAM Update.\n");
-         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
-         if (sensorTransforms.size() > 0 && _slamModule->enabled)
-         {
-            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
-            printf("After SLAM Publisher.\n");
-         }
+//         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
+//         if (sensorTransforms.size() > 0 && _slamModule->enabled)
+//         {
+//            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+//            printf("After SLAM Publisher.\n");
+//         }
       }
       ROS_INFO("SLAM Pose Published.");
 
@@ -238,12 +220,12 @@ void MyApplication::draw_regions()
    }
    auto end = high_resolution_clock::now();
    auto duration = duration_cast<microseconds>(end - start).count();
-   ROS_DEBUG("Visualization Took: %.2f ms", duration / (float) 1000);
+   ROS_INFO("Visualization Took: %.2f ms", duration / (float) 1000);
 }
 
 void MyApplication::generate_patches()
 {
-   _regionCalculator->generateRegions(_networkManager, appState);
+   _regionCalculator->generateRegions(appState);
    draw_patches();
 }
 

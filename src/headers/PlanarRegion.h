@@ -97,7 +97,7 @@ class PlanarRegion
 
       void transform(Vector3d translation, Matrix3d rotation);
 
-      void copyAndTransform(shared_ptr<PlanarRegion> planarRegion, RigidBodyTransform transform);
+      void copyAndTransform(shared_ptr<PlanarRegion>& planarRegion, RigidBodyTransform transform);
 
       string toString();
 

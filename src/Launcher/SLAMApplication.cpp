@@ -19,23 +19,23 @@ void SLAMApplication::init(const Arguments& arguments)
    }
    AppUtils::getFileNames(dirPath, _mapper.files);
    _mapper.setDirectory(dirPath);
-   _mapper.loadRegions(frameIndex, _mapper.regions);
-   _mapper.loadRegions(frameIndex + SKIP_REGIONS, _mapper.latestRegions);
+   GeomTools::loadRegions(frameIndex, _mapper.regions, _mapper.directory, _mapper.files);
+   GeomTools::loadRegions(frameIndex + SKIP_REGIONS, _mapper.latestRegions, _mapper.directory, _mapper.files);
 
 
 
    printf("Creating Prior Factors\n");
    printf("PoseId:(%d)", _mapper.fgSLAM->getPoseId());
    _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
-   _mapper.updateFactorGraphLandmarks(_mapper.regions, 1);
+   _mapper.insertOrientedPlaneFactors(1);
 
-   _mapper.fgSLAM->initPoseValue(Pose3().identity());
+   _mapper.fgSLAM->setPoseInitialValue(1, Pose3().identity());
    for (int i = 0; i < _mapper.regions.size(); i++)
    {
       shared_ptr<PlanarRegion> region = _mapper.regions[i];
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      _mapper.fgSLAM->initOrientedPlaneLandmarkValue(region->getId(), plane);
+      _mapper.fgSLAM->setOrientedPlaneInitialValue(region->getId(), plane);
       _mapper.mapRegions.emplace_back(region);
       _mapper.measuredRegions.emplace_back(region);
    }
@@ -84,26 +84,26 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
          /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
          _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-         _mapper.registerRegionsPointToPlane();
+         _mapper.registerRegionsPointToPlane(1);
 
          /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
-         int currentPoseId = _mapper.updateFactorGraphPoses(_mapper._sensorPoseRelative);
-         _mapper.updateFactorGraphLandmarks(_mapper.latestRegions, currentPoseId);
+         int currentPoseId = _mapper.fgSLAM->addOdometryFactor(MatrixXd(_mapper._sensorPoseRelative.getMatrix()));
+         _mapper.insertOrientedPlaneFactors(currentPoseId);
 
          /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
          vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
-         _mapper.transformAndCopyLatestRegions(_mapper._sensorToMapTransform, regionsInMapFrame);
+         GeomTools::transformAndCopyRegions(_mapper.latestRegions, regionsInMapFrame, _mapper._sensorToMapTransform);
 
          if (_mapper.FACTOR_GRAPH)
          {
             /* Initialize poses and landmarks with map frame values. */
-            _mapper.initFactorGraphState(_mapper._sensorToMapTransform.getInverse(), regionsInMapFrame);
+            _mapper.setOrientedPlaneInitialValues();
             //            _mapper.fgSLAM.addPriorPoseFactor(Pose3(_mapper._sensorToMapTransform.getInverse().getMatrix()), currentPoseId);
 
             /* Optimize the Factor Graph and get Results. */
-            _mapper.ISAM2 ? _mapper.fgSLAM->optimizeISAM2(_mapper.ISAM2_NUM_STEPS) : _mapper.fgSLAM->optimize();
+            _mapper.optimize();
             //_mapper.mergeLatestRegions();
-            _mapper.updateMapRegionsWithSLAM();
+            _mapper.extractFactorGraphLandmarks();
 
             auto end = high_resolution_clock::now();
             auto duration = duration_cast<microseconds>(end - start).count();
@@ -130,7 +130,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             frameIndex += SKIP_REGIONS;
          }
          _mapper.regions = _mapper.latestRegions;
-         _mapper.loadRegions(frameIndex, _mapper.latestRegions);
+         GeomTools::loadRegions(frameIndex, _mapper.latestRegions, _mapper.directory, _mapper.files);
 
          //         _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
          break;
@@ -153,8 +153,8 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
    }
    if (event.key() == KeyEvent::Key::Left || event.key() == KeyEvent::Key::Right)
    {
-      _mapper.loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions);
-      _mapper.loadRegions(frameIndex, _mapper.latestRegions);
+      GeomTools::loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions, _mapper.directory, _mapper.files);
+      GeomTools::loadRegions(frameIndex, _mapper.latestRegions, _mapper.directory, _mapper.files);
 
       _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
       _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor);
@@ -162,10 +162,6 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
       _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
    }
-}
-
-void SLAMApplication::slamUpdate(vector<shared_ptr<PlanarRegion>> regionsInMapFrame)
-{
 }
 
 int main(int argc, char **argv)

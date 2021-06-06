@@ -30,6 +30,14 @@ class GeomTools
       static void getParametricCurve(vector<Vector2f> points, uint8_t m, MatrixXf& params);
 
       static void compressPointSetLinear(shared_ptr<PlanarRegion> region);
+
+      static void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files);
+
+      static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform);
+
+      static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Vector3d translation, Matrix3d rotation);
+
+      static void transformAndCopyRegions(vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>>& transformedRegions, RigidBodyTransform transform);
 };
 
 #endif //GEOMTOOLS_H
