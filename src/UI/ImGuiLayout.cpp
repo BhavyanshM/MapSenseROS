@@ -11,8 +11,6 @@ void ImGuiLayout::getImGuiAppLayout(ApplicationState& appState)
    ImGui::Text("Time:%.3f ms FPS:%.1f", 1000.0 / Magnum::Double(ImGui::GetIO().Framerate), Magnum::Double(ImGui::GetIO().Framerate));
 }
 
-
-
 void ImGuiLayout::getImGui2DLayout(ApplicationState& appState)
 {
 

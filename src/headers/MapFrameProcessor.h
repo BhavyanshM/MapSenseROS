@@ -36,6 +36,8 @@ class MapFrameProcessor
 
       void displayDebugger(int delay);
 
+      void growRegionBoundary(vector<shared_ptr<PlanarRegion>>& regions);
+
       int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
       int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
 };
