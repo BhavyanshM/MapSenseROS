@@ -47,6 +47,7 @@ class PlanarRegionCalculator
       MapFrame output;
       MapFrameProcessor mapFrameProcessor;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
+      vector<int> planes;
 
       explicit PlanarRegionCalculator(ApplicationState& app);
 
@@ -65,6 +66,8 @@ class PlanarRegionCalculator
       void getInputDepth(Mat& dispDepth, ApplicationState appState);
 
       static void onMouse(int event, int x, int y, int flags, void *userdata);
+
+      void extractRealPlanes();
 };
 
 #endif //SRC_PLANARREGIONCALCULATOR_H

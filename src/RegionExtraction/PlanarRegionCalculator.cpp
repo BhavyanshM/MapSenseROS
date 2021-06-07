@@ -37,9 +37,10 @@ void PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    Mat depthMat = inputDepth.clone();
    Mat colorMat = inputColor.clone();
 
-//   medianBlur(depthMat, depthMat, 5);
+   //   medianBlur(depthMat, depthMat, 5);
 
-   if(appState.EARLY_GAUSSIAN_BLUR) GaussianBlur(depthMat, depthMat, Size(appState.GAUSSIAN_SIZE * 2 + 1,appState.GAUSSIAN_SIZE * 2 + 1), appState.GAUSSIAN_SIGMA);
+   if (appState.EARLY_GAUSSIAN_BLUR)
+      GaussianBlur(depthMat, depthMat, Size(appState.GAUSSIAN_SIZE * 2 + 1, appState.GAUSSIAN_SIZE * 2 + 1), appState.GAUSSIAN_SIGMA);
 
    /* Input Data OpenCL Buffers */
    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);
@@ -286,6 +287,8 @@ void PlanarRegionCalculator::generateRegions(NetworkManager *receiver, Applicati
    ROS_DEBUG("Regions Generated in %.2f ms", (GPUDuration + CPUDuration) / (float) 1000);
    //   cout << GPUDuration/ (float) 1000 << "\t" << CPUDuration/ (float) 1000 << endl;
 
+//   extractRealPlanes();
+
    publishRegions(planarRegionList);
 }
 
@@ -363,4 +366,32 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState)
    // output.drawGraph(dispDepth);
 
    cout << "PackAndMerge" << endl;
+}
+
+void PlanarRegionCalculator::extractRealPlanes()
+{
+   bool exists = false;
+   this->planes.clear();
+   Vector4f regionSupportPlane, uniquePlane;
+   for (int i = 0; i < planarRegionList.size(); i++)
+   {
+      shared_ptr<PlanarRegion> region = this->planarRegionList[i];
+      regionSupportPlane << region->getNormal(), -region->getNormal().dot(region->getCenter());
+      for (int index : planes)
+      {
+         shared_ptr<PlanarRegion> plane = this->planarRegionList[index];
+         uniquePlane << plane->getNormal(), -plane->getNormal().dot(plane->getCenter());
+         if ((regionSupportPlane - uniquePlane).norm() < 0.1 && (plane->getCenter() - region->getCenter()).norm() < 0.3)
+         {
+            exists = true;
+         }
+      }
+      if (!exists)
+         planes.emplace_back(i);
+   }
+   ROS_INFO("Total Unique Surfaces Found: %d/%d", planes.size(), this->planarRegionList.size());
+   for(int planeIndex : planes)
+   {
+      ROS_INFO("Unique Surface: %s", this->planarRegionList[planeIndex]->toString().c_str());
+   }
 }
