@@ -36,15 +36,15 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
       }
    }
 
-//   printf("PlanarICP: (A:(%d, %d), b:(%d))\n", A.rows(), A.cols(), b.rows());
+   //   printf("PlanarICP: (A:(%d, %d), b:(%d))\n", A.rows(), A.cols(), b.rows());
 
    VectorXf solution(6);
    solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
    eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
    translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
 
-//   printf("ICP Result: Rotation(%.2lf, %.2lf, %.2lf) Translation(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference.x(), eulerAnglesToReference.y(),
-//          eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
+   //   printf("ICP Result: Rotation(%.2lf, %.2lf, %.2lf) Translation(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference.x(), eulerAnglesToReference.y(),
+   //          eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
    _sensorPoseRelative.setRotationAndTranslation(eulerAnglesToReference, translationToReference);
@@ -130,7 +130,6 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap()
    }
 }
 
-
 void PlanarRegionMapHandler::insertOrientedPlaneFactors(int currentPoseId)
 {
    for (int i = 0; i < latestRegions.size(); i++)
@@ -166,8 +165,8 @@ void PlanarRegionMapHandler::mergeLatestRegions()
 
 void PlanarRegionMapHandler::extractFactorGraphLandmarks()
 {
-//   mapRegions.clear();
-//   printRefCounts();
+   //   mapRegions.clear();
+   //   printRefCounts();
    for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
       RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
@@ -179,7 +178,6 @@ void PlanarRegionMapHandler::extractFactorGraphLandmarks()
       mapRegions.emplace_back(transformedRegion);
    }
    cout << "Total Map Regions: " << mapRegions.size() << endl;
-
 }
 
 void PlanarRegionMapHandler::optimize()
@@ -192,20 +190,40 @@ void PlanarRegionMapHandler::setDirectory(const string& directory)
    this->directory = directory;
 }
 
+void PlanarRegionMapHandler::transformAndCopyLatestRegions(vector<shared_ptr<PlanarRegion>>& transformedRegions, const RigidBodyTransform& transform)
+{
+   printf("TransformAndCopy(%d)\n", latestRegions.size());
+   transformedRegions.clear();
+   for (int i = 0; i < latestRegions.size(); i++)
+   {
+      shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(latestRegions[i]->getId());
+      latestRegions[i]->copyAndTransform(planarRegion, transform);
+      transformedRegions.emplace_back(planarRegion);
+   }
+   printf("TransformAndCopyRegions(");
+   for (auto region : latestRegions)
+      printf("%d, ", region.use_count());
+   printf(")\n");
+}
+
 void PlanarRegionMapHandler::printRefCounts()
 {
    printf("---------- REF Counts ----------\n");
    printf("Regions(");
-   for(auto region : this->regions) printf("%d, ",region.use_count());
+   for (auto region : this->regions)
+      printf("%d, ", region.use_count());
    printf(")\n");
    printf("LatestRegions(");
-   for(auto region : this->latestRegions) printf("%d, ",region.use_count());
+   for (auto region : this->latestRegions)
+      printf("%d, ", region.use_count());
    printf(")\n");
    printf("MapRegions(");
-   for(auto region : this->mapRegions) printf("%d, ",region.use_count());
+   for (auto region : this->mapRegions)
+      printf("%d, ", region.use_count());
    printf(")\n");
    printf("RegionsInMapFrame(");
-   for(auto region : this->regionsInMapFrame) printf("%d, ",region.use_count());
+   for (auto region : this->regionsInMapFrame)
+      printf("%d, ", region.use_count());
    printf(")\n");
    printf("---------- REF Counts End ----------\n\n");
 }

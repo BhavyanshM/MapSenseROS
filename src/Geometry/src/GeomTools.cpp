@@ -365,19 +365,5 @@ void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Vect
    }
 }
 
-void GeomTools::transformAndCopyRegions(vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>>& transformedRegions, RigidBodyTransform transform)
-{
-   printf("TransformAndCopy(%d)\n", regions.size());
-//   transformedRegions.clear();
-   for (int i = 0; i < regions.size(); i++)
-   {
-      shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(regions[i]->getId());
-      regions[i]->copyAndTransform(planarRegion, transform);
-      transformedRegions.emplace_back(planarRegion);
-   }
-   printf("TransformAndCopyRegions(");
-   for(auto region : regions) printf("%d, ",region.use_count());
-   printf(")\n");
-}
 
 

@@ -36,8 +36,6 @@ class GeomTools
       static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform);
 
       static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Vector3d translation, Matrix3d rotation);
-
-      static void transformAndCopyRegions(vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>>& transformedRegions, RigidBodyTransform transform);
 };
 
 #endif //GEOMTOOLS_H

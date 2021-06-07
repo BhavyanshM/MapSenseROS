@@ -33,6 +33,7 @@ class SLAMModule
       bool enabled = true;
       bool initial = true;
       bool ICPEnabled = false;
+      bool poseAvailable = false;
 
    public:
       SLAMModule(int argc, char **argv, NetworkManager *networkManager, Magnum::SceneGraph::DrawableGroup3D* _drawables, Object3D* sensor);

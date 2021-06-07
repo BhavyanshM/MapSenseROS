@@ -195,21 +195,24 @@ void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)
    }
 }
 
-void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegion, RigidBodyTransform transform)
+void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform)
 {
-   planarRegion->setNormal(this->getNormal());
-   planarRegion->setCenter(this->getCenter());
-   planarRegion->centroidCalculated = true;
-   planarRegion->normalCalculated = true;
-   planarRegion->setNumOfMeasurements(this->getNumOfMeasurements());
-   planarRegion->setId(this->getId());
-   planarRegion->setPoseId(this->getPoseId());
-   planarRegion->numPatches = this->numPatches;
-   for (int i = 0; i < this->getNumOfBoundaryVertices(); i++)
+   printf("copyData(id:%d)\n", this->getId());
+   planarRegionToPack->setNormal(this->getNormal());
+   planarRegionToPack->setCenter(this->getCenter());
+   planarRegionToPack->centroidCalculated = true;
+   planarRegionToPack->normalCalculated = true;
+   planarRegionToPack->setNumOfMeasurements(this->getNumOfMeasurements());
+   planarRegionToPack->setId(this->getId());
+   planarRegionToPack->setPoseId(this->getPoseId());
+   planarRegionToPack->numPatches = this->numPatches;
+   for (int i = 0; i < this->boundaryVertices.size(); i++)
    {
-      planarRegion->insertBoundaryVertex(this->boundaryVertices[i]);
+      printf("copyBoundary(id:%d, i:%d)\n", this->getId(), i);
+      planarRegionToPack->insertBoundaryVertex(this->boundaryVertices[i]);
    }
-   planarRegion->transform(transform);
+   printf("transform(id:%d)\n", this->getId());
+   planarRegionToPack->transform(transform);
 }
 
 void PlanarRegion::projectToPlane(Vector4f plane)

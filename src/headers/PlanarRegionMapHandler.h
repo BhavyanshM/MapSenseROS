@@ -62,6 +62,8 @@ class PlanarRegionMapHandler
       void optimize();
 
       void printRefCounts();
+
+      void transformAndCopyLatestRegions(vector<shared_ptr<PlanarRegion>>& transformedRegions, const RigidBodyTransform& transform);
 };
 
 #endif //PLANARREGIONMAPHANDLER_H
