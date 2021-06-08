@@ -54,8 +54,8 @@ void RigidBodyTransform::setRotationAndTranslation(const Eigen::Vector3d& eulerA
 
 void RigidBodyTransform::setRotationAndTranslation(const Eigen::Quaterniond& orientation, const Eigen::Vector3d& translation)
 {
-   this->matrix.block<3,3>(0,0) = orientation.toRotationMatrix();
-   this->matrix.block<3,1>(0,3) = translation;
+   this->matrix.block<3, 3>(0, 0) = orientation.toRotationMatrix();
+   this->matrix.block<3, 1>(0, 3) = translation;
 }
 
 void RigidBodyTransform::setRotationAndTranslation(const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation)
@@ -105,3 +105,24 @@ Eigen::Quaterniond RigidBodyTransform::getQuaternion()
    return Eigen::Quaterniond(this->matrix.block<3, 3>(0, 0));
 }
 
+void RigidBodyTransform::rotateX(float rad)
+{
+   this->rotate(rad, Eigen::Vector3d::UnitX());
+}
+
+void RigidBodyTransform::rotateY(float rad)
+{
+   this->rotate(rad, Eigen::Vector3d::UnitY());
+}
+
+void RigidBodyTransform::rotateZ(float rad)
+{
+   this->rotate(rad, Eigen::Vector3d::UnitZ());
+}
+
+void RigidBodyTransform::rotate(float rad, Eigen::Vector3d axis)
+{
+   Eigen::Matrix4d rotation = Eigen::Matrix4d::Identity();
+   rotation.block<3,3>(0,0) = Eigen::AngleAxisd(rad, axis).toRotationMatrix();
+   this->matrix =  this->matrix * rotation;
+}

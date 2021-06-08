@@ -25,7 +25,7 @@ MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shar
    }
 }
 
-void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent, int color)
+void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent, int color, float scale)
 {
    clearMesh(objects);
    for (int i = 1; i < poses.size(); i++)
@@ -34,7 +34,7 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
 
       Object3D& axes = parent->addChild<Object3D>();
       axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
-      axes.scaleLocal({0.1, 0.1, 0.1});
+      axes.scaleLocal({0.1 * scale, 0.1 * scale, 0.1 * scale});
 
       objects.emplace_back(&axes);
       new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};

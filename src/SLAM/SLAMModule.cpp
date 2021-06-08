@@ -106,8 +106,8 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
          _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
 
          /* Initialize poses and landmarks with map frame values. */
-         //         _mapper.insertOrientedPlaneFactors(currentPoseId);
-         //         _mapper.setOrientedPlaneInitialValues();
+//         _mapper.insertOrientedPlaneFactors(currentPoseId);
+//         _mapper.setOrientedPlaneInitialValues();
 
          //         _mapper.printRefCounts();
 
@@ -120,8 +120,8 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
          //         printf("Extracting Factor Graph Landmarks\n");
          //         _mapper.extractFactorGraphLandmarks();
          //
-         //         printf("Generating Region Mesh\n");
-         //         _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _sensor);
+//         printf("Generating Region Mesh\n");
+//         _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _sensor);
 
 
          _mapper.fgSLAM->getPoses(_mapper.poses);
@@ -136,9 +136,9 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
          //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
       }
 
-      printf("Appending Pose Mesh\n");
-      //      _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _sensor, 1);
-      _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, 2);
+      printf("Generating Pose Mesh\n");
+      _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _sensor, 3);
+      _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, 2, 1.5);
 
       printf("Recycling Region Lists.\n");
       /* Load previous and current regions. Separated by SKIP_REGIONS. */
@@ -177,6 +177,10 @@ void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& po
             Eigen::Quaterniond(this->sensorPoseMessage->pose.orientation.x, this->sensorPoseMessage->pose.orientation.y,
                                this->sensorPoseMessage->pose.orientation.z, this->sensorPoseMessage->pose.orientation.w),
             Eigen::Vector3d(this->sensorPoseMessage->pose.position.x, this->sensorPoseMessage->pose.position.y, this->sensorPoseMessage->pose.position.z));
+
+      this->_mapper._atlasSensorPose.rotateX(-M_PI_2);
+      this->_mapper._atlasSensorPose.rotateY(-M_PI_2);
+//      this->_mapper._atlasSensorPose.rotateZ(M_PI);
 
       poseAvailable = true;
       ROS_INFO("Sensor Pose Received.");

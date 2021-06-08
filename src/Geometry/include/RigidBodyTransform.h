@@ -48,6 +48,14 @@ class RigidBodyTransform
       Eigen::Vector3d getTranslation();
 
       Eigen::Quaterniond getQuaternion();
+
+      void rotateX(float angleRad);
+
+      void rotateY(float angleRad);
+
+      void rotateZ(float angleRad);
+
+      void rotate(float rad, Eigen::Vector3d axis);
 };
 
 #endif //RIGIDBODYTRANSFORM_H
