@@ -1,5 +1,5 @@
-# Current version: 0.7
-FROM ihmcrobotics/nvidia-ros:0.1
+# Current version: 0.8
+FROM ihmcrobotics/nvidia-ros:0.3
 
 USER root
 
