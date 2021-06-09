@@ -25,7 +25,7 @@ class SLAMModule
       geometry_msgs::PoseStampedConstPtr sensorPoseMessage;
 
    public:
-      Object3D* _sensor;
+      Object3D* _world;
       NetworkManager* network;
       PlanarRegionMapHandler _mapper;
       MeshGenerator _mesher;
@@ -47,6 +47,8 @@ class SLAMModule
       void ImGuiUpdate();
 
       void sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose);
+
+      void renderSLAMOutput();
 };
 
 #endif //SLAMMODULE_H

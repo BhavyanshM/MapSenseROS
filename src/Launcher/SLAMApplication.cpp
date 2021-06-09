@@ -7,7 +7,7 @@ SLAMApplication::SLAMApplication(const Arguments& arguments) : MagnumApplication
 
 void SLAMApplication::init(const Arguments& arguments)
 {
-   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
+   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _world);
    string dirPath;
    std::vector<std::string> args(arguments.argv, arguments.argv + arguments.argc);
    for (int i = 0; i < arguments.argc; i++)
@@ -40,8 +40,8 @@ void SLAMApplication::init(const Arguments& arguments)
       _mapper.measuredRegions.emplace_back(region);
    }
 
-//   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
-   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor);
+//   _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _world);
+   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _world);
 }
 
 void SLAMApplication::draw()
@@ -111,7 +111,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
             for(shared_ptr<PlanarRegion> region : _mapper.mapRegions) GeomTools::compressPointSetLinear(region);
 
-            _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _sensor);
+            _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, frameIndex, _world);
             _mapper.fgSLAM->getPoses(_mapper.poses);
 
             if (_mapper.ISAM2)
@@ -119,10 +119,10 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          } else
          {
             _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
-            _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
+            _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _world);
          }
 
-         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor);
+         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world);
 
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
@@ -132,7 +132,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          _mapper.regions = _mapper.latestRegions;
          GeomTools::loadRegions(frameIndex, _mapper.latestRegions, _mapper.directory, _mapper.files);
 
-         //         _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
+         //         _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _world);
          break;
    }
 
@@ -143,7 +143,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
       cout << "Reached" << endl;
       _mapper.latestRegions[0]->retainLinearApproximation();
-      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _sensor, false);
+      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _world, false);
 
 
    }
@@ -156,11 +156,11 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       GeomTools::loadRegions(frameIndex - SKIP_REGIONS, _mapper.regions, _mapper.directory, _mapper.files);
       GeomTools::loadRegions(frameIndex, _mapper.latestRegions, _mapper.directory, _mapper.files);
 
-      _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _sensor);
-      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _sensor);
+      _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _world);
+      _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _world);
 
       _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
-      _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _sensor);
+      _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _world);
    }
 }
 

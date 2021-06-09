@@ -165,8 +165,7 @@ void PlanarRegionMapHandler::mergeLatestRegions()
 
 void PlanarRegionMapHandler::extractFactorGraphLandmarks()
 {
-   //   mapRegions.clear();
-   //   printRefCounts();
+   mapRegions.clear();
    for (shared_ptr<PlanarRegion> region : this->latestRegions)
    {
       RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
@@ -192,7 +191,6 @@ void PlanarRegionMapHandler::setDirectory(const string& directory)
 
 void PlanarRegionMapHandler::transformAndCopyLatestRegions(vector<shared_ptr<PlanarRegion>>& transformedRegions, const RigidBodyTransform& transform)
 {
-   printf("TransformAndCopy(%d)\n", latestRegions.size());
    transformedRegions.clear();
    for (int i = 0; i < latestRegions.size(); i++)
    {
@@ -200,10 +198,6 @@ void PlanarRegionMapHandler::transformAndCopyLatestRegions(vector<shared_ptr<Pla
       latestRegions[i]->copyAndTransform(planarRegion, transform);
       transformedRegions.emplace_back(planarRegion);
    }
-   printf("TransformAndCopyRegions(");
-   for (auto region : latestRegions)
-      printf("%d, ", region.use_count());
-   printf(")\n");
 }
 
 void PlanarRegionMapHandler::printRefCounts()

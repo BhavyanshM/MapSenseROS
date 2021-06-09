@@ -29,15 +29,17 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
    _camera = new Magnum::SceneGraph::Camera3D(*_camObject);
    _camera->setProjectionMatrix(Magnum::Matrix4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
 
-   _sensor = new Object3D{&_scene};
-   _sensor->transformLocal(Magnum::Matrix4::rotationY(Magnum::Rad{180.0_degf}));
+   _world = new Object3D{&_scene};
+   _world->transformLocal(Magnum::Matrix4::rotationX(Magnum::Rad{-90.0_degf}));
+   _world->transformLocal(Magnum::Matrix4::rotationZ(Magnum::Rad{90.0_degf}));
 
    /* TODO: Prepare your objects here and add them to the scene */
-   _sensorAxes = new Object3D{_sensor};
+   _sensorAxes = new Object3D{_world};
    _sensorAxes->scale({0.1, 0.1, 0.1});
    new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
+//   _camGrandParent->transformLocal(Magnum::Matrix4::rotationY(Magnum::Rad{180.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
@@ -59,14 +61,14 @@ void MyApplication::init(int argc, char **argv)
    _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
    _regionCalculator->initOpenCL(appState);
 
-   _slamModule = new SLAMModule(argc, argv, _networkManager, &_drawables, _sensor);
+   _slamModule = new SLAMModule(argc, argv, _networkManager, &_drawables, _world);
 
    ROS_INFO("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
 {
-   ROS_INFO("TickEvent: %d", count++);
+//   ROS_INFO("TickEvent: %d", count++);
 
    if (appState.ROS_ENABLED)
    {
@@ -183,7 +185,7 @@ void MyApplication::draw_patches()
             Magnum::Vector3 axis = Magnum::Math::cross(up, dir).normalized();
             Magnum::Rad angle = Magnum::Math::acos(Magnum::Math::dot(up, dir) / (up.length() * dir.length()));
 
-            Object3D& plane = _sensor->addChild<Object3D>();
+            Object3D& plane = _world->addChild<Object3D>();
             planePatches.emplace_back(&plane);
             plane.scale({appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE});
             plane.translate({patch[3], patch[4], patch[5]});
@@ -208,7 +210,7 @@ void MyApplication::draw_regions()
       vector<Eigen::Vector3f> vertices = planarRegion->getVertices();
       for (int j = appState.NUM_SKIP_EDGES; j < vertices.size(); j += appState.NUM_SKIP_EDGES)
       {
-         Object3D& edge = _sensor->addChild<Object3D>();
+         Object3D& edge = _world->addChild<Object3D>();
          Eigen::Vector3f prevPoint = vertices[j - appState.NUM_SKIP_EDGES];
          Eigen::Vector3f curPoint = vertices[j];
          regionEdges.emplace_back(&edge);

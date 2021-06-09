@@ -26,7 +26,6 @@ FactorGraphHandler::FactorGraphHandler()
 
 void FactorGraphHandler::getPoses(std::vector<RigidBodyTransform>& poses)
 {
-   printf("getPoses()");
    poses.clear();
    for (int i = 1; i < this->getPoseId(); i++)
    {

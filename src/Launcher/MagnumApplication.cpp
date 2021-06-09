@@ -27,20 +27,20 @@ MagnumApplication::MagnumApplication(const Arguments& arguments) : Magnum::Platf
 
    /* TODO: Configure Camera in Scene Graph*/
    _camGrandParent = new Object3D{&_scene};
-   _sensor = new Object3D{&_scene};
+   _world = new Object3D{&_scene};
    _camParent = new Object3D{_camGrandParent};
    _camObject = new Object3D{_camParent};
    _camera = new Magnum::SceneGraph::Camera3D(*_camObject);
    _camera->setProjectionMatrix(Mat4::perspectiveProjection(35.0_degf, 1.33f, 0.001f, 100.0f));
-   _sensor->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
+   _world->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
 
    /* TODO: Prepare your objects here and add them to the scene */
-   _sensorAxes = new Object3D{_sensor};
+   _sensorAxes = new Object3D{_world};
    _sensorAxes->scale({0.1, 0.1, 0.1});
    new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
-   _sensor->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
+   _world->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});

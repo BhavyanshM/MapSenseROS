@@ -5,7 +5,7 @@
 #include "SLAMModule.h"
 
 SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager, Magnum::SceneGraph::DrawableGroup3D *_drawables, Object3D *sensor) : _mesher(
-      _drawables), _sensor(sensor)
+      _drawables), _world(sensor)
 {
    this->network = networkManager;
 
@@ -76,11 +76,8 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
    /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
    if (initial && poseAvailable)
    {
-      printf("Initialization\n");
       initial = false;
       _mapper._atlasSensorPose.print();
-
-      printf("Initialized\n");
 
       _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
       _mapper.regions = _mapper.latestRegions;
@@ -101,44 +98,29 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
          RigidBodyTransform odometry(_mapper._atlasSensorPose);
          odometry.multiplyLeft(_mapper._atlasPreviousSensorPose.getInverse());
 
+         _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+
          currentPoseId = _mapper.fgSLAM->addOdometryFactor(MatrixXd(odometry.getMatrix()));
          _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
          _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
 
          /* Initialize poses and landmarks with map frame values. */
-//         _mapper.insertOrientedPlaneFactors(currentPoseId);
-//         _mapper.setOrientedPlaneInitialValues();
+         _mapper.insertOrientedPlaneFactors(currentPoseId);
+         _mapper.setOrientedPlaneInitialValues();
 
-         //         _mapper.printRefCounts();
-
-         /* Optimize the Factor Graph and get Results. */
+         /* Optimize the Factor Graph. */
          _mapper.optimize();
-         //_mapper.mergeLatestRegions();
 
-         _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _sensor, false);
-
-         //         printf("Extracting Factor Graph Landmarks\n");
-         //         _mapper.extractFactorGraphLandmarks();
-         //
-//         printf("Generating Region Mesh\n");
-//         _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _sensor);
-
-
-         _mapper.fgSLAM->getPoses(_mapper.poses);
-
-         printf("Clearing ISAM2.\n");
+         this->renderSLAMOutput();
 
          if (_mapper.ISAM2)
             _mapper.fgSLAM->clearISAM2();
       } else
       {
          _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
-         //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _sensor);
+         //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _world);
       }
 
-      printf("Generating Pose Mesh\n");
-      _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _sensor, 3);
-      _mesher.generatePoseMesh(_mapper.poses, poseAxes, _sensor, 2, 1.5);
 
       printf("Recycling Region Lists.\n");
       /* Load previous and current regions. Separated by SKIP_REGIONS. */
@@ -147,8 +129,31 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
 
       printf("SLAM Update Complete.\n");
 
-      //      _mapper.printRefCounts();
    }
+}
+
+void SLAMModule::renderSLAMOutput()
+{
+   /* Generate World Frame Region Mesh. */
+   for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
+      _mapper.regionsInMapFrame[k]->retainConvexHull();
+   _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
+
+//   /* Extracting Landmarks from Factor Graph. */
+//   _mapper.extractFactorGraphLandmarks();
+//
+//   /* Reducing Vertex Count on Region Boundaries. */
+//   for (int k = 0; k < _mapper.mapRegions.size(); k++)
+//      _mapper.mapRegions[k]->retainConvexHull();
+//
+//   /* Generating Region Mesh */
+//   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
+
+   /* Generating Pose Mesh */
+   _mapper.fgSLAM->getPoses(_mapper.poses);
+   _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
+   _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 2, 1.5);
+
 }
 
 void SLAMModule::ImGuiUpdate()
@@ -180,7 +185,7 @@ void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& po
 
       this->_mapper._atlasSensorPose.rotateX(-M_PI_2);
       this->_mapper._atlasSensorPose.rotateY(-M_PI_2);
-//      this->_mapper._atlasSensorPose.rotateZ(M_PI);
+      //      this->_mapper._atlasSensorPose.rotateZ(M_PI);
 
       poseAvailable = true;
       ROS_INFO("Sensor Pose Received.");

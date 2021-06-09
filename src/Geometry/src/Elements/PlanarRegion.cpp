@@ -197,7 +197,6 @@ void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)
 
 void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform)
 {
-   printf("copyData(id:%d)\n", this->getId());
    planarRegionToPack->setNormal(this->getNormal());
    planarRegionToPack->setCenter(this->getCenter());
    planarRegionToPack->centroidCalculated = true;
@@ -208,10 +207,8 @@ void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack
    planarRegionToPack->numPatches = this->numPatches;
    for (int i = 0; i < this->boundaryVertices.size(); i++)
    {
-      printf("copyBoundary(id:%d, i:%d)\n", this->getId(), i);
       planarRegionToPack->insertBoundaryVertex(this->boundaryVertices[i]);
    }
-   printf("transform(id:%d)\n", this->getId());
    planarRegionToPack->transform(transform);
 }
 

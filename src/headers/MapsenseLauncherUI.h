@@ -85,7 +85,7 @@ using namespace Magnum::Math::Literals;
       Object3D *_camParent;
       Object3D *_camObject;
       Object3D *_camOriginCube;
-      Object3D *_sensor;
+      Object3D *_world;
       Object3D *_sensorAxes;
       Magnum::SceneGraph::Camera3D *_camera;
 
