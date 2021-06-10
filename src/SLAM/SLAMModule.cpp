@@ -135,19 +135,19 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
 void SLAMModule::renderSLAMOutput()
 {
    /* Generate World Frame Region Mesh. */
-   for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
-      _mapper.regionsInMapFrame[k]->retainConvexHull();
-   _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
+//   for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
+//      _mapper.regionsInMapFrame[k]->retainConvexHull();
+//   _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
 
-//   /* Extracting Landmarks from Factor Graph. */
-//   _mapper.extractFactorGraphLandmarks();
-//
-//   /* Reducing Vertex Count on Region Boundaries. */
-//   for (int k = 0; k < _mapper.mapRegions.size(); k++)
-//      _mapper.mapRegions[k]->retainConvexHull();
-//
-//   /* Generating Region Mesh */
-//   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
+   /* Extracting Landmarks from Factor Graph. */
+   _mapper.extractFactorGraphLandmarks();
+
+   /* Reducing Vertex Count on Region Boundaries. */
+   for (int k = 0; k < _mapper.mapRegions.size(); k++)
+      _mapper.mapRegions[k]->retainConvexHull();
+
+   /* Generating Region Mesh */
+   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
 
    /* Generating Pose Mesh */
    _mapper.fgSLAM->getPoses(_mapper.poses);

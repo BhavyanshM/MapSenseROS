@@ -93,7 +93,7 @@ class ApplicationState
       float GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
-      float DISPLAY_WINDOW_SIZE = 1.0f;
+      float DISPLAY_WINDOW_SIZE = 0.5f;
       float DEPTH_BRIGHTNESS = 40;
       float DEPTH_DISPLAY_OFFSET = 100;
 
