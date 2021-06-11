@@ -2,11 +2,22 @@
 // Created by quantum on 6/10/21.
 //
 
-#ifndef PLOTTER3D_PY_PLANARREGIONPROCESSOR_H
-#define PLOTTER3D_PY_PLANARREGIONPROCESSOR_H
+#ifndef PLANARREGIONPROCESSOR_H
+#define PLANARREGIONPROCESSOR_H
+
+#include "PlanarRegion.h"
 
 class PlanarRegionProcessor
 {
+   private:
+
+      vector<int> planes;
+
+   public:
+
+      void extractRealPlanes(vector<shared_ptr<PlanarRegion>> planarRegionList);
+
+      void filterPlanarRegions(vector<shared_ptr<PlanarRegion>>& planarRegionList);
 };
 
-#endif //PLOTTER3D_PY_PLANARREGIONPROCESSOR_H
+#endif //PLANARREGIONPROCESSOR_H

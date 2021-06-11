@@ -79,6 +79,7 @@ set(SOURCE
 		src/Application/ApplicationState.cpp
 		src/Geometry/src/Elements/RegionRing.cpp
 		src/Application/AppUtils.cpp
+		src/RegionExtraction/PlanarRegionProcessor.cpp
 		)
 
 set (HEADERS
@@ -89,7 +90,8 @@ set (HEADERS
 		src/headers/PlanarRegion.h
 		src/headers/ApplicationState.h
 		src/headers/RegionRing.h
-		src/headers/AppUtils.h)
+		src/headers/AppUtils.h
+		src/RegionExtraction/PlanarRegionProcessor.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -145,7 +147,7 @@ include_directories(
 		/usr/include/CL/
 )
 
-add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS})
+add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
 target_link_libraries(planar_region_publisher
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}

@@ -368,30 +368,4 @@ void PlanarRegionCalculator::launch_tester(ApplicationState appState)
    cout << "PackAndMerge" << endl;
 }
 
-void PlanarRegionCalculator::extractRealPlanes()
-{
-   bool exists = false;
-   this->planes.clear();
-   Vector4f regionSupportPlane, uniquePlane;
-   for (int i = 0; i < planarRegionList.size(); i++)
-   {
-      shared_ptr<PlanarRegion> region = this->planarRegionList[i];
-      regionSupportPlane << region->getNormal(), -region->getNormal().dot(region->getCenter());
-      for (int index : planes)
-      {
-         shared_ptr<PlanarRegion> plane = this->planarRegionList[index];
-         uniquePlane << plane->getNormal(), -plane->getNormal().dot(plane->getCenter());
-         if ((regionSupportPlane - uniquePlane).norm() < 0.1 && (plane->getCenter() - region->getCenter()).norm() < 0.3)
-         {
-            exists = true;
-         }
-      }
-      if (!exists)
-         planes.emplace_back(i);
-   }
-   ROS_INFO("Total Unique Surfaces Found: %d/%d", planes.size(), this->planarRegionList.size());
-   for(int planeIndex : planes)
-   {
-      ROS_INFO("Unique Surface: %s", this->planarRegionList[planeIndex]->toString().c_str());
-   }
-}
+
