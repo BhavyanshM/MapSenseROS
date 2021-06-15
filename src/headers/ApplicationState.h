@@ -89,7 +89,7 @@ class ApplicationState
       bool EARLY_GAUSSIAN_BLUR = true;
       string TOPIC_CAMERA_NAME = "chest_l515";
 
-      int GAUSSIAN_SIZE = 3;
+      int GAUSSIAN_SIZE = 6;
       int  GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
