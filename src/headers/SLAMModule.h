@@ -22,7 +22,8 @@ class SLAMModule
       vector<Object3D *> latestRegionEdges, previousRegionEdges, matchingEdges, poseAxes, atlasPoseAxes;
       vector<int> matchCountVec;
       Subscriber *sensorPoseSub;
-      geometry_msgs::PoseStampedConstPtr sensorPoseMessage;
+      geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
+      int _frameId = 0;
 
    public:
       Object3D* _world;
@@ -46,7 +47,7 @@ class SLAMModule
 
       void ImGuiUpdate();
 
-      void sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose);
+      void sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg);
 
       void renderSLAMOutput();
 };

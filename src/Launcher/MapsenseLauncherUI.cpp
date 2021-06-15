@@ -63,12 +63,12 @@ void MyApplication::init(int argc, char **argv)
 
    _slamModule = new SLAMModule(argc, argv, _networkManager, &_drawables, _world);
 
-   ROS_INFO("Application Initialized Successfully");
+   ROS_DEBUG("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
 {
-//   ROS_INFO("TickEvent: %d", count++);
+//   ROS_DEBUG("TickEvent: %d", count++);
 
    if (appState.ROS_ENABLED)
    {
@@ -94,7 +94,7 @@ void MyApplication::tickEvent()
 //            printf("After SLAM Publisher.\n");
 //         }
       }
-      ROS_INFO("SLAM Pose Published.");
+      ROS_DEBUG("SLAM Pose Published.");
 
       if (appState.STEREO_DRIVER)
       {
@@ -222,7 +222,7 @@ void MyApplication::draw_regions()
    }
    auto end = high_resolution_clock::now();
    auto duration = duration_cast<microseconds>(end - start).count();
-   ROS_INFO("Visualization Took: %.2f ms", duration / (float) 1000);
+   ROS_DEBUG("Visualization Took: %.2f ms", duration / (float) 1000);
 }
 
 void MyApplication::generate_patches()

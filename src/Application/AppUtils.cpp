@@ -31,7 +31,7 @@ void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, string fi
       region->writeToFile(file);
    }
    file.close();
-   cout << "Writing Regions to:" << fileName << endl;
+//   cout << "Writing Regions to:" << fileName << endl;
 }
 
 void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,

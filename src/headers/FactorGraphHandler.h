@@ -19,12 +19,12 @@
 #include <boost/assign/std/vector.hpp>
 #include <bits/stdc++.h>
 
-#define _DEBUG 1
+#define _DEBUG 0
 
 #if _DEBUG == 1
    #define LOG(fmt, ...) printf(fmt, ##__VA_ARGS__)
 #elif _DEBUG == 0
-   #define LOG(x)
+   #define LOG(x, ...)
 #endif
 
 using namespace boost::assign;

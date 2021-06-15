@@ -176,7 +176,6 @@ void PlanarRegionMapHandler::extractFactorGraphLandmarks()
       transformedRegion->projectToPlane(fgSLAM->getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);
    }
-   cout << "Total Map Regions: " << mapRegions.size() << endl;
 }
 
 void PlanarRegionMapHandler::optimize()

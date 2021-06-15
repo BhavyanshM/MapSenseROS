@@ -44,9 +44,26 @@ void SLAMModule::extractArgs(int argc, char **argv)
       {
          _mapper.ISAM2 = true;
          _mapper.ISAM2_NUM_STEPS = stoi(args[i + 1]);
-         printf("Incremental SAM2: true \nSTEPS: %d\n", _mapper.ISAM2_NUM_STEPS);
+         ROS_DEBUG("Incremental SAM2: true \nSTEPS: %d\n", _mapper.ISAM2_NUM_STEPS);
+      }
+      if (args[i] == "--regions-dir")
+      {
+         std::string dirPath;
+         dirPath = args[i + 1];
+         _mapper.setDirectory(dirPath);
       }
    }
+}
+
+void SLAMModule::fileSLAMUpdate()
+{
+   vector<shared_ptr<PlanarRegion>> fileRegions;
+   AppUtils::getFileNames(_mapper.directory, _mapper.files);
+   GeomTools::loadRegions(_frameId, fileRegions, _mapper.directory, _mapper.files);
+   geometry_msgs::PoseStampedConstPtr pose;
+
+   slamUpdate(fileRegions);
+
 }
 
 void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegions)
@@ -67,7 +84,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
    _mapper.matchPlanarRegionsToMap();
    this->matchCountVec.emplace_back(_mapper.matches.size());
 
-   printf("Regions Matched: (%d).\n", _mapper.matches.size());
+   ROS_DEBUG("Regions Matched: (%d).\n", _mapper.matches.size());
 
    if (ICPEnabled && _mapper.matches.size() > 0)
       _mapper.registerRegionsPointToPlane(1);
@@ -86,19 +103,28 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
       _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
 
       _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+
    } else if (poseAvailable)
    {
 
       /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
       _mapper.transformAndCopyLatestRegions(_mapper.regionsInMapFrame, _mapper._atlasSensorPose);
 
-      if (_mapper.FACTOR_GRAPH)
+      if (_mapper.FACTOR_GRAPH && (_mapper._atlasSensorPose.getTranslation() - _mapper._atlasPreviousSensorPose.getTranslation()).norm() > 0.001)
       {
 
-         RigidBodyTransform odometry(_mapper._atlasSensorPose);
-         odometry.multiplyLeft(_mapper._atlasPreviousSensorPose.getInverse());
+         RigidBodyTransform odometry;
+         odometry.setMatrix(_mapper._atlasSensorPose.getMatrix());
+         odometry.multiplyRight(_mapper._atlasPreviousSensorPose.getInverse());
 
-         _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+         printf("%d, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf\n", _frameId, _sensorPoseMessage->pose.position.x, _sensorPoseMessage->pose.position.y, _sensorPoseMessage->pose.position.z, _sensorPoseMessage->pose.orientation.x, _sensorPoseMessage->pose.orientation.y,
+                  _sensorPoseMessage->pose.orientation.z, _sensorPoseMessage->pose.orientation.w);
+
+         AppUtils::write_regions(_mapper.latestRegions, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                                                      string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
+         _frameId++;
+
+//         _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
 
          currentPoseId = _mapper.fgSLAM->addOdometryFactor(MatrixXd(odometry.getMatrix()));
          _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
@@ -117,27 +143,25 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
             _mapper.fgSLAM->clearISAM2();
       } else
       {
-         _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
+//         _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
          //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _world);
       }
 
-
-      printf("Recycling Region Lists.\n");
+      ROS_DEBUG("Recycling Region Lists.\n");
       /* Load previous and current regions. Separated by SKIP_REGIONS. */
       _mapper.regions = _mapper.latestRegions;
       poseAvailable = false;
 
-      printf("SLAM Update Complete.\n");
-
+      ROS_DEBUG("SLAM Update Complete.\n");
    }
 }
 
 void SLAMModule::renderSLAMOutput()
 {
    /* Generate World Frame Region Mesh. */
-//   for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
-//      _mapper.regionsInMapFrame[k]->retainConvexHull();
-//   _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
+   //   for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
+   //      _mapper.regionsInMapFrame[k]->retainConvexHull();
+   //   _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
 
    /* Extracting Landmarks from Factor Graph. */
    _mapper.extractFactorGraphLandmarks();
@@ -147,13 +171,12 @@ void SLAMModule::renderSLAMOutput()
       _mapper.mapRegions[k]->retainConvexHull();
 
    /* Generating Region Mesh */
-   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
+//   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
 
    /* Generating Pose Mesh */
    _mapper.fgSLAM->getPoses(_mapper.poses);
    _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
    _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 2, 1.5);
-
 }
 
 void SLAMModule::ImGuiUpdate()
@@ -173,22 +196,43 @@ void SLAMModule::ImGuiUpdate()
    }
 }
 
-void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& pose)
+void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg)
 {
+   if (_sensorPoseMessage == nullptr)
+   {
+      _sensorPoseMessage = poseMsg;
+      return;
+   }
+
    if (!poseAvailable)
    {
-      this->sensorPoseMessage = pose;
-      this->_mapper._atlasSensorPose.setRotationAndTranslation(
-            Eigen::Quaterniond(this->sensorPoseMessage->pose.orientation.x, this->sensorPoseMessage->pose.orientation.y,
-                               this->sensorPoseMessage->pose.orientation.z, this->sensorPoseMessage->pose.orientation.w),
-            Eigen::Vector3d(this->sensorPoseMessage->pose.position.x, this->sensorPoseMessage->pose.position.y, this->sensorPoseMessage->pose.position.z));
 
-      this->_mapper._atlasSensorPose.rotateX(-M_PI_2);
-      this->_mapper._atlasSensorPose.rotateY(-M_PI_2);
-      //      this->_mapper._atlasSensorPose.rotateZ(M_PI);
+      Vector3d position;
+      Vector3d previous;
 
-      poseAvailable = true;
-      ROS_INFO("Sensor Pose Received.");
-      //   this->_mapper._atlasSensorPose.print();
-   };
+      position << poseMsg->pose.position.x, poseMsg->pose.position.y, poseMsg->pose.position.z;
+      previous << this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y, this->_sensorPoseMessage->pose.position.z;
+
+      this->_sensorPoseMessage = poseMsg;
+
+      double diff = (position - previous).norm();
+
+//      if(diff > 0.001)
+      {
+         ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
+         this->_mapper._atlasSensorPose.setRotationAndTranslation(
+               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.x, this->_sensorPoseMessage->pose.orientation.y,
+                                  this->_sensorPoseMessage->pose.orientation.z, this->_sensorPoseMessage->pose.orientation.w),
+               Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y, this->_sensorPoseMessage->pose.position.z));
+
+//         this->_mapper._atlasSensorPose.rotateX(-M_PI_2);
+//         this->_mapper._atlasSensorPose.rotateY(-M_PI_2);
+         //      this->_mapper._atlasSensorPose.rotateZ(M_PI);
+
+         poseAvailable = true;
+
+         //   this->_mapper._atlasSensorPose.print();
+      }
+   }
+
 }
