@@ -81,6 +81,8 @@ class NetworkManager
       void spin_ros_node();
 
       void load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app);
+
+      void acceptMapsenseConfiguration(ApplicationState& appState);
 };
 
 #endif //SRC_SENSORDATARECEIVER_H

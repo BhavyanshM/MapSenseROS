@@ -3,4 +3,7 @@ float32 mergeAngularThreshold
 float32 mergeDistanceThreshold
 uint8 filterSize
 uint8 kernelLevel
+uint8 gaussianSize
+uint8 gaussianSigma
+float32 regionGrowthFactor
 

@@ -90,12 +90,7 @@ void MyApplication::tickEvent()
    if (appState.ROS_ENABLED)
    {
       _dataReceiver->spin_ros_node();
-      if (_dataReceiver->paramsAvailable)
-      {
-         _dataReceiver->paramsAvailable = false;
-         appState.MERGE_DISTANCE_THRESHOLD = _dataReceiver->paramsMessage.mergeDistanceThreshold;
-         appState.MERGE_ANGULAR_THRESHOLD = _dataReceiver->paramsMessage.mergeAngularThreshold;
-      }
+      _dataReceiver->acceptMapsenseConfiguration(appState);
       _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
       if (_dataReceiver->depthCamInfoSet && appState.GENERATE_REGIONS)
       {

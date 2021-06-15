@@ -13,7 +13,7 @@ void ImGuiLayout::getImGuiParamsLayout(ApplicationState& appState)
    ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
    ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
    ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 8);
-   ImGui::SliderFloat("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1.0f, 20.0f);
+   ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
    ImGui::SliderFloat("Merge Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
    ImGui::SliderFloat("Merge Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
    ImGui::SliderFloat("Region Growth Factor", &appState.REGION_GROWTH_FACTOR, 0.001, 0.1);

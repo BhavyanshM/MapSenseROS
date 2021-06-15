@@ -187,6 +187,19 @@ void NetworkManager::spin_ros_node()
    spinOnce();
 }
 
+void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
+{
+   if (paramsAvailable)
+   {
+      paramsAvailable = false;
+      appState.MERGE_DISTANCE_THRESHOLD = paramsMessage.mergeDistanceThreshold;
+      appState.MERGE_ANGULAR_THRESHOLD = paramsMessage.mergeAngularThreshold;
+      appState.GAUSSIAN_SIGMA = (int) paramsMessage.gaussianSigma;
+      appState.GAUSSIAN_SIZE = (int) paramsMessage.gaussianSize;
+      appState.REGION_GROWTH_FACTOR = paramsMessage.regionGrowthFactor;
+   }
+}
+
 void NetworkManager::load_sample_depth(String filename, Mat& depth)
 {
    depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);

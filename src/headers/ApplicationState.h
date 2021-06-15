@@ -90,7 +90,7 @@ class ApplicationState
       string TOPIC_CAMERA_NAME = "chest_l515";
 
       int GAUSSIAN_SIZE = 3;
-      float GAUSSIAN_SIGMA = 20;
+      int  GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
       float DISPLAY_WINDOW_SIZE = 1.0f;
