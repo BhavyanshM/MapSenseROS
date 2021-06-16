@@ -63,12 +63,21 @@ void MyApplication::init(int argc, char **argv)
 
    _slamModule = new SLAMModule(argc, argv, _networkManager, &_drawables, _world);
 
-   ROS_DEBUG("Application Initialized Successfully");
+   ROS_INFO("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
 {
-//   ROS_DEBUG("TickEvent: %d", count++);
+   ROS_INFO("TickEvent: %d", count++);
+
+   if(!liveSLAMEnabled){
+      if(count % 10 == 0)
+      {
+         ROS_INFO("File SLAM Update.");
+         _slamModule->fileSLAMUpdate();
+      }
+   }
+   ROS_INFO("SLAM Pose Published.");
 
    if (appState.ROS_ENABLED)
    {
@@ -84,7 +93,7 @@ void MyApplication::tickEvent()
       _regionCalculator->generateRegions(appState);
       _regionCalculator->render();
 
-      if (_regionCalculator->planarRegionList.size() > 0)
+      if (_regionCalculator->planarRegionList.size() > 0 && liveSLAMEnabled)
       {
          _slamModule->slamUpdate(_regionCalculator->planarRegionList);
 //         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
@@ -94,7 +103,8 @@ void MyApplication::tickEvent()
 //            printf("After SLAM Publisher.\n");
 //         }
       }
-      ROS_DEBUG("SLAM Pose Published.");
+
+
 
       if (appState.STEREO_DRIVER)
       {
@@ -222,7 +232,7 @@ void MyApplication::draw_regions()
    }
    auto end = high_resolution_clock::now();
    auto duration = duration_cast<microseconds>(end - start).count();
-   ROS_DEBUG("Visualization Took: %.2f ms", duration / (float) 1000);
+   ROS_INFO("Visualization Took: %.2f ms", duration / (float) 1000);
 }
 
 void MyApplication::generate_patches()

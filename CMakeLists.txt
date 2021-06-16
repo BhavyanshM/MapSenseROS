@@ -18,6 +18,8 @@ find_package( OpenCV 4.2 REQUIRED )
 find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
+find_package(nlohmann_json REQUIRED)
+
 include_directories(${GTSAM_INCLUDE_DIR})
 
 find_package(Corrade REQUIRED Main)
@@ -171,7 +173,8 @@ target_link_libraries(planar_region_publisher
 		Eigen3::Eigen
 		tbb
 		gtsam
-		geom-tools)
+		geom-tools
+		nlohmann_json::nlohmann_json)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)

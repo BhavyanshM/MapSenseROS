@@ -57,12 +57,21 @@ void SLAMModule::extractArgs(int argc, char **argv)
 
 void SLAMModule::fileSLAMUpdate()
 {
-   vector<shared_ptr<PlanarRegion>> fileRegions;
    AppUtils::getFileNames(_mapper.directory, _mapper.files);
    GeomTools::loadRegions(_frameId, fileRegions, _mapper.directory, _mapper.files);
-   geometry_msgs::PoseStampedConstPtr pose;
 
-   slamUpdate(fileRegions);
+   Vector3d position;
+   Quaterniond orientation;
+
+   cout << _mapper.directory + "poses.txt" << endl;
+   ifstream fs(_mapper.directory + "poses.txt");
+   GeomTools::loadPoseStamped(fs, position, orientation);
+
+   _frameId++;
+
+   cout << "File SLAM End" << endl;
+
+//   slamUpdate(fileRegions);
 
 }
 

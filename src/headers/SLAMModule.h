@@ -18,6 +18,7 @@ class SLAMModule
 {
    private:
 
+      vector<shared_ptr<PlanarRegion>> fileRegions;
 
       vector<Object3D *> latestRegionEdges, previousRegionEdges, matchingEdges, poseAxes, atlasPoseAxes;
       vector<int> matchCountVec;
@@ -50,6 +51,8 @@ class SLAMModule
       void sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg);
 
       void renderSLAMOutput();
+
+      void fileSLAMUpdate();
 };
 
 #endif //SLAMMODULE_H

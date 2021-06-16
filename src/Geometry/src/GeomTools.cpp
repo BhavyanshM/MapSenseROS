@@ -303,25 +303,25 @@ Vector3f getVec3f(string csv)
    return Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
-void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings)
+void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char delimiter = ':')
 {
    subStrings.clear();
    string regionText;
    getline(regionFile, regionText);
    stringstream ss(regionText);
    string str;
-   while (getline(ss, str, ':'))
+   while (getline(ss, str, delimiter))
    {
-      //      cout << str << '\t';
+            cout << str << '\t';
       subStrings.push_back(str);
    }
-   //   cout << endl;
+      cout << endl;
 }
 
 void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files)
 {
    /* Generate planar region objects from the sorted list of files. */
-   regions.clear();
+//   if(regions.size() > 0) regions.clear();
    ifstream regionFile(directory + files[frameId]);
    cout << "Loading Regions From: " << directory + files[frameId] << endl;
    vector<string> subStrings;
@@ -341,12 +341,35 @@ void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
       int length = stoi(subStrings[1]);
       for (int i = 0; i < length; i++)
       {
+         cout << i << " : ";
          getNextLineSplit(regionFile, subStrings);
          region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
       //      GeomTools::compressPointSetLinear(region);
       regions.emplace_back(region);
    }
+   cout << "Exiting Load Regions" << endl;
+}
+
+void GeomTools::loadPoseStamped(ifstream& poseFile, Vector3d& position, Quaterniond& orientation)
+{
+   vector<string> subStrings;
+   getNextLineSplit(poseFile, subStrings, ',');
+
+
+   position.x() = stof(subStrings[1]);
+   position.y() = stof(subStrings[2]);
+   position.z() = stof(subStrings[3]);
+
+   orientation.x() = stof(subStrings[4]);
+   orientation.y() = stof(subStrings[5]);
+   orientation.z() = stof(subStrings[6]);
+   orientation.w() = stof(subStrings[7]);
+
+   cout << "Loading Pose: " << subStrings[0] << endl;
+   cout << position << endl;
+   cout << orientation.matrix() << endl;
+
 }
 
 void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform)

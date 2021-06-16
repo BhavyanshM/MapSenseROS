@@ -97,7 +97,10 @@ using namespace Magnum::Math::Literals;
       PlanarRegionCalculator *_regionCalculator;
       SLAMModule *_slamModule;
       NetworkManager *_networkManager;
-      int count, frameId = 0;
+      int count = 0;
+      int frameId = 0;
+
+      bool liveSLAMEnabled = false;
 };
 
 
