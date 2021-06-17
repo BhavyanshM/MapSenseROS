@@ -49,9 +49,19 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
 
 void AppUtils::appendToDebugOutput(Mat disp)
 {
+   if(disp.rows <= 0 || disp.cols <= 0)
+   {
+      printf("Image to be displayed has size 0!");
+      return;
+   }
    if (disp.type() == CV_16UC3)
+   {
       disp.convertTo(disp, CV_8U, 0.00390625);
+      disp.convertTo(disp, CV_8UC3);
+   }
+   resize(disp, disp, Size(640, 480));
    images.emplace_back(disp);
+//   printf("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d\n", disp.type(), disp.rows, disp.cols);
 }
 
 void AppUtils::displayDebugOutput(ApplicationState appState)
@@ -62,7 +72,7 @@ void AppUtils::displayDebugOutput(ApplicationState appState)
       namedWindow("DebugOutput", WINDOW_NORMAL);
       resizeWindow("DebugOutput", (int) (debugOutput.cols * appState.DISPLAY_WINDOW_SIZE), (int) (debugOutput.rows * appState.DISPLAY_WINDOW_SIZE));
       imshow("DebugOutput", debugOutput);
-      waitKey(100);
+      waitKey(1);
    }
    images.clear();
 }

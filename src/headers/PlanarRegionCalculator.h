@@ -45,12 +45,12 @@ class PlanarRegionCalculator
       Mat inputStereoLeft, inputStereoRight;
 
       MapFrame output;
-      MapFrameProcessor mapFrameProcessor;
+      MapFrameProcessor _mapFrameProcessor;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
 
       explicit PlanarRegionCalculator(ApplicationState& app);
 
-      void generatePatchGraph(ApplicationState appState);
+      bool generatePatchGraph(ApplicationState appState);
 
       void initOpenCL(ApplicationState app);
 

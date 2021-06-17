@@ -75,7 +75,7 @@ void MyApplication::tickEvent()
       appUtils.appendToDebugOutput(dispDepth);
    }
    if (appState.SHOW_REGION_COMPONENTS)
-      appUtils.appendToDebugOutput(_regionCalculator->mapFrameProcessor.debug);
+      appUtils.appendToDebugOutput(_regionCalculator->_mapFrameProcessor.debug);
 
    if (appState.SHOW_STEREO_LEFT)
    {
@@ -291,8 +291,8 @@ void MyApplication::drawEvent()
          /* Beta Features */
          if (ImGui::Button("Save All"))
          {
-            AppUtils::capture_data(ros::package::getPath("map_sense"),"/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
-                                   _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
+            AppUtils::capture_data(ros::package::getPath("map_sense"), "/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->filteredDepth,
+                                   _regionCalculator->_mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
          }
          if (ImGui::Button("Save Regions"))
          {
