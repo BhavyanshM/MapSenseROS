@@ -6,9 +6,6 @@
 #define SENSORSTREAMRECEIVER_H
 
 #include <ApplicationState.h>
-#include "ros/ros.h"
-#include "ros/package.h"
-#include "iostream"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "ImageTools.h"
@@ -18,6 +15,7 @@
 #include "cv_bridge/cv_bridge.h"
 #include "AppUtils.h"
 #include "imgui.h"
+#include "MapsenseHeaders.h"
 
 using namespace ros;
 using namespace std;

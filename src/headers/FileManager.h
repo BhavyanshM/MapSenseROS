@@ -5,13 +5,9 @@
 #ifndef FILEIO_H
 #define FILEIO_H
 
-#include "ros/ros.h"
-#include "ros/package.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
-#include <iostream>
-#include <sstream>
-#include <random>
+#include "MapsenseHeaders.h"
 
 using namespace cv;
 

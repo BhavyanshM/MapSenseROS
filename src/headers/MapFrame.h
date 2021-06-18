@@ -4,7 +4,7 @@
 #include "opencv2/core/core.hpp"
 #include <opencv2/imgproc.hpp>
 #include "ApplicationState.h"
-#include <iostream>
+#include "MapsenseHeaders.h"
 
 using namespace std;
 using namespace cv;
