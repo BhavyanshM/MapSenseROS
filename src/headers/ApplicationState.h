@@ -48,12 +48,12 @@ class ApplicationState
       int KERNEL_SLIDER_LEVEL = 2;
       int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
       int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
-      int SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
-      int SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
+      int SUB_H = INPUT_HEIGHT / PATCH_HEIGHT;
+      int SUB_W = INPUT_WIDTH / PATCH_WIDTH;
 
       int FILTER_KERNEL_SIZE = 4;
-      int FILTER_SUB_H = (int) INPUT_HEIGHT / FILTER_KERNEL_SIZE;
-      int FILTER_SUB_W = (int) INPUT_WIDTH / FILTER_KERNEL_SIZE;
+      int FILTER_SUB_H = INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+      int FILTER_SUB_W = INPUT_WIDTH / FILTER_KERNEL_SIZE;
 
       //    float DEPTH_FX = 459.97;
       //    float DEPTH_FY = 459.80;
@@ -80,20 +80,20 @@ class ApplicationState
       bool SHOW_STEREO_LEFT = false;
       bool SHOW_STEREO_RIGHT = false;
 
-      bool SHOW_GRAPH = false;
-      bool ROS_ENABLED = false;
+      bool SHOW_GRAPH = true;
+      bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;
 
       bool STEREO_DRIVER = false;
       bool DEPTH_ALIGNED = false;
       bool EARLY_GAUSSIAN_BLUR = true;
-      string TOPIC_CAMERA_NAME = "camera";
+      string TOPIC_CAMERA_NAME = "chest_l515";
 
       int GAUSSIAN_SIZE = 6;
       int  GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
-      float DISPLAY_WINDOW_SIZE = 0.5f;
+      float DISPLAY_WINDOW_SIZE = 1.0f;
       float DEPTH_BRIGHTNESS = 40;
       float DEPTH_DISPLAY_OFFSET = 100;
 
