@@ -2,8 +2,8 @@
 // Created by quantum on 2/16/21.
 //
 
-#ifndef PLOTTER3D_PY_IMGUILAYOUT_H
-#define PLOTTER3D_PY_IMGUILAYOUT_H
+#ifndef IMGUILAYOUT_H
+#define IMGUILAYOUT_H
 
 #include <imgui.h>
 #include <ApplicationState.h>
@@ -26,4 +26,4 @@ class ImGuiLayout
       static void getImGui3DLayout(ApplicationState& appState, Magnum::Color4& color);
 };
 
-#endif //PLOTTER3D_PY_IMGUILAYOUT_H
+#endif //IMGUILAYOUT_H

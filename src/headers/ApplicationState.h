@@ -5,7 +5,7 @@
 #ifndef SRC_APPLICATIONSTATE_H
 #define SRC_APPLICATIONSTATE_H
 
-#include <string>
+#include "MapsenseHeaders.h"
 
 using namespace std;
 

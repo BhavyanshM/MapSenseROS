@@ -6,7 +6,8 @@
 #define GEOMTOOLS_H
 
 #include "Eigen/Dense"
-#include <stack>
+
+#include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 #include "AppUtils.h"
 

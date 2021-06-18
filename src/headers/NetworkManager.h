@@ -1,8 +1,6 @@
 #ifndef SRC_SENSORDATARECEIVER_H
 #define SRC_SENSORDATARECEIVER_H
 
-#include "ros/ros.h"
-#include "ros/package.h"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
 
@@ -11,14 +9,11 @@
 #include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
 
-#include <iostream>
 #include <CL/cl.hpp>
-#include "math.h"
-#include <sstream>
-#include <random>
 #include "map_sense/RawGPUPlanarRegionList.h"
 #include "map_sense/MapsenseConfiguration.h"
 
+#include "MapsenseHeaders.h"
 #include <ApplicationState.h>
 
 using namespace ros;

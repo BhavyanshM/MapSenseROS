@@ -5,8 +5,9 @@
 #ifndef RIGIDBODYTRANSFORM_H
 #define RIGIDBODYTRANSFORM_H
 
+
+#include "MapsenseHeaders.h"
 #include "Eigen/Dense"
-#include "iostream"
 
 class RigidBodyTransform
 {

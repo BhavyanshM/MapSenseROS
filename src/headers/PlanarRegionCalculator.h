@@ -1,21 +1,16 @@
 #ifndef SRC_PLANARREGIONCALCULATOR_H
 #define SRC_PLANARREGIONCALCULATOR_H
 
-#include "ros/ros.h"
-#include "ros/package.h"
+
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "image_transport/image_transport.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
-#include <iostream>
 #include <CL/cl.hpp>
-#include <cmath>
-#include <sstream>
-#include "tbb/tbb.h"
-#include <random>
 
+#include "MapsenseHeaders.h"
 #include "NetworkManager.h"
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"

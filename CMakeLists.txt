@@ -137,7 +137,7 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Point3D.cpp
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
-		src/Geometry/src/Modules/StructureFromMotion.cpp )
+		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/MapsenseHeaders.h)
 
 include_directories(
 		include
@@ -148,6 +148,7 @@ include_directories(
 )
 
 add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
+target_precompile_headers(planar_region_publisher PUBLIC src/headers/MapsenseHeaders.h)
 target_link_libraries(planar_region_publisher
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}
