@@ -6,8 +6,7 @@
 #define REGIONHOLE_H
 
 #include <Eigen/Dense>
-#include <vector>
-#include <iostream>
+#include "MapsenseHeaders.h"
 
 using namespace Eigen;
 using namespace std;

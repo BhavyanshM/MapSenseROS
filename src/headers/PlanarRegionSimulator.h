@@ -2,8 +2,8 @@
 // Created by quantum on 2/19/21.
 //
 
-#ifndef PLOTTER3D_PY_PLANARREGIONSIMULATOR_H
-#define PLOTTER3D_PY_PLANARREGIONSIMULATOR_H
+#ifndef PLANARREGIONSIMULATOR_H
+#define PLANARREGIONSIMULATOR_H
 
 #include <PlanarRegion.h>
 
@@ -16,4 +16,4 @@ class PlanarRegionSimulator
       void createRegions(PlanarRegion& region);
 };
 
-#endif //PLOTTER3D_PY_PLANARREGIONSIMULATOR_H
+#endif //PLANARREGIONSIMULATOR_H

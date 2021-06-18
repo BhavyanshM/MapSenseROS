@@ -39,7 +39,7 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
    new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
-//   _camGrandParent->transformLocal(Magnum::Matrix4::rotationY(Magnum::Rad{180.0_degf}));
+   //   _camGrandParent->transformLocal(Magnum::Matrix4::rotationY(Magnum::Rad{180.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
@@ -70,8 +70,9 @@ void MyApplication::tickEvent()
 {
    ROS_INFO("TickEvent: %d", count++);
 
-   if(!liveSLAMEnabled){
-      if(count % 10 == 0)
+   if (!liveSLAMEnabled)
+   {
+      if (count % 10 == 0)
       {
          ROS_INFO("File SLAM Update.");
          _slamModule->fileSLAMUpdate();
@@ -82,6 +83,7 @@ void MyApplication::tickEvent()
    if (appState.ROS_ENABLED)
    {
       _networkManager->spin_ros_node();
+      _networkManager->acceptMapsenseConfiguration(appState);
       _networkManager->receiverUpdate(appState);
       if (_networkManager->paramsAvailable)
       {
@@ -96,15 +98,13 @@ void MyApplication::tickEvent()
       if (_regionCalculator->planarRegionList.size() > 0 && liveSLAMEnabled)
       {
          _slamModule->slamUpdate(_regionCalculator->planarRegionList);
-//         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
-//         if (sensorTransforms.size() > 0 && _slamModule->enabled)
-//         {
-//            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
-//            printf("After SLAM Publisher.\n");
-//         }
+         //         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
+         //         if (sensorTransforms.size() > 0 && _slamModule->enabled)
+         //         {
+         //            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+         //            printf("After SLAM Publisher.\n");
+         //         }
       }
-
-
 
       if (appState.STEREO_DRIVER)
       {
@@ -216,8 +216,8 @@ void MyApplication::draw_regions()
    auto start = high_resolution_clock::now();
    for (int i = 0; i < _regionCalculator->planarRegionList.size(); i++)
    {
-      shared_ptr<PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
-      vector<Eigen::Vector3f> vertices = planarRegion->getVertices();
+      shared_ptr <PlanarRegion> planarRegion = _regionCalculator->planarRegionList[i];
+      vector <Eigen::Vector3f> vertices = planarRegion->getVertices();
       for (int j = appState.NUM_SKIP_EDGES; j < vertices.size(); j += appState.NUM_SKIP_EDGES)
       {
          Object3D& edge = _world->addChild<Object3D>();
@@ -317,7 +317,8 @@ void MyApplication::drawEvent()
          if (ImGui::Button("Save All"))
          {
             AppUtils::capture_data(ros::package::getPath("map_sense"), "/Extras/Images/Capture", _regionCalculator->inputDepth, _regionCalculator->inputColor,
-                                   _regionCalculator->filteredDepth, _regionCalculator->mapFrameProcessor.debug, appState, _regionCalculator->planarRegionList);
+                                   _regionCalculator->filteredDepth, _regionCalculator->_mapFrameProcessor.debug, appState,
+                                   _regionCalculator->planarRegionList);
          }
          if (ImGui::Button("Save Regions"))
          {

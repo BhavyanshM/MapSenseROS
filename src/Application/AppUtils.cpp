@@ -49,13 +49,21 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
 
 void AppUtils::appendToDebugOutput(Mat disp)
 {
-   if (disp.type() == CV_16UC3 || disp.type() == CV_16UC1)
-      disp.convertTo(disp, CV_8U, 0.00390625);
+   if(disp.rows <= 0 || disp.cols <= 0)
+   {
+      printf("Image to be displayed has size 0!");
+      return;
+   }
    if(disp.type() == CV_8UC1 )
       cvtColor(disp, disp, COLOR_GRAY2BGR);
-   cout << "Image Type: " << disp.type() << endl;
+   if (disp.type() == CV_16UC3 || disp.type() == CV_16UC1)
+   {
+      disp.convertTo(disp, CV_8U, 0.00390625);
+      disp.convertTo(disp, CV_8UC3);
+   }
    cv::resize(disp, disp, Size(640 * 480 / disp.rows, 480));
    images.emplace_back(disp);
+//   printf("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d\n", disp.type(), disp.rows, disp.cols);
 }
 
 void AppUtils::displayDebugOutput(ApplicationState appState)

@@ -12,8 +12,7 @@
 #include "MeshGenerator.h"
 #include "AppUtils.h"
 #include "StructureFromMotion.h"
-#include <chrono>
-#include <queue>
+#include "MapsenseHeaders.h"
 
 using namespace std;
 using namespace chrono;

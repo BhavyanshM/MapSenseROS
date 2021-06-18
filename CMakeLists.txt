@@ -90,6 +90,8 @@ set(SOURCE
 		src/ImPlot/implot.cpp
 		src/ImPlot/implot_demo.cpp
 		src/ImPlot/implot_items.cpp
+		src/RegionExtraction/PlanarRegionProcessor.cpp
+		src/FileManager.cpp
 		)
 
 set (HEADERS
@@ -106,7 +108,9 @@ set (HEADERS
 		src/headers/ROS1TopicReceiver.h
 		src/headers/SLAMModule.h
 		src/headers/PlanarRegionMapHandler.h
-		src/headers/FactorGraphHandler.h)
+		src/headers/FactorGraphHandler.h
+		src/RegionExtraction/PlanarRegionProcessor.h
+		src/headers/FileManager.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -153,7 +157,7 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Point3D.cpp
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
-		src/Geometry/src/Modules/StructureFromMotion.cpp )
+		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/MapsenseHeaders.h)
 
 include_directories(
 		include
@@ -163,7 +167,8 @@ include_directories(
 		/usr/include/CL/
 )
 
-add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} src/FileManager.cpp src/headers/FileManager.h)
+add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
+target_precompile_headers(planar_region_publisher PUBLIC src/headers/MapsenseHeaders.h)
 target_link_libraries(planar_region_publisher
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}
@@ -178,8 +183,6 @@ target_link_libraries(planar_region_publisher
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
-
-
 
 add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE

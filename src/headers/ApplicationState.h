@@ -5,7 +5,7 @@
 #ifndef SRC_APPLICATIONSTATE_H
 #define SRC_APPLICATIONSTATE_H
 
-#include <string>
+#include "MapsenseHeaders.h"
 
 using namespace std;
 
@@ -89,8 +89,8 @@ class ApplicationState
       bool EARLY_GAUSSIAN_BLUR = true;
       string TOPIC_CAMERA_NAME = "camera";
 
-      int GAUSSIAN_SIZE = 3;
-      float GAUSSIAN_SIGMA = 20;
+      int GAUSSIAN_SIZE = 6;
+      int  GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
       float DISPLAY_WINDOW_SIZE = 0.5f;

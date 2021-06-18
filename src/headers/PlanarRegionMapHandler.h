@@ -1,9 +1,10 @@
 #ifndef PLANARREGIONMAPHANDLER_H
 #define PLANARREGIONMAPHANDLER_H
 
+#include "MapsenseHeaders.h"
+
 #include <PlanarRegion.h>
-#include "../Geometry/include/GeomTools.h"
-#include <algorithm>
+#include "GeomTools.h"
 #include "FactorGraphHandler.h"
 
 using namespace std;

@@ -27,12 +27,10 @@
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix4.h>
 #include <Magnum/Math/Quaternion.h>
-
 #include <Magnum/GL/Renderer.h>
-
-#include <iostream>
 #include <imgui.h>
 
+#include "MapsenseHeaders.h"
 #include "MeshGenerator.h"
 #include "SLAMModule.h"
 #include "PlanarRegionCalculator.h"

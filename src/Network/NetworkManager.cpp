@@ -198,6 +198,19 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    ROS_DEBUG("Started ROS Node");
 }
 
+void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
+{
+   if (paramsAvailable)
+   {
+      paramsAvailable = false;
+      appState.MERGE_DISTANCE_THRESHOLD = paramsMessage.mergeDistanceThreshold;
+      appState.MERGE_ANGULAR_THRESHOLD = paramsMessage.mergeAngularThreshold;
+      appState.GAUSSIAN_SIGMA = (int) paramsMessage.gaussianSigma;
+      appState.GAUSSIAN_SIZE = (int) paramsMessage.gaussianSize;
+      appState.REGION_GROWTH_FACTOR = paramsMessage.regionGrowthFactor;
+   }
+}
+
 int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
    ROS_DEBUG("Adding Receiver: (%s), (%s)", data.name.c_str(), info.name.c_str());

@@ -1,7 +1,6 @@
 #ifndef SRC_MESHGENERATOR_H
 #define SRC_MESHGENERATOR_H
 
-#include <iostream>
 #include <opencv2/core.hpp>
 #include "opencv2/imgproc.hpp"
 
@@ -40,6 +39,7 @@
 
 #include <Corrade/Containers/ArrayViewStl.h>
 
+#include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 
 using namespace cv;

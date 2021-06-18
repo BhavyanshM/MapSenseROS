@@ -2,14 +2,10 @@
 #define SRC_PLANARREGION_H
 
 #include <Eigen/Dense>
-#include <vector>
-#include <iostream>
 #include "RegionRing.h"
 #include "RigidBodyTransform.h"
-#include <memory>
-#include <boost/format.hpp>
-#include <fstream>
 #include "KDTree.h"
+#include "MapsenseHeaders.h"
 
 using namespace Eigen;
 using namespace std;
