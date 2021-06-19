@@ -4,14 +4,14 @@
 
 #include "AppUtils.h"
 
-void AppUtils::getFileNames(string dirName, vector<string>& files)
+void AppUtils::getFileNames(string dirName, vector<string>& files, bool printList)
 {
    /* Get the sorted list of file names for planar regions at different frames. */
    if (auto dir = opendir(dirName.c_str()))
    {
       while (auto f = readdir(dir))
       {
-         //         cout << f->d_name << endl;
+
          if (!f->d_name || f->d_name[0] == '.')
             continue;
          files.emplace_back(f->d_name);
@@ -19,19 +19,16 @@ void AppUtils::getFileNames(string dirName, vector<string>& files)
       closedir(dir);
    }
    sort(files.begin(), files.end());
-}
 
-void AppUtils::write_regions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
-{
-   ofstream file;
-   file.open(fileName, fstream::in | fstream::out | fstream::app);
-   file << "NumRegions:" << regions.size() << endl;
-   for (shared_ptr<PlanarRegion> region : regions)
+   if (printList)
    {
-      region->writeToFile(file);
+      printf("[");
+      for (string file : files)
+      {
+         printf("%s, ", file.c_str());
+      }
+      printf("]\n");
    }
-   file.close();
-//   cout << "Writing Regions to:" << fileName << endl;
 }
 
 void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,
@@ -44,17 +41,17 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
    imwrite(projectPath + filename + "_Color.png", color);
    imwrite(projectPath + filename + "_FilteredDepth.png", finalFilteredDepth);
    imwrite(projectPath + filename + "_Components.png", components);
-   write_regions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
+   GeomTools::saveRegions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
 }
 
 void AppUtils::appendToDebugOutput(Mat disp)
 {
-   if(disp.rows <= 0 || disp.cols <= 0)
+   if (disp.rows <= 0 || disp.cols <= 0)
    {
       printf("Image to be displayed has size 0!");
       return;
    }
-   if(disp.type() == CV_8UC1 )
+   if (disp.type() == CV_8UC1)
       cvtColor(disp, disp, COLOR_GRAY2BGR);
    if (disp.type() == CV_16UC3 || disp.type() == CV_16UC1)
    {
@@ -63,7 +60,7 @@ void AppUtils::appendToDebugOutput(Mat disp)
    }
    cv::resize(disp, disp, Size(640 * 480 / disp.rows, 480));
    images.emplace_back(disp);
-//   printf("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d\n", disp.type(), disp.rows, disp.cols);
+   //   printf("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d\n", disp.type(), disp.rows, disp.cols);
 }
 
 void AppUtils::displayDebugOutput(ApplicationState appState)
@@ -93,8 +90,8 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t
       {
          if (canvas(i, j) == 1)
             circle(AppUtils::displayOutput, Point(i * 6, j * 6), 2, Scalar(255, 0, 0), -1);
-         else if (windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - windowSize && i < windowPos.x() + windowSize && j > windowPos.y() - windowSize &&
-             j < windowPos.y() + windowSize)
+         else if (windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - windowSize && i < windowPos.x() + windowSize &&
+                  j > windowPos.y() - windowSize && j < windowPos.y() + windowSize)
          {
             circle(AppUtils::displayOutput, Point(i * 6, j * 6), 2, Scalar(0, 0, 255), -1);
          }
@@ -105,9 +102,10 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t
 void AppUtils::displayPointSet2D(vector<Vector2f> points, Vector2f offset, int scale)
 {
    displayOutput.setTo(0);
-   for(int i = 0; i<points.size(); i++)
+   for (int i = 0; i < points.size(); i++)
    {
-      circle(AppUtils::displayOutput, Point((int) (points[i].x() * scale + offset.x()) * 6, (int) (points[i].y() * scale + offset.y()) * 6), 2, Scalar(255, 0, 0), -1);
+      circle(AppUtils::displayOutput, Point((int) (points[i].x() * scale + offset.x()) * 6, (int) (points[i].y() * scale + offset.y()) * 6), 2,
+             Scalar(255, 0, 0), -1);
       display(20);
    }
 }

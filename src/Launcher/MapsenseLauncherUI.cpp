@@ -68,7 +68,7 @@ void MyApplication::init(int argc, char **argv)
 
 void MyApplication::tickEvent()
 {
-   ROS_INFO("TickEvent: %d", count++);
+   ROS_DEBUG("TickEvent: %d", count++);
 
    if (!liveSLAMEnabled)
    {
@@ -78,7 +78,6 @@ void MyApplication::tickEvent()
          _slamModule->fileSLAMUpdate();
       }
    }
-   ROS_INFO("SLAM Pose Published.");
 
    if (appState.ROS_ENABLED)
    {
@@ -322,7 +321,7 @@ void MyApplication::drawEvent()
          }
          if (ImGui::Button("Save Regions"))
          {
-            AppUtils::write_regions(_regionCalculator->planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+            GeomTools::saveRegions(_regionCalculator->planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
                                                                          string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
             frameId++;
          }

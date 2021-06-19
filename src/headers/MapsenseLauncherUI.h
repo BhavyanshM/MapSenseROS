@@ -98,7 +98,7 @@ using namespace Magnum::Math::Literals;
       int count = 0;
       int frameId = 0;
 
-      bool liveSLAMEnabled = false;
+      bool liveSLAMEnabled = true;
 };
 
 

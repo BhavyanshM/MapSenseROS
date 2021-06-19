@@ -10,6 +10,7 @@
 #include "opencv2/core/core.hpp"
 #include <opencv2/imgproc.hpp>
 
+#include "GeomTools.h"
 #include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 
@@ -40,7 +41,7 @@ class AppUtils
       static void
       capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
 
-      static void getFileNames(string dirName, vector<string>& files);
+      static void getFileNames(string dirName, vector<string>& files, bool printList = false);
 
       void appendToDebugOutput(Mat disp);
 
@@ -48,7 +49,6 @@ class AppUtils
 
       static void checkMemoryLimits();
 
-      static void write_regions(vector<shared_ptr<PlanarRegion>> regions, string fileName);
 };
 
 #endif //APPUTILS_H

@@ -57,7 +57,7 @@ void SLAMModule::extractArgs(int argc, char **argv)
 
 void SLAMModule::fileSLAMUpdate()
 {
-   AppUtils::getFileNames(_mapper.directory, _mapper.files);
+   AppUtils::getFileNames(_mapper.directory, _mapper.files, true);
    GeomTools::loadRegions(_frameId, fileRegions, _mapper.directory, _mapper.files);
 
    Vector3d position;
@@ -108,10 +108,10 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
       _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
       _mapper.regions = _mapper.latestRegions;
 
-      poseAvailable = false;
       _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
-
       _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+
+      poseAvailable = false;
 
    } else if (poseAvailable)
    {
@@ -126,11 +126,14 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
          odometry.setMatrix(_mapper._atlasSensorPose.getMatrix());
          odometry.multiplyRight(_mapper._atlasPreviousSensorPose.getInverse());
 
-         printf("%d, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf\n", _frameId, _sensorPoseMessage->pose.position.x, _sensorPoseMessage->pose.position.y, _sensorPoseMessage->pose.position.z, _sensorPoseMessage->pose.orientation.x, _sensorPoseMessage->pose.orientation.y,
-                  _sensorPoseMessage->pose.orientation.z, _sensorPoseMessage->pose.orientation.w);
+         printf("%d, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf\n", _frameId, odometry.getTranslation().x(), odometry.getTranslation().y(), odometry.getTranslation().z(),
+                  odometry.getQuaternion().x(), odometry.getQuaternion().y(), odometry.getQuaternion().z(), odometry.getQuaternion().w());
 
-         AppUtils::write_regions(_mapper.latestRegions, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-                                                                      string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
+         if(false)
+         {
+            GeomTools::saveRegions(_mapper.latestRegions, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                                          string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
+         }
          _frameId++;
 
 //         _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));

@@ -18,7 +18,6 @@ find_package( OpenCV 4.2 REQUIRED )
 find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
-find_package(nlohmann_json REQUIRED)
 
 include_directories(${GTSAM_INCLUDE_DIR})
 
@@ -178,8 +177,7 @@ target_link_libraries(planar_region_publisher
 		Eigen3::Eigen
 		tbb
 		gtsam
-		geom-tools
-		nlohmann_json::nlohmann_json)
+		geom-tools)
 add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
@@ -189,7 +187,9 @@ target_link_libraries(factorGraph2D PRIVATE
 		${MAGNUM_GUI_LIBS})
 
 add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
-target_link_libraries(geom-tools Eigen3::Eigen ${OpenCV_LIBS})
+target_link_libraries(geom-tools
+		Eigen3::Eigen
+		${OpenCV_LIBS})
 
 add_executable(registration_and_mapping
 		src/Application/AppUtils.cpp

@@ -2,7 +2,8 @@
 // Created by quantum on 3/3/21.
 //
 
-#include "../include/GeomTools.h"
+#include "GeomTools.h"
+#include "AppUtils.h"
 
 Matrix3f GeomTools::getRotationFromAngleApproximations(Vector3f eulerAngles)
 {
@@ -299,11 +300,11 @@ Vector3f getVec3f(string csv)
    {
       CSVSubStrings.push_back(csvStr);
    }
-   //   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
+   cout << "Vector:" << Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
    return Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
-void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char delimiter = ':')
+void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char delimiter = ',')
 {
    subStrings.clear();
    string regionText;
@@ -318,31 +319,45 @@ void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char del
       cout << endl;
 }
 
+void GeomTools::saveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
+{
+   ofstream file;
+   file.open(fileName, fstream::in | fstream::out | fstream::app);
+   file << "NumRegions:" << regions.size() << endl;
+   for (shared_ptr<PlanarRegion> region : regions)
+   {
+      region->writeToFile(file);
+   }
+   file.close();
+   //   cout << "Writing Regions to:" << fileName << endl;
+}
+
+
 void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files)
 {
    /* Generate planar region objects from the sorted list of files. */
 //   if(regions.size() > 0) regions.clear();
    ifstream regionFile(directory + files[frameId]);
-   cout << "Loading Regions From: " << directory + files[frameId] << endl;
+   cout << "Loading Regions From: " << directory + files[frameId] << " FrameID:" << frameId << endl;
    vector<string> subStrings;
-   getNextLineSplit(regionFile, subStrings); // Get number of regions
+   getNextLineSplit(regionFile, subStrings, ':'); // Get number of regions
    int numRegions = stoi(subStrings[1]);
    for (int r = 0; r < numRegions; r++) // For each region
    {
       shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
-      getNextLineSplit(regionFile, subStrings); // Get regionId
+      getNextLineSplit(regionFile, subStrings, ':'); // Get regionId
       region->setId(-1);
       //      region->setId(stoi(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings); // Get regionCenter
+      getNextLineSplit(regionFile, subStrings, ':'); // Get regionCenter
       region->setCenter(getVec3f(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings); // Get regionNormal
+      getNextLineSplit(regionFile, subStrings, ':'); // Get regionNormal
       region->setNormal(getVec3f(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings); // Get numBoundaryVertices
+      getNextLineSplit(regionFile, subStrings, ':'); // Get numBoundaryVertices
       int length = stoi(subStrings[1]);
       for (int i = 0; i < length; i++)
       {
          cout << i << " : ";
-         getNextLineSplit(regionFile, subStrings);
+         getNextLineSplit(regionFile, subStrings, ',');
          region->insertBoundaryVertex(getVec3f(subStrings[0]));
       }
       //      GeomTools::compressPointSetLinear(region);
@@ -354,7 +369,7 @@ void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
 void GeomTools::loadPoseStamped(ifstream& poseFile, Vector3d& position, Quaterniond& orientation)
 {
    vector<string> subStrings;
-   getNextLineSplit(poseFile, subStrings, ',');
+   getNextLineSplit(poseFile, subStrings);
 
 
    position.x() = stof(subStrings[1]);

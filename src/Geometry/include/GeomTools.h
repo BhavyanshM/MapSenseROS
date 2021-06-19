@@ -9,11 +9,12 @@
 
 #include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
-#include "AppUtils.h"
 
 using namespace Eigen;
 
 typedef Eigen::Matrix<bool, Dynamic, Dynamic> BoolDynamicMatrix;
+
+class AppUtils;
 
 class GeomTools
 {
@@ -34,11 +35,14 @@ class GeomTools
 
       static void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files);
 
+      static void saveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName);
+
       static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform);
 
       static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Vector3d translation, Matrix3d rotation);
 
       static void loadPoseStamped(ifstream& poseFile, Vector3d& position, Quaterniond& orientation);
+
 };
 
 #endif //GEOMTOOLS_H
