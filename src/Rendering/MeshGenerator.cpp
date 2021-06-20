@@ -30,10 +30,14 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
    clearMesh(objects);
    for (int i = 1; i < poses.size(); i++)
    {
-      Vector3d translation = poses[i].getMatrix().block<3, 1>(0, 3);
-
       Object3D& axes = parent->addChild<Object3D>();
+
+      Vector3d translation = poses[i].getTranslation();
       axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
+
+      Eigen::Quaterniond quaternion = poses[i].getQuaternion();
+      axes.rotateLocal(Magnum::Quaternion({(float)quaternion.x(), (float)quaternion.y(), (float)quaternion.z()}, -quaternion.w()));
+
       axes.scaleLocal({(float) 0.1 * scale, (float) 0.1 * scale, (float) 0.1 * scale});
 
       objects.emplace_back(&axes);
@@ -43,10 +47,14 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
 
 void MeshGenerator::appendPoseMesh(RigidBodyTransform pose, vector<Object3D*>& objects, Object3D *parent, int color)
 {
-   Vector3d translation = pose.getMatrix().block<3, 1>(0, 3);
-
    Object3D& axes = parent->addChild<Object3D>();
+
+   Vector3d translation = pose.getMatrix().block<3, 1>(0, 3);
    axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
+
+   Eigen::Quaterniond quaternion = pose.getQuaternion();
+   axes.rotateLocal(Magnum::Quaternion({(float)quaternion.x(), (float)quaternion.y(), (float)quaternion.z()}, -quaternion.w()));
+
    axes.scaleLocal({0.1, 0.1, 0.1});
 
    objects.emplace_back(&axes);

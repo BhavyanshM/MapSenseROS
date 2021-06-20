@@ -55,26 +55,6 @@ void SLAMModule::extractArgs(int argc, char **argv)
    }
 }
 
-void SLAMModule::fileSLAMUpdate()
-{
-   AppUtils::getFileNames(_mapper.directory, _mapper.files, true);
-   GeomTools::loadRegions(_frameId, fileRegions, _mapper.directory, _mapper.files);
-
-   Vector3d position;
-   Quaterniond orientation;
-
-   cout << _mapper.directory + "poses.txt" << endl;
-   ifstream fs(_mapper.directory + "poses.txt");
-   GeomTools::loadPoseStamped(fs, position, orientation);
-
-   _frameId++;
-
-   cout << "File SLAM End" << endl;
-
-//   slamUpdate(fileRegions);
-
-}
-
 void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegions)
 {
    if (!enabled)
@@ -168,6 +148,26 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
    }
 }
 
+void SLAMModule::fileSLAMUpdate()
+{
+   AppUtils::getFileNames(_mapper.directory, _mapper.files, true);
+   GeomTools::loadRegions(_frameId, fileRegions, _mapper.directory, _mapper.files);
+
+   Vector3d position;
+   Quaterniond orientation;
+
+   cout << _mapper.directory + "poses.txt" << endl;
+   ifstream fs(_mapper.directory + "poses.txt");
+   GeomTools::loadPoseStamped(fs, position, orientation);
+
+   _frameId++;
+
+   cout << "File SLAM End" << endl;
+
+   //   slamUpdate(fileRegions);
+
+}
+
 void SLAMModule::renderSLAMOutput()
 {
    /* Generate World Frame Region Mesh. */
@@ -189,6 +189,8 @@ void SLAMModule::renderSLAMOutput()
    _mapper.fgSLAM->getPoses(_mapper.poses);
    _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
    _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 2, 1.5);
+
+   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _world, true);
 }
 
 void SLAMModule::ImGuiUpdate()
