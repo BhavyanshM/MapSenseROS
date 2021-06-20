@@ -26,7 +26,7 @@ class PlanarRegionMapHandler
       vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame;
 
       vector<pair<int, int>> matches;
-      vector<RigidBodyTransform> poses;
+      vector<RigidBodyTransform> poses, atlasPoses;
 
       string directory;
       Vector3d translationToReference, eulerAnglesToReference;

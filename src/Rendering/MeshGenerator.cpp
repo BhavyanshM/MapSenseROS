@@ -1,4 +1,10 @@
 #include "MeshGenerator.h"
+#include <Magnum/Primitives/Plane.h>
+#include <Magnum/Primitives/Cube.h>
+#include <Magnum/Primitives/Line.h>
+#include <Magnum/Primitives/Circle.h>
+#include <Magnum/Primitives/Circle.h>
+#include <Magnum/Primitives/Axis.h>
 
 void MeshGenerator::clearMesh(vector<Object3D *>& objects)
 {
@@ -25,7 +31,7 @@ MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shar
    }
 }
 
-void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent, int color, float scale)
+void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D *>& objects, Object3D *parent, int color, float scale, float interp)
 {
    clearMesh(objects);
    for (int i = 1; i < poses.size(); i++)
@@ -35,9 +41,10 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
       Vector3d translation = poses[i].getTranslation();
       axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
 
-      Eigen::Quaterniond quaternion = poses[i].getQuaternion();
-      axes.rotateLocal(Magnum::Quaternion({(float)quaternion.x(), (float)quaternion.y(), (float)quaternion.z()}, -quaternion.w()));
+      Eigen::Quaterniond identity = Eigen::Quaterniond::Identity();
+      Eigen::Quaterniond quaternion = identity.slerp(interp, poses[i].getQuaternion()).inverse();
 
+      axes.rotateLocal(Magnum::Quaternion({(float)quaternion.x(), (float)quaternion.y(), (float)quaternion.z()}, -quaternion.w()));
       axes.scaleLocal({(float) 0.1 * scale, (float) 0.1 * scale, (float) 0.1 * scale});
 
       objects.emplace_back(&axes);
@@ -52,7 +59,7 @@ void MeshGenerator::appendPoseMesh(RigidBodyTransform pose, vector<Object3D*>& o
    Vector3d translation = pose.getMatrix().block<3, 1>(0, 3);
    axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
 
-   Eigen::Quaterniond quaternion = pose.getQuaternion();
+   Eigen::Quaterniond quaternion = pose.getQuaternion().inverse();
    axes.rotateLocal(Magnum::Quaternion({(float)quaternion.x(), (float)quaternion.y(), (float)quaternion.z()}, -quaternion.w()));
 
    axes.scaleLocal({0.1, 0.1, 0.1});

@@ -187,16 +187,23 @@ void SLAMModule::renderSLAMOutput()
 
    /* Generating Pose Mesh */
    _mapper.fgSLAM->getPoses(_mapper.poses);
-   _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
+
+   _mapper.atlasPoses.emplace_back(_mapper._atlasSensorPose);
+   _mesher.generatePoseMesh(_mapper.atlasPoses, atlasPoseAxes, _world, 3, 1.5);
+//   _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
    _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 2, 1.5);
 
-   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _world, true);
+//   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _world, true);
 }
 
 void SLAMModule::ImGuiUpdate()
 {
    ImGui::Checkbox("SLAM Enabled", &this->enabled);
    ImGui::Checkbox("ICP Enabled", &this->ICPEnabled);
+   ImGui::SliderFloat("Interpolation", &_interp, 0.0f, 1.0f);
+
+   _mesher.generatePoseMesh(_mapper.atlasPoses, atlasPoseAxes, _world, 3, 1.5, _interp);
+
    if (this->matchCountVec.size() > 20)
    {
 

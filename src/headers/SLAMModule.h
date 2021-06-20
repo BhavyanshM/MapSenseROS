@@ -32,6 +32,7 @@ class SLAMModule
       PlanarRegionMapHandler _mapper;
       MeshGenerator _mesher;
 
+      float _interp = 0.0f;
       bool enabled = true;
       bool initial = true;
       bool ICPEnabled = false;

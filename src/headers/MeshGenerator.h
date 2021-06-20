@@ -23,12 +23,7 @@
 #include <Magnum/SceneGraph/Camera.h>
 #include <Magnum/SceneGraph/Drawable.h>
 #include <Magnum/GL/Mesh.h>
-#include <Magnum/Primitives/Plane.h>
-#include <Magnum/Primitives/Cube.h>
-#include <Magnum/Primitives/Line.h>
-#include <Magnum/Primitives/Circle.h>
-#include <Magnum/Primitives/Circle.h>
-#include <Magnum/Primitives/Axis.h>
+
 #include <Magnum/Trade/MeshData.h>
 #include <Magnum/Shaders/PhongGL.h>
 
@@ -36,8 +31,6 @@
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix4.h>
 #include <Magnum/Math/Quaternion.h>
-
-#include <Corrade/Containers/ArrayViewStl.h>
 
 #include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
@@ -66,7 +59,7 @@ class MeshGenerator
 
       void generateMatchLineMesh(vector<pair<int,int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
 
-      void generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D*>& edges, Object3D* parent, int color, float scale = 1.0);
+      void generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D*>& edges, Object3D* parent, int color, float scale = 1.0,  float interp = 1.0);
 
       explicit MeshGenerator(Magnum::SceneGraph::DrawableGroup3D* drawables);
 
