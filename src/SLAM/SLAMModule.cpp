@@ -13,6 +13,9 @@ SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager, Ma
    *(this->sensorPoseSub) = networkManager->rosNode->subscribe("/atlas/sensors/chest_l515/pose", 3, &SLAMModule::sensorPoseCallback, this);
 
    this->extractArgs(argc, argv);
+
+   _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
+   _transformZUp.rotateY(90.0f / 180.0f * M_PI);
 }
 
 void SLAMModule::extractArgs(int argc, char **argv)
@@ -68,6 +71,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
 
 
    _mapper.latestRegions = latestRegions;
+   _mapper.transformAndCopyRegions(_mapper.latestRegions, _mapper._latestRegionsZUp, _transformZUp);
 
    /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
    _mapper.matchPlanarRegionsToMap();
@@ -86,7 +90,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
       _mapper._atlasSensorPose.print();
 
       _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
-      _mapper.regions = _mapper.latestRegions;
+      _mapper.regions = _mapper._latestRegionsZUp;
 
       _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
       _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
@@ -97,7 +101,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
    {
 
       /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
-      _mapper.transformAndCopyLatestRegions(_mapper.regionsInMapFrame, _mapper._atlasSensorPose);
+      _mapper.transformAndCopyRegions(_mapper._latestRegionsZUp, _mapper.regionsInMapFrame, _mapper._atlasSensorPose);
 
       if (_mapper.FACTOR_GRAPH && (_mapper._atlasSensorPose.getTranslation() - _mapper._atlasPreviousSensorPose.getTranslation()).norm() > 0.001)
       {
@@ -111,7 +115,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
 
          if(false)
          {
-            GeomTools::saveRegions(_mapper.latestRegions, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+            GeomTools::saveRegions(_mapper._latestRegionsZUp, ros::package::getPath("map_sense") + "/Extras/Regions/" +
                                                           string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
          }
          _frameId++;
@@ -129,7 +133,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
          /* Optimize the Factor Graph. */
          _mapper.optimize();
 
-         this->renderSLAMOutput();
+         renderSLAMOutput();
 
          if (_mapper.ISAM2)
             _mapper.fgSLAM->clearISAM2();
@@ -141,7 +145,7 @@ void SLAMModule::slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegion
 
       ROS_DEBUG("Recycling Region Lists.\n");
       /* Load previous and current regions. Separated by SKIP_REGIONS. */
-      _mapper.regions = _mapper.latestRegions;
+      _mapper.regions = _mapper._latestRegionsZUp;
       poseAvailable = false;
 
       ROS_DEBUG("SLAM Update Complete.\n");
@@ -171,9 +175,9 @@ void SLAMModule::fileSLAMUpdate()
 void SLAMModule::renderSLAMOutput()
 {
    /* Generate World Frame Region Mesh. */
-   //   for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
-   //      _mapper.regionsInMapFrame[k]->retainConvexHull();
-   //   _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
+//      for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
+//         _mapper.regionsInMapFrame[k]->retainConvexHull();
+//      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
 
    /* Extracting Landmarks from Factor Graph. */
    _mapper.extractFactorGraphLandmarks();
@@ -183,7 +187,7 @@ void SLAMModule::renderSLAMOutput()
       _mapper.mapRegions[k]->retainConvexHull();
 
    /* Generating Region Mesh */
-//   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
+   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
 
    /* Generating Pose Mesh */
    _mapper.fgSLAM->getPoses(_mapper.poses);
@@ -193,7 +197,7 @@ void SLAMModule::renderSLAMOutput()
 //   _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
    _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 2, 1.5);
 
-//   _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 3, _world, true);
+//   _mesher.generateRegionLineMesh(_mapper._latestRegionsZUp, latestRegionEdges, 3, _world, true);
 }
 
 void SLAMModule::ImGuiUpdate()
@@ -241,9 +245,10 @@ void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& po
 //      if(diff > 0.001)
       {
          ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
+
          this->_mapper._atlasSensorPose.setRotationAndTranslation(
-               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.x, this->_sensorPoseMessage->pose.orientation.y,
-                                  this->_sensorPoseMessage->pose.orientation.z, this->_sensorPoseMessage->pose.orientation.w),
+               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,
+                                  this->_sensorPoseMessage->pose.orientation.y, this->_sensorPoseMessage->pose.orientation.z),
                Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y, this->_sensorPoseMessage->pose.position.z));
 
 //         this->_mapper._atlasSensorPose.rotateX(-M_PI_2);

@@ -11,7 +11,7 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
    int totalNumOfBoundaryPoints = 0;
    for (int i = 0; i < this->matches.size(); i++)
    {
-      totalNumOfBoundaryPoints += this->latestRegions[this->matches[i].second]->getNumOfBoundaryVertices();
+      totalNumOfBoundaryPoints += this->_latestRegionsZUp[this->matches[i].second]->getNumOfBoundaryVertices();
    }
    MatrixXf A(totalNumOfBoundaryPoints, 6);
    VectorXf b(totalNumOfBoundaryPoints);
@@ -19,9 +19,9 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
    int i = 0;
    for (int m = 0; m < this->matches.size(); m++)
    {
-      for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
+      for (int n = 0; n < this->_latestRegionsZUp[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
       {
-         Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
+         Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
          Vector3f correspondingMapCentroid = regions[matches[m].first]->getCenter();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
          Vector3f cross = latestPoint.cross(correspondingMapNormal);
@@ -57,7 +57,7 @@ void PlanarRegionMapHandler::registerRegionsPointToPoint()
    int totalNumOfBoundaryPoints = 0;
    for (int i = 0; i < this->matches.size(); i++)
    {
-      totalNumOfBoundaryPoints += this->latestRegions[this->matches[i].second]->getNumOfBoundaryVertices();
+      totalNumOfBoundaryPoints += this->_latestRegionsZUp[this->matches[i].second]->getNumOfBoundaryVertices();
    }
    MatrixXf A(totalNumOfBoundaryPoints, 6);
    VectorXf b(totalNumOfBoundaryPoints);
@@ -65,9 +65,9 @@ void PlanarRegionMapHandler::registerRegionsPointToPoint()
    int i = 0;
    for (int m = 0; m < this->matches.size(); m++)
    {
-      for (int n = 0; n < this->latestRegions[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
+      for (int n = 0; n < this->_latestRegionsZUp[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
       {
-         Vector3f latestPoint = latestRegions[matches[m].second]->getVertices()[n];
+         Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
          //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
          Vector3f correspondingMapCentroid = regions[matches[m].first]->getCenter();
          Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
@@ -99,29 +99,29 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap()
    {
       if (regions[i]->getNumOfBoundaryVertices() > 8)
       {
-         for (int j = 0; j < latestRegions.size(); j++)
+         for (int j = 0; j < _latestRegionsZUp.size(); j++)
          {
-            if (latestRegions[j]->getNumOfBoundaryVertices() > 8)
+            if (_latestRegionsZUp[j]->getNumOfBoundaryVertices() > 8)
             {
                Vector3f prevNormal = regions[i]->getNormal();
-               Vector3f curNormal = latestRegions[j]->getNormal();
+               Vector3f curNormal = _latestRegionsZUp[j]->getNormal();
                float angularDiff = fabs(prevNormal.dot(curNormal));
 
                Vector3f prevCenter = regions[i]->getCenter();
-               Vector3f curCenter = latestRegions[j]->getCenter();
+               Vector3f curCenter = _latestRegionsZUp[j]->getCenter();
                float dist = (curCenter - prevCenter).norm();
                //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 
-               int countDiff = abs(regions[i]->getNumOfBoundaryVertices() - latestRegions[j]->getNumOfBoundaryVertices());
-               int maxCount = max(regions[i]->getNumOfBoundaryVertices(), latestRegions[j]->getNumOfBoundaryVertices());
+               int countDiff = abs(regions[i]->getNumOfBoundaryVertices() - _latestRegionsZUp[j]->getNumOfBoundaryVertices());
+               int maxCount = max(regions[i]->getNumOfBoundaryVertices(), _latestRegionsZUp[j]->getNumOfBoundaryVertices());
 
                if (dist < MATCH_DIST_THRESHOLD && angularDiff > MATCH_ANGULAR_THRESHOLD &&
                    ((float) countDiff / ((float) maxCount)) * 100.0f < MATCH_PERCENT_VERTEX_THRESHOLD)
                {
                   matches.emplace_back(i, j);
-                  latestRegions[j]->setId(regions[i]->getId());
+                  _latestRegionsZUp[j]->setId(regions[i]->getId());
                   regions[i]->setNumOfMeasurements(regions[i]->getNumOfMeasurements() + 1);
-                  latestRegions[j]->setNumOfMeasurements(latestRegions[j]->getNumOfMeasurements() + 1);
+                  _latestRegionsZUp[j]->setNumOfMeasurements(_latestRegionsZUp[j]->getNumOfMeasurements() + 1);
                   break;
                }
             }
@@ -132,9 +132,9 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap()
 
 void PlanarRegionMapHandler::insertOrientedPlaneFactors(int currentPoseId)
 {
-   for (int i = 0; i < latestRegions.size(); i++)
+   for (int i = 0; i < _latestRegionsZUp.size(); i++)
    {
-      shared_ptr<PlanarRegion> region = latestRegions[i];
+      shared_ptr<PlanarRegion> region = _latestRegionsZUp[i];
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
       region->setId(fgSLAM->addOrientedPlaneLandmarkFactor(plane, region->getId(), currentPoseId));
@@ -154,7 +154,7 @@ void PlanarRegionMapHandler::setOrientedPlaneInitialValues()
 
 void PlanarRegionMapHandler::mergeLatestRegions()
 {
-   for (shared_ptr<PlanarRegion> region : this->latestRegions)
+   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
    {
       if (region->getNumOfMeasurements() < 2 && region->getPoseId() != 0)
       {
@@ -166,7 +166,7 @@ void PlanarRegionMapHandler::mergeLatestRegions()
 void PlanarRegionMapHandler::extractFactorGraphLandmarks()
 {
    mapRegions.clear();
-   for (shared_ptr<PlanarRegion> region : this->latestRegions)
+   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
    {
       RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
 
@@ -188,14 +188,14 @@ void PlanarRegionMapHandler::setDirectory(const string& directory)
    this->directory = directory;
 }
 
-void PlanarRegionMapHandler::transformAndCopyLatestRegions(vector<shared_ptr<PlanarRegion>>& transformedRegions, const RigidBodyTransform& transform)
+void PlanarRegionMapHandler::transformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform)
 {
-   transformedRegions.clear();
-   for (int i = 0; i < latestRegions.size(); i++)
+   dstRegions.clear();
+   for (int i = 0; i < srcRegions.size(); i++)
    {
-      shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(latestRegions[i]->getId());
-      latestRegions[i]->copyAndTransform(planarRegion, transform);
-      transformedRegions.emplace_back(planarRegion);
+      shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(srcRegions[i]->getId());
+      srcRegions[i]->copyAndTransform(planarRegion, transform);
+      dstRegions.emplace_back(planarRegion);
    }
 }
 
@@ -207,7 +207,7 @@ void PlanarRegionMapHandler::printRefCounts()
       printf("%d, ", region.use_count());
    printf(")\n");
    printf("LatestRegions(");
-   for (auto region : this->latestRegions)
+   for (auto region : this->_latestRegionsZUp)
       printf("%d, ", region.use_count());
    printf(")\n");
    printf("MapRegions(");

@@ -23,7 +23,7 @@ class PlanarRegionMapHandler
       FactorGraphHandler* fgSLAM;
       vector<string> files;
 
-      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame;
+      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame, _latestRegionsZUp;
 
       vector<pair<int, int>> matches;
       vector<RigidBodyTransform> poses, atlasPoses;
@@ -64,7 +64,7 @@ class PlanarRegionMapHandler
 
       void printRefCounts();
 
-      void transformAndCopyLatestRegions(vector<shared_ptr<PlanarRegion>>& transformedRegions, const RigidBodyTransform& transform);
+      void transformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

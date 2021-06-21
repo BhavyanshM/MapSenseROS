@@ -42,10 +42,22 @@ void MeshGenerator::generatePoseMesh(vector<RigidBodyTransform> poses, vector<Ob
       axes.translateLocal({static_cast<float>(translation.x()), static_cast<float>(translation.y()), static_cast<float>(translation.z())});
 
       Eigen::Quaterniond identity = Eigen::Quaterniond::Identity();
-      Eigen::Quaterniond quaternion = identity.slerp(interp, poses[i].getQuaternion()).inverse();
+      Eigen::Quaterniond quaternion = poses[i].getQuaternion();
+      Eigen::Quaterniond interp_quaternion = identity.slerp(interp, quaternion);
 
-      axes.rotateLocal(Magnum::Quaternion({(float)quaternion.x(), (float)quaternion.y(), (float)quaternion.z()}, -quaternion.w()));
+      printf("Quaternion: %.4lf, %.4lf, %.4lf, %.4lf\n", quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+
+//      Euler: -0.0430, 1.1400, 0.0110
+//      Quaternion: -0.0151, 0.5396, -0.0070, 0.8418
+//      EulerAngles: 3.0986, 2.0016, -3.1306
+
+
+      axes.rotateLocal(Magnum::Quaternion({(float)interp_quaternion.x(), (float)interp_quaternion.y(), (float)interp_quaternion.z()}, interp_quaternion.w()));
       axes.scaleLocal({(float) 0.1 * scale, (float) 0.1 * scale, (float) 0.1 * scale});
+
+//      axes.transformLocal(Magnum::Matrix4::rotationX(Magnum::Rad{eulerAngles.x()}));
+//      axes.transformLocal(Magnum::Matrix4::rotationY(Magnum::Rad{eulerAngles.y()}));
+//      axes.transformLocal(Magnum::Matrix4::rotationZ(Magnum::Rad{eulerAngles.z()}));
 
       objects.emplace_back(&axes);
       new RedCubeDrawable{axes, drawables, Magnum::Primitives::axis3D(), {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};

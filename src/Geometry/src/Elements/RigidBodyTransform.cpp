@@ -124,5 +124,5 @@ void RigidBodyTransform::rotate(float rad, Eigen::Vector3d axis)
 {
    Eigen::Matrix4d rotation = Eigen::Matrix4d::Identity();
    rotation.block<3,3>(0,0) = Eigen::AngleAxisd(rad, axis).toRotationMatrix();
-   this->matrix =  this->matrix * rotation;
+   this->matrix =  rotation * this->matrix ;
 }

@@ -26,6 +26,8 @@ class SLAMModule
       geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
       int _frameId = 0;
 
+      RigidBodyTransform _transformZUp;
+
    public:
       Object3D* _world;
       NetworkManager* network;

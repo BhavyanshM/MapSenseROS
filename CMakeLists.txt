@@ -243,6 +243,11 @@ target_link_libraries(pose2-slam gtsam)
 add_executable(visual-isam2 src/examples/VisualISAM2Example.cpp src/examples/SFMdata.h)
 target_link_libraries(visual-isam2 gtsam)
 
+add_executable(math-tester
+		src/examples/MathTester.cpp)
+
+target_link_libraries(math-tester
+		Eigen3::Eigen)
 
 
 
