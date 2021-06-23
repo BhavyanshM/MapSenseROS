@@ -23,7 +23,7 @@ class PlanarRegionMapHandler
       FactorGraphHandler* fgSLAM;
       vector<string> files;
 
-      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame, _latestRegionsZUp;
+      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;
 
       vector<pair<int, int>> matches;
       vector<RigidBodyTransform> poses, atlasPoses;

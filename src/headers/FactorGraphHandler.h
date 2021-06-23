@@ -19,7 +19,7 @@
 #include <boost/assign/std/vector.hpp>
 #include <bits/stdc++.h>
 
-#define _DEBUG 0
+#define _DEBUG 1
 
 #if _DEBUG == 1
    #define LOG(fmt, ...) printf(fmt, ##__VA_ARGS__)

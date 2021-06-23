@@ -98,6 +98,12 @@ class PlanarRegion
       string toString();
 
       void projectToPlane(Vector4f plane);
+
+      void setToUnitSquare();
+
+      static void PrintRegionList(const vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name);
+
+      static void SetZeroId( vector<shared_ptr<PlanarRegion>>& regionList);
 };
 
 #endif //SRC_PLANARREGION_H

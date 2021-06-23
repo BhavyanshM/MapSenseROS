@@ -34,6 +34,7 @@
 
 #include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
+#include "MapFrame.h"
 
 using namespace cv;
 using namespace std;
@@ -48,12 +49,11 @@ typedef Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D> Sc
 
 class MeshGenerator
 {
-   private:
-      const int SKIP_EDGES = 5;
-
-      Magnum::SceneGraph::DrawableGroup3D* drawables;
-
    public:
+
+      MeshGenerator(Magnum::SceneGraph::DrawableGroup3D* drawables) : drawables(drawables)
+      {
+      }
 
       void generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& regionEdges, int color, Object3D* parent, bool erase = false);
 
@@ -61,18 +61,26 @@ class MeshGenerator
 
       void generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D*>& edges, Object3D* parent, int color, float scale = 1.0,  float interp = 1.0);
 
-      explicit MeshGenerator(Magnum::SceneGraph::DrawableGroup3D* drawables);
-
       static void clearMesh(vector<Object3D *>& objects);
 
       void appendPoseMesh(RigidBodyTransform pose, vector<Object3D*>& objects, Object3D *parent, int color);
+
+      void generatePatchMesh(Object3D* parent, MapFrame& output,  vector<Object3D*> objects, const ApplicationState& appState);
+
+
+   private:
+
+      const int SKIP_EDGES = 5;
+
+      Magnum::SceneGraph::DrawableGroup3D* drawables;
+
 };
 
-class RedCubeDrawable : public Magnum::SceneGraph::Drawable3D
+class DrawableObject : public Magnum::SceneGraph::Drawable3D
 {
    public:
-      explicit RedCubeDrawable(Object3D& object, Magnum::SceneGraph::DrawableGroup3D *group, Magnum::Trade::MeshData meshData, Magnum::Vector3 color) : Magnum::SceneGraph::Drawable3D{object,
-                                                                                                                                                                                       group}
+      explicit DrawableObject(Object3D& object, Magnum::SceneGraph::DrawableGroup3D *group, Magnum::Trade::MeshData meshData, Magnum::Vector3 color) : Magnum::SceneGraph::Drawable3D{object,
+                                                                                                                                                                                      group}
       {
          _color = color;
          _mesh = Magnum::MeshTools::compile(meshData);
@@ -80,8 +88,8 @@ class RedCubeDrawable : public Magnum::SceneGraph::Drawable3D
 
       typedef Magnum::GL::Attribute<0, Magnum::Vector3> Position;
 
-      explicit RedCubeDrawable(Object3D& object, Magnum::SceneGraph::DrawableGroup3D *group, Magnum::GL::Buffer& vertexBuffer, Magnum::Vector3 color) : Magnum::SceneGraph::Drawable3D{object,
-                                                                                                                                                                                       group}
+      explicit DrawableObject(Object3D& object, Magnum::SceneGraph::DrawableGroup3D *group, Magnum::GL::Buffer& vertexBuffer, Magnum::Vector3 color) : Magnum::SceneGraph::Drawable3D{object,
+                                                                                                                                                                                      group}
       {
          _color = color;
          _mesh.setPrimitive(Magnum::MeshPrimitive::TriangleFan).addVertexBuffer(vertexBuffer, 0, Position{}).setCount(vertexBuffer.size());

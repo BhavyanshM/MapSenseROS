@@ -43,7 +43,9 @@ class SLAMModule
    public:
       SLAMModule(int argc, char **argv, NetworkManager *networkManager, Magnum::SceneGraph::DrawableGroup3D* _drawables, Object3D* sensor);
 
-      void slamUpdate(const vector<shared_ptr<PlanarRegion>>& latestRegions);
+      void slamUpdate();
+
+      void setLatestRegionsToZUp(const vector<shared_ptr<PlanarRegion>>& regions);
 
       void init(Pose3 initialPose);
 
@@ -55,7 +57,7 @@ class SLAMModule
 
       void renderSLAMOutput();
 
-      void fileSLAMUpdate();
+      void SLAMTesterUpdate();
 };
 
 #endif //SLAMMODULE_H

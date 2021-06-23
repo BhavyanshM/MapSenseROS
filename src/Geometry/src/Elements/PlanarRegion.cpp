@@ -296,3 +296,28 @@ void PlanarRegion::retainLinearApproximation()
    cout << "Parameters:" << endl << parametricCurve << endl;
 }
 
+void PlanarRegion::setToUnitSquare()
+{
+   setCenter(Vector3f(0,0,0));
+   setNormal(Vector3f(0,0,1));
+   insertBoundaryVertex(Vector3f(-1,-1,1));
+   insertBoundaryVertex(Vector3f(-1,1,1));
+   insertBoundaryVertex(Vector3f(1,1,1));
+   insertBoundaryVertex(Vector3f(1,-1,1));
+}
+
+void PlanarRegion::PrintRegionList(const vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name)
+{
+   printf("%s: (%d)[", name.c_str(), regionList.size());
+   for(auto region : regionList)
+   {
+      printf("%d,", region->getId());
+   }
+   printf("]\n");
+}
+
+void PlanarRegion::SetZeroId( vector<shared_ptr<PlanarRegion>>& regionList)
+{
+   for(auto region : regionList)
+      region->setId(-1);
+}

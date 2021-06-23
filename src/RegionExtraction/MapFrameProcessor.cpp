@@ -2,7 +2,7 @@
 
 void MapFrameProcessor::init(ApplicationState& app)
 {
-   ROS_DEBUG("Initializing MapFrameProcessor");
+   ROS_INFO("Initializing MapFrameProcessor");
    this->app = app;
    this->debug = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
    this->visited = MatrixXi(app.SUB_H, app.SUB_W).setZero();
@@ -32,7 +32,7 @@ void MapFrameProcessor::printPatchGraph()
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
-   ROS_DEBUG("Starting DFS for Segmentation\n");
+   ROS_INFO("Starting DFS for Segmentation\n");
    this->app = app;
    this->frame = inputFrame;
 
@@ -61,14 +61,17 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
          }
       }
    }
-   ROS_DEBUG("DFS Generated %d Regions\n", components);
+   ROS_INFO("DFS Generated %d Regions\n", components);
 
    /* Extract Region Boundary Indices. */
    visited.setZero();
    findBoundaryAndHoles(planarRegionList);
 
+   ROS_INFO("Found Rings");
+
    /* Grow Region Boundary. */
    growRegionBoundary(planarRegionList);
+   ROS_INFO("Regions Grown Manually");
 
 }
 
@@ -180,6 +183,14 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
 {
    for(int i = 0; i<regions.size(); i++)
    {
+      ROS_INFO("Region: %d(%d) Has %d Rings", i, regions[i]->getId(), regions[i]->rings.size());
+
+      if(regions[i]->rings.size() <= 0)
+      {
+         ROS_WARN("Region Boundary Size is Zero!");
+         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+      }
+
       Vector3f center = regions[i]->getCenter();
       vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
       for (int j = 0; j < ring.size(); j++)

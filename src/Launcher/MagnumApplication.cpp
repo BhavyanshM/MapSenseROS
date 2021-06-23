@@ -37,14 +37,14 @@ MagnumApplication::MagnumApplication(const Arguments& arguments) : Magnum::Platf
    /* TODO: Prepare your objects here and add them to the scene */
    _sensorAxes = new Object3D{_world};
    _sensorAxes->scale({0.1, 0.1, 0.1});
-   new RedCubeDrawable{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
+   new DrawableObject{*_sensorAxes, &_drawables, Magnum::Primitives::axis3D(), {0.5, 0.1f, 0.1f}};
 
    _camObject->translate({0, 0, 10.0f});
    _world->transformLocal(Mat4::rotationX(Magnum::Rad{90.0_degf}));
 
    _camOriginCube = new Object3D{_camGrandParent};
    _camOriginCube->scale({0.01f, 0.01f, 0.01f});
-   new RedCubeDrawable{*_camOriginCube, &_drawables, Magnum::Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
+   new DrawableObject{*_camOriginCube, &_drawables, Magnum::Primitives::cubeSolid(), {0.2, 0.0f, 0.3f}};
 }
 
 void MagnumApplication::viewportEvent(ViewportEvent& event)
