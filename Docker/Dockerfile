@@ -63,7 +63,7 @@ RUN mkdir magnum-integration \
  && cd src/MagnumExternal \
  && git clone https://github.com/ocornut/imgui.git \
  && mv imgui ImGui \
- && cd ../../ \
+ && cd ImGui && git checkout docking && cd ../../../ \
  && sed -i "s/IMGUI=OFF/IMGUI=ON/g" package/debian/rules \
  && sed -i "s/imgui_demo/imgui_demo imgui_tables/g" modules/FindImGui.cmake \
  && ln -s package/debian . \
