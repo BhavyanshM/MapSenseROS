@@ -57,7 +57,7 @@ class PlanarRegionCalculator
 
       void initOpenCL(ApplicationState app);
 
-      void generateRegions(ApplicationState appState);
+      void generateAndPublishRegions(ApplicationState appState);
 
       void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
 

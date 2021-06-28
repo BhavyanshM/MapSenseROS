@@ -9,7 +9,7 @@ typedef Magnum::Vector2 Vec2;
 
 MagnumApplication::MagnumApplication(const Arguments& arguments) : Magnum::Platform::Application{arguments,
                                                                                          Configuration{}.setTitle("Magnum ImGui Application").setSize(
-                                                                                               Magnum::Vector2i(1024, 768)).setWindowFlags(
+                                                                                               Magnum::Vector2i(1920, 1080)).setWindowFlags(
                                                                                                Configuration::WindowFlag::Resizable)}
 {
 

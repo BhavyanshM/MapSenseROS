@@ -13,11 +13,13 @@ class PlanarRegionMapHandler
 {
    public:
 
+      bool SLAM_ENABLED = false;
+
       float MATCH_DIST_THRESHOLD = 0.1f;
       float MATCH_ANGULAR_THRESHOLD = 0.9f;
       int MATCH_PERCENT_VERTEX_THRESHOLD = 20;
-      bool FACTOR_GRAPH = false;
-      bool ISAM2 = false;
+      bool FACTOR_GRAPH = true;
+      bool ISAM2 = true;
       uint8_t ISAM2_NUM_STEPS = 4;
 
       FactorGraphHandler* fgSLAM;

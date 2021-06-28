@@ -19,7 +19,7 @@ void MapsenseHeadlessLauncher::update()
    _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
    if (_dataReceiver->depthCamInfoSet)
    {
-      _regionCalculator->generateRegions(_dataReceiver, appState);
+      _regionCalculator->generateAndPublishRegions(_dataReceiver, appState);
    }
 }
 

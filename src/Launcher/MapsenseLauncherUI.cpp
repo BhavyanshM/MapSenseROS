@@ -2,7 +2,7 @@
 
 MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::Application{arguments,
                                                                                          Configuration{}.setTitle("Magnum ImGui Application").setSize(
-                                                                                               Magnum::Vector2i(1024, 768)).setWindowFlags(
+                                                                                               Magnum::Vector2i(1920, 1080)).setWindowFlags(
                                                                                                Configuration::WindowFlag::Resizable)}
 {
 
@@ -79,14 +79,17 @@ void MyApplication::tickEvent()
          appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
       }
 
-      _regionCalculator->generateRegions(appState);
+      _regionCalculator->generateAndPublishRegions(appState);
       _regionCalculator->render();
 
-      if (_regionCalculator->planarRegionList.size() > 0 && appState.ROS_ENABLED)
+      if (_regionCalculator->planarRegionList.size() > 0 && appState.ROS_ENABLED && _slamModule->_mapper.SLAM_ENABLED)
       {
          PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
          _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
          _slamModule->slamUpdate();
+
+         /* TODO: Publish the latest optimized pose from Factor Graph SLAM. */
+
          //         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
          //         if (sensorTransforms.size() > 0 && _slamModule->enabled)
          //         {

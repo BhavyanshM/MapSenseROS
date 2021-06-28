@@ -321,7 +321,7 @@ void logPlanarRegions(vector<shared_ptr<PlanarRegion>> planarRegionList)
    }
 }
 
-void PlanarRegionCalculator::generateRegions(ApplicationState appState)
+void PlanarRegionCalculator::generateAndPublishRegions(ApplicationState appState)
 {
    ROS_INFO("Generating Regions");
 

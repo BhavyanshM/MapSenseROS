@@ -55,6 +55,11 @@ void SLAMModule::extractArgs(int argc, char **argv)
          _mapper.FACTOR_GRAPH = true;
          cout << "Factor Graph: true" << endl;
       }
+      if (args[i] == "--slam")
+      {
+         _mapper.SLAM_ENABLED = true;
+         cout << "Factor Graph: true" << endl;
+      }
       if (args[i] == "--isam")
       {
          _mapper.ISAM2 = true;
