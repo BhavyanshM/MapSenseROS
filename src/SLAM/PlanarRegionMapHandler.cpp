@@ -148,7 +148,7 @@ void PlanarRegionMapHandler::setOrientedPlaneInitialValues()
    {
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), plane);
+      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), OrientedPlane3(plane(0), plane(1), plane(2), plane(3)));
    }
 }
 

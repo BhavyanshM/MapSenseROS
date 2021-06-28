@@ -212,7 +212,6 @@ void SLAMModule::ImGuiUpdate()
 
    if (this->matchCountVec.size() > 20)
    {
-
       this->matchCountVec.erase(this->matchCountVec.begin());
       int *data = this->matchCountVec.data();
       if (ImPlot::BeginPlot("SLAM Plots"))

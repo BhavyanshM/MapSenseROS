@@ -108,28 +108,35 @@ void MyApplication::drawEvent()
    ImGui::Text("MapSense");
 
 
-   /* Use for docking. */
+      /* Dockable Window **************************************************************************************** */
+      /* Use for docking. */
 
-   //   static ImGuiID dockspaceID = 0;
-   //   bool active = true;
-   //   if (ImGui::Begin("Master Window", &active))
-   //   {
-   //      ImGui::TextUnformatted("DockSpace below");
-   //   }
-   //   if (active)
-   //   {
-   //      // Declare Central dockspace
-   //      dockspaceID = ImGui::GetID("HUB_DockSpace");
-   //      ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode/*|ImGuiDockNodeFlags_NoResize*/);
-   //   }
-   //   ImGui::End();
-   //
-   //   ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
-   //   if (ImGui::Begin("Dockable Window"))
-   //   {
-   //      ImGui::TextUnformatted("Test");
-   //   }
-   //   ImGui::End();
+      static ImGuiID dockspaceID = 0;
+      bool active = true;
+      if (ImGui::Begin("Master Window", &active))
+      {
+         ImGui::TextUnformatted("DockSpace below");
+      }
+      if (active)
+      {
+         // Declare Central dockspace
+         dockspaceID = ImGui::GetID("HUB_DockSpace");
+         ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode /*|ImGuiDockNodeFlags_NoResize*/ );
+      }
+
+      bool demo = true;
+      ImGui::ShowDemoWindow(&demo);
+
+      ImGui::End();
+
+      ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
+      if (ImGui::Begin("Dockable Window"))
+      {
+         ImGui::TextUnformatted("Test");
+      }
+      ImGui::End();
+
+      /* Dockable Window **************************************************************************************** */
 
    if (ImGui::BeginTabBar("Configuration"))
    {

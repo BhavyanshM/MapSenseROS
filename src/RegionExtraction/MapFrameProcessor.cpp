@@ -183,8 +183,6 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
 {
    for(int i = 0; i<regions.size(); i++)
    {
-      ROS_INFO("Region: %d(%d) Has %d Rings", i, regions[i]->getId(), regions[i]->rings.size());
-
       if(regions[i]->rings.size() <= 0)
       {
          ROS_WARN("Region Boundary Size is Zero!");
