@@ -48,7 +48,7 @@ void AppUtils::appendToDebugOutput(Mat disp)
 {
    if (disp.rows <= 0 || disp.cols <= 0)
    {
-      printf("Image to be displayed has size 0!");
+      ROS_WARN("Image to be displayed has size 0!");
       return;
    }
    if (disp.type() == CV_8UC1)
@@ -60,11 +60,12 @@ void AppUtils::appendToDebugOutput(Mat disp)
    }
    cv::resize(disp, disp, Size(640 * 480 / disp.rows, 480));
    images.emplace_back(disp);
-   //   printf("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d\n", disp.type(), disp.rows, disp.cols);
+   ROS_INFO("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d, Images: %d\n", disp.type(), disp.rows, disp.cols, images.size());
 }
 
 void AppUtils::displayDebugOutput(ApplicationState appState)
 {
+   ROS_INFO("Displaying Debug Output: %d", images.size());
    hconcat(images, debugOutput);
    if (debugOutput.cols > 0 && debugOutput.rows > 0 && !debugOutput.empty())
    {
@@ -73,6 +74,11 @@ void AppUtils::displayDebugOutput(ApplicationState appState)
       imshow("DebugOutput", debugOutput);
       waitKey(1);
    }
+   clearDebug();
+}
+
+void AppUtils::clearDebug()
+{
    images.clear();
 }
 
@@ -158,6 +164,17 @@ void AppUtils::checkMemoryLimits()
    } else
    {
       fprintf(stderr, "%s\n", strerror(errno));
+   }
+}
+
+void AppUtils::DisplayImage(Mat disp, const ApplicationState& app)
+{
+   if (disp.cols > 0 && disp.rows > 0 && !disp.empty())
+   {
+      namedWindow("DisplayImage", WINDOW_NORMAL);
+      resizeWindow("DisplayImage", (int) (disp.cols * app.DISPLAY_WINDOW_SIZE), (int) (disp.rows * app.DISPLAY_WINDOW_SIZE));
+      imshow("DisplayImage", disp);
+      waitKey(1);
    }
 }
 

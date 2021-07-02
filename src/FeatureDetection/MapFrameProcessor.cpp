@@ -2,7 +2,7 @@
 
 void MapFrameProcessor::init(ApplicationState& app)
 {
-   ROS_INFO("Initializing MapFrameProcessor");
+   ROS_DEBUG("Initializing MapFrameProcessor");
    this->app = app;
    this->debug = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
    this->visited = MatrixXi(app.SUB_H, app.SUB_W).setZero();
@@ -32,7 +32,7 @@ void MapFrameProcessor::printPatchGraph()
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
-   ROS_INFO("Starting DFS for Segmentation\n");
+   ROS_DEBUG("Starting DFS for Segmentation\n");
    this->app = app;
    this->frame = inputFrame;
 
@@ -61,17 +61,17 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
          }
       }
    }
-   ROS_INFO("DFS Generated %d Regions\n", components);
+   ROS_DEBUG("DFS Generated %d Regions\n", components);
 
    /* Extract Region Boundary Indices. */
    visited.setZero();
    findBoundaryAndHoles(planarRegionList);
 
-   ROS_INFO("Found Rings");
+   ROS_DEBUG("Found Rings");
 
    /* Grow Region Boundary. */
    growRegionBoundary(planarRegionList);
-   ROS_INFO("Regions Grown Manually");
+   ROS_DEBUG("Regions Grown Manually");
 
 }
 

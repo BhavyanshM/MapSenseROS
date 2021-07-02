@@ -38,33 +38,33 @@ void SLAMModule::extractArgs(int argc, char **argv)
       if (args[i] == "--match-dist")
       {
          _mapper.MATCH_DIST_THRESHOLD = stof(args[i + 1]);
-         cout << "DIST:" << _mapper.MATCH_DIST_THRESHOLD << "\t";
+         ROS_INFO("DIST: %.3lf", _mapper.MATCH_DIST_THRESHOLD);
       }
       if (args[i] == "--match-dot")
       {
          _mapper.MATCH_ANGULAR_THRESHOLD = stof(args[i + 1]);
-         cout << "ANGLE:" << _mapper.MATCH_ANGULAR_THRESHOLD << "\t";
+         ROS_INFO("ANGLE: %.3lf", _mapper.MATCH_ANGULAR_THRESHOLD);
       }
       if (args[i] == "--match-vert")
       {
          _mapper.MATCH_PERCENT_VERTEX_THRESHOLD = stoi(args[i + 1]);
-         cout << "VERT:" << _mapper.MATCH_PERCENT_VERTEX_THRESHOLD << "\n";
+         ROS_INFO("VERT: %d", _mapper.MATCH_PERCENT_VERTEX_THRESHOLD);
       }
       if (args[i] == "--factor-graph")
       {
          _mapper.FACTOR_GRAPH = true;
-         cout << "Factor Graph: true" << endl;
+         ROS_INFO("Setting FACTOR_GRAPH: true");
       }
       if (args[i] == "--slam")
       {
          _mapper.SLAM_ENABLED = true;
-         cout << "Factor Graph: true" << endl;
+         ROS_INFO("Setting SLAM_ENABLED: true");
       }
       if (args[i] == "--isam")
       {
          _mapper.ISAM2 = true;
          _mapper.ISAM2_NUM_STEPS = stoi(args[i + 1]);
-         ROS_INFO("Incremental SAM2: true \nSTEPS: %d\n", _mapper.ISAM2_NUM_STEPS);
+         ROS_DEBUG("Setting ISAM2_NUM_STEPS: true \nSTEPS: %d\n", _mapper.ISAM2_NUM_STEPS);
       }
       if (args[i] == "--regions-dir")
       {
@@ -88,7 +88,7 @@ void SLAMModule::slamUpdate()
 
    _mapper.matchPlanarRegionsToMap();
    this->matchCountVec.emplace_back(_mapper.matches.size());
-   ROS_INFO("Regions Matched: (%d).\n", _mapper.matches.size());
+   ROS_DEBUG("Regions Matched: (%d).\n", _mapper.matches.size());
 
    if (ICPEnabled && _mapper.matches.size() > 0)
       _mapper.registerRegionsPointToPlane(1);
@@ -148,12 +148,12 @@ void SLAMModule::slamUpdate()
          //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _world);
       }
 
-      ROS_INFO("Recycling Region Lists.\n");
+      ROS_DEBUG("Recycling Region Lists.\n");
       /* Load previous and current regions. Separated by SKIP_REGIONS. */
       _mapper.regions = _mapper._latestRegionsZUp;
       poseAvailable = false;
 
-      ROS_INFO("SLAM Update Complete.\n");
+      ROS_DEBUG("SLAM Update Complete.\n");
    }
 }
 
@@ -250,7 +250,7 @@ void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& po
 
       //      if(diff > 0.001)
       {
-         ROS_INFO("Distance From Last Transform: (%.4lf)\n", diff);
+         ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
 
          this->_mapper._atlasSensorPose.setRotationAndTranslation(
                Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,

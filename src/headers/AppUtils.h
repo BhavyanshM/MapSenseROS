@@ -49,6 +49,10 @@ class AppUtils
 
       static void checkMemoryLimits();
 
+      void clearDebug();
+
+      static void DisplayImage(Mat disp, const ApplicationState& app);
+
 };
 
 #endif //APPUTILS_H

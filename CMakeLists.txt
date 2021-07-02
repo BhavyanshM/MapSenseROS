@@ -72,10 +72,10 @@ catkin_package(
 ## Your package locations should be listed before other locations
 
 set(SOURCE
-		src/RegionExtraction/PlanarRegionCalculator.cpp
+        src/FeatureDetection/PlanarRegionCalculator.cpp
 		src/Network/NetworkManager.cpp
-		src/RegionExtraction/MapFrame.cpp
-		src/RegionExtraction/MapFrameProcessor.cpp
+        src/FeatureDetection/MapFrame.cpp
+        src/FeatureDetection/MapFrameProcessor.cpp
         src/Geometry/src/Elements/PlanarRegion.cpp
 		src/Application/ApplicationState.cpp
 		src/Geometry/src/Elements/RegionRing.cpp
@@ -89,8 +89,9 @@ set(SOURCE
 		src/ImPlot/implot.cpp
 		src/ImPlot/implot_demo.cpp
 		src/ImPlot/implot_items.cpp
-		src/RegionExtraction/PlanarRegionProcessor.cpp
+        src/FeatureDetection/PlanarRegionProcessor.cpp
 		src/FileManager.cpp
+		src/FeatureDetection/KeypointDetector.cpp
 		)
 
 set (HEADERS
@@ -108,8 +109,9 @@ set (HEADERS
 		src/headers/SLAMModule.h
 		src/headers/PlanarRegionMapHandler.h
 		src/headers/FactorGraphHandler.h
-		src/RegionExtraction/PlanarRegionProcessor.h
-		src/headers/FileManager.h)
+        src/FeatureDetection/PlanarRegionProcessor.h
+		src/headers/FileManager.h
+		src/headers/KeypointDetector.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp

@@ -153,7 +153,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
          ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH,
-                  app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
       }
       //        app.PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
       //        app.PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
@@ -162,7 +162,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
 
 
       ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.SUB_W, app.SUB_H,
-               app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
    }
    ROS_DEBUG("Data Frame Loaded");
 }
@@ -179,12 +179,12 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    // ROSTopic Subscribers
    string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                             "/depth/image_rect_raw";
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" +
-                                                                                                                                   app.TOPIC_CAMERA_NAME +
-                                                                                                                                   "/depth/camera_info";
+                                                                                                                   "/depth/image_rect_raw";
+   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
+                                                                                                                         "/depth/camera_info";
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
+   addReceiver(TopicInfo("/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage"));
 
    //   subDepth = rosNode->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    //   subDepthCamInfo = rosNode->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
@@ -266,6 +266,7 @@ void NetworkManager::receiverUpdate(ApplicationState& app)
       ROS_DEBUG("RenderUpdate");
       receivers[i]->processMessage(app);
       receivers[i]->render();
+      appUtils->displayDebugOutput(app);
    }
 }
 

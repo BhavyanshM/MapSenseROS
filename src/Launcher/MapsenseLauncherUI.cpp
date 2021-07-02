@@ -58,9 +58,11 @@ void MyApplication::init(int argc, char **argv)
    _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
    _regionCalculator->initOpenCL(appState);
 
+   _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
+
    _slamModule = new SLAMModule(argc, argv, _networkManager, &_drawables, _world);
 
-   ROS_INFO("Application Initialized Successfully");
+   ROS_DEBUG("Application Initialized Successfully");
 }
 
 void MyApplication::tickEvent()
@@ -82,6 +84,8 @@ void MyApplication::tickEvent()
       _regionCalculator->generateAndPublishRegions(appState);
       _regionCalculator->render();
 
+      _keypointDetector->update(appState);
+
       if (_regionCalculator->planarRegionList.size() > 0 && appState.ROS_ENABLED && _slamModule->_mapper.SLAM_ENABLED)
       {
          PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
@@ -98,17 +102,21 @@ void MyApplication::tickEvent()
          //         }
       }
 
+      appUtils.clearDebug();
+
       if (appState.SHOW_REGION_EDGES)
       {
          MeshGenerator::clearMesh(regionEdges);
          _mesher->generateRegionLineMesh(_regionCalculator->planarRegionList, regionEdges, 4, _world, true);
       }
    }
+
+   /* Update Without ROS */
    else
    {
       if (count % 10 == 0)
       {
-         ROS_INFO("Test SLAM Update.");
+         ROS_DEBUG("Test SLAM Update.");
          _slamModule->SLAMTesterUpdate();
       }
    }

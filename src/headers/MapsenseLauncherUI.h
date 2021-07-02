@@ -32,6 +32,7 @@
 #include "ApplicationState.h"
 #include "ImGuiLayout.h"
 #include "AppUtils.h"
+#include "KeypointDetector.h"
 
 using namespace Magnum::Math::Literals;
 
@@ -91,6 +92,7 @@ using namespace Magnum::Math::Literals;
 
       MeshGenerator* _mesher;
       PlanarRegionCalculator *_regionCalculator;
+      KeypointDetector* _keypointDetector;
       SLAMModule *_slamModule;
       NetworkManager *_networkManager;
       int count = 0;

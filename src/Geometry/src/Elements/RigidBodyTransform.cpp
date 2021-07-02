@@ -41,15 +41,12 @@ RigidBodyTransform::RigidBodyTransform(const Eigen::Vector3d& eulerAngles, const
 
 void RigidBodyTransform::setRotationAndTranslation(const Eigen::Vector3d& eulerAngles, const Eigen::Vector3d& translation)
 {
-   std::cout << "Setting Rotation and Translation" << std::endl;
    Eigen::Matrix3d rotation;
    rotation = Eigen::AngleAxisd((double) eulerAngles.x(), Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd((double) eulerAngles.y(), Eigen::Vector3d::UnitY()) *
               Eigen::AngleAxisd((double) eulerAngles.z(), Eigen::Vector3d::UnitZ());
-   std::cout << rotation << std::endl;
    this->matrix.setIdentity();
    this->matrix.block<3, 3>(0, 0) = rotation;
    this->matrix.block<3, 1>(0, 3) = translation;
-   std::cout << this->matrix << std::endl;
 }
 
 void RigidBodyTransform::setRotationAndTranslation(const Eigen::Quaterniond& orientation, const Eigen::Vector3d& translation)
