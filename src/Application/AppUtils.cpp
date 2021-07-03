@@ -65,7 +65,7 @@ void AppUtils::appendToDebugOutput(Mat disp)
 
 void AppUtils::displayDebugOutput(ApplicationState appState)
 {
-   ROS_INFO("Displaying Debug Output: %d", images.size());
+   ROS_DEBUG("Displaying Debug Output: %d", images.size());
    hconcat(images, debugOutput);
    if (debugOutput.cols > 0 && debugOutput.rows > 0 && !debugOutput.empty())
    {

@@ -182,9 +182,13 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
                                                                                                                    "/depth/image_rect_raw";
    string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
                                                                                                                          "/depth/camera_info";
+   string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
+
+   string colorCompressedTopicName = "/camera/color/image_raw/compressed";
+   string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
-   addReceiver(TopicInfo("/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
 
    //   subDepth = rosNode->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    //   subDepthCamInfo = rosNode->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);

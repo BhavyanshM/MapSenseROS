@@ -95,37 +95,37 @@ void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> plan
    }
 }
 
-void MeshGenerator::generatePatchMesh(Object3D* parent, MapFrame& output, vector<Object3D*> objects, const ApplicationState& appState)
-{
-   for (int i = 0; i < output.getRegionOutput().rows; i++)
-   {
-      for (int j = 0; j < output.getRegionOutput().cols; j++)
-      {
-         uint8_t edges = output.getPatchData().at<uint8_t>(i, j);
-         if (edges == 255)
-         {
-            Vec6f patch = output.getRegionOutput().at<Vec6f>(i, j);
-            // cout << patch << endl;
-            Magnum::Vector3 up = {0, 0, 1};
-            Magnum::Vector3 dir = {0.01f * patch[0], 0.01f * patch[1], 0.01f * patch[2]};
-            Magnum::Vector3 axis = Magnum::Math::cross(up, dir).normalized();
-            Magnum::Rad angle = Magnum::Math::acos(Magnum::Math::dot(up, dir) / (up.length() * dir.length()));
-
-            Object3D& plane = parent->addChild<Object3D>();
-            objects.emplace_back(&plane);
-            plane.scale({appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE});
-            plane.translate({patch[3], patch[4], patch[5]});
-            // plane.transformLocal(Magnum::Matrix4::rotationX(-Magnum::Rad{180.0_degf}));
-            if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()))
-            {
-               Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
-               plane.transformLocal(Magnum::Matrix4(quat.toMatrix()));
-            }
-            new DrawableObject{plane, drawables, Magnum::Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
-         }
-      }
-   }
-}
+//void MeshGenerator::generatePatchMesh(Object3D* parent, MapFrame& output, vector<Object3D*> objects, const ApplicationState& appState)
+//{
+//   for (int i = 0; i < output.getRegionOutput().rows; i++)
+//   {
+//      for (int j = 0; j < output.getRegionOutput().cols; j++)
+//      {
+//         uint8_t edges = output.getPatchData().at<uint8_t>(i, j);
+//         if (edges == 255)
+//         {
+//            Vec6f patch = output.getRegionOutput().at<Vec6f>(i, j);
+//            // cout << patch << endl;
+//            Magnum::Vector3 up = {0, 0, 1};
+//            Magnum::Vector3 dir = {0.01f * patch[0], 0.01f * patch[1], 0.01f * patch[2]};
+//            Magnum::Vector3 axis = Magnum::Math::cross(up, dir).normalized();
+//            Magnum::Rad angle = Magnum::Math::acos(Magnum::Math::dot(up, dir) / (up.length() * dir.length()));
+//
+//            Object3D& plane = parent->addChild<Object3D>();
+//            objects.emplace_back(&plane);
+//            plane.scale({appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE, appState.MAGNUM_PATCH_SCALE});
+//            plane.translate({patch[3], patch[4], patch[5]});
+//            // plane.transformLocal(Magnum::Matrix4::rotationX(-Magnum::Rad{180.0_degf}));
+//            if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()))
+//            {
+//               Magnum::Quaternion quat = Magnum::Quaternion::rotation(angle, axis);
+//               plane.transformLocal(Magnum::Matrix4(quat.toMatrix()));
+//            }
+//            new DrawableObject{plane, drawables, Magnum::Primitives::planeSolid(), {0.4, 0.4f, 0.6f}};
+//         }
+//      }
+//   }
+//}
 
 
 

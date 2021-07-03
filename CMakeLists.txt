@@ -217,6 +217,7 @@ target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${OpenCV_LIBS}
 		${MAGNUM_GUI_LIBS}
+		${catkin_LIBRARIES}
 		gtsam
 		geom-tools)
 include_directories(${GTEST_INCLUDE_DIRS})

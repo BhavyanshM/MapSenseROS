@@ -26,7 +26,7 @@ void SLAMApplication::init(const Arguments& arguments)
 
    printf("Creating Prior Factors\n");
    printf("PoseId:(%d)", _mapper.fgSLAM->getPoseId());
-   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity(), 1);
+   _mapper.fgSLAM->addPriorPoseFactor(Pose3().identity());
    _mapper.insertOrientedPlaneFactors(1);
 
    _mapper.fgSLAM->setPoseInitialValue(1, Pose3().identity());
@@ -83,7 +83,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
          auto start = high_resolution_clock::now();
 
          /* Match the previous and latest regions to copy ids and generate match indices. Calculate odometry between previous and latest poses. */
-         _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
+         _mapper.matchPlanarRegionsToMap();
          _mapper.registerRegionsPointToPlane(1);
 
          /* Insert the local landmark measurements and odometry constraints into the Factor Graph for SLAM. */
@@ -92,7 +92,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
 
          /* Transform and copy the latest planar regions from current sensor frame to map frame.  */
          vector<shared_ptr<PlanarRegion>> regionsInMapFrame;
-         GeomTools::transformAndCopyRegions(_mapper.latestRegions, regionsInMapFrame, _mapper._sensorToMapTransform);
+         _mapper.transformAndCopyRegions(_mapper.latestRegions, regionsInMapFrame, _mapper._sensorToMapTransform);
 
          if (_mapper.FACTOR_GRAPH)
          {
@@ -122,7 +122,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
             _mesher.generateRegionLineMesh(regionsInMapFrame, latestRegionEdges, frameIndex, _world);
          }
 
-         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world);
+         _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 3);
 
          /* Load previous and current regions. Separated by SKIP_REGIONS. */
          if (frameIndex < _mapper.files.size() - SKIP_REGIONS)
@@ -159,7 +159,7 @@ void SLAMApplication::keyPressEvent(KeyEvent& event)
       _mesher.generateRegionLineMesh(_mapper.regions, previousRegionEdges, 1, _world);
       _mesher.generateRegionLineMesh(_mapper.latestRegions, latestRegionEdges, 2, _world);
 
-      _mapper.matchPlanarRegionsToMap(_mapper.latestRegions);
+      _mapper.matchPlanarRegionsToMap();
       _mesher.generateMatchLineMesh(_mapper.matches, _mapper.regions, _mapper.latestRegions, matchingEdges, _world);
    }
 }

@@ -46,7 +46,7 @@ void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 
 void ImageReceiver::render()
 {
-   ROS_INFO("Render: %s", this->topicName.c_str());
+   ROS_DEBUG("Render: %s", this->topicName.c_str());
    if (renderingEnabled)
    {
       if(imageEncoding == sensor_msgs::image_encodings::TYPE_16UC1)

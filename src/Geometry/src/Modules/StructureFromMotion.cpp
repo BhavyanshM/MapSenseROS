@@ -10,6 +10,7 @@ StructureFromMotion::StructureFromMotion(String directory)
       Mat disp;
       hconcat(images[ (t % images.size())], images[ (t + 1) % images.size()], disp);
       namedWindow("Output", WINDOW_NORMAL);
+      resizeWindow("Output", disp.cols * 2, disp.rows * 2);
       imshow("Output", disp);
       code = waitKeyEx(0);
 
@@ -19,7 +20,6 @@ StructureFromMotion::StructureFromMotion(String directory)
       cout << code << endl;
 
    }
-
 }
 
 void StructureFromMotion::loadImages(String directory)

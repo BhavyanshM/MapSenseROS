@@ -24,7 +24,8 @@ void KeypointDetector::track_features(cv::Mat prev, cv::Mat cur, std::vector<cv:
    cur_pts.clear();
    calcOpticalFlowPyrLK(prev, cur, prev_pts, cur_pts, status, err, cv::Size(21,21), 3, criteria);
 
-   printf("(%d,%d)\n", prev_pts.size(), cur_pts.size());
+   ROS_INFO("Previous Keypoints: (%d) \t Current Keypoints: (%d)", prev_pts.size(), cur_pts.size());
+
    for(uint i = 0; i < prev_pts.size(); i++)
    {
       // Select good points
@@ -71,10 +72,83 @@ void KeypointDetector::update(ApplicationState& appState)
 //      extract_points(cur, orb, kp_cur);
 
       /* Track previously found keypoints in current frame */
-      printf("Tracking Features\n");
       track_features(prev, cur, kp_prev, kp_cur);
       draw_matches(img, kp_prev, kp_cur);
-      printf("(%d,%d)\n", kp_prev.size(), kp_cur.size());
+
+
+      /* Calculate Essential Matrix from Correspondences and Intrinsics
+          (TUM-RGBD) - fx:517.3 fy:516.5 cx:318.6 cy:255.3
+          (KITTI) - fx:718.856 fy:718.856 cx:607.193 cy:185.216
+          (IHMC-Chest-L515) - fx:602.259 fy:603.040 cx:321.375 cy:240.515
+      */
+      float fx = 602.259, fy = 603.040, cx = 321.375, cy = 240.515;
+      float data[9] = {   fx, 0, cx, 0, fy, cy, 0, 0, 1 };
+      Mat K = cv::Mat(3, 3, CV_32FC1, data);
+      Mat R(3,3,CV_32FC1), t(1,3,CV_32FC1), mask;
+
+      Mat E = findEssentialMat(kp_prev, kp_cur, K, RANSAC, 0.999, 1.0, mask);
+
+      /*
+       * Recover Pose from Essential Matrix (R,t)
+       * */
+      recoverPose(E, kp_prev, kp_cur, K, R, t, mask);
+
+      Vector3f translation;
+      translation << t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2);
+
+      ROS_INFO("(%.2lf, %.2lf, %.2lf)", t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2));
+
+//
+//      double dist = translation.norm();
+//
+//      cout << "Translation:" << t << "\tDistance:" << dist << endl;
+//      if(i > 1){
+//         /* Scale the translation */
+//      }
+//      /*
+//      * Calculate the current pose from previous pose.
+//      * */
+//      Mat cvPose = Mat::eye(4,4,CV_32FC1);
+//      R.copyTo(cvPose(Range(0,3), Range(0,3))); /* Excludes the 'end' element */
+//      t.copyTo(cvPose(Range(0,3), Range(3,4)));
+//      this->cvCurPose = (this->cvCurPose * cvPose);
+//
+//      /*
+//       * Triangulate 3D points from correspondences and Projection Matrices P = K*RT
+//       * */
+//      vector<Point2f> trip_prev, trip_cur;
+//      for(int i = 0; i < mask.rows; i++) {
+//         if(!mask.at<unsigned char>(i)){
+//            trip_prev.push_back(cv::Point2d((double)kp_prev[i].x,(double)kp_prev[i].y));
+//            trip_cur.push_back(cv::Point2d((double)kp_cur[i].x,(double)kp_cur[i].y));
+//         }
+//      }
+//
+//      printf("Inlier Points: %d\n", trip_prev.size());
+//      Mat point3d_homo;
+//      if(trip_prev.size() > 0){
+//
+//         Mat Rt0 = cvPrevPose(Range(0,3), Range(0,4));
+//         Mat Rt1 = cvCurPose(Range(0,3), Range(0,4));
+//
+//         cv::triangulatePoints(K * Rt0, K * Rt1,
+//                               trip_prev, trip_cur,
+//                               point3d_homo);
+//         printf("Triangulated Points: %d\n", point3d_homo.cols);
+//      }
+//
+//      /* Filter the 3D points for positive Z-coordinate */
+//      int count = 0;
+//      for(int m = 0; m<point3d_homo.cols; m++){
+//         Mat point = point3d_homo.col(m) / point3d_homo.at<float>(3,m);
+//         float z = point.at<float>(2);
+//         if (z > 0) {
+//            landmarks.emplace_back(Vector3f(point.at<float>(0,m), point.at<float>(1,m), point.at<float>(2,m)));
+//            count++;
+//         }
+//      }
+//      cout << "Count Z-forward: " << count << endl;
+
 
       /* Extract ORB Keypoints from Current Image if number of tracked points falls below threshold */
       if(kp_prev.size() < kMinFeatures){
