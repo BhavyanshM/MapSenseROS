@@ -92,7 +92,7 @@ set(SOURCE
         src/FeatureDetection/PlanarRegionProcessor.cpp
 		src/FileManager.cpp
 		src/FeatureDetection/KeypointDetector.cpp
-		)
+		src/OpenCL/OpenCLManager.cpp )
 
 set (HEADERS
 		src/headers/PlanarRegionCalculator.h
@@ -111,7 +111,9 @@ set (HEADERS
 		src/headers/FactorGraphHandler.h
         src/FeatureDetection/PlanarRegionProcessor.h
 		src/headers/FileManager.h
-		src/headers/KeypointDetector.h)
+		src/headers/KeypointDetector.h
+		src/headers/OpenCLManager.h
+		)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp

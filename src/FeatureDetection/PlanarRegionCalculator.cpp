@@ -240,7 +240,7 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    return true;
 }
 
-void PlanarRegionCalculator::initOpenCL(ApplicationState app)
+void PlanarRegionCalculator::initOpenCL()
 {
 
    printf("Initializing OpenCL\n");

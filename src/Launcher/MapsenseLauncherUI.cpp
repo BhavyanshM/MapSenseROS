@@ -56,7 +56,7 @@ void MyApplication::init(int argc, char **argv)
    _networkManager->init_ros_node(argc, argv, appState);
 
    _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
-   _regionCalculator->initOpenCL(appState);
+   _regionCalculator->initOpenCL();
 
    _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
 

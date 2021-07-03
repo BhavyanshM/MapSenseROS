@@ -1,5 +1,5 @@
-#ifndef SRC_PLANARREGIONCALCULATOR_H
-#define SRC_PLANARREGIONCALCULATOR_H
+#ifndef PLANARREGIONCALCULATOR_H
+#define PLANARREGIONCALCULATOR_H
 
 
 #include "std_msgs/String.h"
@@ -55,7 +55,7 @@ class PlanarRegionCalculator
 
       void ImGuiUpdate(ApplicationState& appState);
 
-      void initOpenCL(ApplicationState app);
+      void initOpenCL();
 
       void generateAndPublishRegions(ApplicationState appState);
 
@@ -67,4 +67,4 @@ class PlanarRegionCalculator
 
 };
 
-#endif //SRC_PLANARREGIONCALCULATOR_H
+#endif //PLANARREGIONCALCULATOR_H
