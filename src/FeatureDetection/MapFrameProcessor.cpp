@@ -65,11 +65,8 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
    /* Extract Region Boundary Indices. */
    visited.setZero();
+
    findBoundaryAndHoles(planarRegionList);
-
-   ROS_DEBUG("Found Rings");
-
-//   printPatchGraph();
 
    /* Grow Region Boundary. */
    growRegionBoundary(planarRegionList);
@@ -117,33 +114,64 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
 
 void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
-   for (int i = 0; i < planarRegionList.size(); i++)
+   tbb::parallel_for(tbb::blocked_range<int>(0, planarRegionList.size()), [&](const tbb::blocked_range<int>& r)
    {
-      int components = 0;
-      vector<Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
-      for (int j = 0; j < leafPatches.size(); j++)
+      for (int i = r.begin(); i < r.end(); i++)
       {
-         int num = 0;
-         shared_ptr<RegionRing> regionRing = make_shared<RegionRing>(components);
-         boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), planarRegionList[i]->getId(), components, num, debug, regionRing);
-         if (num > 3)
+         int components = 0;
+         vector<Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
+         for (int j = 0; j < leafPatches.size(); j++)
          {
-            planarRegionList[i]->rings.emplace_back(regionRing);
-            components++;
+            int num = 0;
+            shared_ptr<RegionRing> regionRing = make_shared<RegionRing>(components);
+            boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), planarRegionList[i]->getId(), components, num, debug, regionRing);
+            if (num > 3)
+            {
+               planarRegionList[i]->rings.emplace_back(regionRing);
+               components++;
+            }
          }
+         auto comp = [](const shared_ptr<RegionRing> a, const shared_ptr<RegionRing> b)
+         {
+            return a->getNumOfVertices() > b->getNumOfVertices();
+         };
+         sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
+         //      vector<Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
+         //      for (int j = 0; j < ring.size(); j++)
+         //      {
+         //         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
+         //         planarRegionList[i]->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
+         //      }
       }
-      auto comp = [](const shared_ptr<RegionRing> a, const shared_ptr<RegionRing> b)
-      {
-         return a->getNumOfVertices() > b->getNumOfVertices();
-      };
-      sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
-//      vector<Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
-//      for (int j = 0; j < ring.size(); j++)
+   });
+
+//   for (int i = 0; i < planarRegionList.size(); i++)
+//   {
+//      int components = 0;
+//      vector<Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
+//      for (int j = 0; j < leafPatches.size(); j++)
 //      {
-//         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-//         planarRegionList[i]->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
+//         int num = 0;
+//         shared_ptr<RegionRing> regionRing = make_shared<RegionRing>(components);
+//         boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), planarRegionList[i]->getId(), components, num, debug, regionRing);
+//         if (num > 3)
+//         {
+//            planarRegionList[i]->rings.emplace_back(regionRing);
+//            components++;
+//         }
 //      }
-   }
+//      auto comp = [](const shared_ptr<RegionRing> a, const shared_ptr<RegionRing> b)
+//      {
+//         return a->getNumOfVertices() > b->getNumOfVertices();
+//      };
+//      sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
+////      vector<Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
+////      for (int j = 0; j < ring.size(); j++)
+////      {
+////         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
+////         planarRegionList[i]->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
+////      }
+//   }
 }
 
 void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing)
@@ -183,21 +211,42 @@ void MapFrameProcessor::displayDebugger(int delay)
 
 void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& regions)
 {
-   for(int i = 0; i<regions.size(); i++)
-   {
-      if(regions[i]->rings.size() <= 0)
-      {
-         ROS_WARN("Region Boundary Size is Zero!");
-         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
-      }
 
-      Vector3f center = regions[i]->getCenter();
-      vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
-      for (int j = 0; j < ring.size(); j++)
+   tbb::parallel_for(tbb::blocked_range<int>(0, regions.size()), [&](const tbb::blocked_range<int>& r){
+      for(int i = r.begin(); i<r.end(); i++)
       {
-         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-         Vector3f vertex(patch[3], patch[4], patch[5]);
-         regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
+         if(regions[i]->rings.size() <= 0)
+         {
+            ROS_WARN("Region Boundary Size is Zero!");
+            ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+         }
+
+         Vector3f center = regions[i]->getCenter();
+         vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+         for (int j = 0; j < ring.size(); j++)
+         {
+            Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
+            Vector3f vertex(patch[3], patch[4], patch[5]);
+            regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
+         }
       }
-   }
+   });
+
+//   for(int i = 0; i<regions.size(); i++)
+//   {
+//      if(regions[i]->rings.size() <= 0)
+//      {
+//         ROS_WARN("Region Boundary Size is Zero!");
+//         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+//      }
+//
+//      Vector3f center = regions[i]->getCenter();
+//      vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+//      for (int j = 0; j < ring.size(); j++)
+//      {
+//         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
+//         Vector3f vertex(patch[3], patch[4], patch[5]);
+//         regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
+//      }
+//   }
 }

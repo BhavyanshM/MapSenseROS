@@ -171,9 +171,9 @@ include_directories(
 		Vendor/spdlog/include
 )
 
-add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
-target_precompile_headers(planar_region_publisher PUBLIC src/headers/MapsenseHeaders.h)
-target_link_libraries(planar_region_publisher
+add_executable(Mapsense_Launcher_UI ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
+target_precompile_headers(Mapsense_Launcher_UI PUBLIC src/headers/MapsenseHeaders.h)
+target_link_libraries(Mapsense_Launcher_UI
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}
 		${MAGNUM_GUI_LIBS}
@@ -183,9 +183,9 @@ target_link_libraries(planar_region_publisher
 		tbb
 		gtsam
 		geom-tools)
-add_dependencies(planar_region_publisher map_sense_generate_messages_cpp)
+add_dependencies(Mapsense_Launcher_UI map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
-#set_target_properties(planar_region_publisher PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
+#set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
 
 add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE

@@ -49,7 +49,8 @@ using namespace Magnum::Math::Literals;
 
       AppUtils appUtils;
 
-
+      uint32_t averageTime = 0;
+      uint32_t timeCount = 0;
 
    private:
       void drawEvent() override;
