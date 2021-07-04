@@ -51,12 +51,16 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
 
 void MyApplication::init(int argc, char **argv)
 {
+   Log::Init();
+
+   _openCLManager = new OpenCLManager();
+
    /* TODO: Instantiate the Information Processors */
    _networkManager = new NetworkManager(appState, &appUtils);
    _networkManager->init_ros_node(argc, argv, appState);
 
    _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
-   _regionCalculator->initOpenCL();
+   _regionCalculator->setOpenCLManager(_openCLManager);
 
    _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
 
@@ -84,7 +88,7 @@ void MyApplication::tickEvent()
       _regionCalculator->generateAndPublishRegions(appState);
       _regionCalculator->render();
 
-      _keypointDetector->update(appState);
+//      _keypointDetector->update(appState);
 
       if (_regionCalculator->planarRegionList.size() > 0 && appState.ROS_ENABLED && _slamModule->_mapper.SLAM_ENABLED)
       {

@@ -69,6 +69,8 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
    ROS_DEBUG("Found Rings");
 
+//   printPatchGraph();
+
    /* Grow Region Boundary. */
    growRegionBoundary(planarRegionList);
    ROS_DEBUG("Regions Grown Manually");

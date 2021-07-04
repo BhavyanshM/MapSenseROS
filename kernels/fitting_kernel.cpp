@@ -249,12 +249,20 @@ void kernel packKernel(  read_only image2d_t in,
 	int y = get_global_id(0);
     int x = get_global_id(1);
 
-//    if(x==0 && y==0) printf("PackKernel:(%d,%d)\n", (int)params[PATCH_HEIGHT], (int)params[PATCH_WIDTH]);
+//    if(x==0 && y==0) printf("PackKernel:(%d,%d,%d,%d,%d,%.2lf,%.2lf)\n",
+//                            (int)params[SUB_H],
+//                            (int)params[SUB_W],
+//                            (int)params[PATCH_HEIGHT],
+//                            (int)params[PATCH_WIDTH],
+//                            (int)params[FILTER_DISPARITY_THRESHOLD],
+//                            params[MERGE_ANGULAR_THRESHOLD],
+//                            params[MERGE_DISTANCE_THRESHOLD]);
+
     if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
         float3 normal = estimate_normal(in, x, y, params);
         float3 centroid = estimate_centroid(in, x, y, params);
 
-        // if(x==24 && y==50) printf("Normal:(%.4lf, %.4lf, %.4lf)\n", normal.x, normal.y, normal.z);
+//        if(x==24 && y==50) printf("PackKernel Normal:(%.4lf, %.4lf, %.4lf)\n", normal.x, normal.y, normal.z);
 
         write_imagef(out0, (int2)(x,y), (float4)(normal.x,0,0,0));
         write_imagef(out1, (int2)(x,y), (float4)(normal.y,0,0,0));

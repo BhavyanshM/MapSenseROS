@@ -63,8 +63,9 @@ void PlanarRegionCalculator::render()
 {
    if (this->app.SHOW_REGION_COMPONENTS)
    {
-      ROS_INFO("Appending Region Components");
-      appUtils.appendToDebugOutput(this->_mapFrameProcessor.debug);
+      ROS_DEBUG("Appending Region Components");
+      AppUtils::DisplayImage(_mapFrameProcessor.debug, app);
+//      appUtils.appendToDebugOutput(this->_mapFrameProcessor.debug);
    }
    if (this->app.SHOW_STEREO_LEFT)
    {
@@ -107,7 +108,9 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
 
    ROS_DEBUG("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT,
              appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W, appState.FILTER_SUB_H, appState.FILTER_SUB_W, appState.FILTER_KERNEL_SIZE);
-   cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
+
+//   cl::Buffer paramsBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(params), params);
+   uint8_t paramsBuffer = _openCL->CreateBufferFloat(params, sizeof(params) / sizeof(float));
 
    Mat depthMat = inputDepth.clone();
    Mat colorMat = inputColor.clone();
@@ -127,52 +130,93 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    /* Input Data OpenCL Buffers */
    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);
    uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(colorMat.data);
-   cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT,
-                       0, depthBuffer);
-   cl::Image2D clColor(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), appState.INPUT_WIDTH,
-                       appState.INPUT_HEIGHT, 0, colorBuffer);
+//   cl::Image2D clDepth(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT,
+//                       0, depthBuffer);
+   uint8_t clDepth = _openCL->CreateImage2D_R16(depthBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+
+//   cl::Image2D clColor(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), appState.INPUT_WIDTH,
+//                       appState.INPUT_HEIGHT, 0, colorBuffer);
+   uint8_t clColor = _openCL->CreateImage2D_RGBA8(colorBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
 
    /* Output Data OpenCL Buffers */
-   // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
-   cl::Image2D clFilterDepth(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
-   cl::Image2D clBuffer_nx(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clBuffer_ny(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clBuffer_nz(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clBuffer_gx(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clBuffer_gy(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clBuffer_gz(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
-   cl::Image2D clBuffer_graph(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), appState.SUB_W, appState.SUB_H);
+//   // cl::Image2D clDebug(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+//   cl::Image2D clFilterDepth(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+//   cl::Image2D clBuffer_nx(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+//   cl::Image2D clBuffer_ny(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+//   cl::Image2D clBuffer_nz(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+//   cl::Image2D clBuffer_gx(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+//   cl::Image2D clBuffer_gy(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+//   cl::Image2D clBuffer_gz(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), appState.SUB_W, appState.SUB_H);
+//   cl::Image2D clBuffer_graph(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), appState.SUB_W, appState.SUB_H);
+
+   ROS_DEBUG("Creating OpenCL Image2Ds now.");
+
+   uint8_t clFilterDepth = _openCL->CreateOutputImage2D_R16(appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+   uint8_t clBuffer_nx = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_ny = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_nz = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gx = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gy = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gz = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_graph = _openCL->CreateOutputImage2D_R8(appState.SUB_W, appState.SUB_H);
+
+   ROS_DEBUG("Created All Input Images.");
 
    /* Setting Kernel arguments for patch-packing kernel */
-   filterKernel.setArg(0, clDepth);
-   filterKernel.setArg(1, clColor);
-   filterKernel.setArg(2, clFilterDepth);
-   filterKernel.setArg(3, clBuffer_nx);
-   filterKernel.setArg(4, paramsBuffer);
+//   _openCL->filterKernel.setArg(0, clDepth);
+//   _openCL->filterKernel.setArg(1, clColor);
+//   _openCL->filterKernel.setArg(2, clFilterDepth);
+//   _openCL->filterKernel.setArg(3, clBuffer_nx);
+//   _openCL->filterKernel.setArg(4, paramsBuffer);
+
+   _openCL->SetArgument("filterKernel", 0, clDepth, true);
+   _openCL->SetArgument("filterKernel", 1, clColor, true);
+   _openCL->SetArgument("filterKernel", 2, clFilterDepth, true);
+   _openCL->SetArgument("filterKernel", 3, clBuffer_nx, true);
+   _openCL->SetArgument("filterKernel", 4, paramsBuffer);
 
    if (appState.FILTER_SELECTED)
    {
-      packKernel.setArg(0, clFilterDepth);
+//      _openCL->packKernel.setArg(0, clFilterDepth);
+      _openCL->SetArgument("packKernel",0, clFilterDepth, true);
    } else
    {
-      packKernel.setArg(0, clDepth);
+//      _openCL->packKernel.setArg(0, clDepth);
+      _openCL->SetArgument("packKernel", 0, clDepth, true);
    }
-   packKernel.setArg(1, clBuffer_nx); // Output: nx
-   packKernel.setArg(2, clBuffer_ny); // Output: ny
-   packKernel.setArg(3, clBuffer_nz); // Output: nz
-   packKernel.setArg(4, clBuffer_gx); // Output: gx
-   packKernel.setArg(5, clBuffer_gy); // Output: gy
-   packKernel.setArg(6, clBuffer_gz); // Output: gz
-   packKernel.setArg(7, paramsBuffer);
+//   _openCL->packKernel.setArg(1, clBuffer_nx); // Output: nx
+//   _openCL->packKernel.setArg(2, clBuffer_ny); // Output: ny
+//   _openCL->packKernel.setArg(3, clBuffer_nz); // Output: nz
+//   _openCL->packKernel.setArg(4, clBuffer_gx); // Output: gx
+//   _openCL->packKernel.setArg(5, clBuffer_gy); // Output: gy
+//   _openCL->packKernel.setArg(6, clBuffer_gz); // Output: gz
+//   _openCL->packKernel.setArg(7, paramsBuffer);
 
-   mergeKernel.setArg(0, clBuffer_nx); // Input: nx
-   mergeKernel.setArg(1, clBuffer_ny); // Input: ny
-   mergeKernel.setArg(2, clBuffer_nz); // Input: nz
-   mergeKernel.setArg(3, clBuffer_gx); // Input: gx
-   mergeKernel.setArg(4, clBuffer_gy); // Input: gy
-   mergeKernel.setArg(5, clBuffer_gz); // Input: gz
-   mergeKernel.setArg(6, clBuffer_graph);  // Output: graph
-   mergeKernel.setArg(7, paramsBuffer);
+   _openCL->SetArgument("packKernel",1, clBuffer_nx, true); // Output: nx
+   _openCL->SetArgument("packKernel",2, clBuffer_ny, true); // Output: ny
+   _openCL->SetArgument("packKernel",3, clBuffer_nz, true); // Output: nz
+   _openCL->SetArgument("packKernel",4, clBuffer_gx, true); // Output: gx
+   _openCL->SetArgument("packKernel",5, clBuffer_gy, true); // Output: gy
+   _openCL->SetArgument("packKernel",6, clBuffer_gz, true); // Output: gz
+   _openCL->SetArgument("packKernel",7, paramsBuffer);
+
+//   _openCL->mergeKernel.setArg(0, clBuffer_nx); // Input: nx
+//   _openCL->mergeKernel.setArg(1, clBuffer_ny); // Input: ny
+//   _openCL->mergeKernel.setArg(2, clBuffer_nz); // Input: nz
+//   _openCL->mergeKernel.setArg(3, clBuffer_gx); // Input: gx
+//   _openCL->mergeKernel.setArg(4, clBuffer_gy); // Input: gy
+//   _openCL->mergeKernel.setArg(5, clBuffer_gz); // Input: gz
+//   _openCL->mergeKernel.setArg(6, clBuffer_graph);  // Output: graph
+//   _openCL->mergeKernel.setArg(7, paramsBuffer);
+
+   _openCL->SetArgument("mergeKernel",0, clBuffer_nx, true); // Input: nx
+   _openCL->SetArgument("mergeKernel",1, clBuffer_ny, true); // Input: ny
+   _openCL->SetArgument("mergeKernel",2, clBuffer_nz, true); // Input: nz
+   _openCL->SetArgument("mergeKernel",3, clBuffer_gx, true); // Input: gx
+   _openCL->SetArgument("mergeKernel",4, clBuffer_gy, true); // Input: gy
+   _openCL->SetArgument("mergeKernel",5, clBuffer_gz, true); // Input: gz
+   _openCL->SetArgument("mergeKernel",6, clBuffer_graph, true);  // Output: graph
+   _openCL->SetArgument("mergeKernel",7, paramsBuffer);
 
    // kernel.setArg(4, clDebug); /* For whenever clDebug may be required. */
 
@@ -202,24 +246,35 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
 
 
    /* Deploy the patch-packing and patch-merging kernels patch-wise */
-   commandQueue.enqueueNDRangeKernel(filterKernel, cl::NullRange, cl::NDRange(appState.FILTER_SUB_H, appState.FILTER_SUB_W), cl::NullRange);
-   commandQueue.enqueueNDRangeKernel(packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
-   commandQueue.enqueueNDRangeKernel(mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->filterKernel, cl::NullRange, cl::NDRange(appState.FILTER_SUB_H, appState.FILTER_SUB_W), cl::NullRange);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
 
-   ROS_DEBUG("FilteredDepth:(%d,%d)", filteredDepth.rows, filteredDepth.cols);
+   ROS_DEBUG("Reading Images Now: (%d, %d, %d, %d, %d, %d, %d, %d)", clFilterDepth, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz, clBuffer_graph);
    /* Read the output data from OpenCL buffers into CPU buffers */
-   // commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
-   commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, filteredDepth.data);
-   commandQueue.enqueueReadImage(clBuffer_nx, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
-   commandQueue.enqueueReadImage(clBuffer_ny, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
-   commandQueue.enqueueReadImage(clBuffer_nz, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
-   commandQueue.enqueueReadImage(clBuffer_gx, CL_TRUE, origin, regionOutputSize, 0, 0, output_3.data);
-   commandQueue.enqueueReadImage(clBuffer_gy, CL_TRUE, origin, regionOutputSize, 0, 0, output_4.data);
-   commandQueue.enqueueReadImage(clBuffer_gz, CL_TRUE, origin, regionOutputSize, 0, 0, output_5.data);
-   commandQueue.enqueueReadImage(clBuffer_graph, CL_TRUE, origin, regionOutputSize, 0, 0, output_6.data);
+   // _openCL->commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
+//   _openCL->commandQueue.enqueueReadImage(clFilterDepth, CL_TRUE, origin, size, 0, 0, filteredDepth.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_nx, CL_TRUE, origin, regionOutputSize, 0, 0, output_0.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_ny, CL_TRUE, origin, regionOutputSize, 0, 0, output_1.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_nz, CL_TRUE, origin, regionOutputSize, 0, 0, output_2.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_gx, CL_TRUE, origin, regionOutputSize, 0, 0, output_3.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_gy, CL_TRUE, origin, regionOutputSize, 0, 0, output_4.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_gz, CL_TRUE, origin, regionOutputSize, 0, 0, output_5.data);
+//   _openCL->commandQueue.enqueueReadImage(clBuffer_graph, CL_TRUE, origin, regionOutputSize, 0, 0, output_6.data);
+
+   _openCL->ReadImage(clFilterDepth, size, filteredDepth.data);
+   _openCL->ReadImage(clBuffer_nx, regionOutputSize, output_0.data);
+   _openCL->ReadImage(clBuffer_ny, regionOutputSize, output_1.data);
+   _openCL->ReadImage(clBuffer_nz, regionOutputSize, output_2.data);
+   _openCL->ReadImage(clBuffer_gx, regionOutputSize, output_3.data);
+   _openCL->ReadImage(clBuffer_gy, regionOutputSize, output_4.data);
+   _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_5.data);
+   _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_6.data);
 
    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
-   commandQueue.finish();
+   _openCL->commandQueue.finish();
+
+   ROS_DEBUG("Packaging Layers Now. ");
 
    /* Combine the CPU buffers into single image with multiple channels */
    Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
@@ -235,71 +290,73 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    output.setRegionOutput(regionOutput);
    output.setPatchData(output_6);
 
+   _openCL->Reset();
+
    ROS_DEBUG("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
 
    return true;
 }
 
-void PlanarRegionCalculator::initOpenCL()
-{
-
-   printf("Initializing OpenCL\n");
-
-   vector<cl::Platform> all_platforms;
-   cl::Platform::get(&all_platforms);
-
-   if (all_platforms.size() == 0)
-   {
-      cout << " No platforms found. Check OpenCL installation!\n";
-      exit(1);
-   }
-   cl::Platform default_platform = all_platforms[0];
-   vector<cl::Device> all_devices;
-   default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-   cl::Device default_device = all_devices[0];
-   context = cl::Context({default_device});
-
-   cl::Program::Sources sources;
-   // calculates for each element; C = A + B
-
-   FILE *fp;
-   char *source_str;
-   size_t source_size, program_size;
-
-   fp = fopen((ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp").c_str(), "rb");
-   if (!fp)
-   {
-      printf("Failed to load kernel\n");
-      cout << ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp" << endl;
-      return;
-   }
-
-   fseek(fp, 0, SEEK_END);
-   program_size = ftell(fp);
-   rewind(fp);
-   source_str = (char *) malloc(program_size + 1);
-   source_str[program_size] = '\0';
-   fread(source_str, sizeof(char), program_size, fp);
-   fclose(fp);
-
-   std::string kernel_code(source_str);
-   //    kernel_code = "#define SIZE_X " + to_string(this->PATCH_HEIGHT) + "\n"
-   //                  + "#define SIZE_Y " + to_string(this->PATCH_WIDTH)
-   //                  + kernel_code;
-   sources.push_back({kernel_code.c_str(), kernel_code.length()});
-   cl::Program program(context, sources);
-   if (program.build({default_device}) != CL_SUCCESS)
-   {
-      cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
-      exit(1);
-   }
-   commandQueue = cl::CommandQueue(context, default_device);
-   filterKernel = cl::Kernel(program, "filterKernel");
-   packKernel = cl::Kernel(program, "packKernel");
-   mergeKernel = cl::Kernel(program, "mergeKernel");
-
-   printf("OpenCL Initialized Successfully\n");
-}
+//void PlanarRegionCalculator::initOpenCL()
+//{
+//
+//   printf("Initializing OpenCL\n");
+//
+//   vector<cl::Platform> all_platforms;
+//   cl::Platform::get(&all_platforms);
+//
+//   if (all_platforms.size() == 0)
+//   {
+//      cout << " No platforms found. Check OpenCL installation!\n";
+//      exit(1);
+//   }
+//   cl::Platform default_platform = all_platforms[0];
+//   vector<cl::Device> all_devices;
+//   default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+//   cl::Device default_device = all_devices[0];
+//   context = cl::Context({default_device});
+//
+//   cl::Program::Sources sources;
+//   // calculates for each element; C = A + B
+//
+//   FILE *fp;
+//   char *source_str;
+//   size_t source_size, program_size;
+//
+//   fp = fopen((ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp").c_str(), "rb");
+//   if (!fp)
+//   {
+//      printf("Failed to load kernel\n");
+//      cout << ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp" << endl;
+//      return;
+//   }
+//
+//   fseek(fp, 0, SEEK_END);
+//   program_size = ftell(fp);
+//   rewind(fp);
+//   source_str = (char *) malloc(program_size + 1);
+//   source_str[program_size] = '\0';
+//   fread(source_str, sizeof(char), program_size, fp);
+//   fclose(fp);
+//
+//   std::string kernel_code(source_str);
+//   //    kernel_code = "#define SIZE_X " + to_string(this->PATCH_HEIGHT) + "\n"
+//   //                  + "#define SIZE_Y " + to_string(this->PATCH_WIDTH)
+//   //                  + kernel_code;
+//   sources.push_back({kernel_code.c_str(), kernel_code.length()});
+//   cl::Program program(context, sources);
+//   if (program.build({default_device}) != CL_SUCCESS)
+//   {
+//      cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
+//      exit(1);
+//   }
+//   commandQueue = cl::CommandQueue(context, default_device);
+//   filterKernel = cl::Kernel(program, "filterKernel");
+//   packKernel = cl::Kernel(program, "packKernel");
+//   mergeKernel = cl::Kernel(program, "mergeKernel");
+//
+//   printf("OpenCL Initialized Successfully\n");
+//}
 
 void PlanarRegionCalculator::onMouse(int event, int x, int y, int flags, void *userdata)
 {

@@ -33,8 +33,8 @@ class ROS1TopicReceiver
       double timestampLastReceived = 0.0;
 
    public:
-      virtual void render(){};
-      virtual void ImGuiUpdate(){};
+      virtual void render() = 0;
+      virtual void ImGuiUpdate() = 0;
       virtual void processMessage(ApplicationState& app){};
       void setAppUtils(AppUtils* appUtils);
 };

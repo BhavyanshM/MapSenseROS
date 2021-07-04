@@ -15,6 +15,7 @@
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"
 #include "PlanarRegion.h"
+#include "OpenCLManager.h"
 
 using namespace ros;
 using namespace std;
@@ -24,10 +25,11 @@ using namespace cv;
 class PlanarRegionCalculator
 {
    public:
-      cl::Kernel filterKernel, packKernel, mergeKernel;
-      cl::Context context;
-      cl::CommandQueue commandQueue;
-      cl::Event event;
+//      cl::Kernel filterKernel, packKernel, mergeKernel;
+//      cl::Context context;
+//      cl::CommandQueue commandQueue;
+//      cl::Event event;
+
       cl::size_t<3> origin;
 
       ApplicationState app;
@@ -42,6 +44,7 @@ class PlanarRegionCalculator
 
       MapFrame output;
       MapFrameProcessor _mapFrameProcessor;
+      OpenCLManager* _openCL;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
 
       int frameId = 0;
@@ -55,7 +58,7 @@ class PlanarRegionCalculator
 
       void ImGuiUpdate(ApplicationState& appState);
 
-      void initOpenCL();
+//      void initOpenCL();
 
       void generateAndPublishRegions(ApplicationState appState);
 
@@ -64,6 +67,8 @@ class PlanarRegionCalculator
       void getFilteredDepth(Mat& dispDepth, ApplicationState appState);
 
       static void onMouse(int event, int x, int y, int flags, void *userdata);
+
+      void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
 
 };
 

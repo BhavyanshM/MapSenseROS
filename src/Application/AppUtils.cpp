@@ -60,7 +60,7 @@ void AppUtils::appendToDebugOutput(Mat disp)
    }
    cv::resize(disp, disp, Size(640 * 480 / disp.rows, 480));
    images.emplace_back(disp);
-   ROS_INFO("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d, Images: %d\n", disp.type(), disp.rows, disp.cols, images.size());
+   ROS_DEBUG("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d, Images: %d\n", disp.type(), disp.rows, disp.cols, images.size());
 }
 
 void AppUtils::displayDebugOutput(ApplicationState appState)

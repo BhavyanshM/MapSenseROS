@@ -25,6 +25,7 @@
 #include <Magnum/Math/Quaternion.h>
 #include <Magnum/GL/Renderer.h>
 
+#include "Log.h"
 #include "MapsenseHeaders.h"
 #include "MeshGenerator.h"
 #include "SLAMModule.h"
@@ -33,6 +34,7 @@
 #include "ImGuiLayout.h"
 #include "AppUtils.h"
 #include "KeypointDetector.h"
+#include "OpenCLManager.h"
 
 using namespace Magnum::Math::Literals;
 
@@ -95,6 +97,8 @@ using namespace Magnum::Math::Literals;
       KeypointDetector* _keypointDetector;
       SLAMModule *_slamModule;
       NetworkManager *_networkManager;
+      OpenCLManager *_openCLManager;
+
       int count = 0;
       int frameId = 0;
 

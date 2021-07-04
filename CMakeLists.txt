@@ -113,7 +113,7 @@ set (HEADERS
 		src/headers/FileManager.h
 		src/headers/KeypointDetector.h
 		src/headers/OpenCLManager.h
-		)
+		src/headers/Log.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -160,7 +160,7 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Point3D.cpp
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
-		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/MapsenseHeaders.h)
+		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/MapsenseHeaders.h src/headers/Log.h)
 
 include_directories(
 		include
@@ -168,6 +168,7 @@ include_directories(
 		src/Geometry/include
 		${catkin_INCLUDE_DIRS}
 		/usr/include/CL/
+		Vendor/spdlog/include
 )
 
 add_executable(planar_region_publisher ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
