@@ -1,6 +1,7 @@
 #ifndef SRC_MAPFRAMEPROCESSOR_H
 #define SRC_MAPFRAMEPROCESSOR_H
 
+#include "Core.h"
 #include "MapFrame.h"
 #include "PlanarRegion.h"
 #include <opencv2/highgui.hpp>

@@ -25,7 +25,7 @@
 #include <Magnum/Math/Quaternion.h>
 #include <Magnum/GL/Renderer.h>
 
-#include "Log.h"
+#include "Core.h"
 #include "MapsenseHeaders.h"
 #include "MeshGenerator.h"
 #include "SLAMModule.h"
@@ -49,8 +49,6 @@ using namespace Magnum::Math::Literals;
 
       AppUtils appUtils;
 
-      uint32_t averageTime = 0;
-      uint32_t timeCount = 0;
 
    private:
       void drawEvent() override;
@@ -298,6 +296,7 @@ void MyApplication::exitEvent(ExitEvent& event)
 
 int main(int argc, char **argv)
 {
+
    MyApplication app({argc, argv});
    std::vector<std::string> args(argv, argv + argc);
 
@@ -331,7 +330,12 @@ int main(int argc, char **argv)
    }
 
    app.init(argc, argv);
-   return app.exec();
+
+   MAPSENSE_PROFILE_BEGIN_SESSION("Mapsense", "/home/quantum/Workspace/Storage/Other/Mapsense-Runtime.json");
+   int returnCode = app.exec();
+   MAPSENSE_PROFILE_END_SESSION();
+
+   return returnCode;
 }
 
 

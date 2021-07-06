@@ -26,6 +26,8 @@
 #include <cmath>
 #include <random>
 #include <stack>
+#include <iomanip>
+#include <limits>
 
 #include "tbb/tbb.h"
 #include "tbb/parallel_for.h"
@@ -34,6 +36,5 @@
 #include "sys/resource.h"
 #include <queue>
 #include <boost/format.hpp>
-#include "Log.h"
 
 #endif //MAPSENSEHEADERS_H

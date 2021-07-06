@@ -15,7 +15,9 @@
 #include "map_sense/MapsenseConfiguration.h"
 #include "ImageReceiver.h"
 
+
 #include "MapsenseHeaders.h"
+#include "Core.h"
 #include <ApplicationState.h>
 
 using namespace ros;

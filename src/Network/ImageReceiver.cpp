@@ -46,6 +46,7 @@ void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 
 void ImageReceiver::render()
 {
+   MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Render: %s", this->topicName.c_str());
    if (renderingEnabled)
    {
@@ -72,6 +73,7 @@ void ImageReceiver::ImGuiUpdate()
 
 void ImageReceiver::processMessage(ApplicationState& app)
 {
+   MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Process Message");
    cv_bridge::CvImagePtr img_ptr;
    if (imageMessage != nullptr || compressedImageMessage != nullptr)
@@ -106,6 +108,7 @@ void ImageReceiver::processMessage(ApplicationState& app)
 
 void ImageReceiver::getData(Mat& image, ApplicationState& app, double& timestamp)
 {
+   MAPSENSE_PROFILE_FUNCTION();
    timestamp = this->timestampLastReceived;
    if(this->image.rows != 0 && this->image.cols != 0 && !this->image.empty())
    {

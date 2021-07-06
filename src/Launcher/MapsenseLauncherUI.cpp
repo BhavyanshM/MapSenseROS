@@ -85,16 +85,7 @@ void MyApplication::tickEvent()
          appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
       }
 
-      auto start = std::chrono::high_resolution_clock::now();
       _regionCalculator->generateAndPublishRegions(appState);
-      auto end = std::chrono::high_resolution_clock::now();
-      auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-
-      averageTime += duration;
-      timeCount += 1;
-
-      MAPSENSE_LOG_INFO("Found Rings in {0}\tms", (float) averageTime / ((float) timeCount * 1000));
-
       _regionCalculator->render();
 
 //      _keypointDetector->update(appState);

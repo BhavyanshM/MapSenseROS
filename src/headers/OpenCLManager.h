@@ -5,8 +5,8 @@
 #ifndef OPENCLMANAGER_H
 #define OPENCLMANAGER_H
 
+#include "Core.h"
 #include <CL/cl.hpp>
-#include "Log.h"
 
 class OpenCLManager
 {

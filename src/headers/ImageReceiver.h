@@ -5,6 +5,7 @@
 #ifndef IMAGERECEIVER_H
 #define IMAGERECEIVER_H
 
+#include "Core.h"
 #include "ROS1TopicReceiver.h"
 
 class ImageReceiver : public ROS1TopicReceiver

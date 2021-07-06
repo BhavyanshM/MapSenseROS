@@ -113,7 +113,9 @@ set (HEADERS
 		src/headers/FileManager.h
 		src/headers/KeypointDetector.h
 		src/headers/OpenCLManager.h
-		src/headers/Log.h)
+		src/headers/Log.h
+		src/headers/Instrumentor.h
+		src/headers/Timer.h src/headers/Core.h)
 
 set(MAPSENSE_GUI_SOURCE
 		src/Rendering/MeshGenerator.cpp
@@ -148,7 +150,9 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/Line3D.h
 		src/Geometry/include/Plane3D.h
 		src/Geometry/include/Point3D.h
-		src/Geometry/include/StructureFromMotion.h)
+		src/Geometry/include/StructureFromMotion.h
+		src/headers/Instrumentor.h
+		src/headers/Timer.h src/headers/Core.h)
 
 set(GEOMTOOLS_SOURCE
 		src/Geometry/src/GeomTools.cpp
@@ -215,7 +219,9 @@ add_executable(registration_and_mapping
 		src/headers/PlanarRegionMapTester.h
 		src/headers/MeshGenerator.h
 		src/headers/PlanarRegionMapHandler.h
-		src/headers/FactorGraphHandler.h)
+		src/headers/FactorGraphHandler.h
+		src/headers/Instrumentor.h
+		src/headers/Timer.h src/headers/Core.h)
 target_link_libraries(registration_and_mapping
 		Eigen3::Eigen
 		${OpenCV_LIBS}

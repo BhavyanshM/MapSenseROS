@@ -2,6 +2,7 @@
 
 void MapFrameProcessor::init(ApplicationState& app)
 {
+   MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Initializing MapFrameProcessor");
    this->app = app;
    this->debug = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
@@ -10,57 +11,42 @@ void MapFrameProcessor::init(ApplicationState& app)
    this->region = MatrixXi(app.SUB_H, app.SUB_W).setZero();
 }
 
-void MapFrameProcessor::printPatchGraph()
-{
-   printf("DEBUGGER:(%d,%d), AppState:(%d,%d)\n", app.SUB_H, app.SUB_W, app.SUB_H, app.SUB_W);
-   for (int i = 0; i < app.SUB_H; i++)
-   {
-      for (int j = 0; j < app.SUB_W; j++)
-      {
-         uint8_t current = this->frame.patchData.at<uint8_t>(i, j);
-         if (current == 255)
-         {
-            printf("1 ");
-         } else
-         {
-            printf("0 ");
-         }
-      }
-      printf("\n");
-   }
-}
-
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
+   MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Starting DFS for Segmentation\n");
    this->app = app;
    this->frame = inputFrame;
 
    /* For initial development only. Delete all old previous regions before inserting new ones. Old and new regions should be fused instead. */
-   planarRegionList.clear();
    uint8_t components = 0;
-   visited.setZero();
-   region.setZero();
-   boundary.setZero();
-   debug = Scalar(0);
-   for (uint16_t i = 0; i < app.SUB_H; i++)
    {
-      for (uint16_t j = 0; j < app.SUB_W; j++)
+      MAPSENSE_PROFILE_SCOPE("GenerateSegmentation::DFS");
+      planarRegionList.clear();
+      visited.setZero();
+      region.setZero();
+      boundary.setZero();
+      debug = Scalar(0);
+      for (uint16_t i = 0; i < app.SUB_H; i++)
       {
-         uint8_t patch = inputFrame.patchData.at<uint8_t>(i, j);
-         if (!visited(i, j) && patch == 255)
+         for (uint16_t j = 0; j < app.SUB_W; j++)
          {
-            int num = 0;
-            shared_ptr<PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
-            dfs(i, j, components, num, debug, planarRegion);
-            if (num > app.REGION_MIN_PATCHES && num - planarRegion->getNumOfBoundaryVertices() > app.REGION_BOUNDARY_DIFF)
+            uint8_t patch = inputFrame.patchData.at<uint8_t>(i, j);
+            if (!visited(i, j) && patch == 255)
             {
-               planarRegionList.emplace_back(planarRegion);
-               components++;
+               int num = 0;
+               shared_ptr <PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
+               dfs(i, j, components, num, debug, planarRegion);
+               if (num > app.REGION_MIN_PATCHES && num - planarRegion->getNumOfBoundaryVertices() > app.REGION_BOUNDARY_DIFF)
+               {
+                  planarRegionList.emplace_back(planarRegion);
+                  components++;
+               }
             }
          }
       }
    }
+
    ROS_DEBUG("DFS Generated %d Regions\n", components);
 
    /* Extract Region Boundary Indices. */
@@ -74,46 +60,9 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
 }
 
-void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion)
-{
-   if (visited(x, y))
-      return;
-
-   num++;
-   visited(x, y) = 1;
-   region(x, y) = component;
-   Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(x, y);
-   planarRegion->addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
-   if (app.SHOW_PATCHES)
-      circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
-             Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);
-
-   int count = 0;
-   for (int i = 0; i < 8; i++)
-   {
-      if (x + adx[i] < app.SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < app.SUB_W - 1 && y + ady[i] > 1)
-      {
-         uint8_t newPatch = this->frame.patchData.at<uint8_t>((x + adx[i]), (y + ady[i]));
-         if (newPatch == 255)
-         {
-            count++;
-            dfs(x + adx[i], y + ady[i], component, num, debug, planarRegion);
-         }
-      }
-   }
-   if (count != 8)
-   {
-      boundary(x, y) = 1;
-      planarRegion->insertLeafPatch(Vector2i(x, y));
-      if (app.SHOW_BOUNDARIES)
-         circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2, Scalar(255, 255, 255), -1);
-   }
-   if (app.VISUAL_DEBUG)
-      displayDebugger(app.VISUAL_DEBUG_DELAY);
-}
-
 void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
+   MAPSENSE_PROFILE_FUNCTION();
    tbb::parallel_for(tbb::blocked_range<int>(0, planarRegionList.size()), [&](const tbb::blocked_range<int>& r)
    {
       for (int i = r.begin(); i < r.end(); i++)
@@ -174,6 +123,86 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
 //   }
 }
 
+
+
+void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& regions)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   tbb::parallel_for(tbb::blocked_range<int>(0, regions.size()), [&](const tbb::blocked_range<int>& r){
+      for(int i = r.begin(); i<r.end(); i++)
+      {
+         if(regions[i]->rings.size() <= 0)
+         {
+            ROS_WARN("Region Boundary Size is Zero!");
+            ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+         }
+
+         Vector3f center = regions[i]->getCenter();
+         vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+         for (int j = 0; j < ring.size(); j++)
+         {
+            Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
+            Vector3f vertex(patch[3], patch[4], patch[5]);
+            regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
+         }
+      }
+   });
+
+   //   for(int i = 0; i<regions.size(); i++)
+   //   {
+   //      if(regions[i]->rings.size() <= 0)
+   //      {
+   //         ROS_WARN("Region Boundary Size is Zero!");
+   //         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+   //      }
+   //
+   //      Vector3f center = regions[i]->getCenter();
+   //      vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+   //      for (int j = 0; j < ring.size(); j++)
+   //      {
+   //         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
+   //         Vector3f vertex(patch[3], patch[4], patch[5]);
+   //         regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
+   //      }
+   //   }
+}
+
+
+void MapFrameProcessor::printPatchGraph()
+{
+   printf("DEBUGGER:(%d,%d), AppState:(%d,%d)\n", app.SUB_H, app.SUB_W, app.SUB_H, app.SUB_W);
+   for (int i = 0; i < app.SUB_H; i++)
+   {
+      for (int j = 0; j < app.SUB_W; j++)
+      {
+         uint8_t current = this->frame.patchData.at<uint8_t>(i, j);
+         if (current == 255)
+         {
+            printf("1 ");
+         } else
+         {
+            printf("0 ");
+         }
+      }
+      printf("\n");
+   }
+}
+
+void MapFrameProcessor::displayDebugger(int delay)
+{
+   imshow("DebugOutput", this->debug);
+   int code = waitKeyEx(delay);
+   if (code == 113)
+   {
+      this->app.VISUAL_DEBUG = false;
+   }
+}
+
+
+///////////////////////////////////////////////////////////////////
+/* ----------------- RECURSIVE FUNCTIONS BELOW THIS POINT -------*/
+///////////////////////////////////////////////////////////////////
+
 void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing)
 {
    if (visited(x, y))
@@ -199,54 +228,40 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, 
       displayDebugger(app.VISUAL_DEBUG_DELAY);
 }
 
-void MapFrameProcessor::displayDebugger(int delay)
+void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion)
 {
-   imshow("DebugOutput", this->debug);
-   int code = waitKeyEx(delay);
-   if (code == 113)
+   if (visited(x, y))
+      return;
+
+   num++;
+   visited(x, y) = 1;
+   region(x, y) = component;
+   Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(x, y);
+   planarRegion->addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
+   if (app.SHOW_PATCHES)
+      circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
+             Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);
+
+   int count = 0;
+   for (int i = 0; i < 8; i++)
    {
-      this->app.VISUAL_DEBUG = false;
-   }
-}
-
-void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& regions)
-{
-
-   tbb::parallel_for(tbb::blocked_range<int>(0, regions.size()), [&](const tbb::blocked_range<int>& r){
-      for(int i = r.begin(); i<r.end(); i++)
+      if (x + adx[i] < app.SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < app.SUB_W - 1 && y + ady[i] > 1)
       {
-         if(regions[i]->rings.size() <= 0)
+         uint8_t newPatch = this->frame.patchData.at<uint8_t>((x + adx[i]), (y + ady[i]));
+         if (newPatch == 255)
          {
-            ROS_WARN("Region Boundary Size is Zero!");
-            ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
-         }
-
-         Vector3f center = regions[i]->getCenter();
-         vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
-         for (int j = 0; j < ring.size(); j++)
-         {
-            Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-            Vector3f vertex(patch[3], patch[4], patch[5]);
-            regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
+            count++;
+            dfs(x + adx[i], y + ady[i], component, num, debug, planarRegion);
          }
       }
-   });
-
-//   for(int i = 0; i<regions.size(); i++)
-//   {
-//      if(regions[i]->rings.size() <= 0)
-//      {
-//         ROS_WARN("Region Boundary Size is Zero!");
-//         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
-//      }
-//
-//      Vector3f center = regions[i]->getCenter();
-//      vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
-//      for (int j = 0; j < ring.size(); j++)
-//      {
-//         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-//         Vector3f vertex(patch[3], patch[4], patch[5]);
-//         regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
-//      }
-//   }
+   }
+   if (count != 8)
+   {
+      boundary(x, y) = 1;
+      planarRegion->insertLeafPatch(Vector2i(x, y));
+      if (app.SHOW_BOUNDARIES)
+         circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2, Scalar(255, 255, 255), -1);
+   }
+   if (app.VISUAL_DEBUG)
+      displayDebugger(app.VISUAL_DEBUG_DELAY);
 }
