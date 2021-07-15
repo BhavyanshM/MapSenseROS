@@ -25,7 +25,6 @@ if [[ "$OS_NAME" == *"Arch"* ]]; then
   	--volume "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
   	--volume "$(pwd)/../.."/SharedVolume:/home/robotlab/SharedVolume:rw \
   	--volume "$(pwd)/..":/home/robotlab/dev/mapsense_ws/src/MapSenseROS:rw \
-  	--volume "$HOME"/.config/JetBrains:/home/robotlab/.config/JetBrains:rw \
   	--privileged \
   	--gpus all \
   	--device /dev/dri:/dev/dri \
@@ -38,7 +37,6 @@ else
     --volume "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --volume "$(pwd)/../.."/SharedVolume:/home/robotlab/SharedVolume:rw \
     --volume "$(pwd)/..":/home/robotlab/dev/mapsense_ws/src/MapSenseROS:rw \
-    --volume "$HOME"/.config/JetBrains:/home/robotlab/.config/JetBrains:rw \
     --privileged \
     --runtime=nvidia \
     --gpus all \
