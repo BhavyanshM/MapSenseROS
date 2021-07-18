@@ -64,7 +64,7 @@ OpenCLManager::OpenCLManager()
    origin[0] = 0;
 }
 
-uint8_t OpenCLManager::CreateBufferFloat(float *params, uint16_t count)
+uint8_t OpenCLManager::CreateLoadBufferFloat(float *params, uint16_t count)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Buffer :%d", buffers.size());
@@ -72,7 +72,7 @@ uint8_t OpenCLManager::CreateBufferFloat(float *params, uint16_t count)
    return buffers.size() - 1;
 }
 
-uint8_t OpenCLManager::CreateImage2D_R16(uint16_t *depthBuffer, uint16_t width, uint16_t height)
+uint8_t OpenCLManager::CreateLoadReadOnlyImage2D_R16(uint16_t *depthBuffer, uint16_t width, uint16_t height)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Image :%d", images.size());
@@ -80,7 +80,7 @@ uint8_t OpenCLManager::CreateImage2D_R16(uint16_t *depthBuffer, uint16_t width, 
    return images.size() - 1;
 }
 
-uint8_t OpenCLManager::CreateImage2D_RGBA8(uint8_t *colorBuffer, uint16_t width, uint16_t height)
+uint8_t OpenCLManager::CreateLoadReadOnlyImage2D_RGBA8(uint8_t *colorBuffer, uint16_t width, uint16_t height)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Image :%d", images.size());
@@ -89,7 +89,7 @@ uint8_t OpenCLManager::CreateImage2D_RGBA8(uint8_t *colorBuffer, uint16_t width,
    return images.size() - 1;
 }
 
-uint8_t OpenCLManager::CreateOutputImage2D_R8(uint16_t width, uint16_t height)
+uint8_t OpenCLManager::CreateReadWriteImage2D_R8(uint16_t width, uint16_t height)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Image :%d", images.size());
@@ -97,7 +97,7 @@ uint8_t OpenCLManager::CreateOutputImage2D_R8(uint16_t width, uint16_t height)
    return images.size() - 1;
 }
 
-uint8_t OpenCLManager::CreateOutputImage2D_R16(uint16_t width, uint16_t height)
+uint8_t OpenCLManager::CreateReadWriteImage2D_R16(uint16_t width, uint16_t height)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Image :%d", images.size());
@@ -105,11 +105,19 @@ uint8_t OpenCLManager::CreateOutputImage2D_R16(uint16_t width, uint16_t height)
    return images.size() - 1;
 }
 
-uint8_t OpenCLManager::CreateOutputImage2D_RFloat(uint16_t width, uint16_t height)
+uint8_t OpenCLManager::CreateReadWriteImage2D_RFloat(uint16_t width, uint16_t height)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), width, height));
+   return images.size() - 1;
+}
+
+uint8_t OpenCLManager::CreateReadWriteImage2D_RGBA8(uint16_t width, uint16_t height)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   ROS_DEBUG("Creating Image :%d", images.size());
+   images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), width, height));
    return images.size() - 1;
 }
 

@@ -59,6 +59,18 @@ void PlanarRegionCalculator::render()
    //   appUtils.displayDebugOutput(app);
 }
 
+uint8_t PlanarRegionCalculator::loadParameters(const ApplicationState& app)
+{
+   float params[] = {(float) app.FILTER_DISPARITY_THRESHOLD, app.MERGE_ANGULAR_THRESHOLD, app.MERGE_DISTANCE_THRESHOLD, (float) app.PATCH_HEIGHT,
+                     (float) app.PATCH_WIDTH, (float) app.SUB_H, (float) app.SUB_W, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY,
+                     (float) app.FILTER_KERNEL_SIZE, (float) app.FILTER_SUB_H, (float) app.FILTER_SUB_W, (float) app.INPUT_HEIGHT, (float) app.INPUT_WIDTH};
+
+   ROS_DEBUG("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.PATCH_HEIGHT, app.PATCH_WIDTH, app.SUB_H,
+             app.SUB_W, app.FILTER_SUB_H, app.FILTER_SUB_W, app.FILTER_KERNEL_SIZE);
+
+   return _openCL->CreateLoadBufferFloat(params, sizeof(params) / sizeof(float));
+}
+
 /*
  * The following are the intrinsic parameters of the depth camera as recorded from L515 RealSense
     height: 480
@@ -82,91 +94,56 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    }
 
    this->app = appState;
-   float params[] = {(float) appState.FILTER_DISPARITY_THRESHOLD, appState.MERGE_ANGULAR_THRESHOLD, appState.MERGE_DISTANCE_THRESHOLD,
-                     (float) appState.PATCH_HEIGHT, (float) appState.PATCH_WIDTH, (float) appState.SUB_H, (float) appState.SUB_W, appState.DEPTH_FX,
-                     appState.DEPTH_FY, appState.DEPTH_CX, appState.DEPTH_CY, (float) appState.FILTER_KERNEL_SIZE, (float) appState.FILTER_SUB_H,
-                     (float) appState.FILTER_SUB_W, (float) appState.INPUT_HEIGHT, (float) appState.INPUT_WIDTH};
-
-   ROS_DEBUG("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT,
-             appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W, appState.FILTER_SUB_H, appState.FILTER_SUB_W, appState.FILTER_KERNEL_SIZE);
-
-   uint8_t paramsBuffer = _openCL->CreateBufferFloat(params, sizeof(params) / sizeof(float));
+   uint8_t paramsBuffer = loadParameters(appState);
 
    Mat depthMat, colorMat;
    {
-      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Clone");
+      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::CloneAndBlur");
       depthMat = inputDepth.clone();
       colorMat = inputColor.clone();
-   }
-   ROS_DEBUG("Cloned Depth and Color Successfully.");
 
-   //   medianBlur(depthMat, depthMat, 5);
-
-   ROS_DEBUG("Applying Gaussian Filter [GaussianSize: %d, GaussianSigma: %d]( Channels: %d, Dims: %d, Rows: %d, Cols: %d)", appState.GAUSSIAN_SIZE,
-             appState.GAUSSIAN_SIGMA, depthMat.channels(), depthMat.dims, depthMat.rows, depthMat.cols);
-
-   {
-      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::GaussianBlur");
       if (appState.EARLY_GAUSSIAN_BLUR)
          GaussianBlur(depthMat, depthMat, Size(appState.GAUSSIAN_SIZE * 2 + 1, appState.GAUSSIAN_SIZE * 2 + 1), appState.GAUSSIAN_SIGMA);
    }
-   ROS_DEBUG("Gaussian Filter Applied Successfully.");
 
    /* Input Data OpenCL Buffers */
    uint16_t *depthBuffer = reinterpret_cast<uint16_t *>(depthMat.data);
-   uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(colorMat.data);
-   uint8_t clDepth = _openCL->CreateImage2D_R16(depthBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
-   uint8_t clColor = _openCL->CreateImage2D_RGBA8(colorBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+   uint8_t clDepth = _openCL->CreateLoadReadOnlyImage2D_R16(depthBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+   //   uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(colorMat.data);
+   //   uint8_t clColor = _openCL->CreateLoadReadOnlyImage2D_RGBA8(colorBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
 
    /* Output Data OpenCL Buffers */
-   ROS_DEBUG("Creating OpenCL Image2Ds now.");
-
-   uint8_t clFilterDepth = _openCL->CreateOutputImage2D_R16(appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
-   uint8_t clBuffer_nx = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
-   uint8_t clBuffer_ny = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
-   uint8_t clBuffer_nz = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
-   uint8_t clBuffer_gx = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
-   uint8_t clBuffer_gy = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
-   uint8_t clBuffer_gz = _openCL->CreateOutputImage2D_RFloat(appState.SUB_W, appState.SUB_H);
-   uint8_t clBuffer_graph = _openCL->CreateOutputImage2D_R8(appState.SUB_W, appState.SUB_H);
+   uint8_t clFilterDepth = _openCL->CreateReadWriteImage2D_R16(appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+   uint8_t clBuffer_nx = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_ny = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_nz = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gx = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gy = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gz = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_graph = _openCL->CreateReadWriteImage2D_R8(appState.SUB_W, appState.SUB_H);
 
    ROS_DEBUG("Created All Input Images.");
 
    /* Setting Kernel arguments for patch-packing kernel */
    {
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::SetArgument(s)");
-      _openCL->SetArgument("filterKernel", 0, clDepth, true);
-      _openCL->SetArgument("filterKernel", 1, clColor, true);
-      _openCL->SetArgument("filterKernel", 2, clFilterDepth, true);
-      _openCL->SetArgument("filterKernel", 3, clBuffer_nx, true);
-      _openCL->SetArgument("filterKernel", 4, paramsBuffer);
 
-      if (appState.FILTER_SELECTED)
-      {
-         _openCL->SetArgument("packKernel", 0, clFilterDepth, true);
-      } else
-      {
-         _openCL->SetArgument("packKernel", 0, clDepth, true);
-      }
+      uint8_t clDepthBuffer = appState.FILTER_SELECTED ? clFilterDepth : clDepth;
 
-      _openCL->SetArgument("packKernel", 1, clBuffer_nx, true); // Output: nx
-      _openCL->SetArgument("packKernel", 2, clBuffer_ny, true); // Output: ny
-      _openCL->SetArgument("packKernel", 3, clBuffer_nz, true); // Output: nz
-      _openCL->SetArgument("packKernel", 4, clBuffer_gx, true); // Output: gx
-      _openCL->SetArgument("packKernel", 5, clBuffer_gy, true); // Output: gy
-      _openCL->SetArgument("packKernel", 6, clBuffer_gz, true); // Output: gz
-      _openCL->SetArgument("packKernel", 7, paramsBuffer);
+      std::vector<uint8_t> argsImgFilter = {clDepth, clFilterDepth, clBuffer_nx};
+      for (uint8_t i = 0; i < argsImgFilter.size(); i++)
+         _openCL->SetArgument("filterKernel", i, argsImgFilter[i], true);
+      _openCL->SetArgument("filterKernel", argsImgFilter.size(), paramsBuffer);
 
-      _openCL->SetArgument("mergeKernel", 0, clBuffer_nx, true); // Input: nx
-      _openCL->SetArgument("mergeKernel", 1, clBuffer_ny, true); // Input: ny
-      _openCL->SetArgument("mergeKernel", 2, clBuffer_nz, true); // Input: nz
-      _openCL->SetArgument("mergeKernel", 3, clBuffer_gx, true); // Input: gx
-      _openCL->SetArgument("mergeKernel", 4, clBuffer_gy, true); // Input: gy
-      _openCL->SetArgument("mergeKernel", 5, clBuffer_gz, true); // Input: gz
-      _openCL->SetArgument("mergeKernel", 6, clBuffer_graph, true);  // Output: graph
-      _openCL->SetArgument("mergeKernel", 7, paramsBuffer);
+      std::vector<uint8_t> argsImgPack = {clDepthBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
+      for (uint8_t i = 0; i < argsImgPack.size(); i++)
+         _openCL->SetArgument("packKernel", i, argsImgPack[i], true);
+      _openCL->SetArgument("packKernel", argsImgPack.size(), paramsBuffer);
 
-      // kernel.setArg(4, clDebug); /* For whenever clDebug may be required. */
+      std::vector<uint8_t> argsImgMerge = {clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz, clBuffer_graph};
+      for (uint8_t i = 0; i < argsImgMerge.size(); i++)
+         _openCL->SetArgument("mergeKernel", i, argsImgMerge[i], true);
+      _openCL->SetArgument("mergeKernel", argsImgMerge.size(), paramsBuffer);
    }
 
    /* Setup size for reading patch-wise kernel maps from GPU */
@@ -192,7 +169,6 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
    Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
    this->filteredDepth = Mat(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
-
 
    /* Deploy the patch-packing and patch-merging kernels patch-wise */
    {
@@ -221,22 +197,12 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
    _openCL->commandQueue.finish();
 
-   ROS_DEBUG("Packaging Layers Now. ");
-
    /* Combine the CPU buffers into single image with multiple channels */
    Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
-   vector <Mat> channels;
-
    {
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-      channels.push_back(output_0);
-      channels.push_back(output_1);
-      channels.push_back(output_2);
-      channels.push_back(output_3);
-      channels.push_back(output_4);
-      channels.push_back(output_5);
+      vector <Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
       merge(channels, regionOutput);
-
       output.setRegionOutput(regionOutput);
       output.setPatchData(output_6);
    }
@@ -244,6 +210,94 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    _openCL->Reset();
 
    ROS_DEBUG("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
+
+   return true;
+}
+
+bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appState)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   ROS_DEBUG("Generating Patch Graph on GPU: Color:[%d,%d]", inputColor.cols, inputColor.rows, output.getRegionOutput().cols);
+
+   if (inputColor.rows <= 0 || inputColor.cols <= 0 || inputColor.dims <= 0)
+   {
+      ROS_WARN("Color image width, height, or dimensions are zero! Skipping Frame.");
+      return false;
+   }
+
+   this->app = appState;
+   uint8_t paramsBuffer = loadParameters(appState);
+
+   Mat colorMat;
+   colorMat = inputColor.clone();
+
+   /* Input Data OpenCL Buffers */
+   uint8_t *colorBuffer = reinterpret_cast<uint8_t *>(colorMat.data);
+   uint8_t clColor = _openCL->CreateLoadReadOnlyImage2D_RGBA8(colorBuffer, appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+
+   /* Output Data OpenCL Buffers */
+   uint8_t clFilterImage = _openCL->CreateReadWriteImage2D_RGBA8(appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
+   uint8_t clBuffer_graph = _openCL->CreateReadWriteImage2D_R8(appState.SUB_W, appState.SUB_H);
+
+   /* Setting Kernel arguments for patch-packing kernel */
+   {
+      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::SetArgument(s)");
+
+      std::vector<uint8_t> argsImgSegment = {clColor, clFilterImage, clBuffer_graph};
+      for (uint8_t i = 0; i < argsImgSegment.size(); i++)
+         _openCL->SetArgument("segmentKernel", i, argsImgSegment[i], true);
+      _openCL->SetArgument("segmentKernel", argsImgSegment.size(), paramsBuffer);
+   }
+
+   /* Setup size for reading patch-wise kernel maps from GPU */
+   cl::size_t<3> regionOutputSize;
+   regionOutputSize[0] = appState.SUB_W;
+   regionOutputSize[1] = appState.SUB_H;
+   regionOutputSize[2] = 1;
+   cl::size_t<3> origin, size;
+   origin[0] = 0;
+   origin[0] = 0;
+   origin[0] = 0;
+   size[0] = appState.INPUT_WIDTH;
+   size[1] = appState.INPUT_HEIGHT;
+   size[2] = 1;
+
+   /* Output Data Buffers on CPU */
+   Mat output_color(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_8UC3);
+   Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+
+   /* Deploy the patch-packing and patch-merging kernels patch-wise */
+   {
+      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCL::EnqueueNDRangeKernel");
+      _openCL->commandQueue.enqueueNDRangeKernel(_openCL->filterKernel, cl::NullRange, cl::NDRange(appState.FILTER_SUB_H, appState.FILTER_SUB_W),
+                                                 cl::NullRange);
+      _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+      _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+   }
+
+   /* Read the output data from OpenCL buffers into CPU buffers */
+   {
+      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCL::ReadImage(s)");
+      // _openCL->commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
+      _openCL->ReadImage(clFilterImage, size, filteredDepth.data);
+      _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_6.data);
+   }
+   /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
+   _openCL->commandQueue.finish();
+
+   /* Combine the CPU buffers into single image with multiple channels */
+//   Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+//   {
+//      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
+//      vector <Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
+//      merge(channels, regionOutput);
+//      output.setRegionOutput(regionOutput);
+//      output.setPatchData(output_6);
+//   }
+//   ROS_DEBUG("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
+
+   _openCL->Reset();
+
 
    return true;
 }
@@ -270,7 +324,7 @@ void logPlanarRegions(vector <shared_ptr<PlanarRegion>> planarRegionList)
    }
 }
 
-void PlanarRegionCalculator::generateAndPublishRegions(ApplicationState appState)
+void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState appState)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Generating Regions");
@@ -299,7 +353,23 @@ void PlanarRegionCalculator::generateAndPublishRegions(ApplicationState appState
       frameId++;
    }
    //   extractRealPlanes();
-   publishRegions(planarRegionList);
+}
+
+void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState appState)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+
+   ImageReceiver *colorReceiver = ((ImageReceiver *) this->_dataReceiver->receivers[1]);
+   colorReceiver->getData(inputColor, appState, inputTimestamp);
+
+   bool patchGraphGenerated = generatePatchGraph(appState);
+   if (!patchGraphGenerated)
+      return;
+
+   _mapFrameProcessor.init(appState);
+   _mapFrameProcessor.generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+
+   PlanarRegion::SetZeroId(planarRegionList);
 }
 
 void PlanarRegionCalculator::publishRegions(vector <shared_ptr<PlanarRegion>> rawRegionList)

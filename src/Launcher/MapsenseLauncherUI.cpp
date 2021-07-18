@@ -85,7 +85,8 @@ void MyApplication::tickEvent()
          appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
       }
 
-      _regionCalculator->generateAndPublishRegions(appState);
+      _regionCalculator->generateRegionsFromDepth(appState);
+      _regionCalculator->publish();
       _regionCalculator->render();
 
 //      _keypointDetector->update(appState);

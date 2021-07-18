@@ -56,11 +56,15 @@ class PlanarRegionCalculator
 
       bool generatePatchGraph(ApplicationState appState);
 
+      bool generatePatchGraphFromStereo(ApplicationState& appState);
+
       void ImGuiUpdate(ApplicationState& appState);
 
 //      void initOpenCL();
 
-      void generateAndPublishRegions(ApplicationState appState);
+      void generateRegionsFromDepth(ApplicationState appState);
+
+      void generateRegionsFromStereo(ApplicationState appState);
 
       void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
 
@@ -69,6 +73,10 @@ class PlanarRegionCalculator
       static void onMouse(int event, int x, int y, int flags, void *userdata);
 
       void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
+
+      void publish() {publishRegions(planarRegionList);}
+
+      uint8_t loadParameters(const ApplicationState& app);
 
 };
 

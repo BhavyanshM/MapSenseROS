@@ -221,7 +221,7 @@ void smooth_non_boundary(read_only image2d_t in, int x, int y, write_only image2
 /* Filter Kernel: Filters all pixels within a patch on depth map. Removes outliers, flying points, dead pixels and measurement
  * noise. */
 
- void kernel filterKernel(read_only image2d_t in, read_only image2d_t in_color, write_only image2d_t filteredDepth, write_only image2d_t buffer_nx, global float* params){
+ void kernel filterKernel(read_only image2d_t in, write_only image2d_t filteredDepth, write_only image2d_t buffer_nx, global float* params){
     int y = get_global_id(0);
     int x = get_global_id(1);
 
@@ -329,6 +329,19 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
         write_imageui(out6, (int2)(x,y), (uint4)(patch, 0, 0, 0));
 
     }
+}
+
+/*
+ * Segmentation Kernel for generating patch graph for colored images.
+ * */
+void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filteredImage, write_only image2d_t graph, global float* params){
+   int y = get_global_id(0);
+   int x = get_global_id(1);
+
+   //    if(x==0 && y==0) printf("SegmentKernel\n");
+   if(y >= 0 && y < (int)params[FILTER_SUB_H] && x >= 0 && x < (int)params[FILTER_SUB_W]){
+      fill_dead_pixels(color, x, y, filteredImage, params);
+   }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -14,14 +14,15 @@ class OpenCLManager
       OpenCLManager();
       ~OpenCLManager() = default;
 
-      uint8_t CreateBufferFloat(float* params, uint16_t count);
+      uint8_t CreateLoadBufferFloat(float* params, uint16_t count);
 
-      uint8_t CreateImage2D_R16(uint16_t *depthBuffer, uint16_t width, uint16_t height);
-      uint8_t CreateImage2D_RGBA8(uint8_t *colorBuffer, uint16_t width, uint16_t height);
+      uint8_t CreateLoadReadOnlyImage2D_R16(uint16_t *depthBuffer, uint16_t width, uint16_t height);
+      uint8_t CreateLoadReadOnlyImage2D_RGBA8(uint8_t *colorBuffer, uint16_t width, uint16_t height);
 
-      uint8_t CreateOutputImage2D_R8(uint16_t width, uint16_t height);
-      uint8_t CreateOutputImage2D_R16(uint16_t width, uint16_t height);
-      uint8_t CreateOutputImage2D_RFloat(uint16_t width, uint16_t height);
+      uint8_t CreateReadWriteImage2D_R8(uint16_t width, uint16_t height);
+      uint8_t CreateReadWriteImage2D_R16(uint16_t width, uint16_t height);
+      uint8_t CreateReadWriteImage2D_RFloat(uint16_t width, uint16_t height);
+      uint8_t CreateReadWriteImage2D_RGBA8(uint16_t width, uint16_t height);
 
       void ReadImage(uint8_t image, const cl::size_t<3>& region, void* cpuBufferPtr);
 
