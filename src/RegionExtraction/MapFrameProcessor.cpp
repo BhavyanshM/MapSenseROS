@@ -76,7 +76,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
    Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(x, y);
    planarRegion->addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
    if (app.SHOW_PATCHES)
-      circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
+      circle(debug, Point((y) * app.PATCH_HEIGHT * DEBUG_SCALE, (x) * app.PATCH_WIDTH * DEBUG_SCALE), 1,
              Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);
 
    int count = 0;
@@ -97,7 +97,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
       boundary(x, y) = 1;
       planarRegion->insertLeafPatch(Vector2i(x, y));
       if (app.SHOW_BOUNDARIES)
-         circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2, Scalar(255, 255, 255), -1);
+         circle(debug, Point((y) * app.PATCH_HEIGHT * DEBUG_SCALE, (x) * app.PATCH_WIDTH * DEBUG_SCALE), 1, Scalar(255, 255, 255), -1);
    }
    if (app.VISUAL_DEBUG)
       displayDebugger(app.VISUAL_DEBUG_DELAY);
@@ -143,7 +143,7 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, 
    Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(x, y);
    regionRing->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
    if (app.SHOW_BOUNDARIES)
-      circle(debug, Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
+      circle(debug, Point((y) * app.PATCH_HEIGHT * DEBUG_SCALE, (x) * app.PATCH_WIDTH * DEBUG_SCALE), 1,
              Scalar((component + 1) * 130 % 255, (component + 1) * 227 % 255, (component + 1) * 332 % 255), -1);
    for (int i = 0; i < 8; i++)
    {

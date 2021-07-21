@@ -75,13 +75,13 @@ class ApplicationState
       bool SHOW_PATCHES = true;
       bool VISUAL_DEBUG = false;
       bool SHOW_INPUT_COLOR = false;
-      bool SHOW_INPUT_DEPTH = false;
+      bool SHOW_INPUT_DEPTH = true;
       bool SHOW_FILTERED_DEPTH = false;
-      bool SHOW_REGION_COMPONENTS = false;
+      bool SHOW_REGION_COMPONENTS = true;
       bool SHOW_STEREO_LEFT = false;
       bool SHOW_STEREO_RIGHT = false;
 
-      bool SHOW_GRAPH = true;
+      bool SHOW_GRAPH = false;
       bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;
 
@@ -94,7 +94,7 @@ class ApplicationState
       float GAUSSIAN_SIGMA = 20;
 
       /*  VISUALIZATION-ONLY */
-      float DISPLAY_WINDOW_SIZE = 1.0f;
+      float DISPLAY_WINDOW_SIZE = 5.0f;
       float DEPTH_BRIGHTNESS = 40;
       float DEPTH_DISPLAY_OFFSET = 10;
 

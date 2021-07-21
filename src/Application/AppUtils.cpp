@@ -49,8 +49,15 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
 
 void AppUtils::appendToDebugOutput(Mat disp)
 {
+   if(disp.cols <= 0 || disp.rows <= 0 || disp.empty())
+      return;
+
    if (disp.type() == CV_16UC3)
       disp.convertTo(disp, CV_8U, 0.00390625);
+
+   Mat final;
+
+   cv::resize(disp, final, Size(512, 128));
    images.emplace_back(disp);
 }
 
@@ -62,7 +69,7 @@ void AppUtils::displayDebugOutput(ApplicationState appState)
       namedWindow("DebugOutput", WINDOW_NORMAL);
       resizeWindow("DebugOutput", (int) (debugOutput.cols * appState.DISPLAY_WINDOW_SIZE), (int) (debugOutput.rows * appState.DISPLAY_WINDOW_SIZE));
       imshow("DebugOutput", debugOutput);
-      waitKey(100);
+      waitKey(1);
    }
    images.clear();
 }
@@ -98,7 +105,7 @@ void AppUtils::display(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t win
       namedWindow("Display", WINDOW_NORMAL);
       resizeWindow("Display", (int) (displayOutput.cols), (int) (displayOutput.rows));
       imshow("Display", displayOutput);
-      waitKey(40);
+      waitKey(1);
    }
 }
 

@@ -88,7 +88,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
          Mat initialDepth = img_ptr_depth->image;
          timestamp = depthMessage.get()->header.stamp.toSec();
 
-         depth = initialDepth(Rect(app.OUSTER_COLUMN_START ,0,256,128));
+         depth = initialDepth(Rect(min(app.OUSTER_COLUMN_START, initialDepth.cols - 256) ,0,256,128));
 
          for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
          {
@@ -178,7 +178,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    planarRegionPub = nh->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
 
    // ROSTopic Subscribers
-   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME + "/depth/image_rect_raw";
+   string depthTopicName = "/img_node/range_image";
    string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME + "/depth/camera_info";
    subDepth = nh->subscribe("/img_node/range_image", 3, &NetworkManager::depthCallback, this);
    subDepthCamInfo = nh->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);

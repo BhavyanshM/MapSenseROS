@@ -38,6 +38,9 @@ class MapFrameProcessor
 
       int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
       int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
+
+   private:
+      const int DEBUG_SCALE = 2;
 };
 
 #endif //SRC_MAPFRAMEPROCESSOR_H
