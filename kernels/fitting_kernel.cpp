@@ -16,6 +16,21 @@
 #define INPUT_HEIGHT 14
 #define INPUT_WIDTH 15
 
+float4 angular_back_project(int2 pos, float Z, global float* params){
+
+   float x_theta = (float)pos.x/(float)1024 * (float)2;
+   float y_theta = (float)(64 - pos.y)/(float)256;
+
+   float px = Z * cospi(y_theta) * sinpi(x_theta);
+   float py = - Z * sinpi(y_theta);
+   float pz = Z * cospi(y_theta) * cospi(x_theta);
+
+//   printf("\n\n(%d,%d): ANGULAR:(%.2lf, %.2lf)(%.2lf, %.2lf, %.2lf)\n\n", pos.x, pos.y, x_theta, y_theta, px*100, py*100, pz*100);
+
+   float4 X = (float4)(px * 10, py * 10, pz * 10, 0);
+   return X;
+}
+
 float4 back_project(int2 pos, float Z, global float* params){
     float px = (pos.x - params[DEPTH_CX])/(params[DEPTH_FX]) * Z;
     float py = (pos.y - params[DEPTH_CY])/(params[DEPTH_FY]) * Z;
@@ -40,19 +55,19 @@ float4 back_project(int2 pos, float Z, global float* params){
 
                 pos = (int2)(gx,gy);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 va = back_project(pos, Z, params);
+                float4 va = angular_back_project(pos, Z, params);
 
                 pos = (int2)(gx + m, gy);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 vb = back_project(pos, Z, params);
+                float4 vb = angular_back_project(pos, Z, params);
 
                 pos = (int2)(gx + m, gy + m);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 vc = back_project(pos, Z, params);
+                float4 vc = angular_back_project(pos, Z, params);
 
                 pos = (int2)(gx,gy + m);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                float4 vd = back_project(pos, Z, params);
+                float4 vd = angular_back_project(pos, Z, params);
 
                 normal += cross((vc-vb),(vb-va));
                 normal += cross((vd-vc),(vc-vb));
@@ -78,7 +93,7 @@ float4 back_project(int2 pos, float Z, global float* params){
                 int2 pos = (int2)(gx,gy);
                 Z = ((float)read_imageui(in, pos).x)/(float)1000;
                 if(Z > 0.1f){
-                    float4 P = back_project(pos, Z, params);
+                    float4 P = angular_back_project(pos, Z, params);
                     centroid += P.xyz;
                 }
 
