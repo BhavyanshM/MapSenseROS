@@ -171,7 +171,7 @@ namespace Mapsense
       };
 
       template <size_t N, size_t K>
-      constexpr auto CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
+      char* CleanupOutputString(const char(&expr)[N], const char(&remove)[K])
       {
          ChangeResult<N> result = {};
 

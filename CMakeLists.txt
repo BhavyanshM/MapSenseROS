@@ -92,7 +92,8 @@ set(SOURCE
         src/FeatureDetection/PlanarRegionProcessor.cpp
 		src/FileManager.cpp
 		src/FeatureDetection/KeypointDetector.cpp
-		src/OpenCL/OpenCLManager.cpp )
+		src/OpenCL/OpenCLManager.cpp
+		src/Rendering/MeshGenerator.cpp	)
 
 set (HEADERS
 		src/headers/PlanarRegionCalculator.h
@@ -118,7 +119,6 @@ set (HEADERS
 		src/headers/Timer.h src/headers/Core.h)
 
 set(MAPSENSE_GUI_SOURCE
-		src/Rendering/MeshGenerator.cpp
 		src/Launcher/MapsenseLauncherUI.cpp
 		src/UI/ImGuiLayout.cpp
 		)
@@ -240,9 +240,12 @@ add_executable(mapsense_headless
 target_link_libraries(mapsense_headless
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}
+		${MAGNUM_GUI_LIBS}
+		MagnumIntegration::ImGui
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen
 		tbb
+		gtsam
 		geom-tools)
 add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
 

@@ -35,7 +35,7 @@ void SLAMApplication::init(const Arguments& arguments)
       shared_ptr<PlanarRegion> region = _mapper.regions[i];
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      _mapper.fgSLAM->setOrientedPlaneInitialValue(region->getId(), plane);
+      _mapper.fgSLAM->setOrientedPlaneInitialValue(region->getId(), OrientedPlane3(plane.x(), plane.y(), plane.z(), plane.w()));
       _mapper.mapRegions.emplace_back(region);
       _mapper.measuredRegions.emplace_back(region);
    }

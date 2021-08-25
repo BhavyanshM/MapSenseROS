@@ -6,22 +6,27 @@
 
 MapsenseHeadlessLauncher::MapsenseHeadlessLauncher(int argc, char **argv)
 {
-   _dataReceiver = new NetworkManager(this->appState);
-   _dataReceiver->init_ros_node(argc, argv, this->appState);
-   _regionCalculator = new PlanarRegionCalculator(appState);
-   _regionCalculator->initOpenCL();
+   _openCLManager = new OpenCLManager();
+   _networkManager = new NetworkManager(this->appState, &appUtils);
+   _networkManager->init_ros_node(argc, argv, this->appState);
+   _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
+   _regionCalculator->setOpenCLManager(_openCLManager);
 }
 
 void MapsenseHeadlessLauncher::update()
 {
-   _dataReceiver->spin_ros_node();
-   _dataReceiver->acceptMapsenseConfiguration(appState);
-   _dataReceiver->load_next_frame(_regionCalculator->inputDepth, _regionCalculator->inputColor, _regionCalculator->inputTimestamp, appState);
-   if (_dataReceiver->depthCamInfoSet)
+   _networkManager->spin_ros_node();
+   _networkManager->acceptMapsenseConfiguration(appState);
+   _networkManager->receiverUpdate(appState);
+   if (_networkManager->paramsAvailable)
    {
-      _regionCalculator->generateRegionsFromDepth(_dataReceiver, appState);
-      _regionCalculator->publish();
+      _networkManager->paramsAvailable = false;
+      appState.MERGE_DISTANCE_THRESHOLD = _networkManager->paramsMessage.mergeDistanceThreshold;
+      appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
    }
+
+   _regionCalculator->generateRegionsFromDepth(appState);
+   _regionCalculator->publish();
 }
 
 int main(int argc, char **argv)

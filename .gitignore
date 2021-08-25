@@ -5,3 +5,4 @@ Docker/JetBrains*
 **/cmake-build-debug
 Extras/Images*
 GoogleTest*
+cmake-*

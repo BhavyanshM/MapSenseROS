@@ -17,8 +17,10 @@ class MapsenseHeadlessLauncher
       void update();
 
       ApplicationState appState;
+      AppUtils appUtils;
       PlanarRegionCalculator *_regionCalculator;
-      NetworkManager *_dataReceiver;
+      NetworkManager *_networkManager;
+      OpenCLManager *_openCLManager;
 };
 
 #endif //MAPSENSEHEADLESSLAUNCHER_H
