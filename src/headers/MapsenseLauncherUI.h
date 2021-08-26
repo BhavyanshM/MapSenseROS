@@ -129,9 +129,6 @@ void MyApplication::drawEvent()
          ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_PassthruCentralNode /*|ImGuiDockNodeFlags_NoResize*/ );
       }
 
-      bool demo = true;
-      ImGui::ShowDemoWindow(&demo);
-
       ImGui::End();
 
       ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_FirstUseEver);
