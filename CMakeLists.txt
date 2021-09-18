@@ -3,14 +3,15 @@ project(map_sense)
 
 # This line is required for specifying the "modules" directory in the project containing .cmake files
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
+set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../../devel;/opt/ros/noetic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-
 #MATH(EXPR stack_size "2048000 * 1024 * 1024") # 16 Mb
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,stack-size=${stack_size}")
 
 enable_testing()
 find_package(GTest REQUIRED) # Find the google testing framework on your system
-
+find_package(Torch REQUIRED PATHS "${PROJECT_SOURCE_DIR}/Vendor/libtorch")
 
 find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
@@ -93,7 +94,8 @@ set(SOURCE
 		src/FileManager.cpp
 		src/FeatureDetection/KeypointDetector.cpp
 		src/OpenCL/OpenCLManager.cpp
-		src/Rendering/MeshGenerator.cpp	)
+		src/Rendering/MeshGenerator.cpp
+		)
 
 set (HEADERS
 		src/headers/PlanarRegionCalculator.h
@@ -186,10 +188,17 @@ target_link_libraries(Mapsense_Launcher_UI
 		Eigen3::Eigen
 		tbb
 		gtsam
-		geom-tools)
+		geom-tools
+		${TORCH_LIBRARIES}
+		ClayEngine)
 add_dependencies(Mapsense_Launcher_UI map_sense_generate_messages_cpp)
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
+
+
+add_executable(TorchDemo src/examples/TorchDemo.cpp)
+target_link_libraries(TorchDemo PRIVATE
+		${TORCH_LIBRARIES})
 
 add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
 target_link_libraries(factorGraph2D PRIVATE
@@ -263,6 +272,7 @@ add_executable(math-tester
 
 target_link_libraries(math-tester
 		Eigen3::Eigen)
+
 
 
 

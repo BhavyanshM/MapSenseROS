@@ -47,6 +47,7 @@ MyApplication::MyApplication(const Arguments& arguments) : Magnum::Platform::App
    _mesher = new MeshGenerator(&_drawables);
 
    // setMinimalLoopPeriod(32); /* Needs to be less than 30-32 milliseconds for real-time performance */
+
 }
 
 void MyApplication::init(int argc, char **argv)

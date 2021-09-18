@@ -6,3 +6,4 @@ Docker/JetBrains*
 Extras/Images*
 GoogleTest*
 cmake-*
+Vendor/libtorch*
