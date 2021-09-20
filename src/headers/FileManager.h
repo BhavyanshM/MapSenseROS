@@ -21,6 +21,8 @@ class FileManager
       void load_sample_depth(String filename, Mat& depth);
 
       void load_sample_color(String filename, Mat& color);
+
+      static Mat ReadImage(String filename);
 };
 
 #endif //FILEIO_H

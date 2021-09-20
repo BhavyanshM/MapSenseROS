@@ -23,7 +23,7 @@
 // ImPlot v0.10 WIP
 
 #pragma once
-#include "imgui.h"
+#include "imgui/imgui.h"
 
 //-----------------------------------------------------------------------------
 // Macros and Defines

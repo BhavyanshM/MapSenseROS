@@ -10,6 +10,12 @@ void FileManager::load_sample_color(String filename, Mat& color)
    color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
 }
 
+Mat FileManager::ReadImage(String filename)
+{
+   std::cout << "PATH:" << ros::package::getPath("map_sense") << std::endl;
+   return imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
+}
+
 void FileManager::get_sample_depth(Mat depth, float mean, float stddev)
 {
    std::default_random_engine generator;

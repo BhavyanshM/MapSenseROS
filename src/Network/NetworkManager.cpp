@@ -169,7 +169,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
-   ROS_DEBUG("Starting ROS Node");
+   ROS_INFO("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
    rosNode = new NodeHandle();
 
