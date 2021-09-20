@@ -16,68 +16,11 @@ RUN mkdir -p Downloads \
  && cd .. \
  && rm -rf Downloads
 
-# Setup MapSenseROS Dependencies (Magnum, Corrade and MagnumIntegration for GUI and Rendering)
-# Reference: [https://doc.magnum.graphics/magnum/getting-started.html]
-RUN apt-get --quiet 2 --yes update \
- && apt-get --quiet 2 --yes install \
-    libopenal-dev \
-    libglfw3-dev \
-    libsdl2-dev \
-    libglm-dev \
-    dpkg-dev \
-    debhelper \
-    libbullet-dev \
-    > /dev/null \
- && rm -rf /var/lib/apt/lists/*
-
 # Install graphics and UI tools magnum and ImGui
 USER robotlab
 RUN mkdir dev
 WORKDIR /home/robotlab/dev
 USER root
-
-RUN mkdir corrade \
- && cd corrade \
- && git clone git://github.com/mosra/corrade \
- && cd corrade \
- && ln -s package/debian . \
- && dpkg-buildpackage > /dev/null \
- && dpkg -i ../corrade*.deb \
- && cd ../.. \
- && rm -rf corrade
-
-RUN mkdir magnum \
- && cd magnum \
- && git clone git://github.com/mosra/magnum \
- && cd magnum \
- && ln -s package/debian . \
- && dpkg-buildpackage > /dev/null \
- && dpkg -i ../magnum*.deb \
- && cd ../.. \
- && rm -rf magnum
-
-RUN mkdir magnum-integration \
- && cd magnum-integration \
- && git clone git://github.com/mosra/magnum-integration \
- && cd magnum-integration \
- && cd src/MagnumExternal \
- && git clone https://github.com/ocornut/imgui.git \
- && mv imgui ImGui \
- && cd ImGui && git checkout docking && cd ../../../ \
- && sed -i "s/IMGUI=OFF/IMGUI=ON/g" package/debian/rules \
- && sed -i "s/imgui_demo/imgui_demo imgui_tables/g" modules/FindImGui.cmake \
- && ln -s package/debian . \
- && dpkg-buildpackage > /dev/null \
- && dpkg -i ../magnum-integration*.deb \
- && cd ../.. \
- && rm -rf magnum-integration
-
-# Setup Catkin Workspace and MapSenseROS C++ node
-RUN apt-get --quiet 2 --yes update \
- && apt-get --quiet 2 --yes install \
-    libvtk7-dev \
-    > /dev/null \
- && rm -rf /var/lib/apt/lists/*
 
 # Install latest GTSAM from source
 RUN cd /tmp && \
@@ -87,21 +30,56 @@ RUN cd /tmp && \
     cd - && \
     wget https://apt.repos.intel.com/setup/intelproducts.list -O /etc/apt/sources.list.d/intelproducts.list
 
-RUN apt-get --quiet 2 --yes update \
- && apt-get --quiet 2 --yes install \
-    libboost-all-dev \
-    libtbb-dev \
-    intel-mkl \
-    > /dev/null \
- && rm -rf /var/lib/apt/lists/*
-
 RUN add-apt-repository ppa:borglab/gtsam-develop \
  && apt-get --quiet 2 --yes update \
  && apt-get --quiet 2 --yes install \
+    libvtk7-dev \
+    libboost-all-dev \
+    libtbb-dev \
+    intel-mkl \
     libgtsam-dev \
     libgtsam-unstable-dev \
+    dpkg-dev \
+    debhelper \
+    libxrandr-dev \
+    libxinerama-dev \
+    > /dev/null
+
+RUN apt-get --quiet 2 --yes install \
+    libxcursor-dev \
+    libxi-dev \
     > /dev/null \
  && rm -rf /var/lib/apt/lists/*
+
+
+
+
+# Setup MapSenseROS Dependencies (Magnum, Corrade and MagnumIntegration for GUI and Rendering)
+# Reference: [https://doc.magnum.graphics/magnum/getting-started.html]
+# RUN apt-get --quiet 2 --yes update \
+#  && apt-get --quiet 2 --yes install \
+#     libopenal-dev \
+#     libglfw3-dev \
+#     libsdl2-dev \
+#     libglm-dev \
+#     dpkg-dev \
+#     debhelper \
+#     libbullet-dev \
+#     > /dev/null \
+#  && rm -rf /var/lib/apt/lists/*
+
+
+RUN mkdir packages \
+    && cd packages \
+    && git clone --recurse-submodules -j8 git://github.com/BhavyanshM/ClayEngine \
+    && cd ClayEngine \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && make -j32 \
+    && make install \
+    && cd ../../.. \
+    && rm -rf packages
 
 USER robotlab
 RUN mkdir -p /home/robotlab/dev/mapsense_ws/src
