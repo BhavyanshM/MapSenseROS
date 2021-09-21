@@ -122,31 +122,8 @@ set (HEADERS
 		src/headers/Timer.h src/headers/Core.h
 		src/headers/ImGuiLayout.h )
 
-set(MAPSENSE_GUI_SOURCE
-		src/Launcher/MapsenseLauncherUI.cpp
-
-		src/Rendering/MeshGenerator.cpp)
-
-
-set(MAPSENSE_GUI_HEADERS
-		src/headers/MeshGenerator.h
-		src/headers/MapsenseLauncherUI.h
-		)
-
-
 set(MAPSENSE_CLAY_HEADERS src/headers/ClayApp.h src/headers/ClayApp.h src/headers/MapsenseLayer.h)
 set(MAPSENSE_CLAY_SOURCES src/Launcher/ClayApp.cpp src/Launcher/ClayApp.cpp src/Launcher/MapsenseLayer.cpp)
-
-#set(MAGNUM_GUI_LIBS
-#		Corrade::Main
-#		Magnum::Application
-#		Magnum::GL
-#		Magnum::Magnum
-#		Magnum::MeshTools
-#		Magnum::Primitives
-#		Magnum::SceneGraph
-#		Magnum::Shaders
-#		Magnum::Trade)
 
 set(GEOMTOOLS_HEADERS
 		src/Geometry/include/GeomTools.h
@@ -183,33 +160,18 @@ include_directories(
 		Vendor/spdlog/include
 )
 
-#add_executable(Mapsense_Launcher_UI ${SOURCE} ${MAPSENSE_GUI_SOURCE} ${HEADERS} ${MAPSENSE_GUI_HEADERS} )
-#target_precompile_headers(Mapsense_Launcher_UI PUBLIC src/headers/MapsenseHeaders.h)
-#target_link_libraries(Mapsense_Launcher_UI
-#		${OpenCV_LIBS}
-#		${catkin_LIBRARIES}
-#		${MAGNUM_GUI_LIBS}
-#		MagnumIntegration::ImGui
-#		/usr/lib/x86_64-linux-gnu/libOpenCL.so
-#		Eigen3::Eigen
-#		tbb
-#		gtsam
-#		geom-tools
-#		${TORCH_LIBRARIES})
-#add_dependencies(Mapsense_Launcher_UI map_sense_generate_messages_cpp)
-#set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 #set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
 
-
 add_executable(Mapsense_Clay ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/GLAD/include")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/glfw/include")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/glm")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/ImGui")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/ImGui/imgui")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/spdlog/include")
-target_include_directories(Mapsense_Clay PUBLIC "/usr/local/include/ClayEngine/Vendor/stb_image/")
+target_include_directories(Mapsense_Clay PUBLIC
+		"/usr/local/include/ClayEngine"
+		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+		"/usr/local/include/ClayEngine/Vendor/glfw/include"
+		"/usr/local/include/ClayEngine/Vendor/glm"
+		"/usr/local/include/ClayEngine/Vendor/ImGui"
+		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+		"/usr/local/include/ClayEngine/Vendor/stb_image/")
 target_link_libraries(Mapsense_Clay
 		${OpenCV_LIBS}
 		${catkin_LIBRARIES}
@@ -227,77 +189,41 @@ add_executable(TorchDemo src/examples/TorchDemo.cpp)
 target_link_libraries(TorchDemo PRIVATE
 		${TORCH_LIBRARIES})
 
-#add_executable(factorGraph2D src/examples/FactorGraph2D.cpp)
-#target_link_libraries(factorGraph2D PRIVATE
-#		${MAGNUM_GUI_LIBS})
-
 add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
 target_link_libraries(geom-tools
 		Eigen3::Eigen
 		${OpenCV_LIBS})
 
-#add_executable(registration_and_mapping
-#		src/Application/AppUtils.cpp
-#		src/Rendering/MeshGenerator.cpp
-#        src/Geometry/src/Elements/PlanarRegion.cpp
-#		src/SLAM/PlanarRegionSimulator.cpp
-#		src/Launcher/MagnumApplication.cpp
-#		src/Launcher/SLAMApplication.cpp
-#		src/Application/PlanarRegionMapTester.cpp
-#		src/Geometry/src/GeomTools.cpp
-#		src/SLAM/PlanarRegionMapHandler.cpp
-#		src/SLAM/FactorGraphHandler.cpp
-#		src/headers/AppUtils.h
-#		src/headers/SLAMApplication.h
-#		src/headers/PlanarRegion.h
-#		src/headers/PlanarRegionSimulator.h
-#		src/headers/MagnumApplication.h
-#		src/headers/PlanarRegionMapTester.h
-#		src/headers/MeshGenerator.h
-#		src/headers/PlanarRegionMapHandler.h
-#		src/headers/FactorGraphHandler.h
-#		src/headers/Instrumentor.h
-#		src/headers/Timer.h src/headers/Core.h)
-#target_link_libraries(registration_and_mapping
-#		Eigen3::Eigen
-#		${OpenCV_LIBS}
-#		${MAGNUM_GUI_LIBS}
-#		${catkin_LIBRARIES}
-#		gtsam
-#		geom-tools)
-#include_directories(${GTEST_INCLUDE_DIRS})
-#target_link_libraries(registration_and_mapping ${GTEST_LIBRARIES})
+if(BUILD_HEADLESS)
+	add_executable(mapsense_headless
+			${SOURCE} ${HEADERS}
+			src/Launcher/MapsenseHeadlessLauncher.cpp
+			src/headers/MapsenseHeadlessLauncher.h)
+	target_include_directories(mapsense_headless PUBLIC
+			"/usr/local/include/ClayEngine"
+			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+			"/usr/local/include/ClayEngine/Vendor/glfw/include"
+			"/usr/local/include/ClayEngine/Vendor/glm"
+			"/usr/local/include/ClayEngine/Vendor/ImGui"
+			"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+			"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+			"/usr/local/include/ClayEngine/Vendor/stb_image/")
+	target_link_libraries(mapsense_headless
+			${OpenCV_LIBS}
+			${catkin_LIBRARIES}
+			/usr/lib/x86_64-linux-gnu/libOpenCL.so
+			Eigen3::Eigen
+			tbb
+			gtsam
+			geom-tools
+			${TORCH_LIBRARIES})
+	add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
+endif()
+#		glad imgui glfw3 ${CMAKE_DL_LIBS} )
 
-
-#add_executable(mapsense_headless
-#        ${SOURCE} ${HEADERS}
-#		src/Launcher/MapsenseHeadlessLauncher.cpp
-#		src/headers/MapsenseHeadlessLauncher.h)
-#target_link_libraries(mapsense_headless
-#		${OpenCV_LIBS}
-#		${catkin_LIBRARIES}
-#		MagnumIntegration::ImGui
-#		/usr/lib/x86_64-linux-gnu/libOpenCL.so
-#		Eigen3::Eigen
-#		tbb
-#		gtsam
-#		geom-tools)
-#add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
-
-add_executable(planar-slam src/examples/PlanarSLAMExample.cpp)
-target_link_libraries(planar-slam gtsam)
-
-add_executable(pose2-slam src/examples/Pose2SLAMExample.cpp)
-target_link_libraries(pose2-slam gtsam)
-
-add_executable(visual-isam2 src/examples/VisualISAM2Example.cpp src/examples/SFMdata.h)
-target_link_libraries(visual-isam2 gtsam)
-
-add_executable(math-tester
-		src/examples/MathTester.cpp)
-
-target_link_libraries(math-tester
-		Eigen3::Eigen)
+if(BUILD_EXAMPLES)
+	add_subdirectory(src/examples/)
+endif()
 
 
 
