@@ -7,3 +7,4 @@ Extras/Images*
 GoogleTest*
 cmake-*
 Vendor/libtorch*
+build*

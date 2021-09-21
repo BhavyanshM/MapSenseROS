@@ -6,7 +6,6 @@
 #define SLAMMODULE_H
 
 #include "PlanarRegionMapHandler.h"
-#include "MeshGenerator.h"
 #include "imgui.h"
 #include "implot/implot.h"
 #include "NetworkManager.h"
@@ -20,7 +19,6 @@ class SLAMModule
 
       vector<shared_ptr<PlanarRegion>> fileRegions;
 
-      vector<Object3D *> latestRegionEdges, previousRegionEdges, matchingEdges, poseAxes, atlasPoseAxes;
       vector<int> matchCountVec;
       Subscriber *sensorPoseSub;
       geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
@@ -29,10 +27,8 @@ class SLAMModule
       RigidBodyTransform _transformZUp;
 
    public:
-      Object3D* _world;
       NetworkManager* network;
       PlanarRegionMapHandler _mapper;
-      MeshGenerator _mesher;
 
       float _interp = 0.0f;
       bool enabled = true;
@@ -41,7 +37,7 @@ class SLAMModule
       bool poseAvailable = false;
 
    public:
-      SLAMModule(int argc, char **argv, NetworkManager *networkManager, Magnum::SceneGraph::DrawableGroup3D* _drawables, Object3D* sensor);
+      SLAMModule(int argc, char **argv, NetworkManager *networkManager);
 
       void slamUpdate();
 

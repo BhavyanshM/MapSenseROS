@@ -4,8 +4,7 @@
 
 #include "SLAMModule.h"
 
-SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager, Magnum::SceneGraph::DrawableGroup3D *_drawables, Object3D *sensor) : _mesher(
-      _drawables), _world(sensor)
+SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager)
 {
    this->network = networkManager;
 
@@ -145,7 +144,6 @@ void SLAMModule::slamUpdate()
       } else
       {
          //         _mapper.poses.emplace_back(RigidBodyTransform(_mapper._sensorToMapTransform));
-         //      _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, frameIndex, _world);
       }
 
       ROS_DEBUG("Recycling Region Lists.\n");
@@ -162,7 +160,6 @@ void SLAMModule::renderSLAMOutput()
    /* Generate World Frame Region Mesh. */
    //         for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
    //            _mapper.regionsInMapFrame[k]->retainConvexHull();
-   //         _mesher.generateRegionLineMesh(_mapper.regionsInMapFrame, latestRegionEdges, 1, _world, false);
 
    /* Extracting Landmarks from Factor Graph. */
    _mapper.extractFactorGraphLandmarks();
@@ -171,18 +168,10 @@ void SLAMModule::renderSLAMOutput()
    for (int k = 0; k < _mapper.mapRegions.size(); k++)
       _mapper.mapRegions[k]->retainConvexHull();
 
-   /* Generating Region Mesh */
-   _mesher.generateRegionLineMesh(_mapper.mapRegions, latestRegionEdges, _mapper.fgSLAM->getPoseId(), _world);
-
    /* Generating Pose Mesh */
    _mapper.fgSLAM->getPoses(_mapper.poses);
 
    _mapper.atlasPoses.emplace_back(_mapper._atlasSensorPose);
-   _mesher.generatePoseMesh(_mapper.atlasPoses, atlasPoseAxes, _world, 3, 1.5);
-   //   _mesher.appendPoseMesh(_mapper._atlasSensorPose, atlasPoseAxes, _world, 3);
-   _mesher.generatePoseMesh(_mapper.poses, poseAxes, _world, 2, 1.5);
-
-   //   _mesher.generateRegionLineMesh(_mapper._latestRegionsZUp, latestRegionEdges, 3, _world, true);
 }
 
 void SLAMModule::SLAMTesterUpdate()
@@ -213,7 +202,6 @@ void SLAMModule::ImGuiUpdate()
    ImGui::Checkbox("ICP Enabled", &this->ICPEnabled);
    ImGui::SliderFloat("Interpolation", &_interp, 0.0f, 1.0f);
 
-   _mesher.generatePoseMesh(_mapper.atlasPoses, atlasPoseAxes, _world, 3, 1.5, _interp);
 
    if (this->matchCountVec.size() > 20)
    {

@@ -295,8 +295,8 @@ int main(int argc, char **argv)
 {
 
    MyApplication app({argc, argv});
-   std::vector<std::string> args(argv, argv + argc);
 
+   std::vector<std::string> args(argv, argv + argc);
    for (int i = 0; i < argc; i++)
    {
       if (args[i] == "--export")
