@@ -31,10 +31,10 @@ void AppUtils::getFileNames(string dirName, vector<string>& files, bool printLis
    }
 }
 
-void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat components, ApplicationState appState,
+void AppUtils::capture_data(std::string projectPath, std::string filename, cv::Mat depth, cv::Mat color, cv::Mat filteredDepth, cv::Mat components, ApplicationState appState,
                             vector<shared_ptr<PlanarRegion>> regions)
 {
-   Mat finalDepth, finalFilteredDepth;
+   cv::Mat finalDepth, finalFilteredDepth;
    depth.convertTo(finalDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
    filteredDepth.convertTo(finalFilteredDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
    imwrite(projectPath + filename + "_Depth.png", finalDepth);
@@ -44,7 +44,7 @@ void AppUtils::capture_data(String projectPath, String filename, Mat depth, Mat 
    GeomTools::saveRegions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
 }
 
-void AppUtils::appendToDebugOutput(Mat disp)
+void AppUtils::appendToDebugOutput(cv::Mat disp)
 {
    if (disp.rows <= 0 || disp.cols <= 0)
    {
@@ -52,13 +52,13 @@ void AppUtils::appendToDebugOutput(Mat disp)
       return;
    }
    if (disp.type() == CV_8UC1)
-      cvtColor(disp, disp, COLOR_GRAY2BGR);
+      cvtColor(disp, disp, cv::COLOR_GRAY2BGR);
    if (disp.type() == CV_16UC3 || disp.type() == CV_16UC1)
    {
       disp.convertTo(disp, CV_8U, 0.00390625);
       disp.convertTo(disp, CV_8UC3);
    }
-   cv::resize(disp, disp, Size(640 * 480 / disp.rows, 480));
+   cv::resize(disp, disp, cv::Size(640 * 480 / disp.rows, 480));
    images.emplace_back(disp);
    ROS_DEBUG("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d, Images: %d\n", disp.type(), disp.rows, disp.cols, images.size());
 }
@@ -69,10 +69,10 @@ void AppUtils::displayDebugOutput(ApplicationState appState)
    hconcat(images, debugOutput);
    if (debugOutput.cols > 0 && debugOutput.rows > 0 && !debugOutput.empty())
    {
-      namedWindow("DebugOutput", WINDOW_NORMAL);
-      resizeWindow("DebugOutput", (int) (debugOutput.cols * appState.DISPLAY_WINDOW_SIZE), (int) (debugOutput.rows * appState.DISPLAY_WINDOW_SIZE));
-      imshow("DebugOutput", debugOutput);
-      waitKey(1);
+      cv::namedWindow("DebugOutput", cv::WINDOW_NORMAL);
+      cv::resizeWindow("DebugOutput", (int) (debugOutput.cols * appState.DISPLAY_WINDOW_SIZE), (int) (debugOutput.rows * appState.DISPLAY_WINDOW_SIZE));
+      cv::imshow("DebugOutput", debugOutput);
+      cv::waitKey(1);
    }
    clearDebug();
 }
@@ -84,7 +84,7 @@ void AppUtils::clearDebug()
 
 void AppUtils::setDisplayResolution(uint16_t rows, uint16_t cols)
 {
-   displayOutput = Mat(rows, cols, CV_8UC3);
+   displayOutput = cv::Mat(rows, cols, CV_8UC3);
    displayOutput.setTo(0);
 }
 
@@ -95,11 +95,11 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t
       for (int j = 0; j < canvas.cols(); j++)
       {
          if (canvas(i, j) == 1)
-            circle(AppUtils::displayOutput, Point(i * 6, j * 6), 2, Scalar(255, 0, 0), -1);
+            circle(AppUtils::displayOutput, cv::Point(i * 6, j * 6), 2, cv::Scalar(255, 0, 0), -1);
          else if (windowPos.x() != -1 && windowPos.y() != -1 && i > windowPos.x() - windowSize && i < windowPos.x() + windowSize &&
                   j > windowPos.y() - windowSize && j < windowPos.y() + windowSize)
          {
-            circle(AppUtils::displayOutput, Point(i * 6, j * 6), 2, Scalar(0, 0, 255), -1);
+            circle(AppUtils::displayOutput, cv::Point(i * 6, j * 6), 2, cv::Scalar(0, 0, 255), -1);
          }
       }
    }
@@ -110,8 +110,8 @@ void AppUtils::displayPointSet2D(vector<Vector2f> points, Vector2f offset, int s
    displayOutput.setTo(0);
    for (int i = 0; i < points.size(); i++)
    {
-      circle(AppUtils::displayOutput, Point((int) (points[i].x() * scale + offset.x()) * 6, (int) (points[i].y() * scale + offset.y()) * 6), 2,
-             Scalar(255, 0, 0), -1);
+      circle(AppUtils::displayOutput, cv::Point((int) (points[i].x() * scale + offset.x()) * 6, (int) (points[i].y() * scale + offset.y()) * 6), 2,
+             cv::Scalar(255, 0, 0), -1);
       display(20);
    }
 }
@@ -126,10 +126,10 @@ void AppUtils::display(uint16_t delay)
 {
    if (displayOutput.cols > 0 && displayOutput.rows > 0 && !displayOutput.empty())
    {
-      namedWindow("Display", WINDOW_NORMAL);
-      resizeWindow("Display", (int) (displayOutput.cols), (int) (displayOutput.rows));
-      imshow("Display", displayOutput);
-      waitKey(delay);
+      cv::namedWindow("Display", cv::WINDOW_NORMAL);
+      cv::resizeWindow("Display", (int) (displayOutput.cols), (int) (displayOutput.rows));
+      cv::imshow("Display", displayOutput);
+      cv::waitKey(delay);
    }
 }
 
@@ -167,14 +167,14 @@ void AppUtils::checkMemoryLimits()
    }
 }
 
-void AppUtils::DisplayImage(Mat disp, const ApplicationState& app)
+void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app)
 {
    if (disp.cols > 0 && disp.rows > 0 && !disp.empty())
    {
-      namedWindow("DisplayImage", WINDOW_NORMAL);
-      resizeWindow("DisplayImage", (int) (disp.cols * app.DISPLAY_WINDOW_SIZE), (int) (disp.rows * app.DISPLAY_WINDOW_SIZE));
-      imshow("DisplayImage", disp);
-      waitKey(1);
+      cv::namedWindow("DisplayImage", cv::WINDOW_NORMAL);
+      cv::resizeWindow("DisplayImage", (int) (disp.cols * app.DISPLAY_WINDOW_SIZE), (int) (disp.rows * app.DISPLAY_WINDOW_SIZE));
+      cv::imshow("DisplayImage", disp);
+      cv::waitKey(1);
    }
 }
 

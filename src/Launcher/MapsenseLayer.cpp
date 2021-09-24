@@ -6,13 +6,7 @@
 #include "MapsenseLayer.h"
 #include "Core/Timer.h"
 #include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-
-#include <execinfo.h>
-#include <signal.h>
-#include <stdlib.h>
 #include "unistd.h"
-#include <boost/stacktrace.hpp>
 
 namespace Clay
 {
@@ -271,7 +265,7 @@ namespace Clay
 
             if (ImGui::Button("Log OpenCV Build Info"))
             {
-               cout << getBuildInformation() << endl;
+               cout << cv::getBuildInformation() << endl;
             }
 
             ImGui::EndTabItem();

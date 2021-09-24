@@ -43,7 +43,7 @@ class SLAMModule
 
       void setLatestRegionsToZUp(const vector<shared_ptr<PlanarRegion>>& regions);
 
-      void init(Pose3 initialPose);
+      void init(gtsam::Pose3 initialPose);
 
       void extractArgs(int argc, char** argv);
 

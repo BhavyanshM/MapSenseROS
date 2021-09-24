@@ -41,15 +41,15 @@ void KeypointDetector::track_features(cv::Mat prev, cv::Mat cur, std::vector<cv:
 
 void KeypointDetector::draw_matches(cv::Mat& img, std::vector<cv::Point2f> prev_pts, std::vector<cv::Point2f> cur_pts){
    for (int i = 0; i<prev_pts.size(); i++){
-      line(img, prev_pts[i],  cur_pts[i], Scalar(0,255,0), 3);
-      circle(img, prev_pts[i], 2, Scalar(0,0,0), -1);
-      circle(img,  cur_pts[i], 2, Scalar(255, 255, 255), -1);
+      line(img, prev_pts[i],  cur_pts[i], cv::Scalar(0,255,0), 3);
+      circle(img, prev_pts[i], 2, cv::Scalar(0,0,0), -1);
+      circle(img,  cur_pts[i], 2, cv::Scalar(255, 255, 255), -1);
    }
 }
 
 void KeypointDetector::update(ApplicationState& appState)
 {
-   Mat img;
+   cv::Mat img;
    double timestamp = 0;
 
    ImageReceiver *depthReceiver = ((ImageReceiver *) this->_dataReceiver->receivers[1]);
@@ -83,10 +83,10 @@ void KeypointDetector::update(ApplicationState& appState)
       */
       float fx = 602.259, fy = 603.040, cx = 321.375, cy = 240.515;
       float data[9] = {   fx, 0, cx, 0, fy, cy, 0, 0, 1 };
-      Mat K = cv::Mat(3, 3, CV_32FC1, data);
-      Mat R(3,3,CV_32FC1), t(1,3,CV_32FC1), mask;
+      cv::Mat K = cv::Mat(3, 3, CV_32FC1, data);
+      cv::Mat R(3,3,CV_32FC1), t(1,3,CV_32FC1), mask;
 
-      Mat E = findEssentialMat(kp_prev, kp_cur, K, RANSAC, 0.999, 1.0, mask);
+      cv::Mat E = findEssentialMat(kp_prev, kp_cur, K, cv::RANSAC, 0.999, 1.0, mask);
 
       /*
        * Recover Pose from Essential Matrix (R,t)

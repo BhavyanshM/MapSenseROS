@@ -8,7 +8,7 @@ ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 {
 }
 
-ImageReceiver::ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
+ImageReceiver::ImageReceiver(NodeHandle *nh, std::string imageTopic, std::string cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
 {
    this->topicName = imageTopic;
    this->_compressed = compressed;
@@ -53,11 +53,11 @@ void ImageReceiver::render()
       if(_imageEncoding == sensor_msgs::image_encodings::TYPE_16UC1)
       {
          this->_image.convertTo(this->_image, -1, this->_imageBrightness, this->_imageOffset);
-         cvtColor(this->_image, this->_image, COLOR_GRAY2BGR);
+         cvtColor(this->_image, this->_image, cv::COLOR_GRAY2BGR);
       }
-      Mat disp;
+      cv::Mat disp;
       if(undistortEnabled){
-         disp = ImageTools::cvUndistort(this->_image, Mat(), Mat());
+         disp = ImageTools::cvUndistort(this->_image, cv::Mat(), cv::Mat());
       } else
          disp = this->_image;
       appUtils->appendToDebugOutput(disp);
@@ -66,9 +66,9 @@ void ImageReceiver::render()
 
 void ImageReceiver::ImGuiUpdate()
 {
-   ImGui::Text("%s", (String("ROS1 Receiver: ") + topicName).c_str());
-   ImGui::Checkbox((String("Render: ") + topicName).c_str(), &renderingEnabled);
-   ImGui::Checkbox((String("Undistort: ") + topicName).c_str(), &undistortEnabled);
+   ImGui::Text("%s", (std::string("ROS1 Receiver: ") + topicName).c_str());
+   ImGui::Checkbox((std::string("Render: ") + topicName).c_str(), &renderingEnabled);
+   ImGui::Checkbox((std::string("Undistort: ") + topicName).c_str(), &undistortEnabled);
 }
 
 void ImageReceiver::processMessage(ApplicationState& app)
@@ -106,7 +106,7 @@ void ImageReceiver::processMessage(ApplicationState& app)
    }
 }
 
-void ImageReceiver::getData(Mat& image, ApplicationState& app, double& timestamp)
+void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& timestamp)
 {
    MAPSENSE_PROFILE_FUNCTION();
    timestamp = this->timestampLastReceived;

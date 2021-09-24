@@ -4,7 +4,7 @@
 
 #include "PointCloudReceiver.h"
 
-PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, String cloudTopic, bool compressed)
+PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, bool compressed)
 {
    this->topicName = cloudTopic;
    this->_cloudSubscriber = new Subscriber();
@@ -14,10 +14,10 @@ PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, String cloudTopic, bool c
 
 void PointCloudReceiver::processMessage(ApplicationState& app)
 {
-   ROS1TopicReceiver::processMessage(app);
+   ROS_DEBUG("PointCloud Processing!");
 }
 
-void PointCloudReceiver::getData(Mat& image, ApplicationState& app, double& timestamp)
+void PointCloudReceiver::getData(cv::Mat& image, ApplicationState& app, double& timestamp)
 {
 }
 
@@ -29,8 +29,8 @@ void PointCloudReceiver::ImGuiUpdate()
 {
 }
 
-void PointCloudReceiver::cloudCallback(const PointCloud2ConstPtr& cloudMsg)
+void PointCloudReceiver::cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloudMsg)
 {
    _cloudMessage = cloudMsg;
-   CLAY_LOG_INFO("PointCloud Received! FrameId:{}, Width:{}, Height:{}", _cloudMessage->header.frame_id, _cloudMessage->width, _cloudMessage->height);
+   ROS_DEBUG("PointCloud Processing! FrameId:{}, Width:{}, Height:{}", _cloudMessage->header.frame_id, _cloudMessage->width, _cloudMessage->height);
 }

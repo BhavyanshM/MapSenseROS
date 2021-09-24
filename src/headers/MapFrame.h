@@ -7,26 +7,25 @@
 #include "MapsenseHeaders.h"
 
 using namespace std;
-using namespace cv;
 
 class MapFrame
 {
    public:
 
-      Mat regionOutput;
-      Mat patchData;
+      cv::Mat regionOutput;
+      cv::Mat patchData;
 
-      void setRegionOutput(Mat& regionOutput);
+      void setRegionOutput(cv::Mat& regionOutput);
 
-      void setPatchData(Mat& patchData);
+      void setPatchData(cv::Mat& patchData);
 
-      Mat& getRegionOutput();
+      cv::Mat& getRegionOutput();
 
-      Mat& getPatchData();
+      cv::Mat& getPatchData();
 
-      void drawGraph(Mat& img, ApplicationState app);
+      void drawGraph(cv::Mat& img, ApplicationState app);
 
-      Vec6f getPatch(int x, int y);
+      cv::Vec6f getPatch(int x, int y);
 };
 
 #endif //SRC_MAPFRAME_H

@@ -16,20 +16,20 @@
 
 using namespace ros;
 using namespace std;
-using namespace cv;
 
 
 class ROS1TopicReceiver
 {
    protected:
       AppUtils* appUtils;
-      String topicName;
       bool messageReceived = false;
       bool renderingEnabled = false;
       bool undistortEnabled = false;
       double timestampLastReceived = 0.0;
+      std::string topicName;
 
    public:
+      const std::string& getTopicName() {return topicName;}
       virtual void render() = 0;
       virtual void ImGuiUpdate() = 0;
       virtual void processMessage(ApplicationState& app){};

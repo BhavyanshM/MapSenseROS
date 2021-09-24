@@ -20,7 +20,7 @@ using namespace sensor_msgs;
 class ImageReceiver : public ROS1TopicReceiver
 {
    private:
-      String _imageEncoding;
+      std::string _imageEncoding;
       ImageConstPtr _imageMessage;
       CameraInfoConstPtr _cameraInfoMessage;
       CompressedImageConstPtr _compressedImageMessage;
@@ -33,10 +33,10 @@ class ImageReceiver : public ROS1TopicReceiver
 
       bool _compressed = false;
       bool _cameraInfoSet = false;
-      Mat _image;
+      cv::Mat _image;
 
    public:
-      ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInfoTopic, bool compressed = false);
+      ImageReceiver(NodeHandle *nh, std::string imageTopic, std::string cameraInfoTopic, bool compressed = false);
 
       void processMessage(ApplicationState& app) override;
 
@@ -44,7 +44,7 @@ class ImageReceiver : public ROS1TopicReceiver
 
    public:
 
-      void getData(Mat& image, ApplicationState& app, double& timestamp);
+      void getData(cv::Mat& image, ApplicationState& app, double& timestamp);
 
       void render() override;
 

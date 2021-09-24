@@ -15,7 +15,6 @@
 #include "PlanarRegion.h"
 
 using namespace std;
-using namespace cv;
 
 typedef Eigen::Matrix<bool, Dynamic, Dynamic> BoolDynamicMatrix;
 
@@ -23,9 +22,9 @@ class AppUtils
 {
    public:
 
-      vector<Mat> images;
-      Mat displayOutput;
-      Mat debugOutput;
+      vector<cv::Mat> images;
+      cv::Mat displayOutput;
+      cv::Mat debugOutput;
       uint16_t rows, cols;
 
       void display(uint16_t delay);
@@ -39,11 +38,11 @@ class AppUtils
       void displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize);
 
       static void
-      capture_data(String projectPath, String filename, Mat depth, Mat color, Mat filteredDepth, Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
+      capture_data(std::string projectPath, std::string filename, cv::Mat depth, cv::Mat color, cv::Mat filteredDepth, cv::Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);
 
       static void getFileNames(string dirName, vector<string>& files, bool printList = false);
 
-      void appendToDebugOutput(Mat disp);
+      void appendToDebugOutput(cv::Mat disp);
 
       void displayDebugOutput(ApplicationState appState);
 
@@ -51,7 +50,7 @@ class AppUtils
 
       void clearDebug();
 
-      static void DisplayImage(Mat disp, const ApplicationState& app);
+      static void DisplayImage(cv::Mat disp, const ApplicationState& app);
 
 };
 

@@ -5,24 +5,24 @@ NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
    this->appUtils = appUtils;
    if (app.STEREO_DRIVER)
    {
-      this->camLeft = new VideoCapture(0, CAP_V4L2);
-      this->camRight = new VideoCapture(2, CAP_V4L2);
+      this->camLeft = new cv::VideoCapture(0, cv::CAP_V4L2);
+      this->camRight = new cv::VideoCapture(2, cv::CAP_V4L2);
 
-      this->camLeft->set(CAP_PROP_FRAME_WIDTH, 320);
-      this->camLeft->set(CAP_PROP_FRAME_HEIGHT, 240);
-      this->camLeft->set(CAP_PROP_FPS, 30);
-      this->camLeft->set(CAP_PROP_AUTO_EXPOSURE, 0.25);
-      this->camLeft->set(CAP_PROP_AUTOFOCUS, 0);
-      this->camLeft->set(CAP_PROP_EXPOSURE, -4);
-      this->camLeft->set(CAP_PROP_MODE, CAP_OPENCV_MJPEG);
+      this->camLeft->set(cv::CAP_PROP_FRAME_WIDTH, 320);
+      this->camLeft->set(cv::CAP_PROP_FRAME_HEIGHT, 240);
+      this->camLeft->set(cv::CAP_PROP_FPS, 30);
+      this->camLeft->set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
+      this->camLeft->set(cv::CAP_PROP_AUTOFOCUS, 0);
+      this->camLeft->set(cv::CAP_PROP_EXPOSURE, -4);
+      this->camLeft->set(cv::CAP_PROP_MODE, cv::CAP_OPENCV_MJPEG);
 
-      this->camRight->set(CAP_PROP_FRAME_WIDTH, 320);
-      this->camRight->set(CAP_PROP_FRAME_HEIGHT, 240);
-      this->camRight->set(CAP_PROP_FPS, 30);
-      this->camRight->set(CAP_PROP_AUTO_EXPOSURE, 0.25);
-      this->camRight->set(CAP_PROP_AUTOFOCUS, 0);
-      this->camRight->set(CAP_PROP_EXPOSURE, -4);
-      this->camRight->set(CAP_PROP_MODE, CAP_OPENCV_MJPEG);
+      this->camRight->set(cv::CAP_PROP_FRAME_WIDTH, 320);
+      this->camRight->set(cv::CAP_PROP_FRAME_HEIGHT, 240);
+      this->camRight->set(cv::CAP_PROP_FPS, 30);
+      this->camRight->set(cv::CAP_PROP_AUTO_EXPOSURE, 0.25);
+      this->camRight->set(cv::CAP_PROP_AUTOFOCUS, 0);
+      this->camRight->set(cv::CAP_PROP_EXPOSURE, -4);
+      this->camRight->set(cv::CAP_PROP_MODE, cv::CAP_OPENCV_MJPEG);
    }
 }
 
@@ -44,7 +44,7 @@ void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
    depthMessage = depthMsg;
 }
 
-void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, String name)
+void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, std::string name)
 {
    colorMessage = colorMsg;
    ROS_DEBUG("COLOR CALLBACK");
@@ -75,13 +75,13 @@ void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfigurati
    ROS_DEBUG("PARAMS CALLBACK");
 }
 
-void NetworkManager::load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app)
+void NetworkManager::load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app)
 {
    camLeft->read(left);
    camRight->read(right);
 }
 
-void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, ApplicationState& app)
+void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app)
 {
    cv_bridge::CvImagePtr img_ptr_depth;
    cv_bridge::CvImagePtr img_ptr_color;
@@ -169,7 +169,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
-   ROS_INFO("Starting ROS Node");
+   ROS_DEBUG("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
    rosNode = new NodeHandle();
 
@@ -270,10 +270,10 @@ void NetworkManager::receiverUpdate(ApplicationState& app)
 {
    for (int i = 0; i < receivers.size(); i++)
    {
-      ROS_DEBUG("RenderUpdate");
+      ROS_DEBUG("RenderUpdate: {}", receivers[i]->getTopicName());
       receivers[i]->processMessage(app);
       receivers[i]->render();
-      appUtils->displayDebugOutput(app);
+      ROS_DEBUG("RenderUpdate: Complete");
    }
 }
 

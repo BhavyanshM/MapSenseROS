@@ -11,12 +11,10 @@
 #include "opencv2/core/core.hpp"
 #include <opencv2/calib3d/calib3d.hpp>
 
-using namespace cv;
-
 class ImageTools
 {
    public:
-      static Mat cvUndistort(Mat image, Mat intrinsics, Mat distortionCoefficients);
+      static cv::Mat cvUndistort(cv::Mat image, cv::Mat intrinsics, cv::Mat distortionCoefficients);
 };
 
 #endif //IMAGETOOLS_H

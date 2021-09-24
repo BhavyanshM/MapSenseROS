@@ -9,20 +9,18 @@
 #include "opencv2/core/core.hpp"
 #include "MapsenseHeaders.h"
 
-using namespace cv;
-
 class FileManager
 {
    public:
-      void get_sample_depth(Mat depth, float mean, float stddev);
+      void get_sample_depth(cv::Mat depth, float mean, float stddev);
 
-      void get_sample_color(Mat color);
+      void get_sample_color(cv::Mat color);
 
-      void load_sample_depth(String filename, Mat& depth);
+      void load_sample_depth(std::string filename, cv::Mat& depth);
 
-      void load_sample_color(String filename, Mat& color);
+      void load_sample_color(std::string filename, cv::Mat& color);
 
-      static Mat ReadImage(String filename);
+      static cv::Mat ReadImage(std::string filename);
 };
 
 #endif //FILEIO_H

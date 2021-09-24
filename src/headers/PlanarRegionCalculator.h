@@ -20,7 +20,6 @@
 using namespace ros;
 using namespace std;
 using namespace chrono;
-using namespace cv;
 
 class PlanarRegionCalculator
 {
@@ -36,11 +35,11 @@ class PlanarRegionCalculator
       AppUtils appUtils;
       NetworkManager *_dataReceiver;
 
-      Mat inputDepth;
-      Mat inputColor;
+      cv::Mat inputDepth;
+      cv::Mat inputColor;
       double inputTimestamp;
-      Mat filteredDepth;
-      Mat inputStereoLeft, inputStereoRight;
+      cv::Mat filteredDepth;
+      cv::Mat inputStereoLeft, inputStereoRight;
 
       MapFrame output;
       MapFrameProcessor _mapFrameProcessor;
@@ -68,7 +67,7 @@ class PlanarRegionCalculator
 
       void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
 
-      void getFilteredDepth(Mat& dispDepth, ApplicationState appState);
+      void getFilteredDepth(cv::Mat& dispDepth, ApplicationState appState);
 
       static void onMouse(int event, int x, int y, int flags, void *userdata);
 

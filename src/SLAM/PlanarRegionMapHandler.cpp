@@ -148,7 +148,7 @@ void PlanarRegionMapHandler::setOrientedPlaneInitialValues()
    {
       Eigen::Vector4d plane;
       plane << region->getNormal().cast<double>(), (double) -region->getNormal().dot(region->getCenter());
-      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), OrientedPlane3(plane(0), plane(1), plane(2), plane(3)));
+      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), gtsam::OrientedPlane3(plane(0), plane(1), plane(2), plane(3)));
    }
 }
 
@@ -168,12 +168,12 @@ void PlanarRegionMapHandler::extractFactorGraphLandmarks()
    mapRegions.clear();
    for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
    {
-      RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<Pose3>(Symbol('x', region->getPoseId())).matrix());
+      RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<gtsam::Pose3>(gtsam::Symbol('x', region->getPoseId())).matrix());
 
       shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
       region->copyAndTransform(transformedRegion, mapToSensorTransform);
 
-      transformedRegion->projectToPlane(fgSLAM->getResults().at<OrientedPlane3>(Symbol('l', region->getId())).planeCoefficients().cast<float>());
+      transformedRegion->projectToPlane(fgSLAM->getResults().at<gtsam::OrientedPlane3>(gtsam::Symbol('l', region->getId())).planeCoefficients().cast<float>());
       mapRegions.emplace_back(transformedRegion);
    }
 }

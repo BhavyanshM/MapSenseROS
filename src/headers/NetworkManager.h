@@ -24,8 +24,6 @@
 using namespace ros;
 using namespace std;
 using namespace chrono;
-using namespace cv;
-using namespace sensor_msgs;
 
 typedef ros::master::TopicInfo TopicInfo;
 
@@ -42,8 +40,8 @@ class NetworkManager
       map_sense::MapsenseConfiguration paramsMessage;
       ImageConstPtr depthMessage;
       NodeHandle *rosNode;
-      VideoCapture *camLeft;
-      VideoCapture *camRight;
+      cv::VideoCapture *camLeft;
+      cv::VideoCapture *camRight;
 
       vector<ROS1TopicReceiver*> receivers;
       Subscriber subMapSenseParams;
@@ -69,7 +67,7 @@ class NetworkManager
 
       void receiverUpdate(ApplicationState& app);
 
-      void load_next_frame(Mat& depth, Mat& color, double& timestamp, ApplicationState& app);
+      void load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app);
 
       void depthCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& message);
 
@@ -77,7 +75,7 @@ class NetworkManager
 
       void depthCallback(const ImageConstPtr& depthMsg);
 
-      void colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, String name);
+      void colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, std::string name);
 
       void colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& colorMsg);
 
@@ -87,7 +85,7 @@ class NetworkManager
 
       void spin_ros_node();
 
-      void load_next_stereo_frame(Mat& left, Mat& right, ApplicationState& app);
+      void load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app);
 
       void publishSLAMPose(RigidBodyTransform pose);
 

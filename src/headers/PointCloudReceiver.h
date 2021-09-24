@@ -7,29 +7,29 @@
 
 #include "ROS1TopicReceiver.h"
 #include "sensor_msgs/PointCloud2.h"
-
-using namespace sensor_msgs;
+#include "torch/torch.h"
 
 class PointCloudReceiver : public ROS1TopicReceiver
 {
    private:
-      PointCloud2ConstPtr _cloudMessage;
+      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       Subscriber *_cloudSubscriber;
+      torch::Tensor _cloud;
 
    public:
       PointCloudReceiver() = default;
 
-      PointCloudReceiver(NodeHandle *nh, String cloudTopic, bool compressed = false);
+      PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, bool compressed = false);
 
       void processMessage(ApplicationState& app) override;
 
-      void getData(Mat& image, ApplicationState& app, double& timestamp);
+      void getData(cv::Mat& image, ApplicationState& app, double& timestamp);
 
       void render() override;
 
       void ImGuiUpdate() override;
 
-      void cloudCallback(const PointCloud2ConstPtr& cloudMsg);
+      void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloudMsg);
 
 };
 

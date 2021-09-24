@@ -28,22 +28,21 @@
 #endif
 
 using namespace boost::assign;
-using namespace gtsam;
 
 class FactorGraphHandler
 {
    private:
 
-      ISAM2Params parameters;
-      ISAM2 isam;
+      gtsam::ISAM2Params parameters;
+      gtsam::ISAM2 isam;
 
       std::unordered_set<std::string> structure;
-      Values initial, result;
-      NonlinearFactorGraph graph;
-      noiseModel::Diagonal::shared_ptr priorNoise;
-      noiseModel::Diagonal::shared_ptr priorNoise2;
-      noiseModel::Diagonal::shared_ptr odometryNoise;
-      noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
+      gtsam::Values initial, result;
+      gtsam::NonlinearFactorGraph graph;
+      gtsam::noiseModel::Diagonal::shared_ptr priorNoise;
+      gtsam::noiseModel::Diagonal::shared_ptr priorNoise2;
+      gtsam::noiseModel::Diagonal::shared_ptr odometryNoise;
+      gtsam::noiseModel::Diagonal::shared_ptr orientedPlaneNoise;
       int poseId = 1;
    public:
       int getPoseId() const;
@@ -57,11 +56,11 @@ class FactorGraphHandler
 
       void getPoses(std::vector<RigidBodyTransform>& poses);
 
-      int addPriorPoseFactor(Pose3 mean);
+      int addPriorPoseFactor(gtsam::Pose3 mean);
 
-      int addOdometryFactor(Pose3 odometry);
+      int addOdometryFactor(gtsam::Pose3 odometry);
 
-      int addOrientedPlaneLandmarkFactor(Vector4 lmMean, int lmId, int poseIndex);
+      int addOrientedPlaneLandmarkFactor(gtsam::Vector4 lmMean, int lmId, int poseIndex);
 
       void optimize();
 
@@ -69,19 +68,19 @@ class FactorGraphHandler
 
       void clearISAM2();
 
-      void setPoseInitialValue(int index, Pose3 value);
+      void setPoseInitialValue(int index, gtsam::Pose3 value);
 
-      void setOrientedPlaneInitialValue(int index, OrientedPlane3 value);
+      void setOrientedPlaneInitialValue(int index, gtsam::OrientedPlane3 value);
 
-      Values getResults();
+      gtsam::Values getResults();
 
-      Values getInitial();
+      gtsam::Values getInitial();
 
-      NonlinearFactorGraph getFactorGraph();
+      gtsam::NonlinearFactorGraph getFactorGraph();
 
-      void createOdometryNoiseModel(Vector6 odomVariance);
+      void createOdometryNoiseModel(gtsam::Vector6 odomVariance);
 
-      void createOrientedPlaneNoiseModel(Vector3 lmVariances);
+      void createOrientedPlaneNoiseModel(gtsam::Vector3 lmVariances);
 
       void incrementPoseId();
 };

@@ -15,7 +15,7 @@ class MapFrameProcessor
    public:
 
       MapFrame frame;
-      Mat debug;
+      cv::Mat debug;
       MatrixXi visited;
       MatrixXi boundary;
       MatrixXi region;
@@ -26,9 +26,9 @@ class MapFrameProcessor
 
       void generateSegmentation(MapFrame frame, vector<shared_ptr<PlanarRegion>>& planarRegionList);
 
-      void dfs(uint16_t x, uint16_t y, uint8_t component, int& num, Mat& debug, shared_ptr<PlanarRegion> planarRegion);
+      void dfs(uint16_t x, uint16_t y, uint8_t component, int& num, cv::Mat& debug, shared_ptr<PlanarRegion> planarRegion);
 
-      void boundary_dfs(int x, int y, int regionId, int component, int& num, Mat& debug, shared_ptr<RegionRing> regionRing);
+      void boundary_dfs(int x, int y, int regionId, int component, int& num, cv::Mat& debug, shared_ptr<RegionRing> regionRing);
 
       void findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList);
 

@@ -1,22 +1,22 @@
 #include "FileManager.h"
 
-void FileManager::load_sample_depth(String filename, Mat& depth)
+void FileManager::load_sample_depth(std::string filename, cv::Mat& depth)
 {
-   depth = imread(ros::package::getPath("map_sense") + filename, IMREAD_ANYDEPTH);
+   depth = imread(ros::package::getPath("map_sense") + filename, cv::IMREAD_ANYDEPTH);
 }
 
-void FileManager::load_sample_color(String filename, Mat& color)
+void FileManager::load_sample_color(std::string filename, cv::Mat& color)
 {
-   color = imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
+   color = imread(ros::package::getPath("map_sense") + filename, cv::IMREAD_COLOR);
 }
 
-Mat FileManager::ReadImage(String filename)
+cv::Mat FileManager::ReadImage(std::string filename)
 {
    std::cout << "PATH:" << ros::package::getPath("map_sense") << std::endl;
-   return imread(ros::package::getPath("map_sense") + filename, IMREAD_COLOR);
+   return imread(ros::package::getPath("map_sense") + filename, cv::IMREAD_COLOR);
 }
 
-void FileManager::get_sample_depth(Mat depth, float mean, float stddev)
+void FileManager::get_sample_depth(cv::Mat depth, float mean, float stddev)
 {
    std::default_random_engine generator;
    std::normal_distribution<double> distribution(mean, stddev);
@@ -38,13 +38,13 @@ void FileManager::get_sample_depth(Mat depth, float mean, float stddev)
    }
 }
 
-void FileManager::get_sample_color(Mat color)
+void FileManager::get_sample_color(cv::Mat color)
 {
    for (int i = 0; i < color.rows; i++)
    {
       for (int j = 0; j < color.cols; j++)
       {
-         color.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
+         color.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 255);
       }
    }
 }

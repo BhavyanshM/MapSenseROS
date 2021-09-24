@@ -4,7 +4,7 @@
 
 #include "ImageTools.h"
 
-Mat ImageTools::cvUndistort(Mat image, Mat intrinsics, Mat distortionCoefficients)
+cv::Mat ImageTools::cvUndistort(cv::Mat image, cv::Mat intrinsics, cv::Mat distortionCoefficients)
 {
 
    /*

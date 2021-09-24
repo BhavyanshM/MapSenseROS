@@ -5,8 +5,8 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, NetworkMan
    ROS_DEBUG("Creating PlanarRegionCalculator");
    this->_dataReceiver = network;
    this->_mapFrameProcessor.init(app);
-   this->inputDepth = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
-   this->inputColor = Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
+   this->inputDepth = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
+   this->inputColor = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
    origin[0] = 0;
    origin[0] = 0;
    origin[0] = 0;
@@ -28,8 +28,7 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
    ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
    if (ImGui::Button("Hide Display"))
    {
-      destroyAllWindows();
-      destroyAllWindows();
+      cv::destroyAllWindows();
    }
    ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
    ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
@@ -96,14 +95,14 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    this->app = appState;
    uint8_t paramsBuffer = loadParameters(appState);
 
-   Mat depthMat, colorMat;
+   cv::Mat depthMat, colorMat;
    {
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::CloneAndBlur");
       depthMat = inputDepth.clone();
       colorMat = inputColor.clone();
 
       if (appState.EARLY_GAUSSIAN_BLUR)
-         GaussianBlur(depthMat, depthMat, Size(appState.GAUSSIAN_SIZE * 2 + 1, appState.GAUSSIAN_SIZE * 2 + 1), appState.GAUSSIAN_SIGMA);
+         GaussianBlur(depthMat, depthMat, cv::Size(appState.GAUSSIAN_SIZE * 2 + 1, appState.GAUSSIAN_SIZE * 2 + 1), appState.GAUSSIAN_SIGMA);
    }
 
    /* Input Data OpenCL Buffers */
@@ -160,15 +159,15 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    size[2] = 1;
 
    /* Output Data Buffers on CPU */
-   Mat debug(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
-   Mat output_0(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   Mat output_1(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   Mat output_2(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   Mat output_3(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
-   this->filteredDepth = Mat(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
+   cv::Mat debug(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
+   cv::Mat output_0(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_1(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_2(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_3(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+   this->filteredDepth = cv::Mat(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
 
    /* Deploy the patch-packing and patch-merging kernels patch-wise */
    {
@@ -198,10 +197,10 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    _openCL->commandQueue.finish();
 
    /* Combine the CPU buffers into single image with multiple channels */
-   Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
    {
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-      vector <Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
+      vector <cv::Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
       merge(channels, regionOutput);
       output.setRegionOutput(regionOutput);
       output.setPatchData(output_6);
@@ -228,7 +227,7 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
    this->app = appState;
    uint8_t paramsBuffer = loadParameters(appState);
 
-   Mat colorMat;
+   cv::Mat colorMat;
    colorMat = inputColor.clone();
 
    /* Input Data OpenCL Buffers */
@@ -263,8 +262,8 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
    size[2] = 1;
 
    /* Output Data Buffers on CPU */
-   Mat output_color(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_8UC3);
-   Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+   cv::Mat output_color(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_8UC3);
+   cv::Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
 
    /* Deploy the patch-packing and patch-merging kernels patch-wise */
    {
@@ -305,11 +304,11 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
 void PlanarRegionCalculator::onMouse(int event, int x, int y, int flags, void *userdata)
 {
    MapFrame out = *((MapFrame *) userdata);
-   if (event == EVENT_MOUSEMOVE)
+   if (event == cv::EVENT_MOUSEMOVE)
    {
       ROS_DEBUG("[%d,%d]:", y / 8, x / 8);
       ROS_DEBUG("%hu ", out.getPatchData().at<uint8_t>(y / 8, x / 8));
-      Vec6f patch = out.getRegionOutput().at<Vec6f>(y / 8, x / 8);
+      cv::Vec6f patch = out.getRegionOutput().at<cv::Vec6f>(y / 8, x / 8);
       ROS_DEBUG("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3], patch[4], patch[5], patch[0], patch[1], patch[2]);
    }
 }
