@@ -122,8 +122,16 @@ set (HEADERS
 		src/headers/Timer.h src/headers/Core.h
 		src/headers/ImGuiLayout.h )
 
-set(MAPSENSE_CLAY_HEADERS src/headers/ClayApp.h src/headers/ClayApp.h src/headers/MapsenseLayer.h)
-set(MAPSENSE_CLAY_SOURCES src/Launcher/ClayApp.cpp src/Launcher/ClayApp.cpp src/Launcher/MapsenseLayer.cpp)
+set(MAPSENSE_CLAY_HEADERS
+		src/headers/ClayApp.h
+		src/headers/ClayApp.h
+		src/headers/PointCloudReceiver.h
+		src/headers/MapsenseLayer.h)
+set(MAPSENSE_CLAY_SOURCES
+		src/Launcher/ClayApp.cpp
+		src/Launcher/ClayApp.cpp
+		src/Launcher/MapsenseLayer.cpp
+		src/Network/PointCloudReceiver.cpp)
 
 set(GEOMTOOLS_HEADERS
 		src/Geometry/include/GeomTools.h
@@ -185,9 +193,7 @@ target_link_libraries(Mapsense_Clay
 		glad imgui glfw3 ${CMAKE_DL_LIBS} )
 add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
 
-add_executable(TorchDemo src/examples/TorchDemo.cpp)
-target_link_libraries(TorchDemo PRIVATE
-		${TORCH_LIBRARIES})
+
 
 add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
 target_link_libraries(geom-tools

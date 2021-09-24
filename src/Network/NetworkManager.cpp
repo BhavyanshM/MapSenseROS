@@ -104,7 +104,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
          ROS_DEBUG("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
       } catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert to image! %s", e.what());
+         ROS_ERROR("Could not convert to _image! %s", e.what());
       }
    }
    if (colorMessage != nullptr)
@@ -121,7 +121,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
          }
       } catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert to image! %s", e.what());
+         ROS_ERROR("Could not convert to _image! %s", e.what());
       }
    } else if (colorCompressedMessage != nullptr)
    {
@@ -136,7 +136,7 @@ void NetworkManager::load_next_frame(Mat& depth, Mat& color, double& timestamp, 
          }
       } catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert compressedImage to image! %s", e.what());
+         ROS_ERROR("Could not convert compressedImage to _image! %s", e.what());
       }
    }
    if (depthCameraInfo != nullptr)
@@ -184,17 +184,18 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
                                                                                                                          "/depth/camera_info";
    string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
 
-   string colorCompressedTopicName = "/camera/color/image_raw/compressed";
+   string colorCompressedTopicName = "/camera/color/image_raw/_compressed";
    string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo("/os_cloud_node/points", "sensor_msgs/PointCloud2"));
 
    //   subDepth = rosNode->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    //   subDepthCamInfo = rosNode->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
 
    //   subColor = rosNode->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
-   //   subColorCompressed = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/compressed", 3, &NetworkManager::colorCompressedCallback, this);
+   //   subColorCompressed = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/_compressed", 3, &NetworkManager::colorCompressedCallback, this);
    //   subColorCamInfo = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
    //
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
@@ -223,6 +224,8 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
    if (data.datatype == "sensor_msgs/CompressedImage")
       receiver = new ImageReceiver(rosNode, data.name, info.name, true);
+   if (data.datatype == "sensor_msgs/PointCloud2")
+      receiver = new PointCloudReceiver(rosNode, data.name, false);
 
    if (receiver != nullptr)
    {

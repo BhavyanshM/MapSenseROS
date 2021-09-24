@@ -97,11 +97,11 @@ namespace Clay
 
    void MapsenseLayer::MapsenseUpdate()
    {
-      ROS_INFO("TickEvent: %d", count++);
+      ROS_DEBUG("TickEvent: %d", count++);
 
       if (appState.ROS_ENABLED)
       {
-         CLAY_LOG_INFO("ROS Update: {}", appState.ROS_ENABLED);
+         ROS_DEBUG("ROS Update: {}", appState.ROS_ENABLED);
          _networkManager->spin_ros_node();
          _networkManager->acceptMapsenseConfiguration(appState);
          _networkManager->receiverUpdate(appState);

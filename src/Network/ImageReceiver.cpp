@@ -11,37 +11,37 @@ ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 ImageReceiver::ImageReceiver(NodeHandle *nh, String imageTopic, String cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
 {
    this->topicName = imageTopic;
-   this->compressed = compressed;
+   this->_compressed = compressed;
 
-   this->imageSubscriber = new Subscriber();
-   this->cameraInfoSubscriber = new Subscriber();
+   this->_imageSubscriber = new Subscriber();
+   this->_cameraInfoSubscriber = new Subscriber();
 
    if (!compressed)
    {
-      *(this->imageSubscriber) = nh->subscribe(imageTopic, 2, &ImageReceiver::imageCallback, this);
-      *(this->cameraInfoSubscriber) = nh->subscribe(cameraInfoTopic, 4, &ImageReceiver::cameraInfoCallback, this);
+      *(this->_imageSubscriber) = nh->subscribe(imageTopic, 2, &ImageReceiver::imageCallback, this);
+      *(this->_cameraInfoSubscriber) = nh->subscribe(cameraInfoTopic, 4, &ImageReceiver::cameraInfoCallback, this);
    } else
    {
-      *(this->imageSubscriber) = nh->subscribe(imageTopic, 2, &ImageReceiver::compressedImageCallback, this);
+      *(this->_imageSubscriber) = nh->subscribe(imageTopic, 2, &ImageReceiver::compressedImageCallback, this);
    }
 }
 
 void ImageReceiver::compressedImageCallback(const CompressedImageConstPtr& compressedMsg)
 {
    ROS_DEBUG("Compressed Image Callback: %.6lf", compressedMsg->header.stamp.toSec());
-   compressedImageMessage = compressedMsg;
+   _compressedImageMessage = compressedMsg;
 }
 
 void ImageReceiver::imageCallback(const ImageConstPtr& colorMsg)
 {
    ROS_DEBUG("Image Callback: %.6lf", colorMsg->header.stamp.toSec());
-   imageMessage = colorMsg;
+   _imageMessage = colorMsg;
 }
 
 void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 {
    ROS_DEBUG("Camera Info Callback: %s", message->distortion_model.c_str());
-   cameraInfoMessage = message;
+   _cameraInfoMessage = message;
 }
 
 void ImageReceiver::render()
@@ -50,16 +50,16 @@ void ImageReceiver::render()
    ROS_DEBUG("Render: %s", this->topicName.c_str());
    if (renderingEnabled)
    {
-      if(imageEncoding == sensor_msgs::image_encodings::TYPE_16UC1)
+      if(_imageEncoding == sensor_msgs::image_encodings::TYPE_16UC1)
       {
-         this->image.convertTo(this->image, -1, this->imageBrightness, this->imageOffset);
-         cvtColor(this->image, this->image, COLOR_GRAY2BGR);
+         this->_image.convertTo(this->_image, -1, this->_imageBrightness, this->_imageOffset);
+         cvtColor(this->_image, this->_image, COLOR_GRAY2BGR);
       }
       Mat disp;
       if(undistortEnabled){
-         disp = ImageTools::cvUndistort(this->image, Mat(), Mat());
+         disp = ImageTools::cvUndistort(this->_image, Mat(), Mat());
       } else
-         disp = this->image;
+         disp = this->_image;
       appUtils->appendToDebugOutput(disp);
    }
 }
@@ -76,32 +76,32 @@ void ImageReceiver::processMessage(ApplicationState& app)
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Process Message");
    cv_bridge::CvImagePtr img_ptr;
-   if (imageMessage != nullptr || compressedImageMessage != nullptr)
+   if (_imageMessage != nullptr || _compressedImageMessage != nullptr)
    {
       ROS_DEBUG("Image Message Received");
       try
       {
-         if (compressed)
+         if (_compressed)
          {
-            ROS_DEBUG("Compressed Image Being Decoded.", compressedImageMessage->header.stamp);
-            image = imdecode(cv::Mat(compressedImageMessage->data), 1);
-            timestampLastReceived = compressedImageMessage.get()->header.stamp.toSec();
+            ROS_DEBUG("Compressed Image Being Decoded.", _compressedImageMessage->header.stamp);
+            _image = imdecode(cv::Mat(_compressedImageMessage->data), 1);
+            timestampLastReceived = _compressedImageMessage.get()->header.stamp.toSec();
          } else
          {
-            if(imageMessage->encoding == "mono8")
-               this->imageEncoding = sensor_msgs::image_encodings::MONO8;
-            else if(imageMessage->encoding == "16UC1")
-               this->imageEncoding = sensor_msgs::image_encodings::TYPE_16UC1;
-            else if(imageMessage->encoding.find("rgb8") != string::npos)
-               this->imageEncoding = sensor_msgs::image_encodings::TYPE_16UC3;
-            img_ptr = cv_bridge::toCvCopy(*imageMessage, imageEncoding);
-            image = img_ptr->image;
-            timestampLastReceived = imageMessage.get()->header.stamp.toSec();
+            if(_imageMessage->encoding == "mono8")
+               this->_imageEncoding = sensor_msgs::image_encodings::MONO8;
+            else if(_imageMessage->encoding == "16UC1")
+               this->_imageEncoding = sensor_msgs::image_encodings::TYPE_16UC1;
+            else if(_imageMessage->encoding.find("rgb8") != string::npos)
+               this->_imageEncoding = sensor_msgs::image_encodings::TYPE_16UC3;
+            img_ptr = cv_bridge::toCvCopy(*_imageMessage, _imageEncoding);
+            _image = img_ptr->image;
+            timestampLastReceived = _imageMessage.get()->header.stamp.toSec();
          }
-         ROS_DEBUG("Image Processed:", image.rows, image.cols);
+         ROS_DEBUG("Image Processed:", _image.rows, _image.cols);
       } catch (cv_bridge::Exception& e)
       {
-         ROS_ERROR("Could not convert to image! %s", e.what());
+         ROS_ERROR("Could not convert to _image! %s", e.what());
       }
    }
 }
@@ -110,20 +110,20 @@ void ImageReceiver::getData(Mat& image, ApplicationState& app, double& timestamp
 {
    MAPSENSE_PROFILE_FUNCTION();
    timestamp = this->timestampLastReceived;
-   if(this->image.rows != 0 && this->image.cols != 0 && !this->image.empty())
+   if(this->_image.rows != 0 && this->_image.cols != 0 && !this->_image.empty())
    {
-      image = this->image;
+      image = this->_image;
    }
-   if (cameraInfoMessage != nullptr)
+   if (_cameraInfoMessage != nullptr)
    {
-      ROS_DEBUG("DEPTH_SET:", cameraInfoSet);
-      cameraInfoSet = true;
-      app.INPUT_WIDTH = cameraInfoMessage->width / app.DIVISION_FACTOR;
-      app.INPUT_HEIGHT = cameraInfoMessage->height / app.DIVISION_FACTOR;
-      app.DEPTH_FX = cameraInfoMessage->K[0] / app.DIVISION_FACTOR;
-      app.DEPTH_FY = cameraInfoMessage->K[4] / app.DIVISION_FACTOR;
-      app.DEPTH_CX = cameraInfoMessage->K[2] / app.DIVISION_FACTOR;
-      app.DEPTH_CY = cameraInfoMessage->K[5] / app.DIVISION_FACTOR;
+      ROS_DEBUG("DEPTH_SET:", _cameraInfoSet);
+      _cameraInfoSet = true;
+      app.INPUT_WIDTH = _cameraInfoMessage->width / app.DIVISION_FACTOR;
+      app.INPUT_HEIGHT = _cameraInfoMessage->height / app.DIVISION_FACTOR;
+      app.DEPTH_FX = _cameraInfoMessage->K[0] / app.DIVISION_FACTOR;
+      app.DEPTH_FY = _cameraInfoMessage->K[4] / app.DIVISION_FACTOR;
+      app.DEPTH_CX = _cameraInfoMessage->K[2] / app.DIVISION_FACTOR;
+      app.DEPTH_CY = _cameraInfoMessage->K[5] / app.DIVISION_FACTOR;
       app.update();
    }
 }
