@@ -46,6 +46,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   image_transport
   cv_bridge
+  pcl_ros
+  pcl_conversions
 )
 
 add_message_files(
@@ -120,7 +122,8 @@ set (HEADERS
 		src/headers/Log.h
 		src/headers/Instrumentor.h
 		src/headers/Timer.h src/headers/Core.h
-		src/headers/ImGuiLayout.h )
+		src/headers/ImGuiLayout.h
+		src/headers/MapsenseHeaders.h )
 
 set(MAPSENSE_CLAY_HEADERS
 		src/headers/ClayApp.h
@@ -157,7 +160,7 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Point3D.cpp
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
-		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/MapsenseHeaders.h src/headers/Log.h)
+		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/Log.h)
 
 include_directories(
 		include
@@ -192,7 +195,8 @@ target_link_libraries(Mapsense_Clay
 		ClayEngine
 		glad imgui glfw3 ${CMAKE_DL_LIBS} )
 add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
-
+target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
+target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
 
 
 add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})

@@ -51,6 +51,7 @@ namespace Clay
 
          Ref<Texture2D> _texture;
          Ref<Texture2D> _checkerTexture;
+         std::vector<Ref<PointCloud>> _clouds;
 
          struct ProfileResult
          {
@@ -77,6 +78,7 @@ namespace Clay
          SLAMModule *_slamModule;
          NetworkManager *_networkManager;
          OpenCLManager *_openCLManager;
+         PointCloudReceiver* _pclReceiver;
    };
 }
 

@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "MapsenseLayer.h"
 #include "Core/Timer.h"
+#include "Core/Clay.h"
 #include "opencv2/core/core.hpp"
 #include "unistd.h"
 
@@ -29,6 +30,15 @@ namespace Clay
       _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
 
       _slamModule = new SLAMModule(argc, argv, _networkManager);
+
+
+      _clouds.emplace_back(std::make_shared<PointCloud>("bunny.pcd", _squareColor));
+//      _clouds.emplace_back(std::make_shared<PointCloud>("bunny.pcd", glm::vec4(0.3,0.8,0.3,1)));
+//      _clouds[0]->RotateLocalY(0.1);
+
+      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
+      Clay::Ref<Clay::PointCloud> pclCloud = _pclReceiver->GetRenderable();
+      _clouds.emplace_back(pclCloud);
    }
 
    void MapsenseLayer::OnAttach()
@@ -38,6 +48,7 @@ namespace Clay
       cv::Mat image = FileManager::ReadImage("/Github_Images/Combined_FirstPage_v2.jpg");
       _texture = Texture2D::Create();
       _texture->LoadImage(image.data, image.cols, image.rows, image.channels());
+      _shader = Clay::Shader::Create(std::string(ASSETS_PATH) + std::string("Shaders/PointCloudShader.glsl"));
 
       cv::Mat imageCheckerboard = FileManager::ReadImage("/Github_Images/Checkerboard.png");
       _checkerTexture = Texture2D::Create();
@@ -59,34 +70,31 @@ namespace Clay
    {
       CLAY_PROFILE_FUNCTION();
 
+      MapsenseUpdate();
+
       if (_viewportFocused)
       {
          _cameraController.OnUpdate(ts);
       }
 
-      Renderer2D::ResetStats();
+      Renderer::ResetStats();
       _frameBuffer->Bind();
 
       RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
       RenderCommand::Clear();
 
-      Renderer2D::BeginScene(_cameraController.GetCamera());
-      //      Renderer2D::DrawQuad({-1.0f, -1.0f}, {0.8f, 0.8f}, {0.8f, 0.2f, 0.3f, 1.0f});
-      //      Renderer2D::DrawQuad({-0.5f, -0.5f}, {1.0f, 1.0f}, {0.2f, 0.5f, 0.3f, 1.0f});
-      //      Renderer2D::DrawQuad({0.0f, 0.0f, -0.01f}, {2.0f, 2.0f}, _texture, 4.0f);
+      Renderer::BeginScene(_cameraController.GetCamera());
 
-      for (float y = -4.0f; y < 4.0f; y += 0.4f)
+      for(Ref<PointCloud> cloud : _clouds)
       {
-         for (float x = -4.0f; x < 4.0f; x += 0.4f)
-         {
-            glm::vec4 color = {(x + 4.0f) / 8.0f, 0.4f, (y + 4.0f) / 8.0f, 0.5f};
-            Renderer2D::DrawQuad({x, y}, {0.45f, 0.45f}, color);
-         }
+         cloud->SetShader(_shader);
+         cloud->SetColor(_squareColor);
+         Renderer::Submit(cloud);
       }
-      Renderer2D::EndScene();
+
+      Renderer::EndScene();
       _frameBuffer->Unbind();
 
-      MapsenseUpdate();
    }
 
    void MapsenseLayer::MapsenseUpdate()
@@ -129,6 +137,9 @@ namespace Clay
          }
 
          appUtils.clearDebug();
+
+
+
       }
    }
 
@@ -183,10 +194,10 @@ namespace Clay
       /* Renderer ImGui Stats and Settings */
       ImGui::Begin("Renderer");
       ImGui::ColorEdit3("Square Color", glm::value_ptr(_squareColor));
-      auto stats = Renderer2D::GetStats();
-      ImGui::Text("Renderer2D Stats:");
+      auto stats = Renderer::GetStats();
+      ImGui::Text("Renderer Stats:");
       ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-      ImGui::Text("Quad Count: %d", stats.QuadCount);
+      ImGui::Text("Quad Count: %d", stats.TriangleCount);
       ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
       ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
       ImGui::End();
@@ -211,6 +222,7 @@ namespace Clay
       ImGui::End();
       ImGui::PopStyleVar();
 
+      ImGui::Begin("MapSense Panel");
       if (ImGui::BeginTabBar("Configuration"))
       {
          if (ImGui::BeginTabItem("Application"))
@@ -272,6 +284,8 @@ namespace Clay
          }
          ImGui::EndTabBar();
       }
+      ImGui::End();
+
       ImGui::End();
    }
 }

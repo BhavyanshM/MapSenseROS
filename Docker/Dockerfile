@@ -48,6 +48,7 @@ RUN add-apt-repository ppa:borglab/gtsam-develop \
 RUN apt-get --quiet 2 --yes install \
     libxcursor-dev \
     libxi-dev \
+    ros-noetic-pcl-conversions \
     > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 
