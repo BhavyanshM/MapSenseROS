@@ -32,13 +32,14 @@ class PointCloudReceiver : public ROS1TopicReceiver
 
       Clay::Ref<Clay::PointCloud> GetRenderable() const {return _cloudToRender;}
       const std::string& GetTopicName() const { return topicName; }
-      bool IsReadyToRender() const {return _readyToRender;}
-      void SetReadyToRender(bool ready) { _readyToRender = ready;}
+      bool IsReadyToRender() const {return _renderEnabled;}
+      void SetReadyToRender(bool ready) { _renderEnabled = ready;}
+      void SetRenderEnabled(bool enabled) {_renderEnabled = enabled;}
 
    private:
 //      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       bool _available = false;
-      bool _readyToRender = false;
+      bool _renderEnabled = true;
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
       Subscriber *_cloudSubscriber;
       torch::Tensor _cloud;

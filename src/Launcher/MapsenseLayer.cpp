@@ -32,13 +32,14 @@ namespace Clay
       _slamModule = new SLAMModule(argc, argv, _networkManager);
 
 
-      _clouds.emplace_back(std::make_shared<PointCloud>("bunny.pcd", _squareColor));
-//      _clouds.emplace_back(std::make_shared<PointCloud>("bunny.pcd", glm::vec4(0.3,0.8,0.3,1)));
-//      _clouds[0]->RotateLocalY(0.1);
+      _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);
 
+//      Ref<PointCloud> cloud = std::make_shared<PointCloud>("bunny.pcd", _squareColor)
+      //      _models.emplace_back(std::make_shared<PointCloud>("bunny.pcd", glm::vec4(0.3,0.8,0.3,1)));
+      //      _models[0]->RotateLocalY(0.1);
       _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
-      Clay::Ref<Clay::PointCloud> pclCloud = _pclReceiver->GetRenderable();
-      _clouds.emplace_back(pclCloud);
+      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
    }
 
    void MapsenseLayer::OnAttach()
@@ -48,7 +49,7 @@ namespace Clay
       cv::Mat image = FileManager::ReadImage("/Github_Images/Combined_FirstPage_v2.jpg");
       _texture = Texture2D::Create();
       _texture->LoadImage(image.data, image.cols, image.rows, image.channels());
-      _shader = Clay::Shader::Create(std::string(ASSETS_PATH) + std::string("Shaders/PointCloudShader.glsl"));
+      _shader = Shader::Create(std::string(ASSETS_PATH) + std::string("Shaders/PointCloudShader.glsl"));
 
       cv::Mat imageCheckerboard = FileManager::ReadImage("/Github_Images/Checkerboard.png");
       _checkerTexture = Texture2D::Create();
@@ -85,11 +86,12 @@ namespace Clay
 
       Renderer::BeginScene(_cameraController.GetCamera());
 
-      for(Ref<PointCloud> cloud : _clouds)
+      for(Ref<Model> model : _models)
       {
-         cloud->SetShader(_shader);
-         cloud->SetColor(_squareColor);
-         Renderer::Submit(cloud);
+         model->Update();
+         model->SetShader(_shader);
+         model->SetColor(_squareColor);
+         Renderer::Submit(model);
       }
 
       Renderer::EndScene();

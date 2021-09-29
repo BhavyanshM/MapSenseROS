@@ -51,7 +51,7 @@ namespace Clay
 
          Ref<Texture2D> _texture;
          Ref<Texture2D> _checkerTexture;
-         std::vector<Ref<PointCloud>> _clouds;
+         std::vector<Ref<Model>> _models;
 
          struct ProfileResult
          {
