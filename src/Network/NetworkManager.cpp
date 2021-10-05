@@ -189,7 +189,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo("/os_cloud_node/points", "sensor_msgs/PointCloud2"));
+//   addReceiver(TopicInfo("/os_cloud_node/points", "sensor_msgs/PointCloud2"));
 
    //   subDepth = rosNode->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
    //   subDepthCamInfo = rosNode->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);

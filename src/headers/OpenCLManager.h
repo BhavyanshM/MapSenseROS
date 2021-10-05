@@ -14,7 +14,7 @@ class OpenCLManager
       OpenCLManager();
       ~OpenCLManager() = default;
 
-      uint8_t CreateLoadBufferFloat(float* params, uint16_t count);
+      uint8_t CreateLoadBufferFloat(float* params, uint32_t count);
 
       uint8_t CreateLoadReadOnlyImage2D_R16(uint16_t *depthBuffer, uint16_t width, uint16_t height);
       uint8_t CreateLoadReadOnlyImage2D_RGBA8(uint8_t *colorBuffer, uint16_t width, uint16_t height);
@@ -28,10 +28,11 @@ class OpenCLManager
 
       void Reset();
       void SetArgument(const std::string& kernel, uint8_t argId, uint8_t bufferId, bool image = false);
+      void SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value);
 
    public:
       cl::CommandQueue commandQueue;
-      cl::Kernel filterKernel, packKernel, mergeKernel;
+      cl::Kernel filterKernel, packKernel, mergeKernel, correspondenceKernel;
 
    private:
       std::vector<cl::Image2D> images;

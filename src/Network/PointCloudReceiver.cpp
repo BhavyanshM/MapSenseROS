@@ -21,6 +21,7 @@ void PointCloudReceiver::processMessage(ApplicationState& app)
 
 void PointCloudReceiver::getData(cv::Mat& image, ApplicationState& app, double& timestamp)
 {
+
 }
 
 void PointCloudReceiver::render()
@@ -52,6 +53,8 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
    {
       _cloudMessage = cloudMsg;
       _available = true;
+      _scanCount++;
+      if((_scanCount % SKIP_SCANS == 0) && _saveScans) FileManager::WriteScanPoints(_cloudMessage, _scanCount);
 //      CLAY_LOG_INFO("New PointCloud Processing! FrameId:{}, Width:{}, Height:{}", _cloudMessage->header.frame_id.c_str(), _cloudMessage->width, _cloudMessage->height);
    }
 }

@@ -11,7 +11,7 @@
 
 namespace Clay
 {
-   MapsenseLayer::MapsenseLayer(int argc, char **argv) : Layer("Sandbox2D"), _cameraController(1000.0f / 1000.0f)
+   MapsenseLayer::MapsenseLayer(int argc, char **argv) : Layer("Sandbox2D")
    {
       opt_fullscreen = true;
       dockspace_flags = ImGuiDockNodeFlags_None;
@@ -27,6 +27,9 @@ namespace Clay
       _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
 
+      _icp = new IterativeClosestPoint();
+      _icp->SetOpenCLManager(_openCLManager);
+
       _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
 
       _slamModule = new SLAMModule(argc, argv, _networkManager);
@@ -34,12 +37,24 @@ namespace Clay
 
       _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);
 
-//      Ref<PointCloud> cloud = std::make_shared<PointCloud>("bunny.pcd", _squareColor)
-      //      _models.emplace_back(std::make_shared<PointCloud>("bunny.pcd", glm::vec4(0.3,0.8,0.3,1)));
-      //      _models[0]->RotateLocalY(0.1);
-      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
-      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
+      _rootPCL = std::make_shared<Model>();
+      Ref<Model> cameraGrandParent = std::make_shared<Model>(_rootPCL);
+      Ref<Model> cameraParent = std::make_shared<Model>(cameraGrandParent);
+      Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
+      _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
+
+      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_8", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
+
+      cloud->RotateLocalY(0.5f);
+      cloud->TranslateLocal({0.23f, 0.3f, -0.2f});
+
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+
+//      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
+//      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
    }
 
    void MapsenseLayer::OnAttach()
@@ -49,7 +64,6 @@ namespace Clay
       cv::Mat image = FileManager::ReadImage("/Github_Images/Combined_FirstPage_v2.jpg");
       _texture = Texture2D::Create();
       _texture->LoadImage(image.data, image.cols, image.rows, image.channels());
-      _shader = Shader::Create(std::string(ASSETS_PATH) + std::string("Shaders/PointCloudShader.glsl"));
 
       cv::Mat imageCheckerboard = FileManager::ReadImage("/Github_Images/Checkerboard.png");
       _checkerTexture = Texture2D::Create();
@@ -86,12 +100,11 @@ namespace Clay
 
       Renderer::BeginScene(_cameraController.GetCamera());
 
+      _rootPCL->Update();
+      if(_models.size() > 1) _models[1]->SetColor(_squareColor);
       for(Ref<Model> model : _models)
       {
-         model->Update();
-         model->SetShader(_shader);
-         model->SetColor(_squareColor);
-         Renderer::Submit(model);
+         Renderer::SubmitPoints(model);
       }
 
       Renderer::EndScene();
@@ -101,7 +114,7 @@ namespace Clay
 
    void MapsenseLayer::MapsenseUpdate()
    {
-      ROS_DEBUG("TickEvent: %d", count++);
+//      ROS_DEBUG("TickEvent: %d", count++);
 
       if (appState.ROS_ENABLED)
       {
@@ -285,6 +298,27 @@ namespace Clay
             ImGui::EndTabItem();
          }
          ImGui::EndTabBar();
+      }
+      ImGui::End();
+
+      ImGui::Begin("LIDAR-ICP Panel");
+      if(ImGui::Button("Load Next Scan"))
+      {
+//         _models.clear();
+         _scanCount+=4;
+         std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount);
+         CLAY_LOG_INFO("Loading Scan From: {}", filename);
+
+         Ref<PointCloud> cloud = std::make_shared<PointCloud>(
+               filename,glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootPCL);
+         _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+      }
+      ImGui::Text("Models: %d", _models.size());
+      if(ImGui::Button("Calculate ICP"))
+      {
+         // Call the alignment calculator function.
+         _icp->FindCorrespondences(_models[0]->GetMesh()->_vertices, _models[1]->GetMesh()->_vertices);
+
       }
       ImGui::End();
 

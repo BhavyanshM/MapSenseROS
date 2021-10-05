@@ -16,6 +16,20 @@ cv::Mat FileManager::ReadImage(std::string filename)
    return imread(ros::package::getPath("map_sense") + filename, cv::IMREAD_COLOR);
 }
 
+void FileManager::WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id)
+{
+   std::ofstream file;
+   std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(id);
+   CLAY_LOG_INFO("Writing Regions to: {}", filename);
+   file.open(filename, std::fstream::in | std::fstream::out | std::fstream::app);
+   file << "DATA ascii" << std::endl;
+   for (const pcl::PointXYZ& pt : scan->points)
+   {
+      file << boost::format("%.3f %.3f %.3f\n") % pt.x % pt.y % pt.z;
+   }
+   file.close();
+}
+
 void FileManager::get_sample_depth(cv::Mat depth, float mean, float stddev)
 {
    std::default_random_engine generator;

@@ -8,6 +8,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "MapsenseHeaders.h"
+#include "Core/Log.h"
 
 class FileManager
 {
@@ -21,6 +22,8 @@ class FileManager
       void load_sample_color(std::string filename, cv::Mat& color);
 
       static cv::Mat ReadImage(std::string filename);
+
+      static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
 };
 
 #endif //FILEIO_H

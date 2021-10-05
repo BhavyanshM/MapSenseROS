@@ -17,6 +17,7 @@
 #include "AppUtils.h"
 #include "KeypointDetector.h"
 #include "OpenCLManager.h"
+#include "IterativeClosestPoint.h"
 
 namespace Clay
 {
@@ -40,18 +41,15 @@ namespace Clay
          void OnImGuiRender() override;
 
          ApplicationState appState;
+
       private:
          Ref<FrameBuffer> _frameBuffer;
-
-         Ref<Shader> _shader;
-
          CameraController _cameraController;
-
          glm::vec4 _squareColor;
-
          Ref<Texture2D> _texture;
          Ref<Texture2D> _checkerTexture;
          std::vector<Ref<Model>> _models;
+         Ref<Model> _rootPCL;
 
          struct ProfileResult
          {
@@ -68,11 +66,13 @@ namespace Clay
          bool opt_fullscreen;
          uint32_t count = 0;
          uint32_t frameId = 0;
+         uint32_t _scanCount = 0;
 
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;
 
          AppUtils appUtils;
+         IterativeClosestPoint* _icp;
          PlanarRegionCalculator *_regionCalculator;
          KeypointDetector* _keypointDetector;
          SLAMModule *_slamModule;

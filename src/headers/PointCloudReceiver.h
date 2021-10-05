@@ -10,6 +10,7 @@
 #include "torch/torch.h"
 #include "Core/Core.h"
 #include "Scene/Mesh/PointCloud.h"
+#include "FileManager.h"
 
 class PointCloudReceiver : public ROS1TopicReceiver
 {
@@ -39,11 +40,15 @@ class PointCloudReceiver : public ROS1TopicReceiver
    private:
 //      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       bool _available = false;
-      bool _renderEnabled = true;
+      bool _renderEnabled = false;
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
       Subscriber *_cloudSubscriber;
       torch::Tensor _cloud;
       Clay::Ref<Clay::PointCloud> _cloudToRender;
+
+      uint32_t _scanCount = 0;
+      uint32_t SKIP_SCANS = 4;
+      bool _saveScans = false;
 
 };
 

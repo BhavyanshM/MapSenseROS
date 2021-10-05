@@ -97,10 +97,9 @@ set(SOURCE
 		src/OpenCL/OpenCLManager.cpp
 		src/SLAM/SLAMModule.cpp
 		src/UI/ImGuiLayout.cpp
-		)
+		src/SLAM/IterativeClosestPoint.cpp)
 
 set (HEADERS
-
 		src/headers/SLAMModule.h
 		src/headers/PlanarRegionCalculator.h
 		src/headers/NetworkManager.h
@@ -123,7 +122,8 @@ set (HEADERS
 		src/headers/Instrumentor.h
 		src/headers/Timer.h src/headers/Core.h
 		src/headers/ImGuiLayout.h
-		src/headers/MapsenseHeaders.h )
+		src/headers/MapsenseHeaders.h
+		src/headers/IterativeClosestPoint.h)
 
 set(MAPSENSE_CLAY_HEADERS
 		src/headers/ClayApp.h
@@ -148,7 +148,8 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/Point3D.h
 		src/Geometry/include/StructureFromMotion.h
 		src/headers/Instrumentor.h
-		src/headers/Timer.h src/headers/Core.h)
+		src/headers/Timer.h
+		src/headers/Core.h)
 
 set(GEOMTOOLS_SOURCE
 		src/Geometry/src/GeomTools.cpp
@@ -160,7 +161,8 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Point3D.cpp
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
-		src/Geometry/src/Modules/StructureFromMotion.cpp src/headers/Log.h)
+		src/Geometry/src/Modules/StructureFromMotion.cpp
+		src/headers/Log.h)
 
 include_directories(
 		include

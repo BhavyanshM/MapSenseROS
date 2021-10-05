@@ -344,4 +344,38 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
    }
 }
 
+/*
+ * Correspondence Kernel for Iterative Closest Point
+ * */
+void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo, int sizeOne, int sizeTwo)
+{
+   int gid = get_global_id(0);
+   float4 pointOne = (float4)(0,0,0,0);
+   float4 pointTwo = (float4)(0,0,0,0);
+
+   int count = 0;
+   for(int i = 0; i<sizeOne/3000; i++)
+   {
+      float minLength = 10000000;
+      pointOne = (float4)(cloudOne[i*3+0], cloudOne[i*3+1], cloudOne[i*3+2], 0);
+      for(int j = 0; j<sizeTwo/3000; j++)
+      {
+         pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
+
+         // Find closest pointTwo to the pointOne from outer loop.
+         float distance = length(pointTwo - pointOne);
+//         if(gid==100 && i == 100)printf("Point: {%.2lf, %.2lf, %.2lf} Distance:(%.2lf) MinLength:(%.2lf)\n", pointTwo.x, pointTwo.y, pointTwo.z, distance, minLength);
+         if(distance < minLength){
+            minLength = distance;
+            if(gid == 100 && i == 100)
+               printf("Found Closer Point: {%.2lf, %.2lf, %.2lf} Distance:(%.2lf)\n", pointTwo.x, pointTwo.y, pointTwo.z, minLength);
+         }
+      }
+   }
+
+   if(gid==0) printf("Sizes(%d,%d)\n", sizeOne/3000, sizeTwo/3000);
+
+
+}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

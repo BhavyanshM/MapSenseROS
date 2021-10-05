@@ -56,6 +56,7 @@ OpenCLManager::OpenCLManager()
    filterKernel = cl::Kernel(program, "filterKernel");
    packKernel = cl::Kernel(program, "packKernel");
    mergeKernel = cl::Kernel(program, "mergeKernel");
+   correspondenceKernel = cl::Kernel(program, "correspondenceKernel");
 
    printf("OpenCL Initialized Successfully\n");
 
@@ -64,7 +65,7 @@ OpenCLManager::OpenCLManager()
    origin[0] = 0;
 }
 
-uint8_t OpenCLManager::CreateLoadBufferFloat(float *params, uint16_t count)
+uint8_t OpenCLManager::CreateLoadBufferFloat(float *params, uint32_t count)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Creating Buffer :%d", buffers.size());
@@ -165,6 +166,24 @@ void OpenCLManager::SetArgument(const std::string& kernel, uint8_t argId, uint8_
       {
          mergeKernel.setArg(argId, buffers[bufferId]);
       }
+
+   if(kernel == "correspondenceKernel")
+      if(image)
+      {
+         correspondenceKernel.setArg(argId, images[bufferId]);
+      }
+      else
+      {
+         correspondenceKernel.setArg(argId, buffers[bufferId]);
+      }
+}
+
+void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value)
+{
+      if(kernel == "filterKernel") filterKernel.setArg(argId, sizeof(cl_int), &value);
+      if(kernel == "mergeKernel") mergeKernel.setArg(argId, sizeof(cl_int), &value);
+      if(kernel == "packKernel") packKernel.setArg(argId, sizeof(cl_int), &value);
+      if(kernel == "correspondenceKernel") correspondenceKernel.setArg(argId, sizeof(cl_int), &value);
 }
 
 
