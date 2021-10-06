@@ -73,6 +73,22 @@ uint8_t OpenCLManager::CreateLoadBufferFloat(float *params, uint32_t count)
    return buffers.size() - 1;
 }
 
+uint8_t OpenCLManager::CreateLoadBufferUnsignedInt(uint32_t *params, uint32_t count)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   ROS_DEBUG("Creating Buffer :%d", buffers.size());
+   buffers.emplace_back(cl::Buffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(uint32_t) * count, params));
+   return buffers.size() - 1;
+}
+
+uint8_t OpenCLManager::CreateBufferInt(uint32_t count)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   ROS_DEBUG("Creating Buffer :%d", buffers.size());
+   buffers.emplace_back(cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * count));
+   return buffers.size() - 1;
+}
+
 uint8_t OpenCLManager::CreateLoadReadOnlyImage2D_R16(uint16_t *depthBuffer, uint16_t width, uint16_t height)
 {
    MAPSENSE_PROFILE_FUNCTION();
@@ -127,6 +143,13 @@ void OpenCLManager::ReadImage(uint8_t image, const cl::size_t<3>& region, void *
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Reading Image :%d", image);
    commandQueue.enqueueReadImage(images[image], CL_TRUE, origin, region, 0, 0, cpuBufferPtr);
+}
+
+void OpenCLManager::ReadBuffer(uint8_t buffer, int *cpuBufferPtr, int size)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   ROS_DEBUG("Reading Buffer :%d", buffer);
+   commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(int) * size, cpuBufferPtr);
 }
 
 void OpenCLManager::Reset()

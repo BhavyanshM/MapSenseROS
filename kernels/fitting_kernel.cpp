@@ -347,35 +347,37 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
 /*
  * Correspondence Kernel for Iterative Closest Point
  * */
-void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo, int sizeOne, int sizeTwo)
+void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo, global int* matches, int sizeOne, int sizeTwo, int threads, int items)
 {
    int gid = get_global_id(0);
    float4 pointOne = (float4)(0,0,0,0);
    float4 pointTwo = (float4)(0,0,0,0);
 
-   int count = 0;
-   for(int i = 0; i<sizeOne/3000; i++)
-   {
-      float minLength = 10000000;
-      pointOne = (float4)(cloudOne[i*3+0], cloudOne[i*3+1], cloudOne[i*3+2], 0);
-      for(int j = 0; j<sizeTwo/3000; j++)
-      {
-         pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
+//   printf("CorrespondenceKernel(%d,%d,%d)\n", sizeOne, sizeTwo, gid);
+//   if(gid ==  threads - 1) printf("Found(%d,%d,%d,%d,%d)\n", sizeOne, sizeTwo, gid, threads, items);
 
-         // Find closest pointTwo to the pointOne from outer loop.
-         float distance = length(pointTwo - pointOne);
-//         if(gid==100 && i == 100)printf("Point: {%.2lf, %.2lf, %.2lf} Distance:(%.2lf) MinLength:(%.2lf)\n", pointTwo.x, pointTwo.y, pointTwo.z, distance, minLength);
-         if(distance < minLength){
-            minLength = distance;
-            if(gid == 100 && i == 100)
-               printf("Found Closer Point: {%.2lf, %.2lf, %.2lf} Distance:(%.2lf)\n", pointTwo.x, pointTwo.y, pointTwo.z, minLength);
-         }
+//   if(gid*3+2 >= sizeOne) return;
+   float minLength = 10000000;
+   int minIndex = -1;
+   float4 closestPoint;
+   pointOne = (float4)(cloudOne[gid*3+0], cloudOne[gid*3+1], cloudOne[gid*3+2], 0);
+
+   for(int j = 0; j<sizeTwo/3; j++)
+   {
+      pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
+//      if(gid==0 && j < 100) printf("PointTwo (%d): (%.3lf, %.3lf, %.3lf)\n", j, pointTwo.x, pointTwo.y, pointTwo.z);
+      float distance = length(pointTwo - pointOne);
+      if(distance < minLength){
+         minIndex = j;
+         minLength = distance;
+         closestPoint = pointTwo;
       }
    }
 
-   if(gid==0) printf("Sizes(%d,%d)\n", sizeOne/3000, sizeTwo/3000);
-
-
+//   printf("Match(%d,%d) Dist:%.3lf\n", gid, minIndex, minLength);
+   if(minLength < 1.0) {
+      matches[gid] = minIndex;
+   }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
