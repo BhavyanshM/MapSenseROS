@@ -11,9 +11,10 @@
 class IterativeClosestPoint
 {
    public:
-      const std::vector<uint32_t>& CalculateAlignment(std::vector<float>& cloudOne, std::vector<float>& cloudTwo);
-      const std::vector<uint32_t>& FindCorrespondences(std::vector<float>& cloudOne, std::vector<float>& cloudTwo);
+      Eigen::Matrix4f CalculateAlignment(std::vector<float>& cloudOne, std::vector<float>& cloudTwo);
+      const Eigen::Matrix4f& FindCorrespondences(std::vector<float>& cloudOne, std::vector<float>& cloudTwo);
       void SetOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
+      void TestICP(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matches);
 
    private:
       OpenCLManager* _openCL;

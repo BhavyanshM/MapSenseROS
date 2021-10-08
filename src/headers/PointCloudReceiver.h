@@ -40,7 +40,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
    private:
 //      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       bool _available = false;
-      bool _renderEnabled = false;
+      bool _renderEnabled = true;
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
       Subscriber *_cloudSubscriber;
       torch::Tensor _cloud;

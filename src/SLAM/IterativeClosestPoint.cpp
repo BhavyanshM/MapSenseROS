@@ -4,48 +4,7 @@
 
 #include "IterativeClosestPoint.h"
 
-const std::vector<uint32_t>& IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, std::vector<float>& cloudTwo)
-{
-//   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-//   int totalNumOfBoundaryPoints = 0;
-//   for (int i = 0; i < this->matches.size(); i++)
-//   {
-//      totalNumOfBoundaryPoints += this->_latestRegionsZUp[this->matches[i].second]->getNumOfBoundaryVertices();
-//   }
-//   Eigen::MatrixXf A(totalNumOfBoundaryPoints, 6);
-//   VectorXf b(totalNumOfBoundaryPoints);
-//
-//   int i = 0;
-//   for (int m = 0; m < this->matches.size(); m++)
-//   {
-//      for (int n = 0; n < this->_latestRegionsZUp[this->matches[m].second]->getNumOfBoundaryVertices(); n++)
-//      {
-//         Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
-//         //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
-//         Vector3f correspondingMapCentroid = regions[matches[m].first]->getCenter();
-//         Vector3f correspondingMapNormal = regions[matches[m].first]->getNormal();
-//         Vector3f cross = latestPoint.cross(correspondingMapNormal);
-//         A(i, 0) = cross(0);
-//         A(i, 1) = cross(1);
-//         A(i, 2) = cross(2);
-//         A(i, 3) = correspondingMapNormal(0);
-//         A(i, 4) = correspondingMapNormal(1);
-//         A(i, 5) = correspondingMapNormal(2);
-//         b(i) = -(latestPoint - correspondingMapCentroid).dot(correspondingMapNormal);
-//         i++;
-//      }
-//   }
-//   VectorXf solution(6);
-//   solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
-//   eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
-//   translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
-//
-//   /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
-//   _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
-//   _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
-}
-
-const std::vector<uint32_t>& IterativeClosestPoint::FindCorrespondences(std::vector<float>& cloudOne, std::vector<float>& cloudTwo)
+Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, std::vector<float>& cloudTwo)
 {
    auto start_point = std::chrono::steady_clock::now();
 
@@ -70,18 +29,17 @@ const std::vector<uint32_t>& IterativeClosestPoint::FindCorrespondences(std::vec
 
    int matches[cloudOne.size()/3];
    _openCL->ReadBuffer(matchBuffer, matches, cloudOne.size()/3);
-
    _openCL->commandQueue.finish();
 
-
+   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
 
    int numOfCorrespondences = 0;
    for(int i = 0; i<cloudOne.size()/3; i++)
    {
       if(matches[i] != -1 && matches[i] != 0) numOfCorrespondences += 1;
 
-//      if((one-two).norm() > 1.0) zeroes += 1;
-//      if((one-two).norm() > 2.0)printf("Match: (%d,%d) Dist:%.3lf\n", i, matches[i], (one-two).norm());
+      //      if((one-two).norm() > 1.0) zeroes += 1;
+//      if(matches[i] != -1 && matches[i] != 0) printf("Match: (%d,%d)\n", i, matches[i]);
    }
    printf("Total Correspondences: %d\n", numOfCorrespondences);
 
@@ -113,11 +71,22 @@ const std::vector<uint32_t>& IterativeClosestPoint::FindCorrespondences(std::vec
    firstCloud = firstCloud - firstMean.rowwise().replicate(firstCloud.rows()).transpose();
    secondCloud = secondCloud - secondMean.rowwise().replicate(secondCloud.rows()).transpose();
 
-
-
    Eigen::Matrix3f correlation = firstCloud.transpose() * secondCloud;
-
    std::cout << "Correlation Matrix:" << correlation << std::endl;
+
+   Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+   std::cout << "S:" << std::endl << svd.singularValues() << std::endl;
+   std::cout << "U:" << std::endl << svd.matrixU() << std::endl;
+   std::cout << "V:" << std::endl << svd.matrixV() << std::endl;
+
+   Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
+   std::cout << "R:" << std::endl << rotation << std::endl;
+   std::cout << "t:" << std::endl << firstMean - secondMean << std::endl;
+
+   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+   transform.block<3,3>(0,0) = rotation.transpose();
+   transform.block<3,1>(0,3) = firstMean - secondMean;
 
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
@@ -127,5 +96,43 @@ const std::vector<uint32_t>& IterativeClosestPoint::FindCorrespondences(std::vec
 
    printf("Total Time Taken: %.3lf ms\n", duration);
 
-   return std::vector<uint32_t>();
+   TestICP(cloudOne, cloudTwo, matchesVector);
+
+   return transform;
+}
+
+const Eigen::Matrix4f& IterativeClosestPoint::FindCorrespondences(std::vector<float>& cloudOne, std::vector<float>& cloudTwo)
+{
+   return Eigen::Matrix4f::Identity();
+}
+
+void IterativeClosestPoint::TestICP(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matches)
+{
+   std::vector<int> currentMatches;
+   for(int i = 0; i<cloudOne.size()/3; i++)
+   {
+      float minLength = 1000000000;
+      int minindex = -1;
+      for(int j = 0; j<cloudTwo.size()/3; j++)
+      {
+         Eigen::Vector3f one(cloudOne[i*3], cloudOne[i*3+1], cloudOne[i*3+2]);
+         Eigen::Vector3f two(cloudTwo[j*3], cloudTwo[j*3+1], cloudTwo[j*3+2]);
+         if((one - two).norm() < minLength)
+         {
+            minLength = (one - two).norm();
+            minindex = j;
+         }
+      }
+      currentMatches.emplace_back(minindex);
+   }
+   int count = 0;
+   for(int i = 0; i<currentMatches.size(); i++)
+   {
+      printf("%d, %d\n", currentMatches[i], matches[i]);
+      if(currentMatches[i] == matches[i])
+      {
+         count++;
+      }
+   }
+   printf("Percent Correct Matches: %.2lf, Total Correct Matches: %d\n", 100.0 * (float)count/((float)currentMatches.size()), count);
 }

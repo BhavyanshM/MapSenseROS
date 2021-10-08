@@ -365,9 +365,13 @@ void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo,
    for(int j = 0; j<sizeTwo/3; j++)
    {
       pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
-//      if(gid==0 && j < 100) printf("PointTwo (%d): (%.3lf, %.3lf, %.3lf)\n", j, pointTwo.x, pointTwo.y, pointTwo.z);
       float distance = length(pointTwo - pointOne);
+//      if(gid==0 && j < 100) printf("Min:(%.3lf) PointOne: (%d): (%.3lf, %.3lf, %.3lf) PointTwo (%d): (%.3lf, %.3lf, %.3lf) -> (%.3lf)\n",
+//                                   minLength, gid, pointOne.x, pointOne.y, pointOne.z,
+//                                   j, pointTwo.x, pointTwo.y, pointTwo.z, distance);
+
       if(distance < minLength){
+//         if(gid==0 && j<100)printf("Updating (%d,%d) -> %.3lf\n", gid,j, minLength);
          minIndex = j;
          minLength = distance;
          closestPoint = pointTwo;
@@ -375,9 +379,9 @@ void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo,
    }
 
 //   printf("Match(%d,%d) Dist:%.3lf\n", gid, minIndex, minLength);
-   if(minLength < 1.0) {
+//   if(minLength < 1.0) {
       matches[gid] = minIndex;
-   }
+//   }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
