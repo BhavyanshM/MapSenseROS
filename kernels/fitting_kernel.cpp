@@ -215,6 +215,11 @@ void smooth_non_boundary(read_only image2d_t in, int x, int y, write_only image2
    }
 }
 
+float4 transform(float4 point, float4 r1, float4 r2, float4 r3, float4 t)
+{
+   return (float4)(dot(r1, point) + t.x, dot(r2, point) + t.y, dot(r3, point) + t.z, 0);
+}
+
 /* ++++++++++++++++++++++++++++++++++++++++++ OPEN_CL KERNELS BEGIN HERE ++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /* OpenCL Kernels Begin Here. All utilities above this point. */
 
@@ -347,31 +352,34 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
 /*
  * Correspondence Kernel for Iterative Closest Point
  * */
-void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo, global int* matches, int sizeOne, int sizeTwo, int threads, int items)
+void kernel correspondenceKernel(global float* cloudOne, global float* transformOne, global float* cloudTwo, global float* transformTwo,
+                                 global int* matches, int sizeOne, int sizeTwo, int threads)
 {
    int gid = get_global_id(0);
    float4 pointOne = (float4)(0,0,0,0);
    float4 pointTwo = (float4)(0,0,0,0);
 
-//   printf("CorrespondenceKernel(%d,%d,%d)\n", sizeOne, sizeTwo, gid);
-//   if(gid ==  threads - 1) printf("Found(%d,%d,%d,%d,%d)\n", sizeOne, sizeTwo, gid, threads, items);
+   if(gid==0) printf("CorrespondenceKernel\n");
 
-//   if(gid*3+2 >= sizeOne) return;
    float minLength = 10000000;
    int minIndex = -1;
    float4 closestPoint;
    pointOne = (float4)(cloudOne[gid*3+0], cloudOne[gid*3+1], cloudOne[gid*3+2], 0);
+   pointOne = transform(pointOne, (float4)(transformOne[0], transformOne[1], transformOne[2], 0),
+                                 (float4)(transformOne[3], transformOne[4], transformOne[5], 0),
+                                 (float4)(transformOne[6], transformOne[7], transformOne[8], 0),
+                                 (float4)(transformOne[9], transformOne[10], transformOne[11], 0));
 
    for(int j = 0; j<sizeTwo/3; j++)
    {
       pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
-      float distance = length(pointTwo - pointOne);
-//      if(gid==0 && j < 100) printf("Min:(%.3lf) PointOne: (%d): (%.3lf, %.3lf, %.3lf) PointTwo (%d): (%.3lf, %.3lf, %.3lf) -> (%.3lf)\n",
-//                                   minLength, gid, pointOne.x, pointOne.y, pointOne.z,
-//                                   j, pointTwo.x, pointTwo.y, pointTwo.z, distance);
+      pointTwo = transform(pointTwo, (float4)(transformTwo[0], transformTwo[1], transformTwo[2], 0),
+                     (float4)(transformTwo[3], transformTwo[4], transformTwo[5], 0),
+                     (float4)(transformTwo[6], transformTwo[7], transformTwo[8], 0),
+                     (float4)(transformTwo[9], transformTwo[10], transformTwo[11], 0));
 
+      float distance = length(pointTwo - pointOne);
       if(distance < minLength){
-//         if(gid==0 && j<100)printf("Updating (%d,%d) -> %.3lf\n", gid,j, minLength);
          minIndex = j;
          minLength = distance;
          closestPoint = pointTwo;
@@ -379,9 +387,9 @@ void kernel correspondenceKernel(global float* cloudOne, global float* cloudTwo,
    }
 
 //   printf("Match(%d,%d) Dist:%.3lf\n", gid, minIndex, minLength);
-//   if(minLength < 1.0) {
+   if(minLength < 0.5) {
       matches[gid] = minIndex;
-//   }
+   }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

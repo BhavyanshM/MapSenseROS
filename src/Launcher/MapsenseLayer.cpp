@@ -43,22 +43,22 @@ namespace Clay
       Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
-//      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-//      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_8", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
+      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
 
-//      cloud->RotateLocalY(0.2f);
-//      cloud->TranslateLocal({0.2f, 0.1f, -0.1f});
+      cloud->RotateLocalY(0.2f);
+      cloud->TranslateLocal({0.2f, 0.1f, -0.1f});
 
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
-      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
-      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
+//      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
+//      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
    }
 
    void MapsenseLayer::OnAttach()
@@ -320,8 +320,24 @@ namespace Clay
       ImGui::Text("Models: %d", _models.size());
       if(ImGui::Button("Calculate ICP"))
       {
-         // Call the alignment calculator function.
-         Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[0]->GetMesh()->_vertices, _models[1]->GetMesh()->_vertices);
+         Eigen::Matrix4f transformOne, transformTwo;
+         glm::mat4 invTransformOne = glm::inverse(_models[0]->GetTransformToParent());
+         glm::mat4 invTransformTwo = glm::inverse(_models[1]->GetTransformToParent());
+         for (int i = 0; i < 4; ++i)
+         {
+            for (int j = 0; j < 4; ++j)
+            {
+               transformOne(i,j) = invTransformOne[j][i];
+               transformTwo(i,j) = invTransformTwo[j][i];
+            }
+         }
+
+         std::cout << "Transform Before Conversion:" << transformTwo << std::endl;
+         std::cout << "Transform After Conversion:" << glm::to_string(_models[1]->GetTransformToParent()) << std::endl;
+
+         // Calculate ICP based Pointcloud Alignment.
+         Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[0]->GetMesh()->_vertices, transformOne, _models[1]->GetMesh()->_vertices, transformTwo);
+
          glm::mat4 transform;
          for (int i = 0; i < 4; ++i)
          {
