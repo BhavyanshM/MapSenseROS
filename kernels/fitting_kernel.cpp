@@ -392,4 +392,58 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
    }
 }
 
+void kernel correlationKernel(global float* cloudOne, global float* transformOne, global float* cloudTwo, global float* transformTwo,
+      global int* matches, global float* correlation, int sizeOne, int sizeTwo, int threads)
+{
+   int gid = get_global_id(0);
+   if(gid==0) printf("CorrelationKernel() Works!\n");
+
+   float4 pointOne = (float4)(0,0,0,0);
+   float4 pointTwo = (float4)(0,0,0,0);
+   int totalPoints = sizeOne/3;
+   int blockSize = totalPoints/threads;
+   int startPoint = gid * threads;
+   int endPoint = startPoint + blockSize;
+   float correl[9];
+
+   if(gid == 0) printf("Block Assigned: %d\n", blockSize);
+
+   for(int k = 0; k<9; k++)
+   {
+      correl[k] = 0;
+   }
+
+   // For each point in block of points
+   for(int i = startPoint; i<endPoint; i++)
+   {
+      if(matches[i] != -1 && matches[i] != 0)
+      {
+         // Calculate correlation 3x3 -> 9x1 for point with matching point.
+         pointOne = (float4)(cloudOne[i*3+0], cloudOne[i*3+1], cloudOne[i*3+2], 0);
+         pointTwo = (float4)(cloudTwo[matches[i]*3+0], cloudTwo[matches[i]*3+1], cloudTwo[matches[i]*3+2], 0);
+
+         // Add 9x1 correlation vector into "correl" array
+         correl[0] += pointOne.x * pointTwo.x;
+         correl[1] += pointOne.x * pointTwo.y;
+         correl[2] += pointOne.x * pointTwo.z;
+         correl[3] += pointOne.y * pointTwo.x;
+         correl[4] += pointOne.y * pointTwo.y;
+         correl[5] += pointOne.y * pointTwo.z;
+         correl[6] += pointOne.z * pointTwo.x;
+         correl[7] += pointOne.z * pointTwo.y;
+         correl[8] += pointOne.z * pointTwo.z;
+
+//         for(int k = 0; k<9; k++)
+//         {
+//            correl[k] += pointOne[k/3] * pointTwo[k%3];
+//         }
+      }
+   }
+   // Store final 9x1 "correl" into gid'th block in "correlation"
+   for(int k = 0; k<9; k++)
+   {
+      correlation[gid*9 + k] = correl[k];
+   }
+}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

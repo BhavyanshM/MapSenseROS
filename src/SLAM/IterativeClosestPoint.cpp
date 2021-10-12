@@ -20,17 +20,15 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
       transformTwoVec.emplace_back(transformTwo(i, 3));
    }
 
-   std::cout << "TransformOne:" << transformOne << std::endl;
-   std::cout << "TransformTwo:" << transformTwo << std::endl;
-
    int numPoints = cloudOne.size()/3;
+   uint32_t threads = 1000;
 
    uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size());
    uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12);
    uint8_t cloudTwoBuffer = _openCL->CreateLoadBufferFloat(cloudTwo.data(), cloudTwo.size());
    uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12);
    uint8_t matchBuffer = _openCL->CreateBufferInt(numPoints);
-   uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * numPoints);
+   uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads);
 
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
@@ -43,16 +41,29 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPoints), cl::NullRange);
 
-   int matches[cloudOne.size()/3];
-   _openCL->ReadBuffer(matchBuffer, matches, cloudOne.size()/3);
+//   int matches[cloudOne.size()/3];
+//   _openCL->ReadBuffer(matchBuffer, matches, cloudOne.size()/3);
 
-   _openCL->commandQueue.finish();
+//   _openCL->commandQueue.finish();
 
-   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
+   // Setup kernel for calculating correlation matrix.
 
-   // Calculate transform on the CPU.
-   Eigen::Matrix4f transform = CalculateTransform(cloudOne, cloudTwo, matchesVector);
-   //Calculate transform on the GPU.
+   _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
+   _openCL->SetArgument("correlationKernel", 1, transformOneBuffer);
+   _openCL->SetArgument("correlationKernel", 2, cloudTwoBuffer);
+   _openCL->SetArgument("correlationKernel", 3, transformTwoBuffer);
+   _openCL->SetArgument("correlationKernel", 4, matchBuffer);
+   _openCL->SetArgument("correlationKernel", 5, correlBuffer);
+   _openCL->SetArgumentInt("correlationKernel", 6, cloudOne.size());
+   _openCL->SetArgumentInt("correlationKernel", 7, cloudTwo.size());
+   _openCL->SetArgumentInt("correlationKernel", 8, threads);
+   Eigen::Matrix3f correl = CalculateCorrelationMatrix(threads);
+
+//   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
+//
+//   // Calculate transform on the CPU.
+//   Eigen::Matrix4f transform = CalculateTransform(cloudOne, cloudTwo, matchesVector);
+//   //Calculate transform on the GPU.
 
 
    auto end_point = std::chrono::steady_clock::now();
@@ -65,7 +76,15 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
 //   TestICP(cloudOne, cloudTwo, matchesVector);
 
-   return transform;
+   return Eigen::Matrix4f::Identity();
+}
+
+Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threads)
+{
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correlationKernel, cl::NullRange, cl::NDRange((int)threads), cl::NullRange);
+   _openCL->commandQueue.finish();
+
+   return Eigen::Matrix3f::Identity();
 }
 
 Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector)

@@ -57,6 +57,7 @@ OpenCLManager::OpenCLManager()
    packKernel = cl::Kernel(program, "packKernel");
    mergeKernel = cl::Kernel(program, "mergeKernel");
    correspondenceKernel = cl::Kernel(program, "correspondenceKernel");
+   correlationKernel = cl::Kernel(program, "correlationKernel");
 
    printf("OpenCL Initialized Successfully\n");
 
@@ -168,55 +169,20 @@ void OpenCLManager::Reset()
 
 void OpenCLManager::SetArgument(const std::string& kernel, uint8_t argId, uint8_t bufferId, bool image)
 {
-   if(kernel == "filterKernel")
-      if(image)
-      {
-         filterKernel.setArg(argId, images[bufferId]);
-      }
-      else
-      {
-         filterKernel.setArg(argId, buffers[bufferId]);
-      }
-
-   if(kernel == "packKernel")
-      if(image)
-      {
-         packKernel.setArg(argId, images[bufferId]);
-      }
-      else
-      {
-         packKernel.setArg(argId, buffers[bufferId]);
-      }
-
-   if(kernel == "mergeKernel")
-      if(image)
-      {
-         mergeKernel.setArg(argId, images[bufferId]);
-      }
-      else
-      {
-         mergeKernel.setArg(argId, buffers[bufferId]);
-      }
-
-   if(kernel == "correspondenceKernel")
-      if(image)
-      {
-         printf("Setting Image Corresp\n");
-         correspondenceKernel.setArg(argId, images[bufferId]);
-      }
-      else
-      {
-         printf("Setting Buffer Corresp\n");
-         correspondenceKernel.setArg(argId, buffers[bufferId]);
-      }
+   if(kernel == "filterKernel") (image) ? filterKernel.setArg(argId, images[bufferId]) : filterKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "packKernel") (image) ? packKernel.setArg(argId, images[bufferId]) : packKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "mergeKernel") (image) ? mergeKernel.setArg(argId, images[bufferId]) : mergeKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "correspondenceKernel") (image) ? correspondenceKernel.setArg(argId, images[bufferId]) : correspondenceKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "correlationKernel") (image) ? correlationKernel.setArg(argId, images[bufferId]) : correlationKernel.setArg(argId, buffers[bufferId]);
 }
 
 void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value)
 {
       if(kernel == "filterKernel") filterKernel.setArg(argId, sizeof(cl_int), &value);
-      if(kernel == "mergeKernel") mergeKernel.setArg(argId, sizeof(cl_int), &value);
-      if(kernel == "packKernel") packKernel.setArg(argId, sizeof(cl_int), &value);
-      if(kernel == "correspondenceKernel") correspondenceKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "mergeKernel") mergeKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "packKernel") packKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "correspondenceKernel") correspondenceKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "correlationKernel") correlationKernel.setArg(argId, sizeof(cl_int), &value);
 }
 
 
