@@ -154,11 +154,18 @@ void OpenCLManager::ReadImage(uint8_t image, const cl::size_t<3>& region, void *
    commandQueue.enqueueReadImage(images[image], CL_TRUE, origin, region, 0, 0, cpuBufferPtr);
 }
 
-void OpenCLManager::ReadBuffer(uint8_t buffer, int *cpuBufferPtr, int size)
+void OpenCLManager::ReadBufferInt(uint8_t buffer, int *cpuBufferPtr, int size)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Reading Buffer :%d", buffer);
+   ROS_DEBUG("Reading Int Buffer :%d", buffer);
    commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(int) * size, cpuBufferPtr);
+}
+
+void OpenCLManager::ReadBufferFloat(uint8_t buffer, float *cpuBufferPtr, int size)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+   ROS_DEBUG("Reading Float Buffer :%d", buffer);
+   commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(float) * size, cpuBufferPtr);
 }
 
 void OpenCLManager::Reset()

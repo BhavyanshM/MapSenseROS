@@ -362,8 +362,8 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
    if(gid==0) printf("CorrespondenceKernel\n");
 
    float minLength = 10000000;
+   float distance = 0;
    int minIndex = -1;
-   float4 closestPoint;
    pointOne = (float4)(cloudOne[gid*3+0], cloudOne[gid*3+1], cloudOne[gid*3+2], 0);
    pointOne = transform(pointOne, (float4)(transformOne[0], transformOne[1], transformOne[2], 0),
                                  (float4)(transformOne[3], transformOne[4], transformOne[5], 0),
@@ -378,18 +378,17 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
                      (float4)(transformTwo[6], transformTwo[7], transformTwo[8], 0),
                      (float4)(transformTwo[9], transformTwo[10], transformTwo[11], 0));
 
-      float distance = length(pointTwo - pointOne);
+      distance = length(pointTwo - pointOne);
       if(distance < minLength){
          minIndex = j;
          minLength = distance;
-         closestPoint = pointTwo;
       }
    }
 
 //   printf("Match(%d,%d) Dist:%.3lf\n", gid, minIndex, minLength);
-   if(minLength < 0.5) {
+//   if(minLength < 0.5) {
       matches[gid] = minIndex;
-   }
+//   }
 }
 
 void kernel correlationKernel(global float* cloudOne, global float* transformOne, global float* cloudTwo, global float* transformTwo,
@@ -402,15 +401,18 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
    float4 pointTwo = (float4)(0,0,0,0);
    int totalPoints = sizeOne/3;
    int blockSize = totalPoints/threads;
-   int startPoint = gid * threads;
+   int startPoint = gid * blockSize;
    int endPoint = startPoint + blockSize;
    float correl[9];
+
+   int count = 0;
 
    if(gid == 0) printf("Block Assigned: %d\n", blockSize);
 
    for(int k = 0; k<9; k++)
    {
       correl[k] = 0;
+      correlation[gid*9 + k] = 0;
    }
 
    // For each point in block of points
@@ -418,6 +420,7 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
    {
       if(matches[i] != -1 && matches[i] != 0)
       {
+         count += 1;
          // Calculate correlation 3x3 -> 9x1 for point with matching point.
          pointOne = (float4)(cloudOne[i*3+0], cloudOne[i*3+1], cloudOne[i*3+2], 0);
          pointTwo = (float4)(cloudTwo[matches[i]*3+0], cloudTwo[matches[i]*3+1], cloudTwo[matches[i]*3+2], 0);
@@ -432,11 +435,6 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
          correl[6] += pointOne.z * pointTwo.x;
          correl[7] += pointOne.z * pointTwo.y;
          correl[8] += pointOne.z * pointTwo.z;
-
-//         for(int k = 0; k<9; k++)
-//         {
-//            correl[k] += pointOne[k/3] * pointTwo[k%3];
-//         }
       }
    }
    // Store final 9x1 "correl" into gid'th block in "correlation"
@@ -444,6 +442,7 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
    {
       correlation[gid*9 + k] = correl[k];
    }
+//   printf("CountCorrelation: (%d,%d) %d - %d\n", startPoint, endPoint, gid, count);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

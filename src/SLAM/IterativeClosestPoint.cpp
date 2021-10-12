@@ -38,16 +38,12 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correspondenceKernel", 5, cloudOne.size());
    _openCL->SetArgumentInt("correspondenceKernel", 6, cloudTwo.size());
    _openCL->SetArgumentInt("correspondenceKernel", 7, numPoints);
-
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPoints), cl::NullRange);
 
 //   int matches[cloudOne.size()/3];
-//   _openCL->ReadBuffer(matchBuffer, matches, cloudOne.size()/3);
-
-//   _openCL->commandQueue.finish();
+//   _openCL->ReadBufferInt(matchBuffer, matches, cloudOne.size()/3);
 
    // Setup kernel for calculating correlation matrix.
-
    _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correlationKernel", 1, transformOneBuffer);
    _openCL->SetArgument("correlationKernel", 2, cloudTwoBuffer);
@@ -57,13 +53,18 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correlationKernel", 6, cloudOne.size());
    _openCL->SetArgumentInt("correlationKernel", 7, cloudTwo.size());
    _openCL->SetArgumentInt("correlationKernel", 8, threads);
-   Eigen::Matrix3f correl = CalculateCorrelationMatrix(threads);
+
+   /*TODO: Upload mean of both pointclouds and subtract before calculating correlation. */
+
+   Eigen::Matrix3f correl = CalculateCorrelationMatrix(threads, correlBuffer);
+
 
 //   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
-//
-//   // Calculate transform on the CPU.
+
+   // Calculate transform on the CPU.
 //   Eigen::Matrix4f transform = CalculateTransform(cloudOne, cloudTwo, matchesVector);
-//   //Calculate transform on the GPU.
+
+   //Calculate transform on the GPU.
 
 
    auto end_point = std::chrono::steady_clock::now();
@@ -79,10 +80,17 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    return Eigen::Matrix4f::Identity();
 }
 
-Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threads)
+Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threads, uint8_t correlBuffer)
 {
+   float correlationMatrixBuffer[9 * threads];
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correlationKernel, cl::NullRange, cl::NDRange((int)threads), cl::NullRange);
+   _openCL->ReadBufferFloat(correlBuffer, correlationMatrixBuffer, 9 * threads);
    _openCL->commandQueue.finish();
+
+   Eigen::Map<Eigen::Matrix<float, 9, Eigen::Dynamic>, Eigen::RowMajor> correlation(correlationMatrixBuffer, 9, threads);
+   Eigen::MatrixXf correlMatVec = correlation.rowwise().sum();
+
+   std::cout << "CorrelMatVec: " << correlMatVec << std::endl;
 
    return Eigen::Matrix3f::Identity();
 }
@@ -122,12 +130,12 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cl
    Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> smallCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
    Eigen::Vector3f smallMeanOne = smallCloudOne.rowwise().mean();
    Eigen::Vector3f smallMeanTwo = smallCloudTwo.rowwise().mean();
-   std::cout << "Small First Size: " << smallCloudOne.cols() << std::endl;
+//   std::cout << "Small First Size: " << smallCloudOne.cols() << std::endl;
 
    // Calculate centroid vectors for both the pointclouds.
    Eigen::Vector3f firstMean = firstCloud.colwise().mean();
    Eigen::Vector3f secondMean = secondCloud.colwise().mean();
-   std::cout << "First Size: " << firstCloud.rows() << std::endl;
+//   std::cout << "First Size: " << firstCloud.rows() << std::endl;
 
    // Remove centroid from both pointcloud matrices.
    firstCloud = firstCloud - firstMean.rowwise().replicate(firstCloud.rows()).transpose();
@@ -135,13 +143,14 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cl
 
    // Calculate the correlation matrix.
    Eigen::Matrix3f correlation = firstCloud.transpose() * secondCloud;
+   std::cout << "Correlation:" << correlation << std::endl;
    // Calculate SVD for the correlation matrix.
    Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
    // Recover rotation matrix from the SVD matrices.
    Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
-   std::cout << "R:" << std::endl << rotation << std::endl;
-   std::cout << "t:" << std::endl << firstMean - secondMean << std::endl;
+//   std::cout << "R:" << std::endl << rotation << std::endl;
+//   std::cout << "t:" << std::endl << firstMean - secondMean << std::endl;
 
    // Construct a 4x4 transformation matrix from rotation and centroidal displacement.
    Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
