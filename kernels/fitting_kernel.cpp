@@ -392,7 +392,7 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
 }
 
 void kernel correlationKernel(global float* cloudOne, global float* transformOne, global float* cloudTwo, global float* transformTwo,
-      global int* matches, global float* correlation, int sizeOne, int sizeTwo, int threads)
+      global float* mean, global int* matches, global float* correlation, int sizeOne, int sizeTwo, int threads)
 {
    int gid = get_global_id(0);
    if(gid==0) printf("CorrelationKernel() Works!\n");
@@ -407,7 +407,7 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
 
    int count = 0;
 
-   if(gid == 0) printf("Block Assigned: %d\n", blockSize);
+   if(gid == 0) printf("Mean: %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf\n", mean[0],mean[1],mean[2],mean[3],mean[4],mean[5]);
 
    for(int k = 0; k<9; k++)
    {
@@ -426,15 +426,15 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
          pointTwo = (float4)(cloudTwo[matches[i]*3+0], cloudTwo[matches[i]*3+1], cloudTwo[matches[i]*3+2], 0);
 
          // Add 9x1 correlation vector into "correl" array
-         correl[0] += pointOne.x * pointTwo.x;
-         correl[1] += pointOne.x * pointTwo.y;
-         correl[2] += pointOne.x * pointTwo.z;
-         correl[3] += pointOne.y * pointTwo.x;
-         correl[4] += pointOne.y * pointTwo.y;
-         correl[5] += pointOne.y * pointTwo.z;
-         correl[6] += pointOne.z * pointTwo.x;
-         correl[7] += pointOne.z * pointTwo.y;
-         correl[8] += pointOne.z * pointTwo.z;
+         correl[0] += (pointOne.x - mean[0]) * (pointTwo.x - mean[3]);
+         correl[1] += (pointOne.x - mean[0]) * (pointTwo.y - mean[4]);
+         correl[2] += (pointOne.x - mean[0]) * (pointTwo.z - mean[5]);
+         correl[3] += (pointOne.y - mean[1]) * (pointTwo.x - mean[3]);
+         correl[4] += (pointOne.y - mean[1]) * (pointTwo.y - mean[4]);
+         correl[5] += (pointOne.y - mean[1]) * (pointTwo.z - mean[5]);
+         correl[6] += (pointOne.z - mean[2]) * (pointTwo.x - mean[3]);
+         correl[7] += (pointOne.z - mean[2]) * (pointTwo.y - mean[4]);
+         correl[8] += (pointOne.z - mean[2]) * (pointTwo.z - mean[5]);
       }
    }
    // Store final 9x1 "correl" into gid'th block in "correlation"

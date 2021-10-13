@@ -44,7 +44,7 @@ namespace Clay
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
       Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
+      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_8", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);

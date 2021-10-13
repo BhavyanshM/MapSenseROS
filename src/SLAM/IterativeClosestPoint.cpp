@@ -23,12 +23,30 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    int numPoints = cloudOne.size()/3;
    uint32_t threads = 1000;
 
+   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudOne(cloudOne.data(), 3,cloudOne.size()/3);
+   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
+   Eigen::Vector4f eigenMeanOne, eigenMeanTwo;
+   eigenMeanOne << eigenCloudOne.rowwise().mean(), 1;
+   eigenMeanTwo << eigenCloudTwo.rowwise().mean(), 1;
+   eigenMeanOne = transformOne * eigenMeanOne;
+   eigenMeanTwo = transformTwo * eigenMeanTwo;
+
+   std::vector<float> meanVec;
+   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanOne(m));
+   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanTwo(m));
+
+   std::cout << "Eigen First Mean: " << eigenMeanOne << std::endl;
+   std::cout << "Eigen Second Mean: " << eigenMeanTwo << std::endl;
+
+
+
    uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size());
    uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12);
    uint8_t cloudTwoBuffer = _openCL->CreateLoadBufferFloat(cloudTwo.data(), cloudTwo.size());
    uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12);
    uint8_t matchBuffer = _openCL->CreateBufferInt(numPoints);
    uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads);
+   uint8_t meanBuffer = _openCL->CreateLoadBufferFloat(meanVec.data(), meanVec.size());
 
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
@@ -40,29 +58,30 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correspondenceKernel", 7, numPoints);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPoints), cl::NullRange);
 
-//   int matches[cloudOne.size()/3];
-//   _openCL->ReadBufferInt(matchBuffer, matches, cloudOne.size()/3);
+
 
    // Setup kernel for calculating correlation matrix.
    _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correlationKernel", 1, transformOneBuffer);
    _openCL->SetArgument("correlationKernel", 2, cloudTwoBuffer);
    _openCL->SetArgument("correlationKernel", 3, transformTwoBuffer);
-   _openCL->SetArgument("correlationKernel", 4, matchBuffer);
-   _openCL->SetArgument("correlationKernel", 5, correlBuffer);
-   _openCL->SetArgumentInt("correlationKernel", 6, cloudOne.size());
-   _openCL->SetArgumentInt("correlationKernel", 7, cloudTwo.size());
-   _openCL->SetArgumentInt("correlationKernel", 8, threads);
+   _openCL->SetArgument("correlationKernel", 4, meanBuffer);
+   _openCL->SetArgument("correlationKernel", 5, matchBuffer);
+   _openCL->SetArgument("correlationKernel", 6, correlBuffer);
+   _openCL->SetArgumentInt("correlationKernel", 7, cloudOne.size());
+   _openCL->SetArgumentInt("correlationKernel", 8, cloudTwo.size());
+   _openCL->SetArgumentInt("correlationKernel", 9, threads);
 
    /*TODO: Upload mean of both pointclouds and subtract before calculating correlation. */
 
    Eigen::Matrix3f correl = CalculateCorrelationMatrix(threads, correlBuffer);
 
 
-//   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
-
    // Calculate transform on the CPU.
-//   Eigen::Matrix4f transform = CalculateTransform(cloudOne, cloudTwo, matchesVector);
+   int matches[cloudOne.size()/3];
+   _openCL->ReadBufferInt(matchBuffer, matches, cloudOne.size()/3);
+   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
+   Eigen::Matrix4f transform = CalculateTransform(cloudOne, cloudTwo, matchesVector);
 
    //Calculate transform on the GPU.
 
@@ -77,7 +96,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
 //   TestICP(cloudOne, cloudTwo, matchesVector);
 
-   return Eigen::Matrix4f::Identity();
+   return transform;
 }
 
 Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threads, uint8_t correlBuffer)
