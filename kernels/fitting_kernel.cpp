@@ -391,7 +391,7 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
 //   }
 }
 
-void kernel correlationKernel(global float* cloudOne, global float* transformOne, global float* cloudTwo, global float* transformTwo,
+void kernel correlationKernel(global float* cloudOne,global float* cloudTwo,
       global float* mean, global int* matches, global float* correlation, int sizeOne, int sizeTwo, int threads)
 {
    int gid = get_global_id(0);
@@ -422,19 +422,19 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
       {
          count += 1;
          // Calculate correlation 3x3 -> 9x1 for point with matching point.
-         pointOne = (float4)(cloudOne[i*3+0], cloudOne[i*3+1], cloudOne[i*3+2], 0);
-         pointTwo = (float4)(cloudTwo[matches[i]*3+0], cloudTwo[matches[i]*3+1], cloudTwo[matches[i]*3+2], 0);
+         pointOne = (float4)(cloudOne[i*3+0] - mean[0], cloudOne[i*3+1] - mean[1], cloudOne[i*3+2] - mean[2], 0);
+         pointTwo = (float4)(cloudTwo[matches[i]*3+0] - mean[3], cloudTwo[matches[i]*3+1] - mean[4], cloudTwo[matches[i]*3+2] - mean[5], 0);
 
          // Add 9x1 correlation vector into "correl" array
-         correl[0] += (pointOne.x - mean[0]) * (pointTwo.x - mean[3]);
-         correl[1] += (pointOne.x - mean[0]) * (pointTwo.y - mean[4]);
-         correl[2] += (pointOne.x - mean[0]) * (pointTwo.z - mean[5]);
-         correl[3] += (pointOne.y - mean[1]) * (pointTwo.x - mean[3]);
-         correl[4] += (pointOne.y - mean[1]) * (pointTwo.y - mean[4]);
-         correl[5] += (pointOne.y - mean[1]) * (pointTwo.z - mean[5]);
-         correl[6] += (pointOne.z - mean[2]) * (pointTwo.x - mean[3]);
-         correl[7] += (pointOne.z - mean[2]) * (pointTwo.y - mean[4]);
-         correl[8] += (pointOne.z - mean[2]) * (pointTwo.z - mean[5]);
+         correl[0] += pointOne.x * pointTwo.x;
+         correl[1] += pointOne.x * pointTwo.y;
+         correl[2] += pointOne.x * pointTwo.z;
+         correl[3] += pointOne.y * pointTwo.x;
+         correl[4] += pointOne.y * pointTwo.y;
+         correl[5] += pointOne.y * pointTwo.z;
+         correl[6] += pointOne.z * pointTwo.x;
+         correl[7] += pointOne.z * pointTwo.y;
+         correl[8] += pointOne.z * pointTwo.z;
       }
    }
    // Store final 9x1 "correl" into gid'th block in "correlation"
@@ -443,6 +443,57 @@ void kernel correlationKernel(global float* cloudOne, global float* transformOne
       correlation[gid*9 + k] = correl[k];
    }
 //   printf("CountCorrelation: (%d,%d) %d - %d\n", startPoint, endPoint, gid, count);
+}
+
+void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
+      global float* mean, global int* matches, int sizeOne, int sizeTwo, int threads)
+{
+   int gid = get_global_id(0);
+   if(gid==0) printf("CorrelationKernel() Works!\n");
+
+   float4 pointOne = (float4)(0,0,0,0);
+   float4 pointTwo = (float4)(0,0,0,0);
+   int totalPoints = sizeOne/3;
+   int blockSize = totalPoints/threads;
+   int startPoint = gid * blockSize;
+   int endPoint = startPoint + blockSize;
+   float meanVec[6];
+
+   int count = 0;
+
+   if(gid == 0) printf("Mean: %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf\n", mean[0],mean[1],mean[2],mean[3],mean[4],mean[5]);
+
+   for(int k = 0; k<6; k++)
+   {
+      meanVec[k] = 0;
+      mean[gid*6 + k] = 0;
+   }
+
+   // For each point in block of points
+   for(int i = startPoint; i<endPoint; i++)
+   {
+      if(matches[i] != -1 && matches[i] != 0)
+      {
+         count += 1;
+         // Calculate correlation 3x3 -> 6x1 for point with matching point.
+         pointOne = (float4)(cloudOne[i*3+0] - mean[0], cloudOne[i*3+1] - mean[1], cloudOne[i*3+2] - mean[2], 0);
+         pointTwo = (float4)(cloudTwo[matches[i]*3+0] - mean[3], cloudTwo[matches[i]*3+1] - mean[4], cloudTwo[matches[i]*3+2] - mean[5], 0);
+
+         // Add 6x1 correlation vector into "correl" array
+         meanVec[0] += pointOne.x;
+         meanVec[1] += pointOne.y;
+         meanVec[2] += pointOne.z;
+         meanVec[3] += pointTwo.x;
+         meanVec[4] += pointTwo.y;
+         meanVec[5] += pointTwo.z;
+      }
+   }
+   // Store final 6x1 "correl" into gid'th block in "correlation"
+   for(int k = 0; k<6; k++)
+   {
+      mean[gid*6 + k] = meanVec[k] / count;
+   }
+   //   printf("CountCorrelation: (%d,%d) %d - %d\n", startPoint, endPoint, gid, count);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

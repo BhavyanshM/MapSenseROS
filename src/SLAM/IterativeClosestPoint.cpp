@@ -25,11 +25,8 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudOne(cloudOne.data(), 3,cloudOne.size()/3);
    Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
-   Eigen::Vector4f eigenMeanOne, eigenMeanTwo;
-   eigenMeanOne << eigenCloudOne.rowwise().mean(), 1;
-   eigenMeanTwo << eigenCloudTwo.rowwise().mean(), 1;
-   eigenMeanOne = transformOne * eigenMeanOne;
-   eigenMeanTwo = transformTwo * eigenMeanTwo;
+   Eigen::Vector3f eigenMeanOne = eigenCloudOne.rowwise().mean();
+   Eigen::Vector3f eigenMeanTwo = eigenCloudTwo.rowwise().mean();
 
    std::vector<float> meanVec;
    for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanOne(m));
@@ -62,26 +59,27 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    // Setup kernel for calculating correlation matrix.
    _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
-   _openCL->SetArgument("correlationKernel", 1, transformOneBuffer);
-   _openCL->SetArgument("correlationKernel", 2, cloudTwoBuffer);
-   _openCL->SetArgument("correlationKernel", 3, transformTwoBuffer);
-   _openCL->SetArgument("correlationKernel", 4, meanBuffer);
-   _openCL->SetArgument("correlationKernel", 5, matchBuffer);
-   _openCL->SetArgument("correlationKernel", 6, correlBuffer);
-   _openCL->SetArgumentInt("correlationKernel", 7, cloudOne.size());
-   _openCL->SetArgumentInt("correlationKernel", 8, cloudTwo.size());
-   _openCL->SetArgumentInt("correlationKernel", 9, threads);
+   _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
+   _openCL->SetArgument("correlationKernel", 2, meanBuffer);
+   _openCL->SetArgument("correlationKernel", 3, matchBuffer);
+   _openCL->SetArgument("correlationKernel", 4, correlBuffer);
+   _openCL->SetArgumentInt("correlationKernel", 5, cloudOne.size());
+   _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
+   _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
-   /*TODO: Upload mean of both pointclouds and subtract before calculating correlation. */
+   /*TODO: Implement the Centroid Kernel and calculate mean for correspoding pairs. */
 
    Eigen::Matrix3f correl = CalculateCorrelationMatrix(threads, correlBuffer);
-
+   std::cout << "CorrelMat: " << correl << std::endl;
+   Eigen::Matrix4f transform = ExtractTransform(correl, eigenMeanOne, eigenMeanTwo);
+   std::cout << "Transfrom:" << std::endl << transform << std::endl;
 
    // Calculate transform on the CPU.
    int matches[cloudOne.size()/3];
    _openCL->ReadBufferInt(matchBuffer, matches, cloudOne.size()/3);
    std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
-   Eigen::Matrix4f transform = CalculateTransform(cloudOne, cloudTwo, matchesVector);
+   Eigen::Matrix4f transformCPU = CalculateTransform(cloudOne, cloudTwo, matchesVector);
+   std::cout << "Transfrom CPU:" << std::endl << transformCPU << std::endl;
 
    //Calculate transform on the GPU.
 
@@ -108,10 +106,10 @@ Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threa
 
    Eigen::Map<Eigen::Matrix<float, 9, Eigen::Dynamic>, Eigen::RowMajor> correlation(correlationMatrixBuffer, 9, threads);
    Eigen::MatrixXf correlMatVec = correlation.rowwise().sum();
+   correlMatVec.resize(3,3);
+   correlMatVec.transposeInPlace();
 
-   std::cout << "CorrelMatVec: " << correlMatVec << std::endl;
-
-   return Eigen::Matrix3f::Identity();
+   return correlMatVec;
 }
 
 Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector)
@@ -149,12 +147,14 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cl
    Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> smallCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
    Eigen::Vector3f smallMeanOne = smallCloudOne.rowwise().mean();
    Eigen::Vector3f smallMeanTwo = smallCloudTwo.rowwise().mean();
-//   std::cout << "Small First Size: " << smallCloudOne.cols() << std::endl;
+   std::cout << "Full First Mean CPU: " << smallMeanOne << std::endl;
+   std::cout << "Full Second Mean CPU: " << smallMeanTwo << std::endl;
 
    // Calculate centroid vectors for both the pointclouds.
    Eigen::Vector3f firstMean = firstCloud.colwise().mean();
    Eigen::Vector3f secondMean = secondCloud.colwise().mean();
-//   std::cout << "First Size: " << firstCloud.rows() << std::endl;
+   std::cout << "First Mean CPU: " << firstMean << std::endl;
+   std::cout << "Second Mean CPU: " << secondMean << std::endl;
 
    // Remove centroid from both pointcloud matrices.
    firstCloud = firstCloud - firstMean.rowwise().replicate(firstCloud.rows()).transpose();
@@ -164,17 +164,20 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cl
    Eigen::Matrix3f correlation = firstCloud.transpose() * secondCloud;
    std::cout << "Correlation:" << correlation << std::endl;
    // Calculate SVD for the correlation matrix.
-   Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
+   return ExtractTransform(correlation, firstMean, secondMean);
+}
+
+Eigen::Matrix4f IterativeClosestPoint::ExtractTransform(Eigen::Matrix3f correlation, Eigen::Vector3f meanOne, Eigen::Vector3f meanTwo)
+{
    // Recover rotation matrix from the SVD matrices.
+   Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
    Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
-//   std::cout << "R:" << std::endl << rotation << std::endl;
-//   std::cout << "t:" << std::endl << firstMean - secondMean << std::endl;
 
    // Construct a 4x4 transformation matrix from rotation and centroidal displacement.
    Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
    transform.block<3,3>(0,0) = rotation;
-   transform.block<3,1>(0,3) = firstMean - secondMean;
+   transform.block<3,1>(0,3) = meanOne - meanTwo;
 
    return transform;
 }

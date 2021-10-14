@@ -49,9 +49,9 @@ namespace Clay
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
-      cloud->RotateLocalX(-0.3f);
-      cloud->RotateLocalY(0.4f);
-      cloud->TranslateLocal({0.3f, 0.5f, -0.73f});
+      cloud->RotateLocalX(-0.6f);
+      cloud->RotateLocalY(-0.7f);
+      cloud->TranslateLocal({0.6f, 0.8f, -0.93f});
 
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
       _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));

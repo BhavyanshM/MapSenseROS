@@ -16,6 +16,7 @@ class IterativeClosestPoint
       void SetOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
       void TestICP(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matches);
       Eigen::Matrix3f CalculateCorrelationMatrix(uint32_t threads, uint8_t correlBuffer);
+      Eigen::Matrix4f ExtractTransform(Eigen::Matrix3f correlation, Eigen::Vector3f meanOne, Eigen::Vector3f meanTwo);
 
    private:
       OpenCLManager* _openCL;
