@@ -44,7 +44,7 @@ namespace Clay
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
       Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_8", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
+      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_40", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
@@ -332,8 +332,8 @@ namespace Clay
             }
          }
 
-         std::cout << "Transform Before Conversion:" << transformTwo << std::endl;
-         std::cout << "Transform After Conversion:" << glm::to_string(_models[1]->GetTransformToParent()) << std::endl;
+//         std::cout << "Transform Before Conversion:" << transformTwo << std::endl;
+//         std::cout << "Transform After Conversion:" << glm::to_string(_models[1]->GetTransformToParent()) << std::endl;
 
          // Calculate ICP based Pointcloud Alignment.
          Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[0]->GetMesh()->_vertices, transformOne, _models[1]->GetMesh()->_vertices, transformTwo);

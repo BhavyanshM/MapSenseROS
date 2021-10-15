@@ -23,17 +23,17 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    int numPoints = cloudOne.size()/3;
    uint32_t threads = 1000;
 
-   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudOne(cloudOne.data(), 3,cloudOne.size()/3);
-   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
-   Eigen::Vector3f eigenMeanOne = eigenCloudOne.rowwise().mean();
-   Eigen::Vector3f eigenMeanTwo = eigenCloudTwo.rowwise().mean();
+//   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudOne(cloudOne.data(), 3,cloudOne.size()/3);
+//   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
+//   Eigen::Vector3f eigenMeanOne = eigenCloudOne.rowwise().mean();
+//   Eigen::Vector3f eigenMeanTwo = eigenCloudTwo.rowwise().mean();
+//
+//   std::vector<float> meanVec;
+//   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanOne(m));
+//   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanTwo(m));
 
-   std::vector<float> meanVec;
-   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanOne(m));
-   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanTwo(m));
-
-   std::cout << "Eigen First Mean: " << eigenMeanOne << std::endl;
-   std::cout << "Eigen Second Mean: " << eigenMeanTwo << std::endl;
+   // std::cout << "Eigen First Mean: " << eigenMeanOne << std::endl;
+   // std::cout << "Eigen Second Mean: " << eigenMeanTwo << std::endl;
 
 
 
@@ -43,7 +43,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12);
    uint8_t matchBuffer = _openCL->CreateBufferInt(numPoints);
    uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads);
-   uint8_t meanBuffer = _openCL->CreateLoadBufferFloat(meanVec.data(), meanVec.size());
+   uint8_t meanBuffer = _openCL->CreateBufferFloat(6 * threads);
 
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
@@ -55,6 +55,13 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correspondenceKernel", 7, numPoints);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPoints), cl::NullRange);
 
+   _openCL->SetArgument("centroidKernel", 0, cloudOneBuffer);
+   _openCL->SetArgument("centroidKernel", 1, cloudTwoBuffer);
+   _openCL->SetArgument("centroidKernel", 2, meanBuffer);
+   _openCL->SetArgument("centroidKernel", 3, matchBuffer);
+   _openCL->SetArgumentInt("centroidKernel", 4, cloudOne.size());
+   _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
+   _openCL->SetArgumentInt("centroidKernel", 6, threads);
 
 
    // Setup kernel for calculating correlation matrix.
@@ -69,17 +76,15 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    /*TODO: Implement the Centroid Kernel and calculate mean for correspoding pairs. */
 
-   Eigen::Matrix3f correl = CalculateCorrelationMatrix(threads, correlBuffer);
-   std::cout << "CorrelMat: " << correl << std::endl;
-   Eigen::Matrix4f transform = ExtractTransform(correl, eigenMeanOne, eigenMeanTwo);
-   std::cout << "Transfrom:" << std::endl << transform << std::endl;
+   Eigen::Matrix4f transform = CalculateTransformParallel(threads, correlBuffer, meanBuffer);
+   // std::cout << "Transfrom:" << std::endl << transform << std::endl;
 
    // Calculate transform on the CPU.
-   int matches[cloudOne.size()/3];
-   _openCL->ReadBufferInt(matchBuffer, matches, cloudOne.size()/3);
-   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
-   Eigen::Matrix4f transformCPU = CalculateTransform(cloudOne, cloudTwo, matchesVector);
-   std::cout << "Transfrom CPU:" << std::endl << transformCPU << std::endl;
+//   int matches[cloudOne.size()/3];
+//   _openCL->ReadBufferInt(matchBuffer, matches, cloudOne.size()/3);
+//   std::vector<int> matchesVector(matches, matches + cloudOne.size()/3);
+//   Eigen::Matrix4f transformCPU = CalculateTransformSequential(cloudOne, cloudTwo, matchesVector);
+   // std::cout << "Transfrom CPU:" << std::endl << transformCPU << std::endl;
 
    //Calculate transform on the GPU.
 
@@ -97,11 +102,20 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    return transform;
 }
 
-Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threads, uint8_t correlBuffer)
+Eigen::Matrix4f IterativeClosestPoint::CalculateTransformParallel(uint32_t threads, uint8_t correlBuffer, uint8_t meanBuffer)
 {
+   float centroidMatrixBuffer[6 * threads];
+   int numMatrixBuffer[threads];
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->centroidKernel, cl::NullRange, cl::NDRange((int)threads), cl::NullRange);
+   _openCL->ReadBufferFloat(meanBuffer, centroidMatrixBuffer, 6 * threads);
+
+   Eigen::Map<Eigen::Matrix<float, 6, Eigen::Dynamic>, Eigen::RowMajor> centroids(centroidMatrixBuffer, 6, threads);
+   Eigen::MatrixXf centroidMatVec = centroids.rowwise().mean();
+
    float correlationMatrixBuffer[9 * threads];
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correlationKernel, cl::NullRange, cl::NDRange((int)threads), cl::NullRange);
    _openCL->ReadBufferFloat(correlBuffer, correlationMatrixBuffer, 9 * threads);
+
    _openCL->commandQueue.finish();
 
    Eigen::Map<Eigen::Matrix<float, 9, Eigen::Dynamic>, Eigen::RowMajor> correlation(correlationMatrixBuffer, 9, threads);
@@ -109,10 +123,11 @@ Eigen::Matrix3f IterativeClosestPoint::CalculateCorrelationMatrix(uint32_t threa
    correlMatVec.resize(3,3);
    correlMatVec.transposeInPlace();
 
-   return correlMatVec;
+   return ExtractTransform(correlMatVec, Eigen::Vector3f(centroidMatVec(0), centroidMatVec(1), centroidMatVec(2)),
+                           Eigen::Vector3f(centroidMatVec(3), centroidMatVec(4), centroidMatVec(5)));
 }
 
-Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector)
+Eigen::Matrix4f IterativeClosestPoint::CalculateTransformSequential(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector)
 {
    // Count number of corresponding point pairs found.
    int numOfCorrespondences = 0;
@@ -147,14 +162,14 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cl
    Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> smallCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
    Eigen::Vector3f smallMeanOne = smallCloudOne.rowwise().mean();
    Eigen::Vector3f smallMeanTwo = smallCloudTwo.rowwise().mean();
-   std::cout << "Full First Mean CPU: " << smallMeanOne << std::endl;
-   std::cout << "Full Second Mean CPU: " << smallMeanTwo << std::endl;
+   // std::cout << "Full First Mean CPU: " << smallMeanOne << std::endl;
+   // std::cout << "Full Second Mean CPU: " << smallMeanTwo << std::endl;
 
    // Calculate centroid vectors for both the pointclouds.
    Eigen::Vector3f firstMean = firstCloud.colwise().mean();
    Eigen::Vector3f secondMean = secondCloud.colwise().mean();
-   std::cout << "First Mean CPU: " << firstMean << std::endl;
-   std::cout << "Second Mean CPU: " << secondMean << std::endl;
+   // std::cout << "First Mean CPU: " << firstMean << std::endl;
+   // std::cout << "Second Mean CPU: " << secondMean << std::endl;
 
    // Remove centroid from both pointcloud matrices.
    firstCloud = firstCloud - firstMean.rowwise().replicate(firstCloud.rows()).transpose();
@@ -162,7 +177,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransform(std::vector<float>& cl
 
    // Calculate the correlation matrix.
    Eigen::Matrix3f correlation = firstCloud.transpose() * secondCloud;
-   std::cout << "Correlation:" << correlation << std::endl;
+   // std::cout << "Correlation:" << correlation << std::endl;
    // Calculate SVD for the correlation matrix.
 
    return ExtractTransform(correlation, firstMean, secondMean);

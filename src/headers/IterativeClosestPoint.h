@@ -12,10 +12,10 @@ class IterativeClosestPoint
 {
    public:
       Eigen::Matrix4f CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo);
-      Eigen::Matrix4f CalculateTransform(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector);
+      Eigen::Matrix4f CalculateTransformSequential(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector);
       void SetOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
       void TestICP(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matches);
-      Eigen::Matrix3f CalculateCorrelationMatrix(uint32_t threads, uint8_t correlBuffer);
+      Eigen::Matrix4f CalculateTransformParallel(uint32_t threads, uint8_t correlBuffer, uint8_t meanBuffer);
       Eigen::Matrix4f ExtractTransform(Eigen::Matrix3f correlation, Eigen::Vector3f meanOne, Eigen::Vector3f meanTwo);
 
    private:

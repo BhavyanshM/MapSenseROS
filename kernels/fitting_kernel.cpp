@@ -359,7 +359,7 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
    float4 pointOne = (float4)(0,0,0,0);
    float4 pointTwo = (float4)(0,0,0,0);
 
-   if(gid==0) printf("CorrespondenceKernel\n");
+//   if(gid==0) printf("CorrespondenceKernel\n");
 
    float minLength = 10000000;
    float distance = 0;
@@ -370,7 +370,7 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
                                  (float4)(transformOne[6], transformOne[7], transformOne[8], 0),
                                  (float4)(transformOne[9], transformOne[10], transformOne[11], 0));
 
-   for(int j = 0; j<sizeTwo/3; j++)
+   for(int j = 0; j<sizeTwo/3; j+=32)
    {
       pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
       pointTwo = transform(pointTwo, (float4)(transformTwo[0], transformTwo[1], transformTwo[2], 0),
@@ -395,7 +395,7 @@ void kernel correlationKernel(global float* cloudOne,global float* cloudTwo,
       global float* mean, global int* matches, global float* correlation, int sizeOne, int sizeTwo, int threads)
 {
    int gid = get_global_id(0);
-   if(gid==0) printf("CorrelationKernel() Works!\n");
+//   if(gid==0) printf("CorrelationKernel() Works!\n");
 
    float4 pointOne = (float4)(0,0,0,0);
    float4 pointTwo = (float4)(0,0,0,0);
@@ -407,7 +407,7 @@ void kernel correlationKernel(global float* cloudOne,global float* cloudTwo,
 
    int count = 0;
 
-   if(gid == 0) printf("Mean: %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf\n", mean[0],mean[1],mean[2],mean[3],mean[4],mean[5]);
+//   if(gid == 0) printf("Mean: %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf\n", mean[0],mean[1],mean[2],mean[3],mean[4],mean[5]);
 
    for(int k = 0; k<9; k++)
    {
@@ -449,7 +449,7 @@ void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
       global float* mean, global int* matches, int sizeOne, int sizeTwo, int threads)
 {
    int gid = get_global_id(0);
-   if(gid==0) printf("CorrelationKernel() Works!\n");
+//   if(gid==0) printf("CentroidKernel() Works!\n");
 
    float4 pointOne = (float4)(0,0,0,0);
    float4 pointTwo = (float4)(0,0,0,0);
@@ -460,8 +460,6 @@ void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
    float meanVec[6];
 
    int count = 0;
-
-   if(gid == 0) printf("Mean: %.3lf %.3lf %.3lf %.3lf %.3lf %.3lf\n", mean[0],mean[1],mean[2],mean[3],mean[4],mean[5]);
 
    for(int k = 0; k<6; k++)
    {
@@ -491,9 +489,10 @@ void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
    // Store final 6x1 "correl" into gid'th block in "correlation"
    for(int k = 0; k<6; k++)
    {
-      mean[gid*6 + k] = meanVec[k] / count;
+      mean[gid*6 + k] = (float)meanVec[k] / (float)count;
    }
-   //   printf("CountCorrelation: (%d,%d) %d - %d\n", startPoint, endPoint, gid, count);
+//   printf("Mean(%d) Count(%d): (%.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf)\n", gid, count,
+//          mean[gid*6], mean[gid*6 + 1], mean[gid*6 + 2], mean[gid*6 + 3], mean[gid*6 + 4], mean[gid*6 + 5]);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
