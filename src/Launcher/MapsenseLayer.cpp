@@ -49,9 +49,9 @@ namespace Clay
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
-      cloud->RotateLocalX(-0.6f);
-      cloud->RotateLocalY(-0.7f);
-      cloud->TranslateLocal({0.6f, 0.8f, -0.93f});
+//      cloud->RotateLocalX(-0.6f);
+//      cloud->RotateLocalY(-0.7f);
+//      cloud->TranslateLocal({0.6f, 0.8f, -0.93f});
 
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
       _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
@@ -119,6 +119,27 @@ namespace Clay
    void MapsenseLayer::MapsenseUpdate()
    {
 //      ROS_DEBUG("TickEvent: %d", count++);
+
+      if(_lidarICP && count < 10000)
+      {
+         count++;
+//         std::cout << "Count:" << count << std::endl;
+         if(count%100 == 0)
+         {
+            glm::mat4 transform;
+            Eigen::Matrix4f transformOne, transformTwo;
+            glm::mat4 invTransformOne = glm::inverse(_models[0]->GetTransformToParent());
+            glm::mat4 invTransformTwo = glm::inverse(_models[1]->GetTransformToParent());
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
+
+            // Calculate ICP based Pointcloud Alignment.
+            Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[0]->GetMesh()->_vertices, transformOne, _models[1]->GetMesh()->_vertices, transformTwo);
+
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
+            _models[1]->TransformLocal(transform);
+         }
+      }
 
       if (appState.ROS_ENABLED)
       {
@@ -320,33 +341,7 @@ namespace Clay
       ImGui::Text("Models: %d", _models.size());
       if(ImGui::Button("Calculate ICP"))
       {
-         Eigen::Matrix4f transformOne, transformTwo;
-         glm::mat4 invTransformOne = glm::inverse(_models[0]->GetTransformToParent());
-         glm::mat4 invTransformTwo = glm::inverse(_models[1]->GetTransformToParent());
-         for (int i = 0; i < 4; ++i)
-         {
-            for (int j = 0; j < 4; ++j)
-            {
-               transformOne(i,j) = invTransformOne[j][i];
-               transformTwo(i,j) = invTransformTwo[j][i];
-            }
-         }
-
-//         std::cout << "Transform Before Conversion:" << transformTwo << std::endl;
-//         std::cout << "Transform After Conversion:" << glm::to_string(_models[1]->GetTransformToParent()) << std::endl;
-
-         // Calculate ICP based Pointcloud Alignment.
-         Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[0]->GetMesh()->_vertices, transformOne, _models[1]->GetMesh()->_vertices, transformTwo);
-
-         glm::mat4 transform;
-         for (int i = 0; i < 4; ++i)
-         {
-            for (int j = 0; j < 4; ++j)
-            {
-               transform[j][i] = transformEigen(i, j);
-            }
-         }
-         _models[1]->TransformLocal(transform);
+         _lidarICP = true;
       }
       ImGui::End();
 

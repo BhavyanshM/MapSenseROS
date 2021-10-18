@@ -6,8 +6,9 @@
 
 Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo)
 {
-   auto start_point = std::chrono::steady_clock::now();
+   if(_iteration > MAX_STEPS) return Eigen::Matrix4f::Identity(); else _iteration++;
 
+   auto start_point = std::chrono::steady_clock::now();
    std::vector<float> transformOneVec, transformTwoVec;
    for(int i = 0; i<9; i++)
    {
@@ -22,20 +23,6 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    int numPoints = cloudOne.size()/3;
    uint32_t threads = 1000;
-
-//   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudOne(cloudOne.data(), 3,cloudOne.size()/3);
-//   Eigen::Map<Eigen::Matrix<float, 3, Eigen::Dynamic>, Eigen::RowMajor> eigenCloudTwo(cloudTwo.data(), 3,cloudTwo.size()/3);
-//   Eigen::Vector3f eigenMeanOne = eigenCloudOne.rowwise().mean();
-//   Eigen::Vector3f eigenMeanTwo = eigenCloudTwo.rowwise().mean();
-//
-//   std::vector<float> meanVec;
-//   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanOne(m));
-//   for(int m = 0; m<3; m++) meanVec.emplace_back(eigenMeanTwo(m));
-
-   // std::cout << "Eigen First Mean: " << eigenMeanOne << std::endl;
-   // std::cout << "Eigen Second Mean: " << eigenMeanTwo << std::endl;
-
-
 
    uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size());
    uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12);
@@ -63,8 +50,6 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
    _openCL->SetArgumentInt("centroidKernel", 6, threads);
 
-
-   // Setup kernel for calculating correlation matrix.
    _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
    _openCL->SetArgument("correlationKernel", 2, meanBuffer);
@@ -74,10 +59,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
    _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
-   /*TODO: Implement the Centroid Kernel and calculate mean for correspoding pairs. */
-
    Eigen::Matrix4f transform = CalculateTransformParallel(threads, correlBuffer, meanBuffer);
-   // std::cout << "Transfrom:" << std::endl << transform << std::endl;
 
    // Calculate transform on the CPU.
 //   int matches[cloudOne.size()/3];
@@ -86,9 +68,6 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 //   Eigen::Matrix4f transformCPU = CalculateTransformSequential(cloudOne, cloudTwo, matchesVector);
    // std::cout << "Transfrom CPU:" << std::endl << transformCPU << std::endl;
 
-   //Calculate transform on the GPU.
-
-
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
    long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();
@@ -96,8 +75,6 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    float duration = (end - start) * 0.001f;
 
    printf("Total Time Taken: %.3lf ms\n", duration);
-
-//   TestICP(cloudOne, cloudTwo, matchesVector);
 
    return transform;
 }
@@ -125,6 +102,57 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransformParallel(uint32_t threa
 
    return ExtractTransform(correlMatVec, Eigen::Vector3f(centroidMatVec(0), centroidMatVec(1), centroidMatVec(2)),
                            Eigen::Vector3f(centroidMatVec(3), centroidMatVec(4), centroidMatVec(5)));
+}
+
+Eigen::Matrix4f IterativeClosestPoint::ExtractTransform(Eigen::Matrix3f correlation, Eigen::Vector3f meanOne, Eigen::Vector3f meanTwo)
+{
+   // Recover rotation matrix from the SVD matrices.
+   Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
+   Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
+
+   // Interpolate using Momentum Factor and add randomness.
+   Eigen::Quaternion<float> quat1(Eigen::Matrix3f::Identity());
+   Eigen::Quaternion<float> quat2(rotation);
+   Eigen::Quaternion<float> quat3 = quat1.slerp(6.0, quat2);
+   rotation = rotation * rotation * rotation;
+
+   // Construct a 4x4 transformation matrix from rotation and centroidal displacement.
+   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+   transform.block<3,3>(0,0) = rotation;
+   transform.block<3,1>(0,3) = meanOne - meanTwo;
+
+   return transform;
+}
+
+void IterativeClosestPoint::TestICP(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matches)
+{
+   std::vector<int> currentMatches;
+   for(int i = 0; i<cloudOne.size()/3; i++)
+   {
+      float minLength = 1000000000;
+      int minindex = -1;
+      for(int j = 0; j<cloudTwo.size()/3; j++)
+      {
+         Eigen::Vector3f one(cloudOne[i*3], cloudOne[i*3+1], cloudOne[i*3+2]);
+         Eigen::Vector3f two(cloudTwo[j*3], cloudTwo[j*3+1], cloudTwo[j*3+2]);
+         if((one - two).norm() < minLength)
+         {
+            minLength = (one - two).norm();
+            minindex = j;
+         }
+      }
+      currentMatches.emplace_back(minindex);
+   }
+   int count = 0;
+   for(int i = 0; i<currentMatches.size(); i++)
+   {
+//      printf("%d, %d\n", currentMatches[i], matches[i]);
+      if(currentMatches[i] == matches[i])
+      {
+         count++;
+      }
+   }
+   printf("Percent Correct Matches: %.2lf, Total Correct Matches: %d\n", 100.0 * (float)count/((float)currentMatches.size()), count);
 }
 
 Eigen::Matrix4f IterativeClosestPoint::CalculateTransformSequential(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matchesVector)
@@ -181,49 +209,4 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransformSequential(std::vector<
    // Calculate SVD for the correlation matrix.
 
    return ExtractTransform(correlation, firstMean, secondMean);
-}
-
-Eigen::Matrix4f IterativeClosestPoint::ExtractTransform(Eigen::Matrix3f correlation, Eigen::Vector3f meanOne, Eigen::Vector3f meanTwo)
-{
-   // Recover rotation matrix from the SVD matrices.
-   Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
-   Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
-
-   // Construct a 4x4 transformation matrix from rotation and centroidal displacement.
-   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-   transform.block<3,3>(0,0) = rotation;
-   transform.block<3,1>(0,3) = meanOne - meanTwo;
-
-   return transform;
-}
-
-void IterativeClosestPoint::TestICP(std::vector<float>& cloudOne, std::vector<float>& cloudTwo, std::vector<int>& matches)
-{
-   std::vector<int> currentMatches;
-   for(int i = 0; i<cloudOne.size()/3; i++)
-   {
-      float minLength = 1000000000;
-      int minindex = -1;
-      for(int j = 0; j<cloudTwo.size()/3; j++)
-      {
-         Eigen::Vector3f one(cloudOne[i*3], cloudOne[i*3+1], cloudOne[i*3+2]);
-         Eigen::Vector3f two(cloudTwo[j*3], cloudTwo[j*3+1], cloudTwo[j*3+2]);
-         if((one - two).norm() < minLength)
-         {
-            minLength = (one - two).norm();
-            minindex = j;
-         }
-      }
-      currentMatches.emplace_back(minindex);
-   }
-   int count = 0;
-   for(int i = 0; i<currentMatches.size(); i++)
-   {
-//      printf("%d, %d\n", currentMatches[i], matches[i]);
-      if(currentMatches[i] == matches[i])
-      {
-         count++;
-      }
-   }
-   printf("Percent Correct Matches: %.2lf, Total Correct Matches: %d\n", 100.0 * (float)count/((float)currentMatches.size()), count);
 }

@@ -223,6 +223,12 @@ float4 transform(float4 point, float4 r1, float4 r2, float4 r3, float4 t)
 /* ++++++++++++++++++++++++++++++++++++++++++ OPEN_CL KERNELS BEGIN HERE ++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /* OpenCL Kernels Begin Here. All utilities above this point. */
 
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *  GPU Planar Region Kernels Here
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ */
+
 /* Filter Kernel: Filters all pixels within a patch on depth map. Removes outliers, flying points, dead pixels and measurement
  * noise. */
 
@@ -349,6 +355,11 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
    }
 }
 
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *  ICP Kernels Here
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * */
+
 /*
  * Correspondence Kernel for Iterative Closest Point
  * */
@@ -370,7 +381,7 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
                                  (float4)(transformOne[6], transformOne[7], transformOne[8], 0),
                                  (float4)(transformOne[9], transformOne[10], transformOne[11], 0));
 
-   for(int j = 0; j<sizeTwo/3; j+=32)
+   for(int j = 0; j<sizeTwo/3; j+=16)
    {
       pointTwo = (float4)(cloudTwo[j*3+0], cloudTwo[j*3+1], cloudTwo[j*3+2], 0);
       pointTwo = transform(pointTwo, (float4)(transformTwo[0], transformTwo[1], transformTwo[2], 0),
@@ -386,11 +397,14 @@ void kernel correspondenceKernel(global float* cloudOne, global float* transform
    }
 
 //   printf("Match(%d,%d) Dist:%.3lf\n", gid, minIndex, minLength);
-//   if(minLength < 0.5) {
+//   if(minLength < 1.0) {
       matches[gid] = minIndex;
 //   }
 }
 
+/*
+ * Correlation Matrix Calculation Kernel for Iterative Closest Point
+ * */
 void kernel correlationKernel(global float* cloudOne,global float* cloudTwo,
       global float* mean, global int* matches, global float* correlation, int sizeOne, int sizeTwo, int threads)
 {
@@ -445,6 +459,10 @@ void kernel correlationKernel(global float* cloudOne,global float* cloudTwo,
 //   printf("CountCorrelation: (%d,%d) %d - %d\n", startPoint, endPoint, gid, count);
 }
 
+
+/*
+ * Centroid Calculation Kernel for Iterative Closest Point
+ * */
 void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
       global float* mean, global int* matches, int sizeOne, int sizeTwo, int threads)
 {

@@ -20,6 +20,8 @@ class IterativeClosestPoint
 
    private:
       OpenCLManager* _openCL;
+      uint8_t _iteration = 0;
+      const uint8_t MAX_STEPS = 8;
 
 };
 

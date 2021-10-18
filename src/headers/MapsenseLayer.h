@@ -64,6 +64,8 @@ namespace Clay
          bool _viewportHovered = false;
          bool dockspaceOpen = true;
          bool opt_fullscreen;
+         bool _lidarICP = false;
+
          uint32_t count = 0;
          uint32_t frameId = 0;
          uint32_t _scanCount = 0;
