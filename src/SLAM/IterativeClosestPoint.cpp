@@ -111,10 +111,9 @@ Eigen::Matrix4f IterativeClosestPoint::ExtractTransform(Eigen::Matrix3f correlat
    Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
 
    // Interpolate using Momentum Factor and add randomness.
-   Eigen::Quaternion<float> quat1(Eigen::Matrix3f::Identity());
-   Eigen::Quaternion<float> quat2(rotation);
-   Eigen::Quaternion<float> quat3 = quat1.slerp(6.0, quat2);
-   rotation = rotation * rotation * rotation;
+//   Eigen::Quaternion<float> quat1(Eigen::Matrix3f::Identity());
+//   Eigen::Quaternion<float> quat2(rotation);
+//   Eigen::Quaternion<float> quat3 = quat1.slerp(6.0, quat2);
 
    // Construct a 4x4 transformation matrix from rotation and centroidal displacement.
    Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
@@ -146,7 +145,6 @@ void IterativeClosestPoint::TestICP(std::vector<float>& cloudOne, std::vector<fl
    int count = 0;
    for(int i = 0; i<currentMatches.size(); i++)
    {
-//      printf("%d, %d\n", currentMatches[i], matches[i]);
       if(currentMatches[i] == matches[i])
       {
          count++;

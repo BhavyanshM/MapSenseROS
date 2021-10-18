@@ -439,6 +439,8 @@ void kernel correlationKernel(global float* cloudOne,global float* cloudTwo,
          pointOne = (float4)(cloudOne[i*3+0] - mean[0], cloudOne[i*3+1] - mean[1], cloudOne[i*3+2] - mean[2], 0);
          pointTwo = (float4)(cloudTwo[matches[i]*3+0] - mean[3], cloudTwo[matches[i]*3+1] - mean[4], cloudTwo[matches[i]*3+2] - mean[5], 0);
 
+         // float weight = 1.0/(float)(length(pointOne - pointTwo));
+
          // Add 9x1 correlation vector into "correl" array
          correl[0] += pointOne.x * pointTwo.x;
          correl[1] += pointOne.x * pointTwo.y;
