@@ -26,6 +26,95 @@ NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
    }
 }
 
+void NetworkManager::spin_ros_node()
+{
+   ROS_DEBUG("SpinOnce");
+   spinOnce();
+}
+
+void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
+{
+   ROS_DEBUG("Starting ROS Node");
+   init(argc, argv, "PlanarRegionPublisher");
+   rosNode = new NodeHandle();
+
+   // ROSTopic Publishers
+   planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
+   slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
+
+   // ROSTopic Subscribers
+   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
+                                                                                                                   "/depth/image_rect_raw";
+   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
+                                                                                                                         "/depth/camera_info";
+   string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
+
+   string colorCompressedTopicName = "/camera/color/image_raw/_compressed";
+   string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
+
+   addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
+   addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo("/os_cloud_node/points", "sensor_msgs/PointCloud2"));
+
+   subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+
+   ROS_DEBUG("Started ROS Node");
+}
+
+int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
+{
+   ROS_DEBUG("Adding Receiver: (%s), (%s)", data.name.c_str(), info.name.c_str());
+   ROS1TopicReceiver *receiver = nullptr;
+   if (data.datatype == "sensor_msgs/Image")
+      receiver = new ImageReceiver(rosNode, data.name, info.name, false);
+   if (data.datatype == "sensor_msgs/CompressedImage")
+      receiver = new ImageReceiver(rosNode, data.name, info.name, true);
+   if (data.datatype == "sensor_msgs/PointCloud2")
+      receiver = new PointCloudReceiver(rosNode, data.name, false);
+
+   if (receiver != nullptr)
+   {
+      receiver->setAppUtils(this->appUtils);
+      receivers.emplace_back(receiver);
+   } else
+   {
+      printf("Request to add receiver: %s\n", data.name.c_str());
+   }
+   ROS_DEBUG("Receiver Added Successfully");
+   return receivers.size() - 1;
+}
+
+void NetworkManager::ImGuiUpdate()
+{
+   /* Testing Combo Drop Downs */
+   vector<TopicInfo> topics = getROSTopicList();
+   getTopicSelection(topics, currentDataTopic);
+   if (ImGui::Button("Add Receiver"))
+      addReceiver(currentDataTopic);
+   for (int i = 0; i < receivers.size(); i++)
+      receivers[i]->ImGuiUpdate();
+}
+
+void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
+{
+   paramsMessage = msg;
+   paramsAvailable = true;
+   ROS_DEBUG("PARAMS CALLBACK");
+}
+
+void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
+{
+   if (paramsAvailable)
+   {
+      paramsAvailable = false;
+      appState.MERGE_DISTANCE_THRESHOLD = paramsMessage.mergeDistanceThreshold;
+      appState.MERGE_ANGULAR_THRESHOLD = paramsMessage.mergeAngularThreshold;
+      appState.GAUSSIAN_SIGMA = (int) paramsMessage.gaussianSigma;
+      appState.GAUSSIAN_SIZE = (int) paramsMessage.gaussianSize;
+      appState.REGION_GROWTH_FACTOR = paramsMessage.regionGrowthFactor;
+   }
+}
+
 vector<TopicInfo> NetworkManager::getROSTopicList()
 {
    ros::master::V_TopicInfo topic_infos;
@@ -38,47 +127,44 @@ vector<TopicInfo> NetworkManager::getROSTopicList()
    return names;
 }
 
-void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
+void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic)
 {
-   ROS_DEBUG("Depth Callback", depthMsg->header.seq);
-   depthMessage = depthMsg;
+   if (ImGui::BeginCombo("ROS Topics", currentTopic.name.c_str()))
+   {
+      for (int n = 0; n < topics.size(); n++)
+      {
+         bool is_selected = (currentTopic.name.c_str() == topics[n].name.c_str());
+         if (ImGui::Selectable(topics[n].name.c_str(), is_selected))
+            currentTopic = topics[n];
+         if (is_selected)
+            ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+   }
 }
 
-void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, std::string name)
+void NetworkManager::receiverUpdate(ApplicationState& app)
 {
-   colorMessage = colorMsg;
-   ROS_DEBUG("COLOR CALLBACK");
+   for (int i = 0; i < receivers.size(); i++)
+   {
+      ROS_DEBUG("RenderUpdate: {}", receivers[i]->getTopicName());
+      receivers[i]->processMessage(app);
+      receivers[i]->render();
+      ROS_DEBUG("RenderUpdate: Complete");
+   }
 }
 
-void NetworkManager::colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& compressedMsg)
+void NetworkManager::publishSamplePose(int count)
 {
-   colorCompressedMessage = compressedMsg;
-   ROS_DEBUG("COLOR CALLBACK");
-}
+   geometry_msgs::PoseStamped pose;
+   pose.pose.position = geometry_msgs::Point();
+   pose.pose.position.x = sin((double) count / (double) 100);
+   pose.pose.position.y = cos((double) count / (double) 200);
+   pose.pose.position.z = sin((double) count / (double) 300);
 
-void NetworkManager::depthCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
-{
-   depthCameraInfo = infoMsg;
-   ROS_DEBUG("DEPTH_CAM_INFO CALLBACK");
-}
+   pose.pose.orientation = geometry_msgs::Quaternion();
 
-void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
-{
-   colorCameraInfo = infoMsg;
-   ROS_DEBUG("COLOR_CAM_INFO CALLBACK");
-}
-
-void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
-{
-   paramsMessage = msg;
-   paramsAvailable = true;
-   ROS_DEBUG("PARAMS CALLBACK");
-}
-
-void NetworkManager::load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app)
-{
-   camLeft->read(left);
-   camRight->read(right);
+   this->slamPosePub.publish(pose);
 }
 
 void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app)
@@ -167,135 +253,6 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    ROS_DEBUG("Data Frame Loaded");
 }
 
-void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
-{
-   ROS_DEBUG("Starting ROS Node");
-   init(argc, argv, "PlanarRegionPublisher");
-   rosNode = new NodeHandle();
-
-   // ROSTopic Publishers
-   planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
-   slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
-
-   // ROSTopic Subscribers
-   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                   "/depth/image_rect_raw";
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                         "/depth/camera_info";
-   string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
-
-   string colorCompressedTopicName = "/camera/color/image_raw/_compressed";
-   string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
-
-   addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
-   addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
-//   addReceiver(TopicInfo("/os_cloud_node/points", "sensor_msgs/PointCloud2"));
-
-   //   subDepth = rosNode->subscribe(depthTopicName, 3, &NetworkManager::depthCallback, this);
-   //   subDepthCamInfo = rosNode->subscribe(depthInfoTopicName, 2, &NetworkManager::depthCameraInfoCallback, this);
-
-   //   subColor = rosNode->subscribe("/camera/image_mono", 3, &NetworkManager::colorCallback, this); /* "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw" */
-   //   subColorCompressed = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/image_raw/_compressed", 3, &NetworkManager::colorCompressedCallback, this);
-   //   subColorCamInfo = rosNode->subscribe("/" + app.TOPIC_CAMERA_NAME + "/color/camera_info", 2, &NetworkManager::colorCameraInfoCallback, this);
-   //
-   subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
-
-   ROS_DEBUG("Started ROS Node");
-}
-
-void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
-{
-   if (paramsAvailable)
-   {
-      paramsAvailable = false;
-      appState.MERGE_DISTANCE_THRESHOLD = paramsMessage.mergeDistanceThreshold;
-      appState.MERGE_ANGULAR_THRESHOLD = paramsMessage.mergeAngularThreshold;
-      appState.GAUSSIAN_SIGMA = (int) paramsMessage.gaussianSigma;
-      appState.GAUSSIAN_SIZE = (int) paramsMessage.gaussianSize;
-      appState.REGION_GROWTH_FACTOR = paramsMessage.regionGrowthFactor;
-   }
-}
-
-int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
-{
-   ROS_DEBUG("Adding Receiver: (%s), (%s)", data.name.c_str(), info.name.c_str());
-   ROS1TopicReceiver *receiver = nullptr;
-   if (data.datatype == "sensor_msgs/Image")
-      receiver = new ImageReceiver(rosNode, data.name, info.name, false);
-   if (data.datatype == "sensor_msgs/CompressedImage")
-      receiver = new ImageReceiver(rosNode, data.name, info.name, true);
-   if (data.datatype == "sensor_msgs/PointCloud2")
-      receiver = new PointCloudReceiver(rosNode, data.name, false);
-
-   if (receiver != nullptr)
-   {
-      receiver->setAppUtils(this->appUtils);
-      receivers.emplace_back(receiver);
-   } else
-   {
-      printf("Request to add receiver: %s\n", data.name.c_str());
-   }
-   ROS_DEBUG("Receiver Added Successfully");
-   return receivers.size() - 1;
-}
-
-void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic)
-{
-   if (ImGui::BeginCombo("ROS Topics", currentTopic.name.c_str()))
-   {
-      for (int n = 0; n < topics.size(); n++)
-      {
-         bool is_selected = (currentTopic.name.c_str() == topics[n].name.c_str());
-         if (ImGui::Selectable(topics[n].name.c_str(), is_selected))
-            currentTopic = topics[n];
-         if (is_selected)
-            ImGui::SetItemDefaultFocus();
-      }
-      ImGui::EndCombo();
-   }
-}
-
-void NetworkManager::ImGuiUpdate()
-{
-   /* Testing Combo Drop Downs */
-   vector<TopicInfo> topics = getROSTopicList();
-   getTopicSelection(topics, currentDataTopic);
-   if (ImGui::Button("Add Receiver"))
-      addReceiver(currentDataTopic);
-   for (int i = 0; i < receivers.size(); i++)
-      receivers[i]->ImGuiUpdate();
-}
-
-void NetworkManager::receiverUpdate(ApplicationState& app)
-{
-   for (int i = 0; i < receivers.size(); i++)
-   {
-      ROS_DEBUG("RenderUpdate: {}", receivers[i]->getTopicName());
-      receivers[i]->processMessage(app);
-      receivers[i]->render();
-      ROS_DEBUG("RenderUpdate: Complete");
-   }
-}
-
-void NetworkManager::spin_ros_node()
-{
-   ROS_DEBUG("SpinOnce");
-   spinOnce();
-}
-
-void NetworkManager::publishSamplePose(int count)
-{
-   geometry_msgs::PoseStamped pose;
-   pose.pose.position = geometry_msgs::Point();
-   pose.pose.position.x = sin((double) count / (double) 100);
-   pose.pose.position.y = cos((double) count / (double) 200);
-   pose.pose.position.z = sin((double) count / (double) 300);
-
-   pose.pose.orientation = geometry_msgs::Quaternion();
-
-   this->slamPosePub.publish(pose);
-}
-
 void NetworkManager::publishSLAMPose(RigidBodyTransform worldToSensorTransform)
 {
    Quaterniond quaternion = worldToSensorTransform.getQuaternion();
@@ -314,4 +271,40 @@ void NetworkManager::publishSLAMPose(RigidBodyTransform worldToSensorTransform)
    pose.pose.orientation.w = quaternion.w();
 
    this->slamPosePub.publish(pose);
+}
+
+void NetworkManager::load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app)
+{
+   camLeft->read(left);
+   camRight->read(right);
+}
+
+void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
+{
+   ROS_DEBUG("Depth Callback", depthMsg->header.seq);
+   depthMessage = depthMsg;
+}
+
+void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
+{
+   colorCameraInfo = infoMsg;
+   ROS_DEBUG("COLOR_CAM_INFO CALLBACK");
+}
+
+void NetworkManager::depthCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
+{
+   depthCameraInfo = infoMsg;
+   ROS_DEBUG("DEPTH_CAM_INFO CALLBACK");
+}
+
+void NetworkManager::colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& compressedMsg)
+{
+   colorCompressedMessage = compressedMsg;
+   ROS_DEBUG("COLOR CALLBACK");
+}
+
+void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, std::string name)
+{
+   colorMessage = colorMsg;
+   ROS_DEBUG("COLOR CALLBACK");
 }

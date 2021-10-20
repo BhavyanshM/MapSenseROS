@@ -8,4 +8,4 @@ GoogleTest*
 cmake-*
 Vendor/libtorch*
 build*
-Extras/Clouds*
+Extras/Clouds/Archived*

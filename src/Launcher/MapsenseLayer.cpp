@@ -43,8 +43,8 @@ namespace Clay
       Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
-      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_4", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_40", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
+      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_2", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+//      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_40", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
 
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
@@ -54,7 +54,7 @@ namespace Clay
 //      cloud->TranslateLocal({0.6f, 0.8f, -0.93f});
 
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
 //      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
@@ -120,24 +120,29 @@ namespace Clay
    {
 //      ROS_DEBUG("TickEvent: %d", count++);
 
-      if(_lidarICP && count < 10000)
+      if(_lidarICP)
       {
          count++;
-//         std::cout << "Count:" << count << std::endl;
-         if(count%100 == 0)
+         if(count < 100)
          {
-            glm::mat4 transform;
-            Eigen::Matrix4f transformOne, transformTwo;
-            glm::mat4 invTransformOne = glm::inverse(_models[0]->GetTransformToParent());
-            glm::mat4 invTransformTwo = glm::inverse(_models[1]->GetTransformToParent());
-            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
-            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
+            if(count%20 == 0){
+               std::cout << "Count:" << count << " Size: " << _models.size() << std::endl;
+               glm::mat4 transform;
+               Eigen::Matrix4f transformOne, transformTwo;
+               glm::mat4 invTransformOne = glm::inverse(_models[_models.size()-2]->GetTransformToParent());
+               glm::mat4 invTransformTwo = glm::inverse(_models[_models.size()-1]->GetTransformToParent());
+               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
+               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
 
-            // Calculate ICP based Pointcloud Alignment.
-            Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[0]->GetMesh()->_vertices, transformOne, _models[1]->GetMesh()->_vertices, transformTwo);
+               // Calculate ICP based Pointcloud Alignment.
+               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[_models.size()-2]->GetMesh()->_vertices, transformOne, _models[_models.size()-1]->GetMesh()->_vertices, transformTwo);
 
-            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
-            _models[1]->TransformLocal(transform);
+               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
+               _models[_models.size()-1]->TransformLocal(transform);
+            }
+         } else {
+            _lidarICP = false;
+            count = 0;
          }
       }
 
@@ -177,9 +182,6 @@ namespace Clay
          }
 
          appUtils.clearDebug();
-
-
-
       }
    }
 
@@ -330,18 +332,30 @@ namespace Clay
       if(ImGui::Button("Load Next Scan"))
       {
 //         _models.clear();
-         _scanCount+=4;
-         std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount);
+         _scanCount+=1;
+         std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount + 1);
          CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
          Ref<PointCloud> cloud = std::make_shared<PointCloud>(
                filename,glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootPCL);
+         _models.clear();
          _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
       }
       ImGui::Text("Models: %d", _models.size());
       if(ImGui::Button("Calculate ICP"))
       {
+         _scanCount+=1;
+         std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount + 1);
+         float r = (float)(_scanCount * 12 % 255);
+         float g = (float)(_scanCount * 32 % 255);
+         float b = (float)(_scanCount * 34 % 255);
+         glm::vec4 color(r/(r+g+b), g/(r+g+b), b/(r+g+b), 1.0f);
+
+         CLAY_LOG_INFO("Loading Scan From: {}", filename);
+         Ref<PointCloud> cloud = std::make_shared<PointCloud>(filename,color, _models[_models.size() - 1]);
+         _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
          _lidarICP = true;
+         count = 0;
       }
       ImGui::End();
 

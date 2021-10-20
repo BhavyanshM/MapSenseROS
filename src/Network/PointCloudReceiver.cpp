@@ -6,6 +6,7 @@
 
 PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, bool compressed)
 {
+   CLAY_LOG_INFO("PointCloudReceiver Created!");
    topicName = cloudTopic;
    _cloudSubscriber = new Subscriber();
    _cloudToRender = std::make_shared<Clay::PointCloud>(glm::vec4(0.8f, 0.3f, 0.3f, 1.0f), nullptr);
@@ -49,12 +50,16 @@ void PointCloudReceiver::ImGuiUpdate()
 
 void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloudMsg)
 {
+   CLAY_LOG_INFO("PointCloudCallback.");
    if (!_available)
    {
       _cloudMessage = cloudMsg;
       _available = true;
-      _scanCount++;
-      if((_scanCount % SKIP_SCANS == 0) && _saveScans) FileManager::WriteScanPoints(_cloudMessage, _scanCount);
-//      CLAY_LOG_INFO("New PointCloud Processing! FrameId:{}, Width:{}, Height:{}", _cloudMessage->header.frame_id.c_str(), _cloudMessage->width, _cloudMessage->height);
+      if(_saveScans) {
+         FileManager::WriteScanPoints(_cloudMessage, _scanCount);
+         _available = false;
+         _scanCount++;
+      }
+      CLAY_LOG_INFO("New PointCloud Processing! FrameId:{}, Width:{}, Height:{}", _cloudMessage->header.frame_id.c_str(), _cloudMessage->width, _cloudMessage->height);
    }
 }

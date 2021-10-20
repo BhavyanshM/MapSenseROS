@@ -6,7 +6,9 @@
 
 Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo)
 {
-   if(_iteration > MAX_STEPS) return Eigen::Matrix4f::Identity(); else _iteration++;
+
+
+//   if(_iteration > MAX_STEPS) return Eigen::Matrix4f::Identity(); else _iteration++;
 
    auto start_point = std::chrono::steady_clock::now();
    std::vector<float> transformOneVec, transformTwoVec;
