@@ -11,7 +11,6 @@ PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, b
    _cloudSubscriber = new Subscriber();
    _cloudToRender = std::make_shared<Clay::PointCloud>(glm::vec4(0.8f, 0.3f, 0.3f, 1.0f), nullptr);
 
-   //   *(this->_cloudSubscriber) = nh->subscribe(cloudTopic, 2, &PointCloudReceiver::cloudCallback, this);
    *(this->_cloudSubscriber) = nh->subscribe(cloudTopic, 2, &PointCloudReceiver::cloudCallback, this);
 }
 
@@ -30,22 +29,22 @@ void PointCloudReceiver::render()
    if (_available && _renderEnabled)
    {
       uint32_t numPoints = 0;
-//      CLAY_LOG_INFO("Added all new vertices. 1 {}", _cloudToRender->GetSize());
       _cloudToRender->Reset();
-//      CLAY_LOG_INFO("Added all new vertices. 2 {}", _cloudToRender->GetSize());
       for(const pcl::PointXYZ& pt : _cloudMessage->points)
       {
          _cloudToRender->Insert(-pt.y, pt.z, -pt.x);
          numPoints++;
       }
       _available = false;
-//      CLAY_LOG_INFO("Added all new vertices. 3 {}", _cloudToRender->GetSize());
    }
    if(_renderEnabled) _cloudToRender->Upload();
 }
 
 void PointCloudReceiver::ImGuiUpdate()
 {
+   ImGui::NewLine();
+   ImGui::Checkbox("Render", &_renderEnabled);
+   ImGui::Checkbox("Save Scans", &_saveScans);
 }
 
 void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloudMsg)
@@ -55,11 +54,10 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
    {
       _cloudMessage = cloudMsg;
       _available = true;
-      if(_saveScans) {
-         FileManager::WriteScanPoints(_cloudMessage, _scanCount);
-         _available = false;
-         _scanCount++;
-      }
       CLAY_LOG_INFO("New PointCloud Processing! FrameId:{}, Width:{}, Height:{}", _cloudMessage->header.frame_id.c_str(), _cloudMessage->width, _cloudMessage->height);
+   }
+   if(_saveScans) {
+      if(_scanCount % _skipScans == 0)FileManager::WriteScanPoints(cloudMsg, _scanCount);
+      _scanCount++;
    }
 }

@@ -68,7 +68,7 @@ namespace Clay
 
          uint32_t count = 0;
          uint32_t frameId = 0;
-         uint32_t _scanCount = 2;
+         uint32_t _scanCount = 100;
 
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;

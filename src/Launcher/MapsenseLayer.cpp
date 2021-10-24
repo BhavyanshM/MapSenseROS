@@ -31,9 +31,7 @@ namespace Clay
       _icp->SetOpenCLManager(_openCLManager);
 
       _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
-
       _slamModule = new SLAMModule(argc, argv, _networkManager);
-
 
       _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);
 
@@ -43,18 +41,8 @@ namespace Clay
       Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
-      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_2", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-//      Ref<PointCloud> cloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_40", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
-
-//      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-//      Ref<PointCloud> cloud = std::make_shared<PointCloud>(std::string(ASSETS_PATH) + "Meshes/bunny.pcd", glm::vec4(0.1f, 0.2f, 0.8f, 1.0f), firstCloud);
-
-//      cloud->RotateLocalX(-0.6f);
-//      cloud->RotateLocalY(-0.7f);
-//      cloud->TranslateLocal({0.6f, 0.8f, -0.93f});
-
+      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount), glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
 //      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
@@ -105,7 +93,6 @@ namespace Clay
       Renderer::BeginScene(_cameraController.GetCamera());
 
       _rootPCL->Update();
-      if(_models.size() > 1) _models[1]->SetColor(_squareColor);
       for(Ref<Model> model : _models)
       {
          Renderer::SubmitPoints(model);
@@ -119,32 +106,6 @@ namespace Clay
    void MapsenseLayer::MapsenseUpdate()
    {
 //      ROS_DEBUG("TickEvent: %d", count++);
-
-      if(_lidarICP)
-      {
-         count++;
-         if(count < 100)
-         {
-            if(count%20 == 0){
-               std::cout << "Count:" << count << " Size: " << _models.size() << std::endl;
-               glm::mat4 transform;
-               Eigen::Matrix4f transformOne, transformTwo;
-               glm::mat4 invTransformOne = glm::inverse(_models[_models.size()-2]->GetTransformToParent());
-               glm::mat4 invTransformTwo = glm::inverse(_models[_models.size()-1]->GetTransformToParent());
-               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
-               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
-
-               // Calculate ICP based Pointcloud Alignment.
-               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[_models.size()-2]->GetMesh()->_vertices, transformOne, _models[_models.size()-1]->GetMesh()->_vertices, transformTwo);
-
-               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
-               _models[_models.size()-1]->TransformLocal(transform);
-            }
-         } else {
-            _lidarICP = false;
-            count = 0;
-         }
-      }
 
       if (appState.ROS_ENABLED)
       {
@@ -183,6 +144,32 @@ namespace Clay
 
          appUtils.clearDebug();
       }
+      else if(_lidarICP)
+      {
+         count++;
+         if(count < 100)
+         {
+            if(count%20 == 0){
+               std::cout << "Count:" << count << " Size: " << _models.size() << std::endl;
+               glm::mat4 transform;
+               Eigen::Matrix4f transformOne, transformTwo;
+               glm::mat4 invTransformOne = glm::inverse(_models[_models.size()-2]->GetTransformToParent());
+               glm::mat4 invTransformTwo = glm::inverse(_models[_models.size()-1]->GetTransformToParent());
+               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
+               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
+
+               // Calculate ICP based Pointcloud Alignment.
+               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[_models.size()-2]->GetMesh()->_vertices, transformOne, _models[_models.size()-1]->GetMesh()->_vertices, transformTwo);
+
+               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
+               _models[_models.size()-1]->TransformLocal(transform);
+            }
+         } else {
+            _lidarICP = false;
+            count = 0;
+         }
+      }
+
    }
 
    void MapsenseLayer::OnEvent(Event& e)
@@ -342,13 +329,14 @@ namespace Clay
          _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
       }
       ImGui::Text("Models: %d", _models.size());
+
       if(ImGui::Button("Calculate ICP"))
       {
-         _scanCount+=1;
-         std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount + 1);
-         float r = (float)(_scanCount * 12 % 255);
-         float g = (float)(_scanCount * 32 % 255);
-         float b = (float)(_scanCount * 34 % 255);
+         _scanCount+=2;
+         std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount);
+         float r = (float)(_scanCount * 123 % 255);
+         float g = (float)(_scanCount * 324 % 255);
+         float b = (float)(_scanCount * 534 % 255);
          glm::vec4 color(r/(r+g+b), g/(r+g+b), b/(r+g+b), 1.0f);
 
          CLAY_LOG_INFO("Loading Scan From: {}", filename);

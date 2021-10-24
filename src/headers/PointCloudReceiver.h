@@ -47,7 +47,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
       Clay::Ref<Clay::PointCloud> _cloudToRender;
 
       uint32_t _scanCount = 0;
-      uint32_t SKIP_SCANS = 1;
+      uint32_t _skipScans = 2;
       bool _saveScans = false;
 
 };
