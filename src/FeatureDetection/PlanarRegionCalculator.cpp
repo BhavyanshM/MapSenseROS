@@ -1,9 +1,10 @@
+#include <map_sense/RawGPUPlanarRegionList.h>
+#include <AppUtils.h>
 #include "PlanarRegionCalculator.h"
 
-PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, NetworkManager *network, ApplicationState& app)
+PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, ApplicationState& app)
 {
    ROS_DEBUG("Creating PlanarRegionCalculator");
-   this->_dataReceiver = network;
    this->_mapFrameProcessor.init(app);
    this->inputDepth = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
    this->inputColor = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
@@ -12,34 +13,8 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, NetworkMan
    origin[0] = 0;
 }
 
-void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
-{
-   ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT, appState.PATCH_WIDTH,
-               appState.KERNEL_SLIDER_LEVEL);
-   ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
-   ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
-   ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
-   ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 4);
-   ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
-   ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
-   ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
-   ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
-   ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
-   ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
-   if (ImGui::Button("Hide Display"))
-   {
-      cv::destroyAllWindows();
-   }
-   ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
-   ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
-   ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
-   ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
-   ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
-   ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
-   ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
-}
 
-void PlanarRegionCalculator::render()
+void PlanarRegionCalculator::Render()
 {
    if (this->app.SHOW_REGION_COMPONENTS)
    {
@@ -47,15 +22,6 @@ void PlanarRegionCalculator::render()
       AppUtils::DisplayImage(_mapFrameProcessor.debug, app);
       //      appUtils.appendToDebugOutput(this->_mapFrameProcessor.debug);
    }
-   if (this->app.SHOW_STEREO_LEFT)
-   {
-      appUtils.appendToDebugOutput(this->inputStereoLeft);
-   }
-   if (this->app.SHOW_STEREO_RIGHT)
-   {
-      appUtils.appendToDebugOutput(this->inputStereoRight);
-   }
-   //   appUtils.displayDebugOutput(app);
 }
 
 uint8_t PlanarRegionCalculator::loadParameters(const ApplicationState& app)
@@ -323,13 +289,13 @@ void logPlanarRegions(vector <shared_ptr<PlanarRegion>> planarRegionList)
    }
 }
 
-void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState appState)
+void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState appState, cv::Mat& depth, double inputTimestamp)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Generating Regions");
 
-   ImageReceiver *depthReceiver = ((ImageReceiver *) this->_dataReceiver->receivers[0]);
-   depthReceiver->getData(inputDepth, appState, inputTimestamp);
+   inputDepth = depth;
+   inputTimestamp = inputTimestamp;
 
    // Generate patch graph of connected patches on GPU
    _mapFrameProcessor.init(appState);
@@ -358,9 +324,6 @@ void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState appState
 {
    MAPSENSE_PROFILE_FUNCTION();
 
-   ImageReceiver *colorReceiver = ((ImageReceiver *) this->_dataReceiver->receivers[1]);
-   colorReceiver->getData(inputColor, appState, inputTimestamp);
-
    bool patchGraphGenerated = generatePatchGraph(appState);
    if (!patchGraphGenerated)
       return;
@@ -371,41 +334,41 @@ void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState appState
    PlanarRegion::SetZeroId(planarRegionList);
 }
 
-void PlanarRegionCalculator::publishRegions(vector <shared_ptr<PlanarRegion>> rawRegionList)
+map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Publishing Regions");
-   map_sense::RawGPUPlanarRegionList planarRegionsToPublish;
-   if (rawRegionList.size() > 0)
+
+   if (planarRegionList.size() > 0)
    {
-      for (int i = 0; i < rawRegionList.size(); i++)
+      for (int i = 0; i < planarRegionList.size(); i++)
       {
          map_sense::RawGPUPlanarRegion region;
-         region.numOfPatches = rawRegionList[i]->getNumPatches();
-         region.id = rawRegionList[i]->getId();
+         region.numOfPatches = planarRegionList[i]->getNumPatches();
+         region.id = planarRegionList[i]->getId();
          region.normal = geometry_msgs::Vector3();
-         region.normal.x = static_cast<double>(rawRegionList[i]->getNormal().x());
-         region.normal.y = static_cast<double>(rawRegionList[i]->getNormal().y());
-         region.normal.z = static_cast<double>(rawRegionList[i]->getNormal().z());
+         region.normal.x = static_cast<double>(planarRegionList[i]->getNormal().x());
+         region.normal.y = static_cast<double>(planarRegionList[i]->getNormal().y());
+         region.normal.z = static_cast<double>(planarRegionList[i]->getNormal().z());
          region.centroid = geometry_msgs::Point();
-         region.centroid.x = static_cast<double>(rawRegionList[i]->getCenter().x());
-         region.centroid.y = static_cast<double>(rawRegionList[i]->getCenter().y());
-         region.centroid.z = static_cast<double>(rawRegionList[i]->getCenter().z());
+         region.centroid.x = static_cast<double>(planarRegionList[i]->getCenter().x());
+         region.centroid.y = static_cast<double>(planarRegionList[i]->getCenter().y());
+         region.centroid.z = static_cast<double>(planarRegionList[i]->getCenter().z());
 
-         for (int j = 0; j < rawRegionList[i]->getVertices().size(); j++)
+         for (int j = 0; j < planarRegionList[i]->getVertices().size(); j++)
          {
-            Vector3f vertex = rawRegionList[i]->getVertices()[j];
+            Vector3f vertex = planarRegionList[i]->getVertices()[j];
             geometry_msgs::Point point;
             point.x = static_cast<double>(vertex.x());
             point.y = static_cast<double>(vertex.y());
             point.z = static_cast<double>(vertex.z());
             region.vertices.emplace_back(point);
          }
-         planarRegionsToPublish.regions.emplace_back(region);
+         _planarRegionsToPublish.regions.emplace_back(region);
       }
-      planarRegionsToPublish.numOfRegions = rawRegionList.size();
-      planarRegionsToPublish.header.stamp.fromSec(inputTimestamp);
-      _dataReceiver->planarRegionPub.publish(planarRegionsToPublish);
+      _planarRegionsToPublish.numOfRegions = planarRegionList.size();
+      _planarRegionsToPublish.header.stamp.fromSec(inputTimestamp);
+      return _planarRegionsToPublish;
       ROS_DEBUG("Published Regions");
    }
 }

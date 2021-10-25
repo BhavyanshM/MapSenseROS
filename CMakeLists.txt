@@ -74,47 +74,65 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 
-set(SOURCE
-        src/FeatureDetection/PlanarRegionCalculator.cpp
-		src/Network/NetworkManager.cpp
-        src/FeatureDetection/MapFrame.cpp
-        src/FeatureDetection/MapFrameProcessor.cpp
-        src/Geometry/src/Elements/PlanarRegion.cpp
-		src/Application/ApplicationState.cpp
+set(PLANAR_REGION_LIB
+		src/FeatureDetection/PlanarRegionCalculator.cpp
+		src/FeatureDetection/MapFrame.cpp
+		src/FeatureDetection/MapFrameProcessor.cpp
+		src/Geometry/src/Elements/PlanarRegion.cpp
 		src/Geometry/src/Elements/RegionRing.cpp
+		src/FeatureDetection/PlanarRegionProcessor.cpp
+		src/OpenCL/OpenCLManager.cpp
+		src/Application/AppUtils.cpp
+
+		src/headers/AppUtils.h
+		src/headers/OpenCLManager.h
+		src/headers/PlanarRegionCalculator.h
+		src/headers/MapFrameProcessor.h
+		src/headers/MapFrame.h
+		src/headers/PlanarRegion.h
+		src/headers/RegionRing.h
+		src/FeatureDetection/PlanarRegionProcessor.h)
+
+set(SLAM_LIB
+		src/SLAM/PlanarRegionMapHandler.cpp
+		src/SLAM/FactorGraphHandler.cpp
+		src/SLAM/SLAMModule.cpp
+		src/headers/SLAMModule.h
+		src/headers/FactorGraphHandler.h
+		src/headers/PlanarRegionMapHandler.h)
+
+
+set(ICP_LIB
+		src/OpenCL/OpenCLManager.cpp
+		src/headers/OpenCLManager.h
+		src/SLAM/IterativeClosestPoint.cpp
+		src/headers/IterativeClosestPoint.h)
+
+set(SOURCE
+		src/Application/ApplicationState.cpp
+		src/Network/NetworkManager.cpp
 		src/Application/AppUtils.cpp
 		src/ImageProcessing/ImageTools.cpp
 		src/Network/ROS1TopicReceiver.cpp
-        src/Network/ImageReceiver.cpp
-		src/SLAM/PlanarRegionMapHandler.cpp
-		src/SLAM/FactorGraphHandler.cpp
+		src/Network/ImageReceiver.cpp
 		src/ImPlot/implot.cpp
 		src/ImPlot/implot_demo.cpp
 		src/ImPlot/implot_items.cpp
-		src/FeatureDetection/PlanarRegionProcessor.cpp
 		src/FileManager.cpp
 		src/FeatureDetection/KeypointDetector.cpp
 		src/OpenCL/OpenCLManager.cpp
-		src/SLAM/SLAMModule.cpp
 		src/UI/ImGuiLayout.cpp
-		src/SLAM/IterativeClosestPoint.cpp)
+		)
 
 set (HEADERS
-		src/headers/SLAMModule.h
-		src/headers/PlanarRegionCalculator.h
+
+
 		src/headers/NetworkManager.h
-		src/headers/MapFrame.h
-		src/headers/MapFrameProcessor.h
-		src/headers/PlanarRegion.h
 		src/headers/ApplicationState.h
-		src/headers/RegionRing.h
 		src/headers/AppUtils.h
 		src/headers/ImageTools.h
 		src/headers/ImageReceiver.h
 		src/headers/ROS1TopicReceiver.h
-		src/headers/PlanarRegionMapHandler.h
-		src/headers/FactorGraphHandler.h
-		src/FeatureDetection/PlanarRegionProcessor.h
 		src/headers/FileManager.h
 		src/headers/KeypointDetector.h
 		src/headers/OpenCLManager.h
@@ -123,7 +141,7 @@ set (HEADERS
 		src/headers/Timer.h src/headers/Core.h
 		src/headers/ImGuiLayout.h
 		src/headers/MapsenseHeaders.h
-		src/headers/IterativeClosestPoint.h)
+		)
 
 set(MAPSENSE_CLAY_HEADERS
 		src/headers/ClayApp.h
@@ -175,6 +193,33 @@ include_directories(
 
 #set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
 
+#[[
+	Develop all libraries here.
+]]
+add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
+target_link_libraries(geom-tools
+		Eigen3::Eigen
+		${OpenCV_LIBS})
+
+add_library(planar-regions STATIC ${PLANAR_REGION_LIB})
+target_link_libraries(planar-regions
+		Eigen3::Eigen
+		${OpenCV_LIBS}
+		geom-tools)
+
+add_library(slam STATIC ${SLAM_LIB})
+target_link_libraries(slam
+		gtsam
+		Eigen3::Eigen
+		${OpenCV_LIBS}
+		geom-tools)
+
+add_library(icp STATIC ${ICP_LIB})
+target_link_libraries(icp Eigen3::Eigen)
+
+#[[
+	Develop all executables here.
+]]
 add_executable(Mapsense_Clay ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
 target_include_directories(Mapsense_Clay PUBLIC
 		"/usr/local/include/ClayEngine"
@@ -186,25 +231,17 @@ target_include_directories(Mapsense_Clay PUBLIC
 		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
 		"/usr/local/include/ClayEngine/Vendor/stb_image/")
 target_link_libraries(Mapsense_Clay
-		${OpenCV_LIBS}
-		${catkin_LIBRARIES}
+		${OpenCV_LIBS} ${catkin_LIBRARIES}
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
-		Eigen3::Eigen
-		tbb
-		gtsam
-		geom-tools
-		${TORCH_LIBRARIES}
-		ClayEngine
+		Eigen3::Eigen tbb gtsam
+		geom-tools planar-regions slam icp
+		ClayEngine ${TORCH_LIBRARIES}
 		glad imgui glfw3 ${CMAKE_DL_LIBS} )
 add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
 target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
 target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
 
 
-add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
-target_link_libraries(geom-tools
-		Eigen3::Eigen
-		${OpenCV_LIBS})
 
 if(BUILD_HEADLESS)
 	add_executable(mapsense_headless

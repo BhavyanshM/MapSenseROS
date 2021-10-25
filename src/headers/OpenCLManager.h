@@ -5,13 +5,12 @@
 #ifndef OPENCLMANAGER_H
 #define OPENCLMANAGER_H
 
-#include "Core.h"
 #include <CL/cl.hpp>
 
 class OpenCLManager
 {
    public:
-      OpenCLManager();
+      OpenCLManager(const std::string& packagePath);
       ~OpenCLManager() = default;
 
       uint8_t CreateLoadBufferFloat(float* params, uint32_t count);

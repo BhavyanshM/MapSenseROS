@@ -9,13 +9,14 @@
 #include "opencv2/core/core.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include <CL/cl.hpp>
+#include <map_sense/RawGPUPlanarRegionList.h>
 
 #include "MapsenseHeaders.h"
-#include "NetworkManager.h"
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"
 #include "PlanarRegion.h"
 #include "OpenCLManager.h"
+#include "AppUtils.h"
 
 using namespace ros;
 using namespace std;
@@ -33,7 +34,6 @@ class PlanarRegionCalculator
 
       ApplicationState app;
       AppUtils appUtils;
-      NetworkManager *_dataReceiver;
 
       cv::Mat inputDepth;
       cv::Mat inputColor;
@@ -45,13 +45,14 @@ class PlanarRegionCalculator
       MapFrameProcessor _mapFrameProcessor;
       OpenCLManager* _openCL;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
+      map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
       int frameId = 0;
       int depthReceiverId = -1;
 
-      explicit PlanarRegionCalculator(int argc, char** argv, NetworkManager* network, ApplicationState& app);
+      explicit PlanarRegionCalculator(int argc, char **argv, ApplicationState& app);
 
-      void render();
+      void Render();
 
       bool generatePatchGraph(ApplicationState appState);
 
@@ -61,19 +62,17 @@ class PlanarRegionCalculator
 
 //      void initOpenCL();
 
-      void generateRegionsFromDepth(ApplicationState appState);
+      void generateRegionsFromDepth(ApplicationState appState, cv::Mat& depth, double inputTimestamp);
 
       void generateRegionsFromStereo(ApplicationState appState);
 
-      void publishRegions(vector<shared_ptr<PlanarRegion>> regionList);
+      map_sense::RawGPUPlanarRegionList publishRegions();
 
       void getFilteredDepth(cv::Mat& dispDepth, ApplicationState appState);
 
       static void onMouse(int event, int x, int y, int flags, void *userdata);
 
       void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
-
-      void publish() {publishRegions(planarRegionList);}
 
       uint8_t loadParameters(const ApplicationState& app);
 

@@ -3,11 +3,12 @@
 //
 
 #include <glm/gtc/type_ptr.hpp>
-#include "MapsenseLayer.h"
 #include "Core/Timer.h"
 #include "Core/Clay.h"
 #include "opencv2/core/core.hpp"
 #include "unistd.h"
+
+#include "MapsenseLayer.h"
 
 namespace Clay
 {
@@ -19,19 +20,20 @@ namespace Clay
       if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
          window_flags |= ImGuiWindowFlags_NoBackground;
 
+
       /* TODO: Instantiate the Information Processors */
-      _openCLManager = new OpenCLManager();
+      _openCLManager = new OpenCLManager(ros::package::getPath("map_sense"));
       _networkManager = new NetworkManager(appState, &appUtils);
       _networkManager->init_ros_node(argc, argv, appState);
 
-      _regionCalculator = new PlanarRegionCalculator(argc, argv, _networkManager, appState);
+      _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
 
       _icp = new IterativeClosestPoint();
       _icp->SetOpenCLManager(_openCLManager);
 
       _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
-      _slamModule = new SLAMModule(argc, argv, _networkManager);
+      _slamModule = new SLAMModule(argc, argv);
 
       _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);
 
@@ -120,9 +122,15 @@ namespace Clay
             appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
          }
 
-         _regionCalculator->generateRegionsFromDepth(appState);
-         _regionCalculator->publish();
-         _regionCalculator->render();
+         cv::Mat depth;
+         double inputTimestamp;
+         ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[0]);
+         depthReceiver->getData(depth, appState, inputTimestamp);
+         _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
+
+         // TODO: Fix this and publish planarregions msg
+         //         _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
+         //         _regionCalculator->Render();
 
          //      _keypointDetector->update(appState);
 
@@ -266,14 +274,14 @@ namespace Clay
          if (ImGui::BeginTabItem("Planar Regions"))
          {
             /* Display 2D */
-            _regionCalculator->ImGuiUpdate(appState);
+            ImGuiUpdate(appState);
             ImGui::EndTabItem();
          }
-         if (ImGui::BeginTabItem("SLAM"))
-         {
-            _slamModule->ImGuiUpdate();
-            ImGui::EndTabItem();
-         }
+//         if (ImGui::BeginTabItem("SLAM"))
+//         {
+//            _slamModule->ImGuiUpdate();
+//            ImGui::EndTabItem();
+//         }
          if (ImGui::BeginTabItem("Network"))
          {
             _networkManager->ImGuiUpdate();
@@ -348,5 +356,32 @@ namespace Clay
       ImGui::End();
 
       ImGui::End();
+   }
+
+   void MapsenseLayer::ImGuiUpdate(ApplicationState& appState)
+   {
+      ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT, appState.PATCH_WIDTH,
+                  appState.KERNEL_SLIDER_LEVEL);
+      ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
+      ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
+      ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
+      ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 4);
+      ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
+      ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
+      ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
+      ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
+      ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
+      ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
+      if (ImGui::Button("Hide Display"))
+      {
+         cv::destroyAllWindows();
+      }
+      ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
+      ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
+      ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
+      ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
+      ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
+      ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
+      ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
    }
 }

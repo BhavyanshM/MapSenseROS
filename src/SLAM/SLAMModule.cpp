@@ -4,12 +4,17 @@
 
 #include "SLAMModule.h"
 
-SLAMModule::SLAMModule(int argc, char **argv, NetworkManager *networkManager)
+SLAMModule::SLAMModule(int argc, char **argv)
 {
-   this->network = networkManager;
 
-   this->sensorPoseSub = new Subscriber();
-   *(this->sensorPoseSub) = networkManager->rosNode->subscribe("/atlas/sensors/chest_l515/pose", 3, &SLAMModule::sensorPoseCallback, this);
+   /* TODO: Fix this mess before any SLAM ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+//   this->network = networkManager;
+//
+//   this->sensorPoseSub = new Subscriber();
+//   *(this->sensorPoseSub) = networkManager->rosNode->subscribe("/atlas/sensors/chest_l515/pose", 3, &SLAMModule::sensorPoseCallback, this);
 
    this->extractArgs(argc, argv);
 
@@ -196,57 +201,57 @@ void SLAMModule::SLAMTesterUpdate()
    slamUpdate();
 }
 
-void SLAMModule::ImGuiUpdate()
-{
-   ImGui::Checkbox("SLAM Enabled", &this->enabled);
-   ImGui::Checkbox("ICP Enabled", &this->ICPEnabled);
-   ImGui::SliderFloat("Interpolation", &_interp, 0.0f, 1.0f);
+//void SLAMModule::ImGuiUpdate()
+//{
+//   ImGui::Checkbox("SLAM Enabled", &this->enabled);
+//   ImGui::Checkbox("ICP Enabled", &this->ICPEnabled);
+//   ImGui::SliderFloat("Interpolation", &_interp, 0.0f, 1.0f);
+//
+//
+//   if (this->matchCountVec.size() > 20)
+//   {
+//      this->matchCountVec.erase(this->matchCountVec.begin());
+//      int *data = this->matchCountVec.data();
+//      if (ImPlot::BeginPlot("SLAM Plots"))
+//      {
+//         ImPlot::PlotLine("Line Plot", data, 10);
+//         ImPlot::EndPlot();
+//      }
+//   }
+//}
 
-
-   if (this->matchCountVec.size() > 20)
-   {
-      this->matchCountVec.erase(this->matchCountVec.begin());
-      int *data = this->matchCountVec.data();
-      if (ImPlot::BeginPlot("SLAM Plots"))
-      {
-         ImPlot::PlotLine("Line Plot", data, 10);
-         ImPlot::EndPlot();
-      }
-   }
-}
-
-void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg)
-{
-   if (_sensorPoseMessage == nullptr)
-   {
-      _sensorPoseMessage = poseMsg;
-      return;
-   }
-
-   if (!poseAvailable)
-   {
-
-      Vector3d position;
-      Vector3d previous;
-
-      position << poseMsg->pose.position.x, poseMsg->pose.position.y, poseMsg->pose.position.z;
-      previous << this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y, this->_sensorPoseMessage->pose.position.z;
-
-      this->_sensorPoseMessage = poseMsg;
-
-      double diff = (position - previous).norm();
-
-      //      if(diff > 0.001)
-      {
-         ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
-
-         this->_mapper._atlasSensorPose.setRotationAndTranslation(
-               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,
-                                  this->_sensorPoseMessage->pose.orientation.y, this->_sensorPoseMessage->pose.orientation.z),
-               Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y,
-                               this->_sensorPoseMessage->pose.position.z));
-
-         poseAvailable = true;
-      }
-   }
-}
+//void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg)
+//{
+//   if (_sensorPoseMessage == nullptr)
+//   {
+//      _sensorPoseMessage = poseMsg;
+//      return;
+//   }
+//
+//   if (!poseAvailable)
+//   {
+//
+//      Vector3d position;
+//      Vector3d previous;
+//
+//      position << poseMsg->pose.position.x, poseMsg->pose.position.y, poseMsg->pose.position.z;
+//      previous << this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y, this->_sensorPoseMessage->pose.position.z;
+//
+//      this->_sensorPoseMessage = poseMsg;
+//
+//      double diff = (position - previous).norm();
+//
+//      //      if(diff > 0.001)
+//      {
+//         ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
+//
+//         this->_mapper._atlasSensorPose.setRotationAndTranslation(
+//               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,
+//                                  this->_sensorPoseMessage->pose.orientation.y, this->_sensorPoseMessage->pose.orientation.z),
+//               Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y,
+//                               this->_sensorPoseMessage->pose.position.z));
+//
+//         poseAvailable = true;
+//      }
+//   }
+//}

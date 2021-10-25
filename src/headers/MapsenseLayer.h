@@ -6,9 +6,7 @@
 #define MAP_SENSE_MAPSENSELAYER_H
 
 #include "Core/Application.h"
-#include "Core/Clay.h"
 #include "FileManager.h"
-#include "Core.h"
 #include "MapsenseHeaders.h"
 #include "SLAMModule.h"
 #include "PlanarRegionCalculator.h"
@@ -39,6 +37,8 @@ namespace Clay
          void OnEvent(Event& e) override;
 
          void OnImGuiRender() override;
+
+         void ImGuiUpdate(ApplicationState& appState);
 
          ApplicationState appState;
 

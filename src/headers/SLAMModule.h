@@ -6,9 +6,6 @@
 #define SLAMMODULE_H
 
 #include "PlanarRegionMapHandler.h"
-#include "imgui.h"
-#include "implot/implot.h"
-#include "NetworkManager.h"
 #include "MapsenseHeaders.h"
 
 using namespace chrono;
@@ -20,14 +17,14 @@ class SLAMModule
       vector<shared_ptr<PlanarRegion>> fileRegions;
 
       vector<int> matchCountVec;
-      Subscriber *sensorPoseSub;
-      geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
+//      Subscriber *sensorPoseSub;
+//      geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
       int _frameId = 0;
 
       RigidBodyTransform _transformZUp;
 
    public:
-      NetworkManager* network;
+//      NetworkManager* network;
       PlanarRegionMapHandler _mapper;
 
       float _interp = 0.0f;
@@ -37,7 +34,7 @@ class SLAMModule
       bool poseAvailable = false;
 
    public:
-      SLAMModule(int argc, char **argv, NetworkManager *networkManager);
+      SLAMModule(int argc, char **argv);
 
       void slamUpdate();
 
@@ -49,7 +46,7 @@ class SLAMModule
 
       void ImGuiUpdate();
 
-      void sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg);
+//      void sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg);
 
       void renderSLAMOutput();
 

@@ -3,8 +3,10 @@
 //
 
 #include "OpenCLManager.h"
+#include <iostream>
+#include "chrono"
 
-OpenCLManager::OpenCLManager()
+OpenCLManager::OpenCLManager(const std::string& packagePath)
 {
    printf("Initializing OpenCL\n");
 
@@ -13,7 +15,7 @@ OpenCLManager::OpenCLManager()
 
    if (all_platforms.size() == 0)
    {
-      ROS_DEBUG(" No platforms found. Check OpenCL installation!");
+      printf(" No platforms found. Check OpenCL installation!\n");
       exit(1);
    }
    cl::Platform default_platform = all_platforms[0];
@@ -28,11 +30,11 @@ OpenCLManager::OpenCLManager()
    char *source_str;
    size_t source_size, program_size;
 
-   fp = fopen((ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp").c_str(), "rb");
+   fp = fopen((packagePath + "/kernels/fitting_kernel.cpp").c_str(), "rb");
    if (!fp)
    {
       printf("Failed to load kernel\n");
-      MAPSENSE_LOG_INFO(ros::package::getPath("map_sense") + "/kernels/fitting_kernel.cpp");
+      std::cout << packagePath << "/kernels/fitting_kernel.cpp" << std::endl;
       return;
    }
 
@@ -49,7 +51,7 @@ OpenCLManager::OpenCLManager()
    cl::Program program(context, sources);
    if (program.build({default_device}) != CL_SUCCESS)
    {
-      MAPSENSE_LOG_INFO(" Error building: {0}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+      std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << std::endl;
       exit(1);
    }
    commandQueue = cl::CommandQueue(context, default_device);
@@ -69,48 +71,36 @@ OpenCLManager::OpenCLManager()
 
 uint8_t OpenCLManager::CreateLoadBufferFloat(float *params, uint32_t count)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Buffer :%d", buffers.size());
    buffers.emplace_back(cl::Buffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float) * count, params));
    return buffers.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateLoadBufferUnsignedInt(uint32_t *params, uint32_t count)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Buffer :%d", buffers.size());
    buffers.emplace_back(cl::Buffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(uint32_t) * count, params));
    return buffers.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateBufferInt(uint32_t count)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Buffer :%d", buffers.size());
    buffers.emplace_back(cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * count));
    return buffers.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateBufferFloat(uint32_t count)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Buffer :%d", buffers.size());
    buffers.emplace_back(cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(float) * count));
    return buffers.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateLoadReadOnlyImage2D_R16(uint16_t *depthBuffer, uint32_t width, uint32_t height)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), width, height, 0, depthBuffer));
    return images.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateLoadReadOnlyImage2D_RGBA8(uint8_t *colorBuffer, uint32_t width, uint32_t height)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(
          cl::Image2D(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), width, height, 0, colorBuffer));
    return images.size() - 1;
@@ -118,54 +108,43 @@ uint8_t OpenCLManager::CreateLoadReadOnlyImage2D_RGBA8(uint8_t *colorBuffer, uin
 
 uint8_t OpenCLManager::CreateReadWriteImage2D_R8(uint32_t width, uint32_t height)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), width, height));
    return images.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateReadWriteImage2D_R16(uint32_t width, uint32_t height)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), width, height));
    return images.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateReadWriteImage2D_RFloat(uint32_t width, uint32_t height)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_FLOAT), width, height));
    return images.size() - 1;
 }
 
 uint8_t OpenCLManager::CreateReadWriteImage2D_RGBA8(uint32_t width, uint32_t height)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Creating Image :%d", images.size());
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8), width, height));
    return images.size() - 1;
 }
 
 void OpenCLManager::ReadImage(uint8_t image, const cl::size_t<3>& region, void *cpuBufferPtr)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Reading Image :%d", image);
+   printf("Reading Image :%d\n", image);
    commandQueue.enqueueReadImage(images[image], CL_TRUE, origin, region, 0, 0, cpuBufferPtr);
 }
 
 void OpenCLManager::ReadBufferInt(uint8_t buffer, int *cpuBufferPtr, int size)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Reading Int Buffer :%d", buffer);
+   printf("Reading Int Buffer :%d\n", buffer);
    commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(int) * size, cpuBufferPtr);
 }
 
 void OpenCLManager::ReadBufferFloat(uint8_t buffer, float *cpuBufferPtr, int size)
 {
-   MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Reading Float Buffer :%d", buffer);
+   printf("Reading Float Buffer :%d\n", buffer);
    commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(float) * size, cpuBufferPtr);
 }
 
