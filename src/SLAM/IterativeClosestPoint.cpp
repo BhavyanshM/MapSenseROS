@@ -17,16 +17,22 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
       transformTwoVec.emplace_back(transformTwo(i, 3));
    }
 
-   int numPoints = cloudOne.size()/3;
+   int numPointsOne = cloudOne.size()/3;
+   int numPointsTwo = cloudTwo.size()/3;
+   int numCylinderParts = 24;
+   int numCylinderThreads = 200;
+   int numPlanes = 5 * numCylinderParts;
    uint32_t threads = 1000;
 
    uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size());
    uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12);
    uint8_t cloudTwoBuffer = _openCL->CreateLoadBufferFloat(cloudTwo.data(), cloudTwo.size());
    uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12);
-   uint8_t matchBuffer = _openCL->CreateBufferInt(numPoints);
+   uint8_t matchBuffer = _openCL->CreateBufferInt(numPointsOne);
    uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads);
    uint8_t meanBuffer = _openCL->CreateBufferFloat(6 * threads);
+   uint8_t cylinderIndexBufferOne = _openCL->CreateBufferInt(numPointsOne);
+   uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo);
 
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
@@ -35,8 +41,8 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgument("correspondenceKernel", 4, matchBuffer);
    _openCL->SetArgumentInt("correspondenceKernel", 5, cloudOne.size());
    _openCL->SetArgumentInt("correspondenceKernel", 6, cloudTwo.size());
-   _openCL->SetArgumentInt("correspondenceKernel", 7, numPoints);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPoints), cl::NullRange);
+   _openCL->SetArgumentInt("correspondenceKernel", 7, numPointsOne);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPointsOne), cl::NullRange);
 
    _openCL->SetArgument("centroidKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("centroidKernel", 1, cloudTwoBuffer);
@@ -54,6 +60,16 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correlationKernel", 5, cloudOne.size());
    _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
    _openCL->SetArgumentInt("correlationKernel", 7, threads);
+
+   _openCL->SetArgument("cylinderKernel", 0, cloudOneBuffer);
+   _openCL->SetArgument("cylinderKernel", 1, cloudTwoBuffer);
+   _openCL->SetArgument("cylinderKernel", 2, cylinderIndexBufferOne);
+   _openCL->SetArgument("cylinderKernel", 3, cylinderIndexBufferTwo);
+   _openCL->SetArgumentInt("cylinderKernel", 4, numPointsOne);
+   _openCL->SetArgumentInt("cylinderKernel", 5, numPointsTwo);
+   _openCL->SetArgumentInt("cylinderKernel", 6, numCylinderParts);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+
 
    Eigen::Matrix4f transform = CalculateTransformParallel(threads, correlBuffer, meanBuffer);
 

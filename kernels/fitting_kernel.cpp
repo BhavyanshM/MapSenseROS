@@ -515,4 +515,39 @@ void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
 //          mean[gid*6], mean[gid*6 + 1], mean[gid*6 + 2], mean[gid*6 + 3], mean[gid*6 + 4], mean[gid*6 + 5]);
 }
 
+
+/*
+ * Cylinder Kernel for Iterative Closest Point
+ * */
+void kernel cylinderKernel(global float* cloudOne, global float* cloudTwo, global int* cylinderIndicesOne, global int* cylinderIndicesTwo,
+                           int sizeOne, int sizeTwo, int numParts)
+{
+   int gid = get_global_id(0);
+
+   int partMaxPoints = sizeOne/numParts;
+   int outputCounter = 0;
+   float4 pointOne;
+   for(int i = 0; i<sizeOne; i++)
+   {
+      // Check whether the point falls inside the 'partId'.
+
+      pointOne = (float4)(cloudOne[i*3], cloudOne[i*3+1], cloudOne[i*3+2], 1);
+
+      float s = length(pointOne);
+
+//      if(gid==0)printf("GID: %d, i:%d, length:%.3lf\n", gid, i, s);
+
+//      if(outputCounter < partMaxPoints)
+//      {
+//         // Store the point index in cylinderIndicesOne at 'outputCounter'
+//         cylinderIndicesOne[outputCounter] = i;
+//         outputCounter++;
+//      }
+
+
+
+   }
+}
+
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
