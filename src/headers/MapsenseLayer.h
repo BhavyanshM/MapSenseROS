@@ -65,10 +65,12 @@ namespace Clay
          bool dockspaceOpen = true;
          bool opt_fullscreen;
          bool _lidarICP = false;
+         bool _partsSet = false;
 
          uint32_t count = 0;
          uint32_t frameId = 0;
          uint32_t _scanCount = 100;
+         int partCount = 24;
 
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;

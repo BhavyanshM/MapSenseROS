@@ -44,7 +44,9 @@ namespace Clay
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
       Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount), glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+      Ref<PointCloud> secondCloud = std::make_shared<PointCloud>(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount), glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(secondCloud));
 
 //      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
@@ -95,10 +97,15 @@ namespace Clay
       Renderer::BeginScene(_cameraController.GetCamera());
 
       _rootPCL->Update();
-      for(Ref<Model> model : _models)
-      {
-         Renderer::SubmitPoints(model);
+
+//      CLAY_LOG_INFO("Parts Set: {0}", _partsSet);
+      if(_partsSet){
+         Renderer::SubmitPointCloudComponents(_models[0]);
       }
+//      for(int i = 0; i<_models.size(); i++)
+//      {
+//         Renderer::SubmitPoints(_models[i]);
+//      }
 
       Renderer::EndScene();
       _frameBuffer->Unbind();
@@ -155,7 +162,7 @@ namespace Clay
       else if(_lidarICP)
       {
          count++;
-         if(count < 100)
+         if(count < 30)
          {
             if(count%20 == 0){
                std::cout << "Count:" << count << " Size: " << _models.size() << std::endl;
@@ -167,7 +174,19 @@ namespace Clay
                for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
 
                // Calculate ICP based Pointcloud Alignment.
-               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[_models.size()-2]->GetMesh()->_vertices, transformOne, _models[_models.size()-1]->GetMesh()->_vertices, transformTwo);
+               int partIds[_models[_models.size() - 2]->GetMesh()->_vertices.size() / 3];
+               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[_models.size()-2]->GetMesh()->_vertices, transformOne, _models[_models.size()-1]->GetMesh()->_vertices, transformTwo, partIds, partCount);
+               std::vector<int> partIdsVec( _models[_models.size()-2]->GetMesh()->_vertices.size() / 3, 0);
+               int partSize = _models[_models.size()-2]->GetMesh()->_vertices.size() / 3;
+               partSize = partSize / partCount;
+               int cloudSize = _models[_models.size()-2]->GetMesh()->_vertices.size() / 3;
+               for(int i = 0; i<cloudSize; i++)
+               {
+                  if(partIds[i] >= 0 && partIds[i] < cloudSize)
+                  partIdsVec[partIds[i]] = i / partSize;
+               }
+               _models[_models.size()-2]->SetPartIds(partIdsVec);
+               _partsSet = true;
 
                for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
                _models[_models.size()-1]->TransformLocal(transform);
@@ -347,12 +366,14 @@ namespace Clay
          float b = (float)(_scanCount * 534 % 255);
          glm::vec4 color(r/(r+g+b), g/(r+g+b), b/(r+g+b), 1.0f);
 
-         CLAY_LOG_INFO("Loading Scan From: {}", filename);
-         Ref<PointCloud> cloud = std::make_shared<PointCloud>(filename,color, _models[_models.size() - 1]);
-         _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+//         CLAY_LOG_INFO("Loading Scan From: {}", filename);
+//         Ref<PointCloud> cloud = std::make_shared<PointCloud>(filename,color, _models[_models.size() - 1]);
+//         _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
          _lidarICP = true;
          count = 0;
       }
+
+      ImGui::SliderInt("Part Count", &partCount, 1, 40);
       ImGui::End();
 
       ImGui::End();

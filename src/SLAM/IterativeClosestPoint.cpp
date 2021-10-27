@@ -1,7 +1,8 @@
+#include <iostream>
 #include "IterativeClosestPoint.h"
 #include "chrono"
 
-Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo)
+Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo, int* partIds, int partCount)
 {
 //   if(_iteration > MAX_STEPS) return Eigen::Matrix4f::Identity(); else _iteration++;
    auto start_point = std::chrono::steady_clock::now();
@@ -19,7 +20,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    int numPointsOne = cloudOne.size()/3;
    int numPointsTwo = cloudTwo.size()/3;
-   int numCylinderParts = 24;
+   int numCylinderParts = partCount;
    int numCylinderThreads = 200;
    int numPlanes = 5 * numCylinderParts;
    uint32_t threads = 1000;
@@ -69,6 +70,17 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("cylinderKernel", 5, numPointsTwo);
    _openCL->SetArgumentInt("cylinderKernel", 6, numCylinderParts);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+
+   if(partIds != nullptr)
+   {
+      _openCL->ReadBufferInt(cylinderIndexBufferOne, partIds, numPointsOne);
+//      std::vector<int> partIdsVec(partIds, partIds + numPointsOne);
+//      for(int i = 0; i<numPointsOne; i++)
+//      {
+//         std::cout << "Index:" << i << " Id:" << partIdsVec[i] << std::endl;
+//      }
+   }
+
 
 
    Eigen::Matrix4f transform = CalculateTransformParallel(threads, correlBuffer, meanBuffer);

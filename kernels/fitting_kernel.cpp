@@ -522,27 +522,38 @@ void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
 void kernel cylinderKernel(global float* cloudOne, global float* cloudTwo, global int* cylinderIndicesOne, global int* cylinderIndicesTwo,
                            int sizeOne, int sizeTwo, int numParts)
 {
-   int gid = get_global_id(0);
-
+   int partId = get_global_id(0);
    int partMaxPoints = sizeOne/numParts;
+   int blockStart = partId * partMaxPoints;
    int outputCounter = 0;
    float4 pointOne;
+
+   //      if(gid==0)printf("GID: %d, i:%d, length:%.3lf\n", gid, i, s);
+   float partYaw = 360 / numParts;
+   float yaw = 0;
+   float yawCount = -1;
+
+   for(int i = blockStart; i<blockStart + partMaxPoints; i++)
+   {
+      cylinderIndicesOne[i] = -1;
+   }
+
    for(int i = 0; i<sizeOne; i++)
    {
-      // Check whether the point falls inside the 'partId'.
-
       pointOne = (float4)(cloudOne[i*3], cloudOne[i*3+1], cloudOne[i*3+2], 1);
-
       float s = length(pointOne);
 
-//      if(gid==0)printf("GID: %d, i:%d, length:%.3lf\n", gid, i, s);
+      // Check whether the point falls inside the 'partId'.
+      yaw = degrees(atan2(pointOne.z, pointOne.x));
+      yawCount = (int)(yaw / partYaw);
 
-//      if(outputCounter < partMaxPoints)
-//      {
-//         // Store the point index in cylinderIndicesOne at 'outputCounter'
-//         cylinderIndicesOne[outputCounter] = i;
-//         outputCounter++;
-//      }
+      if(outputCounter < partMaxPoints && yawCount == partId)
+      {
+//         if(partId==0)printf("PartId: %d, i:%d, Yaw:%.3lf\n", partId, outputCounter, yaw);
+         // Store the point index in cylinderIndicesOne at 'outputCounter'
+         cylinderIndicesOne[blockStart + outputCounter] = i;
+         outputCounter++;
+      }
 
 
 
