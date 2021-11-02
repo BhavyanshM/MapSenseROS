@@ -37,7 +37,7 @@ void PointCloudReceiver::render()
       }
       _available = false;
    }
-   if(_renderEnabled) _cloudToRender->Upload();
+//   if(_renderEnabled) _cloudToRender->Upload();
 }
 
 void PointCloudReceiver::ImGuiUpdate()

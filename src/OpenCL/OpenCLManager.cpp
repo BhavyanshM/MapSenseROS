@@ -133,19 +133,16 @@ uint8_t OpenCLManager::CreateReadWriteImage2D_RGBA8(uint32_t width, uint32_t hei
 
 void OpenCLManager::ReadImage(uint8_t image, const cl::size_t<3>& region, void *cpuBufferPtr)
 {
-   printf("Reading Image :%d\n", image);
    commandQueue.enqueueReadImage(images[image], CL_TRUE, origin, region, 0, 0, cpuBufferPtr);
 }
 
 void OpenCLManager::ReadBufferInt(uint8_t buffer, int *cpuBufferPtr, int size)
 {
-   printf("Reading Int Buffer :%d\n", buffer);
    commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(int) * size, cpuBufferPtr);
 }
 
 void OpenCLManager::ReadBufferFloat(uint8_t buffer, float *cpuBufferPtr, int size)
 {
-   printf("Reading Float Buffer :%d\n", buffer);
    commandQueue.enqueueReadBuffer(buffers[buffer], CL_TRUE, 0, sizeof(float) * size, cpuBufferPtr);
 }
 

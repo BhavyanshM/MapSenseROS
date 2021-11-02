@@ -35,6 +35,12 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    uint8_t cylinderIndexBufferOne = _openCL->CreateBufferInt(numPointsOne);
    uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo);
 
+   _openCL->SetArgument("cylinderKernel", 0, cloudTwoBuffer);
+   _openCL->SetArgument("cylinderKernel", 1, cylinderIndexBufferTwo);
+   _openCL->SetArgumentInt("cylinderKernel", 2, numPointsTwo);
+   _openCL->SetArgumentInt("cylinderKernel", 3, numCylinderParts);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
    _openCL->SetArgument("correspondenceKernel", 2, cloudTwoBuffer);
@@ -53,6 +59,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
    _openCL->SetArgumentInt("centroidKernel", 6, threads);
 
+
    _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
    _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
    _openCL->SetArgument("correlationKernel", 2, meanBuffer);
@@ -62,18 +69,16 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
    _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
-   _openCL->SetArgument("cylinderKernel", 0, cloudOneBuffer);
-   _openCL->SetArgument("cylinderKernel", 1, cloudTwoBuffer);
-   _openCL->SetArgument("cylinderKernel", 2, cylinderIndexBufferOne);
-   _openCL->SetArgument("cylinderKernel", 3, cylinderIndexBufferTwo);
-   _openCL->SetArgumentInt("cylinderKernel", 4, numPointsOne);
-   _openCL->SetArgumentInt("cylinderKernel", 5, numPointsTwo);
-   _openCL->SetArgumentInt("cylinderKernel", 6, numCylinderParts);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+
+//   _openCL->SetArgument("planesKernel", 0, cloudTwoBuffer);
+//   _openCL->SetArgument("planesKernel", 1, cylinderIndexBufferTwo);
+//   _openCL->SetArgumentInt("planesKernel", 3, numPointsTwo);
+//   _openCL->SetArgumentInt("planesKernel", 4, numCylinderParts);
+//   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->planesKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
 
    if(partIds != nullptr)
    {
-      _openCL->ReadBufferInt(cylinderIndexBufferOne, partIds, numPointsOne);
+      _openCL->ReadBufferInt(cylinderIndexBufferTwo, partIds, numPointsOne);
 //      std::vector<int> partIdsVec(partIds, partIds + numPointsOne);
 //      for(int i = 0; i<numPointsOne; i++)
 //      {

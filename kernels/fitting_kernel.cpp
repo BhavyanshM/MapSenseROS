@@ -519,11 +519,10 @@ void kernel centroidKernel(global float* cloudOne, global float* cloudTwo,
 /*
  * Cylinder Kernel for Iterative Closest Point
  * */
-void kernel cylinderKernel(global float* cloudOne, global float* cloudTwo, global int* cylinderIndicesOne, global int* cylinderIndicesTwo,
-                           int sizeOne, int sizeTwo, int numParts)
+void kernel cylinderKernel(global float* cloud, global int* cylinderIndices, int size, int numParts)
 {
    int partId = get_global_id(0);
-   int partMaxPoints = sizeOne/numParts;
+   int partMaxPoints = size/numParts;
    int blockStart = partId * partMaxPoints;
    int outputCounter = 0;
    float4 pointOne;
@@ -531,32 +530,31 @@ void kernel cylinderKernel(global float* cloudOne, global float* cloudTwo, globa
    //      if(gid==0)printf("GID: %d, i:%d, length:%.3lf\n", gid, i, s);
    float partYaw = 360 / numParts;
    float yaw = 0;
-   float yawCount = -1;
+   int yawCount = -1;
 
+   // Initialize part IDs for all points to -1
    for(int i = blockStart; i<blockStart + partMaxPoints; i++)
    {
-      cylinderIndicesOne[i] = -1;
+      cylinderIndices[i] = -1;
    }
 
-   for(int i = 0; i<sizeOne; i++)
+   // Go through all points and check if their yaw falls within the current partId yaw region.
+   for(int i = 0; i<size; i++)
    {
-      pointOne = (float4)(cloudOne[i*3], cloudOne[i*3+1], cloudOne[i*3+2], 1);
+      pointOne = (float4)(cloud[i*3], cloud[i*3+1], cloud[i*3+2], 1);
       float s = length(pointOne);
 
       // Check whether the point falls inside the 'partId'.
       yaw = degrees(atan2(pointOne.z, pointOne.x));
-      yawCount = (int)(yaw / partYaw);
+      yawCount = (int)(yaw / partYaw) + 12;
 
+//      printf("PartId: %d, i:%d, Yaw:%.3lf, YawCount:%d\n", partId, outputCounter, yaw, yawCount);
       if(outputCounter < partMaxPoints && yawCount == partId)
       {
-//         if(partId==0)printf("PartId: %d, i:%d, Yaw:%.3lf\n", partId, outputCounter, yaw);
-         // Store the point index in cylinderIndicesOne at 'outputCounter'
-         cylinderIndicesOne[blockStart + outputCounter] = i;
+         // Store the point index in cylinderIndices at 'outputCounter'
+         cylinderIndices[blockStart + outputCounter] = i;
          outputCounter++;
       }
-
-
-
    }
 }
 
