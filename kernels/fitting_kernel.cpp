@@ -558,5 +558,38 @@ void kernel cylinderKernel(global float* cloud, global int* cylinderIndices, int
    }
 }
 
+/*
+ * Planes Kernel for calculating planar surfaces and normals within a cylinder section.
+ */
+void kernel planesKernel(global float* cloud, global int* cylinderIndices, global int* blockIds, global float* normals, int size, int numParts, int numBlocks)
+{
+   int partId = get_global_id(0);
+   int partMaxPoints = size / numParts;
+   int blockStart = partId * partMaxPoints;
+   float4 point = (float4)(0,0,0,1);
+   float blockPitch = 90 / numParts;
+   float radius = 0.0f;
+   float pitch = 0.0f;
+
+   // Identify the pointIds that fall on each of the blocks.
+   for(int i = blockStart; i<blockStart + partMaxPoints; i++)
+   {
+      radius = sqrt(pointOne.x * pointOne.x + pointOne.z * pointOne.z);
+      point = (float4)(cloud[3*cylinderIndices[i]+0], cloud[3*cylinderIndices[i]+1], cloud[3*cylinderIndices[i]+2], 0);
+      pitch = degrees(atan2(pointOne.y, radius));
+      blockIds[0] = 0;
+   }
+
+
+   // Calculate the surfaces normal for each block.
+   for(int i = 0; i<numBlocks; i++)
+   {
+      calculateNormal(partId, blockId, )
+   }
+
+
+   // Assign surface normal ids to each point.
+}
+
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

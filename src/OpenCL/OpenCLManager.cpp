@@ -62,6 +62,7 @@ OpenCLManager::OpenCLManager(const std::string& packagePath)
    correlationKernel = cl::Kernel(program, "correlationKernel");
    centroidKernel = cl::Kernel(program, "centroidKernel");
    cylinderKernel = cl::Kernel(program, "cylinderKernel");
+   planesKernel = cl::Kernel(program, "planesKernel");
 
    printf("OpenCL Initialized Successfully\n");
 
