@@ -546,7 +546,7 @@ void kernel cylinderKernel(global float* cloud, global int* cylinderIndices, int
 
       // Check whether the point falls inside the 'partId'.
       yaw = degrees(atan2(pointOne.z, pointOne.x));
-      yawCount = (int)(yaw / partYaw) + 12;
+      yawCount = (int)(yaw / partYaw) + numParts/2;
 
 //      printf("PartId: %d, i:%d, Yaw:%.3lf, YawCount:%d\n", partId, outputCounter, yaw, yawCount);
       if(outputCounter < partMaxPoints && yawCount == partId)
@@ -561,31 +561,54 @@ void kernel cylinderKernel(global float* cloud, global int* cylinderIndices, int
 /*
  * Planes Kernel for calculating planar surfaces and normals within a cylinder section.
  */
-void kernel planesKernel(global float* cloud, global int* cylinderIndices, global int* blockIds, global float* normals, int size, int numParts, int numBlocks)
+void kernel planesKernel(global float* cloud, global int* cylinderIndices, global int* blockIds,
+                         global float* normals, global int* blockPointCount, int size, int numParts, int numBlocks)
 {
    int partId = get_global_id(0);
+
+   if(partId == 0) printf("PlanesKernel\n");
+
    int partMaxPoints = size / numParts;
+   int blockMaxPoints = partMaxPoints / numBlocks;
    int blockStart = partId * partMaxPoints;
+   int blockCountStart = partId * numBlocks;
    float4 point = (float4)(0,0,0,1);
-   float blockPitch = 90 / numParts;
+   float blockPitch = 90 / numBlocks;
    float radius = 0.0f;
    float pitch = 0.0f;
+   int blockCount = -1;
+
+//   for(int i = 0; i<size; i++)
+//   {
+//      if(partId == 6) printf("CylinderId: %d -> %d\n", i, cylinderIndices[i]);
+//   }
 
    // Identify the pointIds that fall on each of the blocks.
    for(int i = blockStart; i<blockStart + partMaxPoints; i++)
    {
-      radius = sqrt(pointOne.x * pointOne.x + pointOne.z * pointOne.z);
-      point = (float4)(cloud[3*cylinderIndices[i]+0], cloud[3*cylinderIndices[i]+1], cloud[3*cylinderIndices[i]+2], 0);
-      pitch = degrees(atan2(pointOne.y, radius));
-      blockIds[0] = 0;
+      point = (float4)(cloud[3*cylinderIndices[i]+0], cloud[3*cylinderIndices[i]+1], cloud[3*cylinderIndices[i]+2], 1);
+      radius = sqrt(point.x * point.x + point.z * point.z);
+      pitch = degrees(atan2(point.y, radius));
+      blockCount = (int) (pitch / blockPitch) + numBlocks/2 - 1;
+
+      blockPointCount[blockCountStart + blockCount]++;
+
+//      blockIds[blockStart + blockCount * blockMaxPoints + blockPointCount[blockCountStart + blockCount]] = cylinderIndices[i];
    }
+
+//   for(int i = 0; i<numParts*numBlocks; i++)
+//   {
+//      if(partId==0)printf("%d\n", blockPointCount[i]);
+//   }
 
 
    // Calculate the surfaces normal for each block.
    for(int i = 0; i<numBlocks; i++)
    {
-      calculateNormal(partId, blockId, )
+      if(partId == 0) printf("%d ", blockPointCount[i]);
+//      calculateNormal(partId, blockId, )
    }
+   printf("\n");
 
 
    // Assign surface normal ids to each point.

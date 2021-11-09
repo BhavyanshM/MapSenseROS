@@ -162,6 +162,7 @@ void OpenCLManager::SetArgument(const std::string& kernel, uint8_t argId, uint8_
    else if(kernel == "correlationKernel") (image) ? correlationKernel.setArg(argId, images[bufferId]) : correlationKernel.setArg(argId, buffers[bufferId]);
    else if(kernel == "centroidKernel") (image) ? centroidKernel.setArg(argId, images[bufferId]) : centroidKernel.setArg(argId, buffers[bufferId]);
    else if(kernel == "cylinderKernel") (image) ? cylinderKernel.setArg(argId, images[bufferId]) : cylinderKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "planesKernel") (image) ? planesKernel.setArg(argId, images[bufferId]) : planesKernel.setArg(argId, buffers[bufferId]);
 }
 
 void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value)
@@ -173,6 +174,7 @@ void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uin
       else if(kernel == "correlationKernel") correlationKernel.setArg(argId, sizeof(cl_int), &value);
       else if(kernel == "centroidKernel") centroidKernel.setArg(argId, sizeof(cl_int), &value);
       else if(kernel == "cylinderKernel") cylinderKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "planesKernel") planesKernel.setArg(argId, sizeof(cl_int), &value);
 }
 
 

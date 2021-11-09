@@ -25,20 +25,21 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    int numPointsTwo = cloudTwo.size()/3;
    int numCylinderParts = partCount;
    int numVertBlocks = 8;
-   int numNormals = numCylinderParts * numVertBlocks;
+   int numBlocksTotal = numCylinderParts * numVertBlocks;
    uint32_t threads = 1000;
 
-   // Create OpenCL Buffers for Iterative Closest Point kernels.
-   uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size());
-   uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12);
-   uint8_t cloudTwoBuffer = _openCL->CreateLoadBufferFloat(cloudTwo.data(), cloudTwo.size());
-   uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12);
-   uint8_t matchBuffer = _openCL->CreateBufferInt(numPointsOne);
-   uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads);
-   uint8_t meanBuffer = _openCL->CreateBufferFloat(6 * threads);
-   uint8_t normalBuffer = _openCL->CreateBufferFloat(3 * numNormals);
-   uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo);
-   uint8_t cylinderBlockIdBufferTwo = _openCL->CreateBufferInt(numPointsTwo);
+   // Create OpenCL Buffers for Iterative Closest Point kernels. (Allocate ~320 KB, less than 1 MB)
+   uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size()); // ~80,000 * 3 * 4 bytes
+   uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12); // ~12 * 4 bytes
+   uint8_t cloudTwoBuffer = _openCL->CreateLoadBufferFloat(cloudTwo.data(), cloudTwo.size()); // ~80,000 * 3 * 4 bytes
+   uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12); // ~12 * 4 bytes
+   uint8_t matchBuffer = _openCL->CreateBufferInt(numPointsOne); // ~80,000 * 4 bytes
+   uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads); // ~10,000 * 4 bytes
+   uint8_t meanBuffer = _openCL->CreateBufferFloat(6 * threads); // ~3,000 * 4 bytes
+   uint8_t normalBuffer = _openCL->CreateBufferFloat(3 * numBlocksTotal); // ~60 * 4 bytes
+   uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
+   uint8_t cylinderBlockIdBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
+   uint8_t blockPointCount = _openCL->CreateBufferInt(numBlocksTotal); // ~60 * 4 bytes
 
    // Set arguments for the Cylinder Part generation kernel for only the latest pointcloud. Preserve cylinder buffer for later.
    _openCL->SetArgument("cylinderKernel", 0, cloudTwoBuffer);
@@ -46,6 +47,17 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("cylinderKernel", 2, numPointsTwo);
    _openCL->SetArgumentInt("cylinderKernel", 3, numCylinderParts);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+
+   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
+   _openCL->SetArgument("planesKernel", 0, cloudTwoBuffer);
+   _openCL->SetArgument("planesKernel", 1, cylinderIndexBufferTwo);
+   _openCL->SetArgument("planesKernel", 2, cylinderBlockIdBufferTwo);
+   _openCL->SetArgument("planesKernel", 3, normalBuffer);
+   _openCL->SetArgument("planesKernel", 4, blockPointCount);
+   _openCL->SetArgumentInt("planesKernel", 5, numPointsTwo);
+   _openCL->SetArgumentInt("planesKernel", 6, numCylinderParts);
+   _openCL->SetArgumentInt("planesKernel", 7, numVertBlocks);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->planesKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
 
    // Set arguments for Correspondence Calculation kernel. Pass the surface normal buffers for both clouds.
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
@@ -77,15 +89,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
    _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
-   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
-   _openCL->SetArgument("planesKernel", 0, cloudTwoBuffer);
-   _openCL->SetArgument("planesKernel", 1, cylinderIndexBufferTwo);
-   _openCL->SetArgument("planesKernel", 2, cylinderBlockIdBufferTwo);
-   _openCL->SetArgument("planesKernel", 3, normalBuffer);
-   _openCL->SetArgumentInt("planesKernel", 4, numPointsTwo);
-   _openCL->SetArgumentInt("planesKernel", 5, numCylinderParts);
-   _openCL->SetArgumentInt("planesKernel", 6, numVertBlocks);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->planesKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+
 
    // Set partIds for visualization of cylinder parts in the UI.
    if(partIds != nullptr)
