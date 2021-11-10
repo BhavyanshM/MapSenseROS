@@ -70,7 +70,8 @@ namespace Clay
          uint32_t count = 0;
          uint32_t frameId = 0;
          uint32_t _scanCount = 100;
-         int partCount = 24;
+         int partCount = 40;
+         int numVertBlocks = 10;
 
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;

@@ -182,15 +182,16 @@ namespace Clay
                int prevCloudId = _models.size() - 2;
                int currentCloudId = _models.size() - 1;
                int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];
-               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount);
+               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
                std::vector<int> partIdsVec( _models[currentCloudId]->GetMesh()->_vertices.size() / 3, 0);
                int partSize = _models[currentCloudId]->GetMesh()->_vertices.size() / 3;
                partSize = partSize / partCount;
+               int blockSize = partSize / numVertBlocks;
                int cloudSize = _models[currentCloudId]->GetMesh()->_vertices.size() / 3;
                for(int i = 0; i<cloudSize; i++)
                {
                   if(partIds[i] >= 0 && partIds[i] < cloudSize)
-                  partIdsVec[partIds[i]] = i / partSize;
+                     partIdsVec[partIds[i]] = i / partSize + i / blockSize;
                }
                _models[currentCloudId]->SetPartIds(partIdsVec);
                _partsSet = true;
@@ -257,7 +258,7 @@ namespace Clay
       /* Renderer ImGui Stats and Settings */
       ImGui::Begin("Renderer");
       ImGui::ColorEdit3("Square Color", glm::value_ptr(_squareColor));
-      auto stats = Renderer::GetStats();
+      auto stats = Renderer::GetPointStats();
       ImGui::Text("Renderer Stats:");
       ImGui::Text("Draw Calls: %d", stats.DrawCalls);
       ImGui::Text("Quad Count: %d", stats.TriangleCount);

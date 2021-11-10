@@ -220,6 +220,13 @@ float4 transform(float4 point, float4 r1, float4 r2, float4 r3, float4 t)
    return (float4)(dot(r1, point) + t.x, dot(r2, point) + t.y, dot(r3, point) + t.z, 0);
 }
 
+float3 calculateNormal(float3 p1, float3 p2, float3 p3)
+{
+   float3 v12 = p2 - p1;
+   float3 v23 = p3 - p2;
+   return normalize(cross(v12, v23));
+}
+
 /* ++++++++++++++++++++++++++++++++++++++++++ OPEN_CL KERNELS BEGIN HERE ++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /* OpenCL Kernels Begin Here. All utilities above this point. */
 
@@ -591,9 +598,17 @@ void kernel planesKernel(global float* cloud, global int* cylinderIndices, globa
       pitch = degrees(atan2(point.y, radius));
       blockCount = (int) (pitch / blockPitch) + numBlocks/2 - 1;
 
-      blockPointCount[blockCountStart + blockCount]++;
+      if(blockPointCount[blockCountStart + blockCount] < blockMaxPoints)
+      {
+         blockPointCount[blockCountStart + blockCount]++;
+         blockIds[blockStart + blockCount * blockMaxPoints + blockPointCount[blockCountStart + blockCount]] = cylinderIndices[i];
+      }
 
-//      blockIds[blockStart + blockCount * blockMaxPoints + blockPointCount[blockCountStart + blockCount]] = cylinderIndices[i];
+      if(partId == 4 && blockCount == 3)
+      {
+         printf("%.3lf, %.3lf, %.3lf\n", point.x, point.y, point.z);
+      }
+
    }
 
 //   for(int i = 0; i<numParts*numBlocks; i++)
@@ -603,12 +618,11 @@ void kernel planesKernel(global float* cloud, global int* cylinderIndices, globa
 
 
    // Calculate the surfaces normal for each block.
-   for(int i = 0; i<numBlocks; i++)
+   for(int i = 0; i<numBlocks * numParts; i++)
    {
-      if(partId == 0) printf("%d ", blockPointCount[i]);
+//      if(partId == 0) printf("%d %d %d\n", i / numBlocks, i % numBlocks, blockPointCount[i]);
 //      calculateNormal(partId, blockId, )
    }
-   printf("\n");
 
 
    // Assign surface normal ids to each point.

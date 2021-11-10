@@ -2,7 +2,7 @@
 #include "IterativeClosestPoint.h"
 #include "chrono"
 
-Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo, int* partIds, int partCount)
+Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo, int* partIds, int partCount, int numVertBlocks)
 {
 //   if(_iteration > MAX_STEPS) return Eigen::Matrix4f::Identity(); else _iteration++;
 
@@ -24,7 +24,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    int numPointsOne = cloudOne.size()/3;
    int numPointsTwo = cloudTwo.size()/3;
    int numCylinderParts = partCount;
-   int numVertBlocks = 8;
+
    int numBlocksTotal = numCylinderParts * numVertBlocks;
    uint32_t threads = 1000;
 
@@ -94,7 +94,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    // Set partIds for visualization of cylinder parts in the UI.
    if(partIds != nullptr)
    {
-      _openCL->ReadBufferInt(cylinderIndexBufferTwo, partIds, numPointsOne);
+      _openCL->ReadBufferInt(cylinderBlockIdBufferTwo, partIds, numPointsTwo);
 //      std::vector<int> partIdsVec(partIds, partIds + numPointsOne);
 //      for(int i = 0; i<numPointsOne; i++)
 //      {

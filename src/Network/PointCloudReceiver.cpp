@@ -32,7 +32,7 @@ void PointCloudReceiver::render()
       _cloudToRender->Reset();
       for(const pcl::PointXYZ& pt : _cloudMessage->points)
       {
-         _cloudToRender->Insert(-pt.y, pt.z, -pt.x);
+         _cloudToRender->InsertVertex(-pt.y, pt.z, -pt.x);
          numPoints++;
       }
       _available = false;
