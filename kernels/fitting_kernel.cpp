@@ -569,7 +569,7 @@ void kernel cylinderKernel(global float* cloud, global int* cylinderIndices, int
  * Planes Kernel for calculating planar surfaces and normals within a cylinder section.
  */
 void kernel planesKernel(global float* cloud, global int* cylinderIndices, global int* blockIds,
-                         global float* normals, global int* blockPointCount, int size, int numParts, int numBlocks)
+                         global int* blockPointCount, int size, int numParts, int numBlocks)
 {
    int partId = get_global_id(0);
 
@@ -585,11 +585,6 @@ void kernel planesKernel(global float* cloud, global int* cylinderIndices, globa
    float pitch = 0.0f;
    int blockCount = -1;
 
-//   for(int i = 0; i<size; i++)
-//   {
-//      if(partId == 6) printf("CylinderId: %d -> %d\n", i, cylinderIndices[i]);
-//   }
-
    // Identify the pointIds that fall on each of the blocks.
    for(int i = blockStart; i<blockStart + partMaxPoints; i++)
    {
@@ -603,30 +598,66 @@ void kernel planesKernel(global float* cloud, global int* cylinderIndices, globa
          blockPointCount[blockCountStart + blockCount]++;
          blockIds[blockStart + blockCount * blockMaxPoints + blockPointCount[blockCountStart + blockCount]] = cylinderIndices[i];
       }
-
-      if(partId == 4 && blockCount == 3)
-      {
-         printf("%.3lf, %.3lf, %.3lf\n", point.x, point.y, point.z);
-      }
-
+//      if(partId == 1 && blockCount == 2) printf("%.3lf, %.3lf, %.3lf\n", point.x, point.y, point.z);
+//      if(partId == 36 && blockCount == 7) printf("%.3lf, %.3lf, %.3lf\n", point.x, point.y, point.z);
    }
 
-//   for(int i = 0; i<numParts*numBlocks; i++)
+//   for(int i = 0; i<numBlocks * numParts; i++)
 //   {
-//      if(partId==0)printf("%d\n", blockPointCount[i]);
+//      if(partId == 0)printf("%d, %d -> %d\n", i/numBlocks, i%numBlocks, blockPointCount[i]);
+//   }
+
+}
+
+void kernel normalsKernel(global float* cloud, global int* cylinderIndices, global int* blockIds,
+      global float* normals, int size, int numParts, int numBlocks)
+{
+   int gid = get_global_id(0);
+   int blockId = gid % numBlocks;
+   int partId = gid / numBlocks;
+   int partMaxPoints = size / numParts;
+   int blockMaxPoints = partMaxPoints / numBlocks;
+   int blockStart = (partId * partMaxPoints) + (blockId * blockMaxPoints);
+   float3 p1 = (float3)(0,0,0);
+   float3 p2 = (float3)(0,0,0);
+   float3 p3 = (float3)(0,0,0);
+   float3 normal = (float3)(0,0,0);
+   float3 centroid = (float3)(0,0,0);
+   int pointId = 0;
+
+   int centroidCount = 0;
+   for(int i = 0; i<blockMaxPoints; i++)
+   {
+      pointId = blockStart + i;
+      p1 = (float3)(cloud[blockIds[pointId] * 3], cloud[blockIds[pointId] * 3 + 1], cloud[blockIds[pointId] * 3 + 2]);
+//      if(partId == 1 && blockId == 2) printf("%.3lf, %.3lf, %.3lf\n", p1.x, p1.y, p1.z);
+
+      if(blockIds[pointId] > 0)
+      {
+         centroid += p1;
+         centroidCount += 1;
+      }
+   }
+   if(centroidCount != 0) centroid = centroid / centroidCount;
+   normals[gid * 6 + 3] = centroid.x;
+   normals[gid * 6 + 4] = centroid.y;
+   normals[gid * 6 + 5] = centroid.z;
+
+//   printf("%.3lf, %.3lf, %.3lf\n", centroid.x, centroid.y, centroid.z);
+
+//   for(int i = 0; i<blockMaxPoints - 40; i++)
+//   {
+//      pointId = blockStart + i;
+//      p1 = (float3)(cloud[blockIds[pointId] * 3], cloud[blockIds[pointId] * 3 + 1], cloud[blockIds[pointId] * 3 + 2]);
+//      p2 = (float3)(cloud[blockIds[pointId + 15] * 3], cloud[blockIds[pointId + 15] * 3 + 1], cloud[blockIds[pointId + 15] * 3 + 2]);
+//      p3 = (float3)(cloud[blockIds[pointId + 30] * 3], cloud[blockIds[pointId + 30] * 3 + 1], cloud[blockIds[pointId + 30] * 3 + 2]);
+//
+//
+//
+//      //      printf("%d, %d, %d\n", i, pointId, blockIds[pointId]);
 //   }
 
 
-   // Calculate the surfaces normal for each block.
-   for(int i = 0; i<numBlocks * numParts; i++)
-   {
-//      if(partId == 0) printf("%d %d %d\n", i / numBlocks, i % numBlocks, blockPointCount[i]);
-//      calculateNormal(partId, blockId, )
-   }
-
-
-   // Assign surface normal ids to each point.
 }
-
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

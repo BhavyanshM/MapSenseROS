@@ -24,6 +24,23 @@ class image_converter:
         self.leftSet = False
         self.rightSet = False
 
+        # stereo = cv2.StereoBM_create(numDisparities=16, blockSize=15)
+        #Set disparity parameters
+        #Note: disparity range is tuned according to specific parameters obtained through trial and error.
+        self.win_size = 5
+        self.min_disp = -1
+        self.max_disp = 63 #min_disp * 9
+        self.num_disp = self.max_disp - self.min_disp # Needs to be divisible by 16
+        self.stereo = cv2.StereoSGBM_create(minDisparity= self.min_disp,
+                                       numDisparities = self.num_disp,
+                                       blockSize = 5,
+                                       uniquenessRatio = 5,
+                                       speckleWindowSize = 5,
+                                       speckleRange = 5,
+                                       disp12MaxDiff = 1,
+                                       P1 = 8*3*self.win_size**2,#8*3*win_size**2,
+                                       P2 =32*3*self.win_size**2) #32*3*win_size**2)
+
     def leftCallback(self,data):
         try:
             # cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -54,27 +71,12 @@ class image_converter:
         if self.rightSet and self.leftSet:
             print("Stereo Pair Ready")
 
-            # stereo = cv2.StereoBM_create(numDisparities=16, blockSize=15)
-            #Set disparity parameters
-            #Note: disparity range is tuned according to specific parameters obtained through trial and error.
-            win_size = 5
-            min_disp = -1
-            max_disp = 63 #min_disp * 9
-            num_disp = max_disp - min_disp # Needs to be divisible by 16
-            stereo = cv2.StereoSGBM_create(minDisparity= min_disp,
-                                           numDisparities = num_disp,
-                                           blockSize = 5,
-                                           uniquenessRatio = 5,
-                                           speckleWindowSize = 5,
-                                           speckleRange = 5,
-                                           disp12MaxDiff = 1,
-                                           P1 = 8*3*win_size**2,#8*3*win_size**2,
-                                           P2 =32*3*win_size**2) #32*3*win_size**2)
+
 
             leftImage = cv2.resize(cv2.cvtColor(self.leftImage, cv2.COLOR_BGR2GRAY), (int(self.leftImage.shape[1]/2), int(self.leftImage.shape[0]/2)))
             rightImage = cv2.resize(cv2.cvtColor(self.rightImage, cv2.COLOR_BGR2GRAY), (int(self.rightImage.shape[1]/2), int(self.rightImage.shape[0]/2)))
 
-            self.disparity = stereo.compute(leftImage, rightImage)
+            self.disparity = self.stereo.compute(leftImage, rightImage)
 
             norm_image = cv2.normalize(self.disparity, None, alpha = 0, beta = 1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
@@ -84,9 +86,8 @@ class image_converter:
             cv2.waitKey(1)
 
 
-            cv2.imwrite("LeftImage.jpg", self.leftImage)
-
-            exit()
+            # cv2.imwrite("LeftImage.jpg", self.leftImage)
+            # exit()
 
             self.rightSet = False
             self.leftSet = False

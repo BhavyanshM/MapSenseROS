@@ -15,5 +15,9 @@ x = data[:,0]
 y = data[:,1]
 z = data[:,2]
 
+ax.axes.set_xlim3d(-4.0, 4.0)
+ax.axes.set_ylim3d(-4.0, 4.0)
+ax.axes.set_zlim3d(-4.0, 4.0)
+
 ax.scatter(x, y, z)
 plt.show()

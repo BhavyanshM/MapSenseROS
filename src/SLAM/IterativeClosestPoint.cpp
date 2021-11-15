@@ -30,15 +30,15 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 
    // Create OpenCL Buffers for Iterative Closest Point kernels. (Allocate ~320 KB, less than 1 MB)
    uint8_t cloudOneBuffer = _openCL->CreateLoadBufferFloat(cloudOne.data(), cloudOne.size()); // ~80,000 * 3 * 4 bytes
-   uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12); // ~12 * 4 bytes
    uint8_t cloudTwoBuffer = _openCL->CreateLoadBufferFloat(cloudTwo.data(), cloudTwo.size()); // ~80,000 * 3 * 4 bytes
+   uint8_t transformOneBuffer = _openCL->CreateLoadBufferFloat(transformOneVec.data(), 12); // ~12 * 4 bytes
    uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12); // ~12 * 4 bytes
    uint8_t matchBuffer = _openCL->CreateBufferInt(numPointsOne); // ~80,000 * 4 bytes
-   uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads); // ~10,000 * 4 bytes
    uint8_t meanBuffer = _openCL->CreateBufferFloat(6 * threads); // ~3,000 * 4 bytes
-   uint8_t normalBuffer = _openCL->CreateBufferFloat(3 * numBlocksTotal); // ~60 * 4 bytes
    uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
    uint8_t cylinderBlockIdBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
+   uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads); // ~10,000 * 4 bytes
+   uint8_t normalBuffer = _openCL->CreateBufferFloat(6 * numBlocksTotal); // ~60 * 4 bytes
    uint8_t blockPointCount = _openCL->CreateBufferInt(numBlocksTotal); // ~60 * 4 bytes
 
    // Set arguments for the Cylinder Part generation kernel for only the latest pointcloud. Preserve cylinder buffer for later.
@@ -52,42 +52,51 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgument("planesKernel", 0, cloudTwoBuffer);
    _openCL->SetArgument("planesKernel", 1, cylinderIndexBufferTwo);
    _openCL->SetArgument("planesKernel", 2, cylinderBlockIdBufferTwo);
-   _openCL->SetArgument("planesKernel", 3, normalBuffer);
-   _openCL->SetArgument("planesKernel", 4, blockPointCount);
-   _openCL->SetArgumentInt("planesKernel", 5, numPointsTwo);
-   _openCL->SetArgumentInt("planesKernel", 6, numCylinderParts);
-   _openCL->SetArgumentInt("planesKernel", 7, numVertBlocks);
+   _openCL->SetArgument("planesKernel", 3, blockPointCount);
+   _openCL->SetArgumentInt("planesKernel", 4, numPointsTwo);
+   _openCL->SetArgumentInt("planesKernel", 5, numCylinderParts);
+   _openCL->SetArgumentInt("planesKernel", 6, numVertBlocks);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->planesKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
 
-   // Set arguments for Correspondence Calculation kernel. Pass the surface normal buffers for both clouds.
-   _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
-   _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
-   _openCL->SetArgument("correspondenceKernel", 2, cloudTwoBuffer);
-   _openCL->SetArgument("correspondenceKernel", 3, transformTwoBuffer);
-   _openCL->SetArgument("correspondenceKernel", 4, matchBuffer);
-   _openCL->SetArgumentInt("correspondenceKernel", 5, cloudOne.size());
-   _openCL->SetArgumentInt("correspondenceKernel", 6, cloudTwo.size());
-   _openCL->SetArgumentInt("correspondenceKernel", 7, numPointsOne);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPointsOne), cl::NullRange);
+   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
+   _openCL->SetArgument("normalsKernel", 0, cloudTwoBuffer);
+   _openCL->SetArgument("normalsKernel", 1, cylinderIndexBufferTwo);
+   _openCL->SetArgument("normalsKernel", 2, cylinderBlockIdBufferTwo);
+   _openCL->SetArgument("normalsKernel", 3, normalBuffer);
+   _openCL->SetArgumentInt("normalsKernel", 4, numPointsTwo);
+   _openCL->SetArgumentInt("normalsKernel", 5, numCylinderParts);
+   _openCL->SetArgumentInt("normalsKernel", 6, numVertBlocks);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->normalsKernel, cl::NullRange, cl::NDRange(numBlocksTotal), cl::NullRange);
 
-   // Set arguments for Centroid calculation kernel. Calculates centroids for both clouds at once. Could potentially store & reuse centroid for first cloud.
-   _openCL->SetArgument("centroidKernel", 0, cloudOneBuffer);
-   _openCL->SetArgument("centroidKernel", 1, cloudTwoBuffer);
-   _openCL->SetArgument("centroidKernel", 2, meanBuffer);
-   _openCL->SetArgument("centroidKernel", 3, matchBuffer);
-   _openCL->SetArgumentInt("centroidKernel", 4, cloudOne.size());
-   _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
-   _openCL->SetArgumentInt("centroidKernel", 6, threads);
-
-   // Set arguments for the Correlation calculation kernel. Pass the point correspondences and surface normals for both clouds.
-   _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
-   _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
-   _openCL->SetArgument("correlationKernel", 2, meanBuffer);
-   _openCL->SetArgument("correlationKernel", 3, matchBuffer);
-   _openCL->SetArgument("correlationKernel", 4, correlBuffer);
-   _openCL->SetArgumentInt("correlationKernel", 5, cloudOne.size());
-   _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
-   _openCL->SetArgumentInt("correlationKernel", 7, threads);
+//   // Set arguments for Correspondence Calculation kernel. Pass the surface normal buffers for both clouds.
+//   _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
+//   _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
+//   _openCL->SetArgument("correspondenceKernel", 2, cloudTwoBuffer);
+//   _openCL->SetArgument("correspondenceKernel", 3, transformTwoBuffer);
+//   _openCL->SetArgument("correspondenceKernel", 4, matchBuffer);
+//   _openCL->SetArgumentInt("correspondenceKernel", 5, cloudOne.size());
+//   _openCL->SetArgumentInt("correspondenceKernel", 6, cloudTwo.size());
+//   _openCL->SetArgumentInt("correspondenceKernel", 7, numPointsOne);
+//   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPointsOne), cl::NullRange);
+//
+//   // Set arguments for Centroid calculation kernel. Calculates centroids for both clouds at once. Could potentially store & reuse centroid for first cloud.
+//   _openCL->SetArgument("centroidKernel", 0, cloudOneBuffer);
+//   _openCL->SetArgument("centroidKernel", 1, cloudTwoBuffer);
+//   _openCL->SetArgument("centroidKernel", 2, meanBuffer);
+//   _openCL->SetArgument("centroidKernel", 3, matchBuffer);
+//   _openCL->SetArgumentInt("centroidKernel", 4, cloudOne.size());
+//   _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
+//   _openCL->SetArgumentInt("centroidKernel", 6, threads);
+//
+//   // Set arguments for the Correlation calculation kernel. Pass the point correspondences and surface normals for both clouds.
+//   _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
+//   _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
+//   _openCL->SetArgument("correlationKernel", 2, meanBuffer);
+//   _openCL->SetArgument("correlationKernel", 3, matchBuffer);
+//   _openCL->SetArgument("correlationKernel", 4, correlBuffer);
+//   _openCL->SetArgumentInt("correlationKernel", 5, cloudOne.size());
+//   _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
+//   _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
 
 

@@ -57,7 +57,7 @@ void ImageReceiver::render()
       }
       cv::Mat disp;
       if(undistortEnabled){
-         disp = ImageTools::cvUndistort(this->_image, cv::Mat(), cv::Mat());
+//         disp = ImageTools::cvUndistort(this->_image, cv::Mat(), cv::Mat());
       } else
          disp = this->_image;
       appUtils->appendToDebugOutput(disp);
