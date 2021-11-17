@@ -112,7 +112,7 @@ set(SOURCE
 		src/Application/ApplicationState.cpp
 		src/Network/NetworkManager.cpp
 		src/Application/AppUtils.cpp
-#		src/ImageProcessing/ImageTools.cpp
+		src/ImageProcessing/ImageTools.cpp
 		src/Network/ROS1TopicReceiver.cpp
 		src/Network/ImageReceiver.cpp
 		src/ImPlot/implot.cpp
@@ -130,7 +130,7 @@ set (HEADERS
 		src/headers/NetworkManager.h
 		src/headers/ApplicationState.h
 		src/headers/AppUtils.h
-#		src/headers/ImageTools.h
+		src/headers/ImageTools.h
 		src/headers/ImageReceiver.h
 		src/headers/ROS1TopicReceiver.h
 		src/headers/FileManager.h
