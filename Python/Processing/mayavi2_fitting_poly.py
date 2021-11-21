@@ -47,7 +47,7 @@ def grad(f, Z, P, gdel):
 	return gd
 
 
-D = np.load('depth.npy')
+D = np.load('../Plotting/depth.npy')
 
 print(D.shape)
 

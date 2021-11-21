@@ -68,35 +68,35 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("normalsKernel", 6, numVertBlocks);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->normalsKernel, cl::NullRange, cl::NDRange(numBlocksTotal), cl::NullRange);
 
-//   // Set arguments for Correspondence Calculation kernel. Pass the surface normal buffers for both clouds.
-//   _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
-//   _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
-//   _openCL->SetArgument("correspondenceKernel", 2, cloudTwoBuffer);
-//   _openCL->SetArgument("correspondenceKernel", 3, transformTwoBuffer);
-//   _openCL->SetArgument("correspondenceKernel", 4, matchBuffer);
-//   _openCL->SetArgumentInt("correspondenceKernel", 5, cloudOne.size());
-//   _openCL->SetArgumentInt("correspondenceKernel", 6, cloudTwo.size());
-//   _openCL->SetArgumentInt("correspondenceKernel", 7, numPointsOne);
-//   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPointsOne), cl::NullRange);
-//
-//   // Set arguments for Centroid calculation kernel. Calculates centroids for both clouds at once. Could potentially store & reuse centroid for first cloud.
-//   _openCL->SetArgument("centroidKernel", 0, cloudOneBuffer);
-//   _openCL->SetArgument("centroidKernel", 1, cloudTwoBuffer);
-//   _openCL->SetArgument("centroidKernel", 2, meanBuffer);
-//   _openCL->SetArgument("centroidKernel", 3, matchBuffer);
-//   _openCL->SetArgumentInt("centroidKernel", 4, cloudOne.size());
-//   _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
-//   _openCL->SetArgumentInt("centroidKernel", 6, threads);
-//
-//   // Set arguments for the Correlation calculation kernel. Pass the point correspondences and surface normals for both clouds.
-//   _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
-//   _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
-//   _openCL->SetArgument("correlationKernel", 2, meanBuffer);
-//   _openCL->SetArgument("correlationKernel", 3, matchBuffer);
-//   _openCL->SetArgument("correlationKernel", 4, correlBuffer);
-//   _openCL->SetArgumentInt("correlationKernel", 5, cloudOne.size());
-//   _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
-//   _openCL->SetArgumentInt("correlationKernel", 7, threads);
+   // Set arguments for Correspondence Calculation kernel. Pass the surface normal buffers for both clouds.
+   _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
+   _openCL->SetArgument("correspondenceKernel", 1, transformOneBuffer);
+   _openCL->SetArgument("correspondenceKernel", 2, cloudTwoBuffer);
+   _openCL->SetArgument("correspondenceKernel", 3, transformTwoBuffer);
+   _openCL->SetArgument("correspondenceKernel", 4, matchBuffer);
+   _openCL->SetArgumentInt("correspondenceKernel", 5, cloudOne.size());
+   _openCL->SetArgumentInt("correspondenceKernel", 6, cloudTwo.size());
+   _openCL->SetArgumentInt("correspondenceKernel", 7, numPointsOne);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->correspondenceKernel, cl::NullRange, cl::NDRange(numPointsOne), cl::NullRange);
+
+   // Set arguments for Centroid calculation kernel. Calculates centroids for both clouds at once. Could potentially store & reuse centroid for first cloud.
+   _openCL->SetArgument("centroidKernel", 0, cloudOneBuffer);
+   _openCL->SetArgument("centroidKernel", 1, cloudTwoBuffer);
+   _openCL->SetArgument("centroidKernel", 2, meanBuffer);
+   _openCL->SetArgument("centroidKernel", 3, matchBuffer);
+   _openCL->SetArgumentInt("centroidKernel", 4, cloudOne.size());
+   _openCL->SetArgumentInt("centroidKernel", 5, cloudTwo.size());
+   _openCL->SetArgumentInt("centroidKernel", 6, threads);
+
+   // Set arguments for the Correlation calculation kernel. Pass the point correspondences and surface normals for both clouds.
+   _openCL->SetArgument("correlationKernel", 0, cloudOneBuffer);
+   _openCL->SetArgument("correlationKernel", 1, cloudTwoBuffer);
+   _openCL->SetArgument("correlationKernel", 2, meanBuffer);
+   _openCL->SetArgument("correlationKernel", 3, matchBuffer);
+   _openCL->SetArgument("correlationKernel", 4, correlBuffer);
+   _openCL->SetArgumentInt("correlationKernel", 5, cloudOne.size());
+   _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
+   _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
 
 

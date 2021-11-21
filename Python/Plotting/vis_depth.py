@@ -4,7 +4,7 @@ from mayavi import mlab
 
 xy_min, xy_max = -10, 10
 
-D = np.load('depth.npy')[:,:,2]
+D = np.load('depth.npy')[:, :, 2]
 D = 255 - D
 D = D/2
 
