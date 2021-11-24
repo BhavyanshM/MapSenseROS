@@ -41,32 +41,32 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    uint8_t normalBuffer = _openCL->CreateBufferFloat(6 * numBlocksTotal); // ~60 * 4 bytes
    uint8_t blockPointCount = _openCL->CreateBufferInt(numBlocksTotal); // ~60 * 4 bytes
 
-   // Set arguments for the Cylinder Part generation kernel for only the latest pointcloud. Preserve cylinder buffer for later.
-   _openCL->SetArgument("cylinderKernel", 0, cloudTwoBuffer);
-   _openCL->SetArgument("cylinderKernel", 1, cylinderIndexBufferTwo);
-   _openCL->SetArgumentInt("cylinderKernel", 2, numPointsTwo);
-   _openCL->SetArgumentInt("cylinderKernel", 3, numCylinderParts);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
-
-   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
-   _openCL->SetArgument("planesKernel", 0, cloudTwoBuffer);
-   _openCL->SetArgument("planesKernel", 1, cylinderIndexBufferTwo);
-   _openCL->SetArgument("planesKernel", 2, cylinderBlockIdBufferTwo);
-   _openCL->SetArgument("planesKernel", 3, blockPointCount);
-   _openCL->SetArgumentInt("planesKernel", 4, numPointsTwo);
-   _openCL->SetArgumentInt("planesKernel", 5, numCylinderParts);
-   _openCL->SetArgumentInt("planesKernel", 6, numVertBlocks);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->planesKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
-
-   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
-   _openCL->SetArgument("normalsKernel", 0, cloudTwoBuffer);
-   _openCL->SetArgument("normalsKernel", 1, cylinderIndexBufferTwo);
-   _openCL->SetArgument("normalsKernel", 2, cylinderBlockIdBufferTwo);
-   _openCL->SetArgument("normalsKernel", 3, normalBuffer);
-   _openCL->SetArgumentInt("normalsKernel", 4, numPointsTwo);
-   _openCL->SetArgumentInt("normalsKernel", 5, numCylinderParts);
-   _openCL->SetArgumentInt("normalsKernel", 6, numVertBlocks);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->normalsKernel, cl::NullRange, cl::NDRange(numBlocksTotal), cl::NullRange);
+//   // Set arguments for the Cylinder Part generation kernel for only the latest pointcloud. Preserve cylinder buffer for later.
+//   _openCL->SetArgument("cylinderKernel", 0, cloudTwoBuffer);
+//   _openCL->SetArgument("cylinderKernel", 1, cylinderIndexBufferTwo);
+//   _openCL->SetArgumentInt("cylinderKernel", 2, numPointsTwo);
+//   _openCL->SetArgumentInt("cylinderKernel", 3, numCylinderParts);
+//   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->cylinderKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+//
+//   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
+//   _openCL->SetArgument("planesKernel", 0, cloudTwoBuffer);
+//   _openCL->SetArgument("planesKernel", 1, cylinderIndexBufferTwo);
+//   _openCL->SetArgument("planesKernel", 2, cylinderBlockIdBufferTwo);
+//   _openCL->SetArgument("planesKernel", 3, blockPointCount);
+//   _openCL->SetArgumentInt("planesKernel", 4, numPointsTwo);
+//   _openCL->SetArgumentInt("planesKernel", 5, numCylinderParts);
+//   _openCL->SetArgumentInt("planesKernel", 6, numVertBlocks);
+//   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->planesKernel, cl::NullRange, cl::NDRange(numCylinderParts), cl::NullRange);
+//
+//   // Set arguments for the plane calculation kernel. Pass cylinder parts for only the latest cloud.
+//   _openCL->SetArgument("normalsKernel", 0, cloudTwoBuffer);
+//   _openCL->SetArgument("normalsKernel", 1, cylinderIndexBufferTwo);
+//   _openCL->SetArgument("normalsKernel", 2, cylinderBlockIdBufferTwo);
+//   _openCL->SetArgument("normalsKernel", 3, normalBuffer);
+//   _openCL->SetArgumentInt("normalsKernel", 4, numPointsTwo);
+//   _openCL->SetArgumentInt("normalsKernel", 5, numCylinderParts);
+//   _openCL->SetArgumentInt("normalsKernel", 6, numVertBlocks);
+//   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->normalsKernel, cl::NullRange, cl::NDRange(numBlocksTotal), cl::NullRange);
 
    // Set arguments for Correspondence Calculation kernel. Pass the surface normal buffers for both clouds.
    _openCL->SetArgument("correspondenceKernel", 0, cloudOneBuffer);
@@ -98,22 +98,23 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    _openCL->SetArgumentInt("correlationKernel", 6, cloudTwo.size());
    _openCL->SetArgumentInt("correlationKernel", 7, threads);
 
-
-
-   // Set partIds for visualization of cylinder parts in the UI.
-   if(partIds != nullptr)
-   {
-      _openCL->ReadBufferInt(cylinderBlockIdBufferTwo, partIds, numPointsTwo);
-//      std::vector<int> partIdsVec(partIds, partIds + numPointsOne);
-//      for(int i = 0; i<numPointsOne; i++)
-//      {
-//         std::cout << "Index:" << i << " Id:" << partIdsVec[i] << std::endl;
-//      }
-   }
+//
+//
+//   // Set partIds for visualization of cylinder parts in the UI.
+//   if(partIds != nullptr)
+//   {
+//      _openCL->ReadBufferInt(cylinderBlockIdBufferTwo, partIds, numPointsTwo);
+////      std::vector<int> partIdsVec(partIds, partIds + numPointsOne);
+////      for(int i = 0; i<numPointsOne; i++)
+////      {
+////         std::cout << "Index:" << i << " Id:" << partIdsVec[i] << std::endl;
+////      }
+//   }
 
 
    // Calculate transform by decomposing the Correlation Matrix using SVD.
    Eigen::Matrix4f transform = CalculateTransformParallel(threads, correlBuffer, meanBuffer);
+   std::cout << "Transform: " << std::endl << transform << std::endl;
 
    // Calculate transform on the CPU.
 //   int matches[cloudOne.size()/3];

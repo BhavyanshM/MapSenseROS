@@ -40,6 +40,8 @@ namespace Clay
 
          void ImGuiUpdate(ApplicationState& appState);
 
+         void GetICPUpdate();
+
          ApplicationState appState;
 
       private:
@@ -49,6 +51,8 @@ namespace Clay
          Ref<Texture2D> _texture;
          Ref<Texture2D> _checkerTexture;
          std::vector<Ref<Model>> _models;
+         std::vector<Ref<Model>> _poses;
+
          Ref<Model> _rootPCL;
 
          struct ProfileResult

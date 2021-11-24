@@ -7,6 +7,8 @@
 #include "Core/Clay.h"
 #include "opencv2/core/core.hpp"
 #include "unistd.h"
+#include "Scene/Mesh/TriangleMesh.h"
+#include "Scene/Mesh/MeshTools.h"
 
 #include "MapsenseLayer.h"
 
@@ -42,6 +44,9 @@ namespace Clay
       Ref<Model> cameraParent = std::make_shared<Model>(cameraGrandParent);
       Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
+
+      Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootPCL);
+      _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      firstCloud->Load(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount));
@@ -108,18 +113,30 @@ namespace Clay
 //         Renderer::SubmitPointCloudComponents(_models[1]);
 //      }
 
-      if(_models.size() > 2) _models.erase(_models.begin());
+
+
+
+      if(_models.size() > 2)
+      {
+         _models.erase(_models.begin());
+         GetICPUpdate();
+      }
       Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
       if(model != nullptr)
       {
          _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
       }
+
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(_pclReceiver->GetClouds()[1]));
 
       CLAY_LOG_INFO("Models: {}", _models.size());
       for(int i = 0; i<_models.size(); i++)
       {
-         Renderer::SubmitPoints(_models[i]);
+         Renderer::Submit(_models[i]);
+      }
+      for(int i = 0; i<_poses.size(); i++)
+      {
+         Renderer::Submit(_poses[i]);
       }
 
       Renderer::EndScene();
@@ -215,6 +232,28 @@ namespace Clay
          }
       }
 
+   }
+
+   void MapsenseLayer::GetICPUpdate()
+   {
+      glm::mat4 transform;
+      Eigen::Matrix4f transformOne, transformTwo;
+      glm::mat4 invTransformOne = glm::inverse(_models[_models.size()-2]->GetTransformToParent());
+      glm::mat4 invTransformTwo = glm::inverse(_models[_models.size()-1]->GetTransformToParent());
+      for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
+      for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
+
+      // Calculate ICP based Pointcloud Alignment.
+      int prevCloudId = _models.size() - 2;
+      int currentCloudId = _models.size() - 1;
+      int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];
+      Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
+      for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
+
+      Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _poses[_poses.size()-1]);
+      MeshTools::Cylinder(pose, 20, 0.01f, 0.04f);
+      _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
+      _poses[_poses.size() - 1]->TransformLocal(transform);
    }
 
    void MapsenseLayer::OnEvent(Event& e)
