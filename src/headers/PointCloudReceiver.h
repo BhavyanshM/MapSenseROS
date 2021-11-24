@@ -36,19 +36,30 @@ class PointCloudReceiver : public ROS1TopicReceiver
       bool IsReadyToRender() const {return _renderEnabled;}
       void SetReadyToRender(bool ready) { _renderEnabled = ready;}
       void SetRenderEnabled(bool enabled) {_renderEnabled = enabled;}
+      Clay::Ref<Clay::PointCloud> GetNextCloud()
+      {
+         if(_clouds.size() > 0)
+         {
+            Clay::Ref<Clay::PointCloud> cloudToReturn = _clouds[_clouds.size()-1];
+            _clouds.erase(_clouds.begin());
+            return cloudToReturn;
+         }
+         else return nullptr;
+      }
 
    private:
 //      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       bool _available = false;
-      bool _renderEnabled = false;
+      bool _renderEnabled = true;
       pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
       Subscriber *_cloudSubscriber;
-      torch::Tensor _cloud;
       Clay::Ref<Clay::PointCloud> _cloudToRender;
 
       uint32_t _scanCount = 0;
       uint32_t _skipScans = 2;
       bool _saveScans = false;
+
+      std::vector<Clay::Ref<Clay::PointCloud>> _clouds;
 
 };
 

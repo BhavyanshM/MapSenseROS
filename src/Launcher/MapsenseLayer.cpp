@@ -43,16 +43,16 @@ namespace Clay
       Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
-      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-      firstCloud->Load(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount));
+//      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+//      firstCloud->Load(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount));
+//
+//      Ref<PointCloud> secondCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), firstCloud);
+//      secondCloud->Load(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount));
+//
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(secondCloud));
 
-      Ref<PointCloud> secondCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), firstCloud);
-      secondCloud->Load(ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(_scanCount));
-
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(secondCloud));
-
-//      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
+      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
    }
@@ -104,13 +104,23 @@ namespace Clay
 
 
 //      CLAY_LOG_INFO("Parts Set: {0}", _partsSet);
-      if(_partsSet){
-         Renderer::SubmitPointCloudComponents(_models[1]);
-      }
-//      for(int i = 0; i<_models.size(); i++)
-//      {
-//         Renderer::SubmitPoints(_models[i]);
+//      if(_partsSet){
+//         Renderer::SubmitPointCloudComponents(_models[1]);
 //      }
+
+      if(_models.size() > 2) _models.erase(_models.begin());
+      Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
+      if(model != nullptr)
+      {
+         _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
+      }
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(_pclReceiver->GetClouds()[1]));
+
+      CLAY_LOG_INFO("Models: {}", _models.size());
+      for(int i = 0; i<_models.size(); i++)
+      {
+         Renderer::SubmitPoints(_models[i]);
+      }
 
       Renderer::EndScene();
       _frameBuffer->Unbind();
