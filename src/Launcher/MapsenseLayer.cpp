@@ -129,7 +129,6 @@ namespace Clay
 
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(_pclReceiver->GetClouds()[1]));
 
-      CLAY_LOG_INFO("Models: {}", _models.size());
       for(int i = 0; i<_models.size(); i++)
       {
          Renderer::Submit(_models[i]);
@@ -246,12 +245,11 @@ namespace Clay
       // Calculate ICP based Pointcloud Alignment.
       int prevCloudId = _models.size() - 2;
       int currentCloudId = _models.size() - 1;
-      int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];
-      Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
+      int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];     Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
       for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
 
       Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _poses[_poses.size()-1]);
-      MeshTools::Cylinder(pose, 20, 0.01f, 0.04f);
+      MeshTools::Cylinder(pose, 20, 0.005f, 0.04f);
       _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
       _poses[_poses.size() - 1]->TransformLocal(transform);
    }
