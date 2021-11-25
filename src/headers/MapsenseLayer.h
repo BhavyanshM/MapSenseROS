@@ -42,6 +42,8 @@ namespace Clay
 
          void GetICPUpdate();
 
+         void ExperimentalUpdate();
+
          ApplicationState appState;
 
       private:
@@ -68,8 +70,11 @@ namespace Clay
          bool _viewportHovered = false;
          bool dockspaceOpen = true;
          bool opt_fullscreen;
+
          bool _lidarICP = false;
          bool _partsSet = false;
+
+
 
          uint32_t count = 0;
          uint32_t frameId = 0;

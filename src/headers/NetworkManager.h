@@ -43,7 +43,7 @@ class NetworkManager
       cv::VideoCapture *camLeft;
       cv::VideoCapture *camRight;
 
-      vector<ROS1TopicReceiver*> receivers;
+      unordered_map<std::string, ROS1TopicReceiver*> receivers;
       Subscriber subMapSenseParams;
       Publisher planarRegionPub;
       Publisher slamPosePub;

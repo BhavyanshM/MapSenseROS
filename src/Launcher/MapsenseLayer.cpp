@@ -9,6 +9,7 @@
 #include "unistd.h"
 #include "Scene/Mesh/TriangleMesh.h"
 #include "Scene/Mesh/MeshTools.h"
+#include "ImGui/ImGuiMenu.h"
 
 #include "MapsenseLayer.h"
 
@@ -57,7 +58,7 @@ namespace Clay
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(secondCloud));
 
-      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[2]);
+      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[appState.OUSTER_POINTS]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
    }
@@ -108,35 +109,8 @@ namespace Clay
       _rootPCL->Update();
 
 
-//      CLAY_LOG_INFO("Parts Set: {0}", _partsSet);
-//      if(_partsSet){
-//         Renderer::SubmitPointCloudComponents(_models[1]);
-//      }
-
-
-
-
-      if(_models.size() > 2)
-      {
-         _models.erase(_models.begin());
-         GetICPUpdate();
-      }
-      Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
-      if(model != nullptr)
-      {
-         _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
-      }
-
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(_pclReceiver->GetClouds()[1]));
-
-      for(int i = 0; i<_models.size(); i++)
-      {
-         Renderer::Submit(_models[i]);
-      }
-      for(int i = 0; i<_poses.size(); i++)
-      {
-         Renderer::Submit(_poses[i]);
-      }
+      for(int i = 0; i<_models.size(); i++) Renderer::Submit(_models[i]);
+      for(int i = 0; i<_poses.size(); i++)  Renderer::Submit(_poses[i]);
 
       Renderer::EndScene();
       _frameBuffer->Unbind();
@@ -146,7 +120,6 @@ namespace Clay
    void MapsenseLayer::MapsenseUpdate()
    {
 //      ROS_DEBUG("TickEvent: %d", count++);
-
       if (appState.ROS_ENABLED)
       {
          ROS_DEBUG("ROS Update: {}", appState.ROS_ENABLED);
@@ -160,19 +133,41 @@ namespace Clay
             appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
          }
 
-         cv::Mat depth;
-         double inputTimestamp;
-         ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[0]);
-         depthReceiver->getData(depth, appState, inputTimestamp);
-         _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
+         if(appState.PLANAR_REGIONS_ENABLED)
+         {
+            cv::Mat depth;
+            double inputTimestamp;
+            ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.OUSTER_POINTS]);
+            depthReceiver->getData(depth, appState, inputTimestamp);
+            _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
 
-         // TODO: Fix this and publish planarregions msg
-         //         _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
-         //         _regionCalculator->Render();
+            // TODO: Fix this and publish planarregions msg
+            //         _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
+            //         _regionCalculator->Render();
+         }
 
-         //      _keypointDetector->update(appState);
 
-         if (_regionCalculator->planarRegionList.size() > 0 && appState.ROS_ENABLED && _slamModule->_mapper.SLAM_ENABLED)
+         if(appState.STEREO_ODOMETRY_ENABLED)
+         {
+            CLAY_LOG_INFO("Stereo Odom Update");
+            _keypointDetector->update(appState);
+         }
+
+         if(appState.ICP_ODOMETRY_ENABLED)
+         {
+            Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
+            if(model != nullptr)
+            {
+               _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
+            }
+            if(_models.size() > 2)
+            {
+               _models.erase(_models.begin());
+               GetICPUpdate();
+            }
+         }
+
+         if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _slamModule->_mapper.SLAM_ENABLED)
          {
             PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
             _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
@@ -187,50 +182,53 @@ namespace Clay
             //            printf("After SLAM Publisher.\n");
             //         }
          }
-
-         appUtils.clearDebug();
       }
       else if(_lidarICP)
       {
-         count++;
-         if(count < 30)
-         {
-            if(count%20 == 0){
-               std::cout << "Count:" << count << " Size: " << _models.size() << std::endl;
-               glm::mat4 transform;
-               Eigen::Matrix4f transformOne, transformTwo;
-               glm::mat4 invTransformOne = glm::inverse(_models[_models.size()-2]->GetTransformToParent());
-               glm::mat4 invTransformTwo = glm::inverse(_models[_models.size()-1]->GetTransformToParent());
-               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
-               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
-
-               // Calculate ICP based Pointcloud Alignment.
-               int prevCloudId = _models.size() - 2;
-               int currentCloudId = _models.size() - 1;
-               int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];
-               Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
-               std::vector<int> partIdsVec( _models[currentCloudId]->GetMesh()->_vertices.size() / 3, 0);
-               int partSize = _models[currentCloudId]->GetMesh()->_vertices.size() / 3;
-               partSize = partSize / partCount;
-               int blockSize = partSize / numVertBlocks;
-               int cloudSize = _models[currentCloudId]->GetMesh()->_vertices.size() / 3;
-               for(int i = 0; i<cloudSize; i++)
-               {
-                  if(partIds[i] >= 0 && partIds[i] < cloudSize)
-                     partIdsVec[partIds[i]] = i / partSize + i / blockSize;
-               }
-               _models[currentCloudId]->SetPartIds(partIdsVec);
-               _partsSet = true;
-
-               for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
-               _models[currentCloudId]->TransformLocal(transform);
-            }
-         } else {
-            _lidarICP = false;
-            count = 0;
-         }
+         ExperimentalUpdate();
       }
 
+   }
+
+   void MapsenseLayer::ExperimentalUpdate()
+   {
+      count++;
+      if(count < 30)
+      {
+         if(count%20 == 0){
+            std::cout << "Count:" << count << " Size: " << _models.size() << std::endl;
+            glm::mat4 transform;
+            Eigen::Matrix4f transformOne, transformTwo;
+            glm::mat4 invTransformOne = glm::inverse(_models[_models.size()-2]->GetTransformToParent());
+            glm::mat4 invTransformTwo = glm::inverse(_models[_models.size()-1]->GetTransformToParent());
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformOne(i,j) = invTransformOne[j][i];
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transformTwo(i,j) = invTransformTwo[j][i];
+
+            // Calculate ICP based Pointcloud Alignment.
+            int prevCloudId = _models.size() - 2;
+            int currentCloudId = _models.size() - 1;
+            int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];
+            Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
+            std::vector<int> partIdsVec( _models[currentCloudId]->GetMesh()->_vertices.size() / 3, 0);
+            int partSize = _models[currentCloudId]->GetMesh()->_vertices.size() / 3;
+            partSize = partSize / partCount;
+            int blockSize = partSize / numVertBlocks;
+            int cloudSize = _models[currentCloudId]->GetMesh()->_vertices.size() / 3;
+            for(int i = 0; i<cloudSize; i++)
+            {
+               if(partIds[i] >= 0 && partIds[i] < cloudSize)
+                  partIdsVec[partIds[i]] = i / partSize + i / blockSize;
+            }
+            _models[currentCloudId]->SetPartIds(partIdsVec);
+            _partsSet = true;
+
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
+            _models[currentCloudId]->TransformLocal(transform);
+         }
+      } else {
+         _lidarICP = false;
+         count = 0;
+      }
    }
 
    void MapsenseLayer::GetICPUpdate()
@@ -303,15 +301,7 @@ namespace Clay
       }
 
       /* Renderer ImGui Stats and Settings */
-      ImGui::Begin("Renderer");
-      ImGui::ColorEdit3("Square Color", glm::value_ptr(_squareColor));
-      auto stats = Renderer::GetPointStats();
-      ImGui::Text("Renderer Stats:");
-      ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-      ImGui::Text("Quad Count: %d", stats.TriangleCount);
-      ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-      ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-      ImGui::End();
+      ImGuiMenu::RendererOptions();
 
       /* Viewport Region */
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});

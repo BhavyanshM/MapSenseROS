@@ -49,31 +49,31 @@ void KeypointDetector::draw_matches(cv::Mat& img, std::vector<cv::Point2f> prev_
 
 void KeypointDetector::update(ApplicationState& appState)
 {
-   cv::Mat img;
+   cv::Mat leftImage, rightImage;
    double timestamp = 0;
 
-   ImageReceiver *depthReceiver = ((ImageReceiver *) this->_dataReceiver->receivers[1]);
-   depthReceiver->getData(img, appState, timestamp);
+   ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_LEFT_IMAGE_RAW])->getData(leftImage, appState, timestamp);
+   ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
 
-   if(!img.empty() && img.rows > 0 && img.cols > 0)
+   if(!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0)
    {
 
       if(count == 0)
       {
-         cvtColor(img, prev, cv::COLOR_BGR2GRAY);
+         cvtColor(leftImage, prev, cv::COLOR_BGR2GRAY);
          extract_points(prev, orb, kp_prev);
          count++;
          return;
       }
 
 
-      cvtColor(img, cur, cv::COLOR_BGR2GRAY);
+      cvtColor(leftImage, cur, cv::COLOR_BGR2GRAY);
 
 //      extract_points(cur, orb, kp_cur);
 
       /* Track previously found keypoints in current frame */
       track_features(prev, cur, kp_prev, kp_cur);
-      draw_matches(img, kp_prev, kp_cur);
+      draw_matches(leftImage, kp_prev, kp_cur);
 
 
       /* Calculate Essential Matrix from Correspondences and Intrinsics
@@ -159,7 +159,7 @@ void KeypointDetector::update(ApplicationState& appState)
       kp_prev = kp_cur;
       count++;
 
-      AppUtils::DisplayImage(img, appState);
+      AppUtils::DisplayImage(leftImage, appState);
 
 
    }

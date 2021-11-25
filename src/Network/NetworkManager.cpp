@@ -54,7 +54,9 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo("/os_cloud_node/points", "sensor_msgs/PointCloud2"));
+   addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
+   addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
+   addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
@@ -63,7 +65,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
 int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
-   ROS_DEBUG("Adding Receiver: (%s), (%s)", data.name.c_str(), info.name.c_str());
+   CLAY_LOG_INFO("Adding Receiver: {}, {}", data.name.c_str(), info.name.c_str());
    ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
@@ -75,7 +77,7 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
    if (receiver != nullptr)
    {
       receiver->setAppUtils(this->appUtils);
-      receivers.emplace_back(receiver);
+      receivers[data.name] = receiver;
    } else
    {
       printf("Request to add receiver: %s\n", data.name.c_str());
@@ -91,8 +93,8 @@ void NetworkManager::ImGuiUpdate()
    getTopicSelection(topics, currentDataTopic);
    if (ImGui::Button("Add Receiver"))
       addReceiver(currentDataTopic);
-   for (int i = 0; i < receivers.size(); i++)
-      receivers[i]->ImGuiUpdate();
+   for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
+      receiver.second->ImGuiUpdate();
 }
 
 void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
@@ -145,11 +147,11 @@ void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& curr
 
 void NetworkManager::receiverUpdate(ApplicationState& app)
 {
-   for (int i = 0; i < receivers.size(); i++)
+   for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
    {
-      ROS_DEBUG("RenderUpdate: {}", receivers[i]->getTopicName());
-      receivers[i]->processMessage(app);
-      receivers[i]->render();
+      ROS_DEBUG("RenderUpdate: {}", receiver.first);
+      receiver.second->processMessage(app);
+      receiver.second->render();
       ROS_DEBUG("RenderUpdate: Complete");
    }
 }

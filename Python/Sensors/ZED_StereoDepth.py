@@ -15,8 +15,15 @@ class image_converter:
     def __init__(self):
 
         self.bridge = CvBridge()
-        self.leftImage_sub = rospy.Subscriber("/zed/zed_node/left/image_rect_color/compressed", CompressedImage,self.leftCallback)
-        self.rightImage_sub = rospy.Subscriber("/zed/zed_node/right/image_rect_color/compressed", CompressedImage,self.rightCallback)
+        self.compressed = False
+
+        if self.compressed is True:
+            self.leftImage_sub = rospy.Subscriber("/zed/zed_node/left/image_rect_color/compressed", CompressedImage,self.leftCallback)
+            self.rightImage_sub = rospy.Subscriber("/zed/zed_node/right/image_rect_color/compressed", CompressedImage,self.rightCallback)
+        else:
+            self.leftImage_sub = rospy.Subscriber("/zed/color/left/image_raw", Image,self.leftCallback)
+            self.rightImage_sub = rospy.Subscriber("/zed/color/right/image_raw", Image,self.rightCallback)
+
         self.processor = rospy.Timer(rospy.Duration(0.01), self.processingCallback)
         self.leftImage = None
         self.rightImage = None
@@ -43,10 +50,12 @@ class image_converter:
 
     def leftCallback(self,data):
         try:
-            # cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            # print(data.header)
-            np_arr = np.frombuffer(data.data, np.uint8)
-            input_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            if self.compressed is True:
+                np_arr = np.frombuffer(data.data, np.uint8)
+                input_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            else:
+                input_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+
             self.leftImage = input_image
             self.leftSet = True
         except CvBridgeError as e:
@@ -56,9 +65,12 @@ class image_converter:
 
     def rightCallback(self,data):
         try:
-            # cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            np_arr = np.frombuffer(data.data, np.uint8)
-            input_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            if self.compressed is True:
+                np_arr = np.frombuffer(data.data, np.uint8)
+                input_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            else:
+                input_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+
             self.rightImage = input_image
             self.rightSet = True
             # print(data.header)
@@ -69,9 +81,6 @@ class image_converter:
 
     def processingCallback(self, timer):
         if self.rightSet and self.leftSet:
-            print("Stereo Pair Ready")
-
-
 
             leftImage = cv2.resize(cv2.cvtColor(self.leftImage, cv2.COLOR_BGR2GRAY), (int(self.leftImage.shape[1]/2), int(self.leftImage.shape[0]/2)))
             rightImage = cv2.resize(cv2.cvtColor(self.rightImage, cv2.COLOR_BGR2GRAY), (int(self.rightImage.shape[1]/2), int(self.rightImage.shape[0]/2)))

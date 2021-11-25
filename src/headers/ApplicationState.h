@@ -81,12 +81,18 @@ class ApplicationState
       bool SHOW_STEREO_RIGHT = false;
 
       bool SHOW_GRAPH = true;
-      bool ROS_ENABLED = false;
+      bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;
 
       bool STEREO_DRIVER = false;
       bool DEPTH_ALIGNED = false;
       bool EARLY_GAUSSIAN_BLUR = true;
+
+      bool ICP_ODOMETRY_ENABLED = false;
+      bool STEREO_ODOMETRY_ENABLED = false;
+      bool PLANAR_REGIONS_ENABLED = false;
+      bool SLAM_ENABLED = false;
+
       string TOPIC_CAMERA_NAME = "chest_l515";
 
       int GAUSSIAN_SIZE = 6;
@@ -101,6 +107,11 @@ class ApplicationState
       bool GENERATE_REGIONS = true;
 
       float REGION_GROWTH_FACTOR = 0.01;
+
+      string OUSTER_POINTS = "/os_cloud_node/points";
+      string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
+      string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
+
 
 };
 
