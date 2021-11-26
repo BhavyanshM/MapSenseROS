@@ -55,25 +55,28 @@ void KeypointDetector::update(ApplicationState& appState)
    ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_LEFT_IMAGE_RAW])->getData(leftImage, appState, timestamp);
    ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
 
-   if(!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0)
+   if(!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
    {
-
       if(count == 0)
       {
-         cvtColor(leftImage, prev, cv::COLOR_BGR2GRAY);
-         extract_points(prev, orb, kp_prev);
+         cvtColor(leftImage, prevLeft, cv::COLOR_BGR2GRAY);
+         cvtColor(rightImage, prevRight, cv::COLOR_BGR2GRAY);
+         extract_points(prevLeft, orb, kp_prevRight);
+         extract_points(prevLeft, orb, kp_prevLeft);
          count++;
          return;
       }
 
-
-      cvtColor(leftImage, cur, cv::COLOR_BGR2GRAY);
+      cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
+      cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
 
 //      extract_points(cur, orb, kp_cur);
 
       /* Track previously found keypoints in current frame */
-      track_features(prev, cur, kp_prev, kp_cur);
-      draw_matches(leftImage, kp_prev, kp_cur);
+      track_features(prevLeft, curLeft, kp_prevLeft, kp_curLeft);
+      track_features(prevRight, curRight, kp_prevRight, kp_curRight);
+      draw_matches(leftImage, kp_prevLeft, kp_curLeft);
+      draw_matches(rightImage, kp_prevRight, kp_curRight);
 
 
       /* Calculate Essential Matrix from Correspondences and Intrinsics
@@ -86,17 +89,17 @@ void KeypointDetector::update(ApplicationState& appState)
       cv::Mat K = cv::Mat(3, 3, CV_32FC1, data);
       cv::Mat R(3,3,CV_32FC1), t(1,3,CV_32FC1), mask;
 
-      cv::Mat E = findEssentialMat(kp_prev, kp_cur, K, cv::RANSAC, 0.999, 1.0, mask);
+      cv::Mat E = findEssentialMat(kp_prevLeft, kp_curLeft, K, cv::RANSAC, 0.999, 1.0, mask);
 
       /*
        * Recover Pose from Essential Matrix (R,t)
        * */
-      recoverPose(E, kp_prev, kp_cur, K, R, t, mask);
+      recoverPose(E, kp_prevLeft, kp_curLeft, K, R, t, mask);
 
       Vector3f translation;
       translation << t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2);
 
-      ROS_INFO("(%.2lf, %.2lf, %.2lf)", t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2));
+//      ROS_INFO("(%.2lf, %.2lf, %.2lf)", t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2));
 
 //
 //      double dist = translation.norm();
@@ -151,15 +154,26 @@ void KeypointDetector::update(ApplicationState& appState)
 
 
       /* Extract ORB Keypoints from Current Image if number of tracked points falls below threshold */
-      if(kp_prev.size() < kMinFeatures){
-         extract_points(cur, orb, kp_cur);
+      if(kp_prevLeft.size() < kMinFeatures){
+         extract_points(curLeft, orb, kp_curLeft);
+      }
+      if(kp_prevRight.size() < kMinFeatures){
+         extract_points(curRight, orb, kp_curRight);
       }
 
-      prev = cur.clone();
-      kp_prev = kp_cur;
+      prevLeft = curLeft.clone();
+      prevRight = curRight.clone();
+      kp_prevLeft = kp_curLeft;
+      kp_prevRight = kp_curRight;
       count++;
 
-      AppUtils::DisplayImage(leftImage, appState);
+      cv::Mat display;
+      std::vector<cv::Mat> images;
+      images.emplace_back(leftImage);
+      images.emplace_back(rightImage);
+      cv::hconcat(images, display);
+
+      AppUtils::DisplayImage(display, appState);
 
 
    }

@@ -23,13 +23,13 @@ class KeypointDetector
 
    private:
       uint32_t count = 0;
-      uint32_t kFeatures = 1000;
+      uint32_t kFeatures = 500;
       uint32_t kMinFeatures = 300;
 
       cv::Ptr<cv::ORB> orb = cv::ORB::create(kFeatures);
-      cv::Mat prev, cur;
+      cv::Mat prevLeft, prevRight, curLeft, curRight;
       std::vector<cv::KeyPoint> keypoints2D;
-      std::vector<cv::Point2f> kp_prev, kp_cur;
+      std::vector<cv::Point2f> kp_prevLeft, kp_prevRight, kp_curLeft, kp_curRight;
 
       NetworkManager* _dataReceiver;
 
