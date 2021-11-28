@@ -34,7 +34,7 @@ void NetworkManager::spin_ros_node()
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
-   ROS_DEBUG("Starting ROS Node");
+   CLAY_LOG_INFO("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
    rosNode = new NodeHandle();
 
@@ -52,7 +52,12 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    string colorCompressedTopicName = "/camera/color/image_raw/_compressed";
    string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
-   addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
+   app.L515_DEPTH = depthTopicName;
+   app.L515_DEPTH_INFO = depthInfoTopicName;
+   CLAY_LOG_INFO("L515 Depth Topic: {}", app.L515_DEPTH);
+   CLAY_LOG_INFO("L515 Depth Info Topic: {}", app.L515_DEPTH_INFO);
+
+   addReceiver(TopicInfo(app.L515_DEPTH, "sensor_msgs/Image"), TopicInfo(app.L515_DEPTH_INFO, "sensor_msgs/CameraInfo"));
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
    addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
    addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
@@ -60,12 +65,12 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
-   ROS_DEBUG("Started ROS Node");
+   CLAY_LOG_INFO("Started ROS Node");
 }
 
 int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
-   CLAY_LOG_INFO("Adding Receiver: {}, {}", data.name.c_str(), info.name.c_str());
+   CLAY_LOG_INFO("Adding Receiver: Topic:{}, Info:{}, Type:{}", data.name.c_str(), info.name.c_str(), data.datatype);
    ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
@@ -82,7 +87,7 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
    {
       printf("Request to add receiver: %s\n", data.name.c_str());
    }
-   ROS_DEBUG("Receiver Added Successfully");
+   CLAY_LOG_INFO("Receiver Added Successfully");
    return receivers.size() - 1;
 }
 
@@ -230,7 +235,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    if (depthCameraInfo != nullptr)
    {
       ROS_DEBUG("DEPTH_SET:", depthCamInfoSet);
-      //      if (!depthCamInfoSet)
+      if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
          app.INPUT_WIDTH = depthCameraInfo->width / app.DIVISION_FACTOR;

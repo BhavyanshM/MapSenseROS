@@ -24,7 +24,7 @@ void KeypointDetector::track_features(cv::Mat prev, cv::Mat cur, std::vector<cv:
    cur_pts.clear();
    calcOpticalFlowPyrLK(prev, cur, prev_pts, cur_pts, status, err, cv::Size(21,21), 3, criteria);
 
-   ROS_INFO("Previous Keypoints: (%d) \t Current Keypoints: (%d)", prev_pts.size(), cur_pts.size());
+   ROS_DEBUG("Previous Keypoints: (%d) \t Current Keypoints: (%d)", prev_pts.size(), cur_pts.size());
 
    for(uint i = 0; i < prev_pts.size(); i++)
    {
@@ -99,7 +99,7 @@ void KeypointDetector::update(ApplicationState& appState)
       Vector3f translation;
       translation << t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2);
 
-//      ROS_INFO("(%.2lf, %.2lf, %.2lf)", t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2));
+//      ROS_DEBUG("(%.2lf, %.2lf, %.2lf)", t.at<double>(0,0), t.at<double>(0,1), t.at<double>(0,2));
 
 //
 //      double dist = translation.norm();

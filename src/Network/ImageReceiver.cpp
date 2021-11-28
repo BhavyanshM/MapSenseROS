@@ -41,7 +41,12 @@ void ImageReceiver::imageCallback(const ImageConstPtr& colorMsg)
 void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 {
    ROS_DEBUG("Camera Info Callback: %s", message->distortion_model.c_str());
-   _cameraInfoMessage = message;
+   if(!_infoMessageSaved)
+   {
+      _cameraInfoMessage = message;
+      _infoMessageSaved = true;
+      CLAY_LOG_INFO("Depth Info Message Saved: {}", _infoMessageSaved);
+   }
 }
 
 void ImageReceiver::render()
@@ -114,9 +119,10 @@ void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& times
    {
       image = this->_image;
    }
-   if (_cameraInfoMessage != nullptr)
+   //   CLAY_LOG_INFO("Receiver: {}, DEPTH_SET: {}, Message Saved: {}", topicName, _cameraInfoSet, _infoMessageSaved);
+   if (_cameraInfoMessage != nullptr && _infoMessageSaved)
    {
-      ROS_DEBUG("DEPTH_SET:", _cameraInfoSet);
+      //      CLAY_LOG_INFO("Copying Depth Info Message: {}", _cameraInfoMessage->distortion_model);
       _cameraInfoSet = true;
       app.INPUT_WIDTH = _cameraInfoMessage->width / app.DIVISION_FACTOR;
       app.INPUT_HEIGHT = _cameraInfoMessage->height / app.DIVISION_FACTOR;

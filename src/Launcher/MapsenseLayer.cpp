@@ -137,19 +137,19 @@ namespace Clay
          {
             cv::Mat depth;
             double inputTimestamp;
-            ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.OUSTER_POINTS]);
+            ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.L515_DEPTH]);
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
 
             // TODO: Fix this and publish planarregions msg
             //         _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
-            //         _regionCalculator->Render();
+            _regionCalculator->Render();
          }
 
 
          if(appState.STEREO_ODOMETRY_ENABLED)
          {
-            CLAY_LOG_INFO("Stereo Odom Update");
+            ROS_DEBUG("Stereo Odom Update");
             _keypointDetector->update(appState);
          }
 

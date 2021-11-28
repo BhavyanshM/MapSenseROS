@@ -112,6 +112,9 @@ class ApplicationState
       string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
       string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
 
+      string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
+      string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
+
 
 };
 
