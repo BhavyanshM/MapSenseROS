@@ -1,3 +1,6 @@
 [submodule "Vendor/spdlog"]
 	path = Vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "Vendor/SemanticSLAM"]
+	path = Vendor/SemanticSLAM
+	url = https://github.com/BhavyanshM/SemanticSLAM.git
