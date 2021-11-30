@@ -35,11 +35,11 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    uint8_t transformTwoBuffer = _openCL->CreateLoadBufferFloat(transformTwoVec.data(), 12); // ~12 * 4 bytes
    uint8_t matchBuffer = _openCL->CreateBufferInt(numPointsOne); // ~80,000 * 4 bytes
    uint8_t meanBuffer = _openCL->CreateBufferFloat(6 * threads); // ~3,000 * 4 bytes
-   uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
-   uint8_t cylinderBlockIdBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
+//   uint8_t cylinderIndexBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
+//   uint8_t cylinderBlockIdBufferTwo = _openCL->CreateBufferInt(numPointsTwo); // ~80,000 * 4 bytes
    uint8_t correlBuffer = _openCL->CreateBufferFloat( 9 * threads); // ~10,000 * 4 bytes
-   uint8_t normalBuffer = _openCL->CreateBufferFloat(6 * numBlocksTotal); // ~60 * 4 bytes
-   uint8_t blockPointCount = _openCL->CreateBufferInt(numBlocksTotal); // ~60 * 4 bytes
+//   uint8_t normalBuffer = _openCL->CreateBufferFloat(6 * numBlocksTotal); // ~60 * 4 bytes
+//   uint8_t blockPointCount = _openCL->CreateBufferInt(numBlocksTotal); // ~60 * 4 bytes
 
 //   // Set arguments for the Cylinder Part generation kernel for only the latest pointcloud. Preserve cylinder buffer for later.
 //   _openCL->SetArgument("cylinderKernel", 0, cloudTwoBuffer);
@@ -123,6 +123,8 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
 //   Eigen::Matrix4f transformCPU = CalculateTransformSequential(cloudOne, cloudTwo, matchesVector);
    // std::cout << "Transfrom CPU:" << std::endl << transformCPU << std::endl;
 
+   _openCL->Finish();
+
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
    long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();
@@ -162,6 +164,7 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateTransformParallel(uint32_t threa
 Eigen::Matrix4f IterativeClosestPoint::ExtractTransform(Eigen::Matrix3f correlation, Eigen::Vector3f meanOne, Eigen::Vector3f meanTwo)
 {
    // Recover rotation matrix from the SVD matrices.
+   std::cout << "Correlation Matrix: " << std::endl << correlation << std::endl;
    Eigen::JacobiSVD<Eigen::MatrixXf> svd(correlation, Eigen::ComputeThinU | Eigen::ComputeThinV);
    Eigen::Matrix3f rotation = svd.matrixU() * svd.matrixV().transpose();
 

@@ -6,7 +6,6 @@
 
 void AppUtils::getFileNames(string dirName, vector<string>& files, bool printList)
 {
-   /* Get the sorted list of file names for planar regions at different frames. */
    if (auto dir = opendir(dirName.c_str()))
    {
       while (auto f = readdir(dir))

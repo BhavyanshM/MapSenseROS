@@ -4,14 +4,16 @@ project(map_sense)
 # This line is required for specifying the "modules" directory in the project containing .cmake files
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
 set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../../devel;/opt/ros/noetic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 #MATH(EXPR stack_size "2048000 * 1024 * 1024") # 16 Mb
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,stack-size=${stack_size}")
 
 enable_testing()
 find_package(GTest REQUIRED) # Find the google testing framework on your system
-find_package(Torch REQUIRED PATHS "${PROJECT_SOURCE_DIR}/Vendor/libtorch")
+#find_package(Torch REQUIRED PATHS "${PROJECT_SOURCE_DIR}/Vendor/libtorch")
 
 find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
@@ -19,6 +21,9 @@ find_package( OpenCV 4.5.2 REQUIRED )
 find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
+find_package(xtl REQUIRED)
+
+add_subdirectory(Vendor/xtensor)
 
 include_directories(${GTSAM_INCLUDE_DIR})
 
@@ -118,8 +123,8 @@ set(SOURCE
 		src/ImPlot/implot.cpp
 		src/ImPlot/implot_demo.cpp
 		src/ImPlot/implot_items.cpp
-		src/FileManager.cpp
-		src/FeatureDetection/KeypointDetector.cpp
+		src/DataManager.cpp
+		src/FeatureDetection/VisualOdometry.cpp
 		src/OpenCL/OpenCLManager.cpp
 		src/UI/ImGuiLayout.cpp
 		)
@@ -133,8 +138,8 @@ set (HEADERS
 		src/headers/ImageTools.h
 		src/headers/ImageReceiver.h
 		src/headers/ROS1TopicReceiver.h
-		src/headers/FileManager.h
-		src/headers/KeypointDetector.h
+		src/headers/DataManager.h
+		src/headers/VisualOdometry.h
 		src/headers/OpenCLManager.h
 		src/headers/Log.h
 		src/headers/Instrumentor.h
@@ -189,6 +194,7 @@ include_directories(
 		${catkin_INCLUDE_DIRS}
 		/usr/include/CL/
 		Vendor/spdlog/include
+		Vendor/xtensor/include
 )
 
 #set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
@@ -235,7 +241,7 @@ target_link_libraries(Mapsense_Clay
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen tbb gtsam
 		geom-tools planar-regions slam icp
-		ClayEngine ${TORCH_LIBRARIES}
+		ClayEngine
 		glad imgui glfw3 ${CMAKE_DL_LIBS} )
 add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
 target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
@@ -265,7 +271,7 @@ if(BUILD_HEADLESS)
 			tbb
 			gtsam
 			geom-tools
-			${TORCH_LIBRARIES})
+			)
 	add_dependencies(mapsense_headless map_sense_generate_messages_cpp)
 endif()
 #		glad imgui glfw3 ${CMAKE_DL_LIBS} )

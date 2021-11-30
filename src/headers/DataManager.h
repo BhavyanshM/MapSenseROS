@@ -10,9 +10,11 @@
 #include "MapsenseHeaders.h"
 #include "Core/Log.h"
 
-class FileManager
+class DataManager
 {
    public:
+      DataManager(const std::string& directory, const std::string& secondDirectory = "");
+
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
 
       void get_sample_color(cv::Mat color);
@@ -21,9 +23,22 @@ class FileManager
 
       void load_sample_color(std::string filename, cv::Mat& color);
 
+      cv::Mat GetNextImage();
+
+      cv::Mat GetNextSecondImage();
+
+      void ShowNext();
+
       static cv::Mat ReadImage(std::string filename);
 
       static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
+
+   private:
+      std::string _directory, _secondDirectory;
+      std::vector<std::string> _fileNames;
+      std::vector<std::string> _secondFileNames;
+      uint32_t _counter = 0;
+      uint32_t _secondCounter = 0;
 };
 
 #endif //FILEIO_H

@@ -6,14 +6,14 @@
 #define MAP_SENSE_MAPSENSELAYER_H
 
 #include "Core/Application.h"
-#include "FileManager.h"
+#include "DataManager.h"
 #include "MapsenseHeaders.h"
 #include "SLAMModule.h"
 #include "PlanarRegionCalculator.h"
 #include "ApplicationState.h"
 #include "ImGuiLayout.h"
 #include "AppUtils.h"
-#include "KeypointDetector.h"
+#include "VisualOdometry.h"
 #include "OpenCLManager.h"
 #include "IterativeClosestPoint.h"
 
@@ -88,11 +88,13 @@ namespace Clay
          AppUtils appUtils;
          IterativeClosestPoint* _icp;
          PlanarRegionCalculator *_regionCalculator;
-         KeypointDetector* _keypointDetector;
+         VisualOdometry* _visualOdometry;
          SLAMModule *_slamModule;
          NetworkManager *_networkManager;
          OpenCLManager *_openCLManager;
          PointCloudReceiver* _pclReceiver;
+         DataManager* _kitti;
+
    };
 }
 

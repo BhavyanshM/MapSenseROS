@@ -4,3 +4,6 @@
 [submodule "Vendor/SemanticSLAM"]
 	path = Vendor/SemanticSLAM
 	url = https://github.com/BhavyanshM/SemanticSLAM.git
+[submodule "Vendor/xtensor"]
+	path = Vendor/xtensor
+	url = https://github.com/xtensor-stack/xtensor.git

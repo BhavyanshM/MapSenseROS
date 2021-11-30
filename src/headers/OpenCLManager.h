@@ -32,6 +32,7 @@ class OpenCLManager
       void ReadBufferFloat(uint8_t buffer, float *cpuBufferPtr, int size);
 
       void Reset();
+      void Finish();
       void SetArgument(const std::string& kernel, uint8_t argId, uint8_t bufferId, bool image = false);
       void SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value);
 

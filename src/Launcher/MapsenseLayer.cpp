@@ -13,10 +13,21 @@
 
 #include "MapsenseLayer.h"
 
+#include <xtensor/xarray.hpp>
+#include <xtensor/xio.hpp>
+
 namespace Clay
 {
    MapsenseLayer::MapsenseLayer(int argc, char **argv) : Layer("Sandbox2D")
    {
+
+      xt::xarray<int> arr
+            {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+      arr.reshape({3, 3});
+
+      std::cout << "WORKING XTensor: "<< arr;
+
       opt_fullscreen = true;
       dockspace_flags = ImGuiDockNodeFlags_None;
       window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -35,8 +46,12 @@ namespace Clay
       _icp = new IterativeClosestPoint();
       _icp->SetOpenCLManager(_openCLManager);
 
-      _keypointDetector = new KeypointDetector(argc, argv, _networkManager, appState);
+      _kitti = new DataManager("/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
+                               "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/");
+
+      _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _kitti);
       _slamModule = new SLAMModule(argc, argv);
+
 
       _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);
 
@@ -67,11 +82,11 @@ namespace Clay
    {
       CLAY_PROFILE_FUNCTION();
 
-      cv::Mat image = FileManager::ReadImage("/Github_Images/Combined_FirstPage_v2.jpg");
+      cv::Mat image = DataManager::ReadImage("/Github_Images/Combined_FirstPage_v2.jpg");
       _texture = Texture2D::Create();
       _texture->LoadImage(image.data, image.cols, image.rows, image.channels());
 
-      cv::Mat imageCheckerboard = FileManager::ReadImage("/Github_Images/Checkerboard.png");
+      cv::Mat imageCheckerboard = DataManager::ReadImage("/Github_Images/Checkerboard.png");
       _checkerTexture = Texture2D::Create();
       _checkerTexture->LoadImage(imageCheckerboard.data, imageCheckerboard.cols, imageCheckerboard.rows, imageCheckerboard.channels());
 
@@ -114,7 +129,6 @@ namespace Clay
 
       Renderer::EndScene();
       _frameBuffer->Unbind();
-
    }
 
    void MapsenseLayer::MapsenseUpdate()
@@ -150,7 +164,7 @@ namespace Clay
          if(appState.STEREO_ODOMETRY_ENABLED)
          {
             ROS_DEBUG("Stereo Odom Update");
-            _keypointDetector->update(appState);
+            _visualOdometry->update(appState);
          }
 
          if(appState.ICP_ODOMETRY_ENABLED)
@@ -247,7 +261,7 @@ namespace Clay
       for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
 
       Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _poses[_poses.size()-1]);
-      MeshTools::Cylinder(pose, 20, 0.005f, 0.04f);
+      MeshTools::CoordinateAxes(pose);
       _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
       _poses[_poses.size() - 1]->TransformLocal(transform);
    }

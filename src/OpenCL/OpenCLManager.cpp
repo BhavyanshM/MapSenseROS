@@ -180,4 +180,9 @@ void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uin
       else if(kernel == "normalsKernel") normalsKernel.setArg(argId, sizeof(cl_int), &value);
 }
 
+void OpenCLManager::Finish()
+{
+   cl::finish();
+}
+
 

@@ -7,10 +7,9 @@
 
 #include "ROS1TopicReceiver.h"
 #include "MapsenseHeaders.h"
-#include "torch/torch.h"
 #include "Core/Core.h"
 #include "Scene/Mesh/PointCloud.h"
-#include "FileManager.h"
+#include "DataManager.h"
 
 class PointCloudReceiver : public ROS1TopicReceiver
 {

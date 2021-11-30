@@ -64,7 +64,7 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
       CLAY_LOG_INFO("Clouds: {}", _clouds.size());
    }
    if(_saveScans) {
-      if(_scanCount % _skipScans == 0)FileManager::WriteScanPoints(cloudMsg, _scanCount);
+      if(_scanCount % _skipScans == 0)DataManager::WriteScanPoints(cloudMsg, _scanCount);
       _scanCount++;
    }
 }

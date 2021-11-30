@@ -154,7 +154,7 @@ void NetworkManager::receiverUpdate(ApplicationState& app)
 {
    for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
    {
-      ROS_DEBUG("RenderUpdate: {}", receiver.first);
+      ROS_DEBUG("RenderUpdate: {}", receiver.first.c_str());
       receiver.second->processMessage(app);
       receiver.second->render();
       ROS_DEBUG("RenderUpdate: Complete");

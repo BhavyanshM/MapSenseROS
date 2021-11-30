@@ -16,6 +16,6 @@ add_executable(math-tester
 target_link_libraries(math-tester
         Eigen3::Eigen)
 
-add_executable(TorchDemo ../examples/TorchDemo.cpp)
-target_link_libraries(TorchDemo PRIVATE
-        ${TORCH_LIBRARIES})
+#add_executable(TorchDemo ../examples/TorchDemo.cpp)
+#target_link_libraries(TorchDemo PRIVATE
+#        ${TORCH_LIBRARIES})

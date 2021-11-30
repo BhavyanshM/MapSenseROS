@@ -33,7 +33,7 @@
 #include "ApplicationState.h"
 #include "ImGuiLayout.h"
 #include "AppUtils.h"
-#include "KeypointDetector.h"
+#include "VisualOdometry.h"
 #include "OpenCLManager.h"
 
 using namespace Magnum::Math::Literals;
