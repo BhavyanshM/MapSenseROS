@@ -182,7 +182,7 @@ void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uin
 
 void OpenCLManager::Finish()
 {
-   cl::finish();
+   commandQueue.finish();
 }
 
 

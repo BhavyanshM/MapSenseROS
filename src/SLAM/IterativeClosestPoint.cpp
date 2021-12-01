@@ -1,6 +1,7 @@
 #include <iostream>
 #include "IterativeClosestPoint.h"
 #include "chrono"
+#include "ClayEngine/Core/Log.h"
 
 Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cloudOne, const Eigen::Matrix4f& transformOne, std::vector<float>& cloudTwo, const Eigen::Matrix4f& transformTwo, int* partIds, int partCount, int numVertBlocks)
 {
@@ -124,6 +125,9 @@ Eigen::Matrix4f IterativeClosestPoint::CalculateAlignment(std::vector<float>& cl
    // std::cout << "Transfrom CPU:" << std::endl << transformCPU << std::endl;
 
    _openCL->Finish();
+   _openCL->Reset();
+
+   CLAY_LOG_INFO("BufferId: {}", meanBuffer);
 
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();

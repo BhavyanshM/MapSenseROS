@@ -92,6 +92,7 @@ class ApplicationState
       bool STEREO_ODOMETRY_ENABLED = false;
       bool PLANAR_REGIONS_ENABLED = false;
       bool SLAM_ENABLED = false;
+      bool DATASET_ENABLED = false;
 
       string TOPIC_CAMERA_NAME = "chest_l515";
 

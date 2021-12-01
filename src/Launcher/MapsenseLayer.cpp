@@ -167,9 +167,9 @@ namespace Clay
             _visualOdometry->update(appState);
          }
 
+         Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
          if(appState.ICP_ODOMETRY_ENABLED)
          {
-            Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
             if(model != nullptr)
             {
                _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
@@ -257,7 +257,16 @@ namespace Clay
       // Calculate ICP based Pointcloud Alignment.
       int prevCloudId = _models.size() - 2;
       int currentCloudId = _models.size() - 1;
-      int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];     Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne, _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
+      int partIds[_models[currentCloudId]->GetMesh()->_vertices.size() / 3];
+      Eigen::Matrix4f transformEigen = _icp->CalculateAlignment(_models[prevCloudId]->GetMesh()->_vertices, transformOne,
+                                                                _models[currentCloudId]->GetMesh()->_vertices, transformTwo, partIds, partCount, numVertBlocks);
+
+      if(transformEigen.hasNaN())
+      {
+         CLAY_LOG_INFO("Returning: ICP Generated NaN.");
+         return;
+      }
+
       for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) transform[j][i] = transformEigen(i, j);
 
       Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _poses[_poses.size()-1]);

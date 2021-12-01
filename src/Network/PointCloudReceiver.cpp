@@ -46,7 +46,7 @@ void PointCloudReceiver::ImGuiUpdate()
 
 void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloudMsg)
 {
-   CLAY_LOG_INFO("PointCloudCallback.");
+   CLAY_LOG_INFO("PointCloudCallback: {} {} {}", cloudMsg->header.frame_id, cloudMsg->height, cloudMsg->width);
    if (!_available)
    {
       _cloudMessage = cloudMsg;
@@ -55,13 +55,17 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
       Clay::Ref<Clay::PointCloud> cloud;
       cloud = std::make_shared<Clay::PointCloud>(glm::vec4(0.3, 0.4, 0.5, 1.0), nullptr);
 
+      int count = 0;
       for(const pcl::PointXYZ& pt : _cloudMessage->points)
       {
-         cloud->InsertVertex(-pt.y, pt.z, -pt.x);
+         count++;
+         if(!(pt.x == 0 && pt.y == 0 && pt.z == 0) && count % 4 == 0)
+         {
+            cloud->InsertVertex(-pt.y, pt.z, -pt.x);
+         }
       }
+      CLAY_LOG_INFO("Points: {}", cloud->GetSize());
       _clouds.push_back(std::move(cloud));
-
-      CLAY_LOG_INFO("Clouds: {}", _clouds.size());
    }
    if(_saveScans) {
       if(_scanCount % _skipScans == 0)DataManager::WriteScanPoints(cloudMsg, _scanCount);
