@@ -160,6 +160,7 @@ set(MAPSENSE_CLAY_SOURCES
 		src/Network/PointCloudReceiver.cpp)
 
 set(GEOMTOOLS_HEADERS
+		src/Geometry/include/NonLinearOptimizer.h
 		src/Geometry/include/GeomTools.h
 		src/Geometry/include/KDTree.h
 		src/Geometry/include/KDNode.h
@@ -175,6 +176,7 @@ set(GEOMTOOLS_HEADERS
 		src/headers/Core.h)
 
 set(GEOMTOOLS_SOURCE
+		src/Geometry/src/Optimizers/NonLinearOptimizer.cpp
 		src/Geometry/src/GeomTools.cpp
 		src/Geometry/src/Structures/KDTree.cpp
 		src/Geometry/src/Structures/KDNode.cpp
