@@ -7,13 +7,15 @@
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
+#include <xtensor/xarray.hpp>
+#include <xtensor/xcsv.hpp>
 #include "MapsenseHeaders.h"
 #include "Core/Log.h"
 
 class DataManager
 {
    public:
-      DataManager(const std::string& directory, const std::string& secondDirectory = "");
+      DataManager(const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
 
@@ -39,6 +41,7 @@ class DataManager
       std::vector<std::string> _secondFileNames;
       uint32_t _counter = 0;
       uint32_t _secondCounter = 0;
+      xt::xarray<float> _poses
 };
 
 #endif //FILEIO_H

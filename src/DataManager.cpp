@@ -1,10 +1,25 @@
 #include "DataManager.h"
 #include "AppUtils.h"
 
-DataManager::DataManager(const std::string& directory, const std::string& secondDirectory) : _directory(directory), _secondDirectory(secondDirectory)
+
+DataManager::DataManager(const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
+    : _directory(directory), _secondDirectory(secondDirectory)
 {
    AppUtils::getFileNames(_directory, _fileNames, true);
    if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, true);
+   if(poseFile != "")
+   {
+      ifstream in_file;
+      in_file.open(poseFile);
+      _poses = xt::load_csv<double>(in_file, ' ');
+
+      _poses.reshape({-1, 12});
+
+      CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
+
+      CLAY_LOG_INFO("Poses Value: {}", _poses.at(1, 2));
+
+   }
 }
 
 void DataManager::ShowNext()
