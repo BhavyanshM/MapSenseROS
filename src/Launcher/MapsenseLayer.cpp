@@ -78,9 +78,9 @@ namespace Clay
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
 
-      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-      _visualOdometry->Initialize(firstCloud);
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+//      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+//      _visualOdometry->Initialize(firstCloud);
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 
    }
 
@@ -170,8 +170,8 @@ namespace Clay
          if(appState.STEREO_ODOMETRY_ENABLED)
          {
             ROS_DEBUG("Stereo Odom Update");
+            _visualOdometry->Update(appState);
             _visualOdometry->Show();
-//            _visualOdometry->update(appState);
          }
 
          Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();

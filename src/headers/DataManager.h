@@ -41,7 +41,7 @@ class DataManager
       std::vector<std::string> _secondFileNames;
       uint32_t _counter = 0;
       uint32_t _secondCounter = 0;
-      xt::xarray<float> _poses
+      xt::xarray<float> _poses;
 };
 
 #endif //FILEIO_H

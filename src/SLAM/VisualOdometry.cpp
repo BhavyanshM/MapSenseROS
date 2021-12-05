@@ -10,11 +10,14 @@ VisualOdometry::VisualOdometry(int argc, char **argv, NetworkManager *network, A
 
 void VisualOdometry::ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc)
 {
+   desc.setTo(0);
+   points.clear();
    orb->detectAndCompute(img,  cv::noArray(), points, desc);
 //   if(desc.type() != CV_32F)
 //   {
 //      desc.convertTo(desc, CV_32F);
 //   }
+   CLAY_LOG_INFO("ExtractKeypoints(): Total Keypoint Features: {}", points.size());
 }
 
 void VisualOdometry::TrackKeypoints(cv::Mat prev, cv::Mat cur, std::vector<cv::Point2f>& prev_pts, std::vector<cv::Point2f>& cur_pts)
@@ -73,6 +76,7 @@ void VisualOdometry::DrawAllMatches(cv::Mat& image)
 
 void VisualOdometry::MatchKeypoints(cv::Mat& descTrain, cv::Mat& descQuery, std::vector<cv::DMatch>& matches)
 {
+   matches.clear();
    using namespace cv;
    BFMatcher matcher(NORM_HAMMING, true);
    matcher.match( descQuery, descTrain, matches);
@@ -82,7 +86,7 @@ void VisualOdometry::MatchKeypoints(cv::Mat& descTrain, cv::Mat& descQuery, std:
       return a.distance < b.distance;
    });
 
-   if(matches.size() > 90) matches.resize(90);
+   if(matches.size() > 200) matches.resize(200);
 
 //   for(auto match : matches)
 //      CLAY_LOG_INFO("Match Distance: {}", match.distance);
@@ -95,6 +99,9 @@ void VisualOdometry::MatchKeypoints(cv::Mat& descTrain, cv::Mat& descQuery, std:
 //            finalMatches.push_back(matches[i]);
 //   }
 //   matches = finalMatches
+
+   CLAY_LOG_INFO("MatchKeypoints(): Total Matches: {}", matches.size());
+
 }
 
 void VisualOdometry::GridSampleKeypoints(std::vector<cv::KeyPoint>& keypoints, std::vector<cv::DMatch>& matches)
@@ -132,7 +139,7 @@ void VisualOdometry::GridSampleKeypoints(std::vector<cv::KeyPoint>& keypoints, s
 }
 
 void VisualOdometry::TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector<cv::KeyPoint> kpLeft, std::vector<cv::KeyPoint> kpRight, std::vector<cv::DMatch> stereoMatches,
-                                             std::vector<std::pair<int, cv::Point3f>> points3D)
+                                             std::vector<PointLandmark> points3D)
 {
    /* Calculate Essential Matrix from Correspondences and Intrinsics
        (TUM-RGBD) - fx:517.3 fy:516.5 cx:318.6 cy:255.3
@@ -173,9 +180,9 @@ void VisualOdometry::TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector
       Mat point = points4D.col(m) / points4D.at<float>(3,m);
       float z = point.at<float>(2);
 //      CLAY_LOG_INFO("Triangulated Point: {} {} {}", point.at<float>(0,m), point.at<float>(1,m), point.at<float>(2,m));
-      if (z > 0) {
+      if (z > 0 && z < 1000) {
          points3D.emplace_back(
-               std::make_pair(0, Point3f(point.at<float>(0,m), point.at<float>(1,m), point.at<float>(2,m))));
+               PointLandmark( Vector3f(point.at<float>(0,m), point.at<float>(1,m), point.at<float>(2,m))));
          count++;
       }
    }
@@ -183,10 +190,11 @@ void VisualOdometry::TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector
 
 }
 
-void VisualOdometry::TriangulateStereoNormal(std::vector<cv::KeyPoint>& pointsTrain, std::vector<cv::KeyPoint>& pointsQuery, std::vector<cv::DMatch>& matches, std::vector<std::pair<int, cv::Point3f>>& points3D, float baseline, float focalLength)
+void VisualOdometry::TriangulateStereoNormal(std::vector<cv::KeyPoint>& pointsTrain, std::vector<cv::KeyPoint>& pointsQuery, std::vector<cv::DMatch>& matches, std::vector<PointLandmark>& points3D, float baseline, float focalLength)
 {
+   points3D.clear();
    float x1, x2, y1, y2, y_hat, X, Y, Z;
-   float cx = 607.193, cy = 185.216;
+   float cx = 607.1928, cy = 185.2157;
    for(auto match : matches)
    {
 //      CLAY_LOG_INFO("{} {}", pointsTrain[match.trainIdx].pt.x, pointsQuery[match.queryIdx].pt.x);
@@ -211,45 +219,96 @@ void VisualOdometry::TriangulateStereoNormal(std::vector<cv::KeyPoint>& pointsTr
          X = x1 * baseline / (x1 - x2);
          Y = (y_hat / 2) * (baseline / (x1 - x2));
 
-         CLAY_LOG_INFO("Point3D: {} {} {}", X, Y, Z);
+//         CLAY_LOG_INFO("Point3D: {} {} {}", X, Y, Z);
          if(Z > 0)
          {
-            points3D.emplace_back(std::make_pair(match.trainIdx, cv::Point3f(X,Y,Z)));
-            CLAY_LOG_INFO("Total Points: {} \t Points2D: [({}, {}), ({}, {})] \t Point3D: ({} {} {})", points3D.size(), x1, y1, x2, y2, X, Y, Z);
+            PointLandmark landmark(Eigen::Vector3f(X,Y,Z));
+            landmark.AddMeasurement2D(Eigen::Vector2f(x1, y1), match.trainIdx, 0);
+            landmark.AddMeasurement2D(Eigen::Vector2f(x2, y2), match.queryIdx, 1);
+            points3D.emplace_back(landmark);
+//            CLAY_LOG_INFO("Total Points: {} \t Points2D: [({}, {}), ({}, {})] \t Point3D: ({} {} {})", points3D.size(), x1, y1, x2, y2, X, Y, Z);
          }
 
       }
 
    }
+   CLAY_LOG_INFO("Triangulate(): Total Depth Points: {}", points3D.size());
 }
 
-void VisualOdometry::ExtractFinalSet(std::vector<cv::DMatch> leftMatches, std::vector<std::pair<int, cv::Point3f>>& points3D)
+void VisualOdometry::ExtractFinalSet(std::vector<cv::DMatch> leftMatches, std::vector<cv::KeyPoint> curLeftKp, std::vector<PointLandmark>& points3D)
 {
    int overlap = 0;
    for(auto match : leftMatches)
    {
-      for(auto landmark : points3D)
+      for(int i = 0; i<points3D.size(); i++)
       {
-         if(landmark.first == match.trainIdx)
+         if(points3D[i]._index[0] == match.trainIdx)
          {
-            CLAY_LOG_INFO("LeftTrain:{} -> 3DTrain:{}", match.trainIdx, landmark.first);
+//            CLAY_LOG_INFO("LeftTrain:{} -> 3DTrain:{}", match.trainIdx, points3D[i]._index[0]);
+            points3D[i].AddMeasurement2D(Eigen::Vector2f(curLeftKp[match.queryIdx].pt.x, curLeftKp[match.queryIdx].pt.y), match.queryIdx, 2);
             overlap++;
          }
       }
    }
-   CLAY_LOG_INFO("FOUND: {}", overlap);
+   CLAY_LOG_INFO("ExtractFinalSet(): Total Overlap PointLandmarks: {}", overlap);
+}
+
+const Eigen::Matrix4f& VisualOdometry::EstimateMotion(std::vector<PointLandmark> points, int cameraID)
+{
+   float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216;
+   float data[9] = {   fx, 0, cx, 0, fy, cy, 0, 0, 1 };
+   cv::Mat cameraMatrix = cv::Mat(3, 3, CV_32FC1, data);
+
+   // Read points
+   std::vector<cv::Point2f> imagePoints;
+   std::vector<cv::Point3f> objectPoints;
+
+   for(auto landmark : points)
+   {
+      imagePoints.emplace_back(cv::Point2f(landmark.GetMeasurements2D()[2].x(), landmark.GetMeasurements2D()[2].y()));
+      objectPoints.emplace_back(cv::Point3f(landmark.GetPoint3D().x(), landmark.GetPoint3D().y(), landmark.GetPoint3D().z()));
+   }
+
+   std::cout << "There are " << imagePoints.size() << " imagePoints and " << objectPoints.size() << " objectPoints." << std::endl;
+
+   std::cout << "Initial cameraMatrix: " << cameraMatrix << std::endl;
+
+   cv::Mat distCoeffs(4,1,cv::DataType<double>::type);
+   distCoeffs.at<double>(0) = 0;
+   distCoeffs.at<double>(1) = 0;
+   distCoeffs.at<double>(2) = 0;
+   distCoeffs.at<double>(3) = 0;
+
+   cv::Mat rvec(3,1,cv::DataType<double>::type);
+   cv::Mat tvec(3,1,cv::DataType<double>::type);
+   cv::Mat rotation(3,3, CV_32F);
+
+   cv::solvePnPRansac(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+   cv::Rodrigues(rvec, rotation);
+
+   cv::Mat cvPose = cv::Mat::eye(4,4,CV_32FC1);
+   rotation.copyTo(cvPose(cv::Range(0,3), cv::Range(0,3))); /* Excludes the 'end' element */
+   tvec.copyTo(cvPose(cv::Range(0,3), cv::Range(3,4)));
+
+   cv::invert(cvPose, cvPose);
+   this->cvCurPose = (this->cvCurPose * cvPose);
+
+   std::cout << "Pose: " << std::endl << cvPose << std::endl;
+
+   return Eigen::Matrix4f::Identity();
+
 }
 
 void VisualOdometry::Initialize(Clay::Ref<Clay::PointCloud>& cloud)
 {
-   std::vector<std::pair<int, cv::Point3f>> prevPoints3D, curPoints3D;
+   std::vector<PointLandmark> prevPoints3D, curPoints3D;
 
    /* To Skip a Few Images. */
-//   for(int i = 0; i<110; i++)
-//   {
-//      _data->GetNextImage();
-//      _data->GetNextSecondImage();
-//   }
+   for(int i = 0; i<110; i++)
+   {
+      _data->GetNextImage();
+      _data->GetNextSecondImage();
+   }
 
    leftImage = _data->GetNextImage();
    rightImage = _data->GetNextSecondImage();
@@ -280,7 +339,9 @@ void VisualOdometry::Initialize(Clay::Ref<Clay::PointCloud>& cloud)
 
 
 
-   ExtractFinalSet(matchesLeft, prevPoints3D);
+   ExtractFinalSet(matchesLeft, kp_curLeft, prevPoints3D);
+
+   Eigen::Matrix4f relativeCurPose = EstimateMotion(prevPoints3D, 2);
 
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
@@ -294,7 +355,7 @@ void VisualOdometry::Initialize(Clay::Ref<Clay::PointCloud>& cloud)
 
    for(int i = 0; i<prevPoints3D.size(); i++)
    {
-      cloud->InsertVertex(prevPoints3D[i].second.x * 0.01, prevPoints3D[i].second.y * 0.01, prevPoints3D[i].second.z * 0.01);
+      cloud->InsertVertex(prevPoints3D[i].GetPoint3D().x() * 0.01, prevPoints3D[i].GetPoint3D().y() * 0.01, prevPoints3D[i].GetPoint3D().z() * 0.01);
    }
 
 //   for(int i = 0; i<curPoints3D.size(); i++)
@@ -324,7 +385,7 @@ void VisualOdometry::Show()
    cv::waitKey(1);
 }
 
-void VisualOdometry::update(ApplicationState& appState)
+void VisualOdometry::Update(ApplicationState& appState)
 {
    double timestamp = 0;
 
@@ -338,6 +399,8 @@ void VisualOdometry::update(ApplicationState& appState)
       ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
    }
 
+   auto start_point = std::chrono::steady_clock::now();
+
    if (!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
    {
       if (count == 0)
@@ -348,42 +411,62 @@ void VisualOdometry::update(ApplicationState& appState)
          cvtColor(rightImage, prevRight, cv::COLOR_BGR2GRAY);
          ExtractKeypoints(prevLeft, orb, kp_prevLeft, desc_prevLeft);
          ExtractKeypoints(prevRight, orb, kp_prevRight, desc_prevRight);
+         MatchKeypoints(desc_prevLeft, desc_prevRight, prevMatchesStereo);
          count++;
          return;
       }
 
+      TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
+
+      leftImage = _data->GetNextImage();
+      rightImage = _data->GetNextSecondImage();
       cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
       cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
       ExtractKeypoints(curLeft, orb, kp_curLeft, desc_curLeft);
       ExtractKeypoints(curRight, orb, kp_curRight, desc_curRight);
 
-      /* Match previously found keypoints in current frame */
+      MatchKeypoints(desc_curLeft, desc_curRight, curMatchesStereo);
+
       MatchKeypoints(desc_prevLeft, desc_curLeft, matchesLeft);
-      MatchKeypoints(desc_prevRight,desc_curRight, matchesRight);
+      ExtractFinalSet(matchesLeft, kp_curLeft, _prevPoints3D);
 
-//      cv::drawMatches(prevLeft, kp_prevLeft, curLeft, kp_curLeft, matchesLeft, curFinalDisplay);
+      Eigen::Matrix4f relativeCurPose = EstimateMotion(_prevPoints3D, 2);
 
-      CLAY_LOG_INFO("Total Matches (Left): {}", matchesLeft.size());
-      CLAY_LOG_INFO("Total Matches (Right): {}", matchesRight.size());
-
-//      GridSampleKeypoints(kp_curLeft, matchesLeft);
-//      GridSampleKeypoints(kp_curRight, matchesRight);
-
-      CLAY_LOG_INFO("Sampled Matches (Left): {}", matchesLeft.size());
-      CLAY_LOG_INFO("Sampled Matches (Right): {}", matchesRight.size());
-
-      /* Match Keypoints between Left and Right images, and include those that are optimally matched. */
-      MatchKeypoints(desc_curLeft, desc_curRight, prevMatchesStereo);
+      cv::drawMatches(prevRight, kp_prevRight, prevLeft, kp_prevLeft, prevMatchesStereo, prevFinalDisplay);
 
 
-      DrawAllMatches(curFinalDisplay);
-
-
-      /* Calculate 3D points corresponding to left-right matches found in last step. */
-      std::vector<std::pair<int, cv::Point3f>> points3D;
-      TriangulateStereoPoints(curPoseLeft, kp_curLeft, kp_curRight, prevMatchesStereo, points3D);
-
-      CLAY_LOG_INFO("Triangulated Points: {}", points3D.size());
+//      cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
+//      cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
+//      ExtractKeypoints(curLeft, orb, kp_curLeft, desc_curLeft);
+//      ExtractKeypoints(curRight, orb, kp_curRight, desc_curRight);
+//
+//      /* Match previously found keypoints in current frame */
+//      MatchKeypoints(desc_prevLeft, desc_curLeft, matchesLeft);
+//      MatchKeypoints(desc_prevRight,desc_curRight, matchesRight);
+//
+////      cv::drawMatches(prevLeft, kp_prevLeft, curLeft, kp_curLeft, matchesLeft, curFinalDisplay);
+//
+//      CLAY_LOG_INFO("Total Matches (Left): {}", matchesLeft.size());
+//      CLAY_LOG_INFO("Total Matches (Right): {}", matchesRight.size());
+//
+////      GridSampleKeypoints(kp_curLeft, matchesLeft);
+////      GridSampleKeypoints(kp_curRight, matchesRight);
+//
+//      CLAY_LOG_INFO("Sampled Matches (Left): {}", matchesLeft.size());
+//      CLAY_LOG_INFO("Sampled Matches (Right): {}", matchesRight.size());
+//
+//      /* Match Keypoints between Left and Right images, and include those that are optimally matched. */
+//      MatchKeypoints(desc_curLeft, desc_curRight, prevMatchesStereo);
+//
+//
+//      DrawAllMatches(curFinalDisplay);
+//
+//
+//      /* Calculate 3D points corresponding to left-right matches found in last step. */
+//      std::vector<PointLandmark> points3D;
+//      TriangulateStereoPoints(curPoseLeft, kp_curLeft, kp_curRight, prevMatchesStereo, points3D);
+//
+//      CLAY_LOG_INFO("Triangulated Points: {}", points3D.size());
 
       //      /* Solve Non-Linear Least Squares to compute motion estimate for time-pair wrt only left image. */
       //      EstimateCameraMotion(prevPoints3D, curPoints3D, kp_prevLeft, kp_curLeft, curPoseLeft);
@@ -406,6 +489,7 @@ void VisualOdometry::update(ApplicationState& appState)
 //         CLAY_LOG_INFO("Total Keypoints Found (Right): {}", kp_curRight.size());
 //      }
 
+      prevMatchesStereo = curMatchesStereo;
       prevLeft = curLeft.clone();
       prevRight = curRight.clone();
       desc_prevLeft = desc_curLeft.clone();
@@ -414,7 +498,22 @@ void VisualOdometry::update(ApplicationState& appState)
       kp_prevRight = kp_curRight;
       count++;
 
-      AppUtils::DisplayImage(curFinalDisplay, appState);
+      auto end_point = std::chrono::steady_clock::now();
+      long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
+      long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();
+
+      float duration = (end - start) * 0.001f;
+
+      CLAY_LOG_INFO("(Visual Odometry) Total Time Taken: {} ms\n", duration);
+
+      //   cv::imshow("Initialize Visual Odometry", curFinalDisplay);
+
+//      for(int i = 0; i<_prevPoints3D.size(); i++)
+//      {
+//         cloud->InsertVertex(_prevPoints3D[i].GetPoint3D().x() * 0.01, _prevPoints3D[i].GetPoint3D().y() * 0.01, _prevPoints3D[i].GetPoint3D().z() * 0.01);
+//      }
+
+//      AppUtils::DisplayImage(curFinalDisplay, appState);
    }
 }
 

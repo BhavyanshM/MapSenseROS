@@ -124,7 +124,7 @@ set(SOURCE
 		src/ImPlot/implot_demo.cpp
 		src/ImPlot/implot_items.cpp
 		src/DataManager.cpp
-		src/FeatureDetection/VisualOdometry.cpp
+		src/SLAM/VisualOdometry.cpp
 		src/OpenCL/OpenCLManager.cpp
 		src/UI/ImGuiLayout.cpp
 		)
@@ -171,9 +171,7 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/Plane3D.h
 		src/Geometry/include/Point3D.h
 		src/Geometry/include/StructureFromMotion.h
-		src/headers/Instrumentor.h
-		src/headers/Timer.h
-		src/headers/Core.h)
+		src/Geometry/include/PointLandmark.h)
 
 set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Optimizers/NonLinearOptimizer.cpp
@@ -187,7 +185,7 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
 		src/Geometry/src/Modules/StructureFromMotion.cpp
-		src/headers/Log.h)
+		src/Geometry/src/Elements/PointLandmark.cpp)
 
 include_directories(
 		include
