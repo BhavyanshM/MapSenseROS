@@ -5,8 +5,8 @@
 DataManager::DataManager(const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
     : _directory(directory), _secondDirectory(secondDirectory)
 {
-   AppUtils::getFileNames(_directory, _fileNames, true);
-   if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, true);
+   AppUtils::getFileNames(_directory, _fileNames, false);
+   if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
    if(poseFile != "")
    {
       ifstream in_file;

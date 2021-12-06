@@ -19,6 +19,7 @@ class VisualOdometry
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
       void Update(ApplicationState& appState);
 
+      void ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1);
       void ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc);
       void TrackKeypoints(cv::Mat prev, cv::Mat cur, std::vector<cv::Point2f>& prev_pts, std::vector<cv::Point2f>& cur_pts);
       void MatchKeypoints(cv::Mat& desc1, cv::Mat& desc2, std::vector<cv::DMatch>& matches);
@@ -35,6 +36,9 @@ class VisualOdometry
                                    std::vector<PointLandmark>& points3D, float baseline, float focalLength);
       void TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector<cv::KeyPoint> kpLeft, std::vector<cv::KeyPoint> kpRight, std::vector<cv::DMatch> stereoMatches,
                                    std::vector<PointLandmark> points3D);
+
+      void CalculateOdometry_ORB(ApplicationState& appState);
+      void CalculateOdometry_FAST(ApplicationState& appState);
 
    private:
       uint32_t count = 0;
@@ -55,6 +59,8 @@ class VisualOdometry
       std::vector<cv::KeyPoint> kp_prevLeft, kp_prevRight, kp_curLeft, kp_curRight;
       cv::Mat cvCurPose = cv::Mat::eye(4,4, CV_32F);
       std::vector<PointLandmark> _prevPoints3D, _curPoints3D;
+
+      std::vector<cv::Point2f> prevFeaturesLeft, curFeaturesLeft;
 
       NetworkManager *_dataReceiver;
       DataManager *_data;
