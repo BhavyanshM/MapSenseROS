@@ -11,6 +11,7 @@
 #include "Scene/Mesh/PointCloud.h"
 #include "DataManager.h"
 
+
 class PointCloudReceiver : public ROS1TopicReceiver
 {
    public:
@@ -35,19 +36,16 @@ class PointCloudReceiver : public ROS1TopicReceiver
       bool IsReadyToRender() const {return _renderEnabled;}
       void SetReadyToRender(bool ready) { _renderEnabled = ready;}
       void SetRenderEnabled(bool enabled) {_renderEnabled = enabled;}
-      void ColorPointsByImage();
+      void ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image);
       Clay::Ref<Clay::PointCloud> GetNextCloud()
       {
-         CLAY_LOG_INFO("GetNextCloud()");
          if(_clouds.size() > 2)
          {
-            CLAY_LOG_INFO("Clouds Found: {}", _clouds.size());
             Clay::Ref<Clay::PointCloud> cloudToReturn = _clouds[_clouds.size()-1];
             _clouds.erase(_clouds.begin());
             return cloudToReturn;
          }
          else {
-            CLAY_LOG_INFO("No Clouds Found." + this->topicName);
             return nullptr;
          }
       }

@@ -54,12 +54,19 @@ void VisualOdometry::TrackKeypoints(cv::Mat prev, cv::Mat cur, std::vector<cv::P
       // Select good points
       cv::Point2f point = cur_pts.at(i - lastIndex);
       if ((status.at(i) == 0)||(point.x<0)||(point.y<0))	{
-         if((point.x<0)||(point.y<0))	{
-            status.at(i) = 0;
-         }
          prev_pts.erase(prev_pts.begin() + i);
          cur_pts.erase(cur_pts.begin() + i);
          lastIndex++;
+      }
+      else if((status.at(i) == 1))
+      {
+         float dist = norm((cur_pts[i] - prev_pts[i]));
+         if(err[i] > 10.0f || dist > 40)
+         {
+            prev_pts.erase(prev_pts.begin() + i);
+            cur_pts.erase(cur_pts.begin() + i);
+            lastIndex++;
+         }
       }
       // else{
       //     printf("(%d)(%.2lf, %.2lf) -> (%.2lf, %.2lf)\n", i, prev_pts[i].x, prev_pts[i].y,cur_pts[i].x,cur_pts[i].y);

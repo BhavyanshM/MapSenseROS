@@ -8,33 +8,30 @@ import numpy as np
 fig = plt.figure(figsize=(10,8))
 
 SHOW_3D = True
-GT = False
+GT = True
 
 if SHOW_3D:
     ax = Axes3D(fig)
-    line, = ax.plot([], [], [], lw=2)
+    line, = ax.plot([], [], [], 'b', lw=2)
+    gt_line, = ax.plot([], [], [], 'r', lw=2)
 else:
     ax = plt.axes(xlim=(-800, 800), ylim=(-800, 400))
     line, = ax.plot([], [], lw=5)
 
 
 
-if GT:
-    data = np.loadtxt("/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt", delimiter=' ', dtype=np.float64)
-else:
-    data = np.loadtxt("odometry.txt", delimiter=' ', dtype=np.float64)
+gt_data = np.loadtxt("/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt", delimiter=' ', dtype=np.float64)
+data = np.loadtxt("odometry_1.txt", delimiter=' ', dtype=np.float64)
 
 # data = data[:120, :]
 
 print(data.shape)
 
 trajectory = np.empty(shape=(data.shape[0], 3))
+gt_trajectory = np.empty(shape=(gt_data.shape[0], 3))
 
-prev_vel_mag = 1
-prev_vel = np.array([0,0,1])
 final_pose = np.eye(4,4)
-last_good_pose = np.eye(4)
-last_good_pose[:3,:] = np.reshape(data[0,:], (3,4))
+final_gt_pose = np.eye(4,4)
 
 old_pose_count = 0
 pose_count = 0
@@ -44,12 +41,14 @@ for i in range(data.shape[0]):
     pose = np.eye(4,4)
     pose[:3,:] = np.reshape(data[i,:], (3,4))
 
-    if GT:
-        trajectory[i, :3] = pose[:3,3].T
+    gt_pose = np.eye(4,4)
+    gt_pose[:3,:] = np.reshape(gt_data[i,:], (3,4))
 
-    else:
-        final_pose = final_pose @ pose
-        trajectory[i, :3] = final_pose[:3,3].T
+    final_gt_pose = final_gt_pose @ gt_pose
+    gt_trajectory[i, :3] = gt_pose[:3,3].T
+
+    final_pose = final_pose @ pose
+    trajectory[i, :3] = final_pose[:3,3].T
 
 # trajectory[:,1] = 0
 
@@ -57,9 +56,9 @@ x = trajectory[:,0]
 y = trajectory[:,1]
 z = trajectory[:,2]
 
-# ax.axes.set_xlim3d(-4.0, 4.0)
-# ax.axes.set_ylim3d(-4.0, 4.0)
-# ax.axes.set_zlim3d(-4.0, 4.0)
+ax.axes.set_xlim3d(-400, 400)
+ax.axes.set_ylim3d(-400, 400)
+ax.axes.set_zlim3d(-400, 400)
 
 if False:
     ax.plot(x, z, -y, lw=2)
@@ -72,18 +71,22 @@ else:
         if SHOW_3D:
             line.set_data([], [])
             line.set_3d_properties([])
+            gt_line.set_data([], [])
+            gt_line.set_3d_properties([])
         else:
             line.set_data([], [])
         return line,
 
-    def animate(i, line, data):
+    def animate(i, line, gt_line, data, gt_data):
         if SHOW_3D:
             line.set_data(trajectory[:i,0], -trajectory[:i,2])
             line.set_3d_properties(-trajectory[:i,1])
+            gt_line.set_data(gt_trajectory[:i,0], -gt_trajectory[:i,2])
+            gt_line.set_3d_properties(-gt_trajectory[:i,1])
         else:
             line.set_data(trajectory[:i,0], -trajectory[:i,2])
-        return line,
+        return line, gt_line
 
-    anim = animation.FuncAnimation(fig, animate, init_func=init, fargs=(line, trajectory),
-                                   frames=trajectory.shape[0], interval=10)
+    anim = animation.FuncAnimation(fig, animate, init_func=init, fargs=(line, gt_line, trajectory, gt_trajectory),
+                                   frames=trajectory.shape[0], interval=1)
     plt.show()

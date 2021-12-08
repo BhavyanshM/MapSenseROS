@@ -177,10 +177,16 @@ namespace Clay
          Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
          if(appState.ICP_ODOMETRY_ENABLED)
          {
+
+            double time = 2.0f;
+            cv::Mat image;
+            ((ImageReceiver*)_networkManager->receivers[appState.KITTI_LEFT_IMG_RECT])->getData(image, appState, time);
+
             if(model != nullptr)
             {
-               CLAY_LOG_INFO("Got ICP Points: {}", model->GetSize());
+//               CLAY_LOG_INFO("Got ICP Points: {}", model->GetSize());
                _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
+//               _pclReceiver->ColorPointsByImage(model, image);
             }
             if(_models.size() > 2)
             {
