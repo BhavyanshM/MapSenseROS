@@ -51,7 +51,7 @@ namespace Clay
                                "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
 
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _kitti);
-      _slamModule = new SLAMModule(argc, argv);
+//      _slamModule = new SLAMModule(argc, argv);
 
 
       _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);

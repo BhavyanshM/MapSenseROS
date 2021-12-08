@@ -407,8 +407,13 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState)
        (TUM-RGBD) - fx:517.3 fy:516.5 cx:318.6 cy:255.3
        (KITTI) - fx:718.856 fy:718.856 cx:607.193 cy:185.216
        (IHMC-Chest-L515) - fx:602.259 fy:603.040 cx:321.375 cy:240.515
+
+        ZED2 Parameters:
+            height: 720 width: 1280
+            distortion_model: "plumb_bob"
+            K: fx: 526.1423950195312, cx: 632.4866943359375, fy: 526.1423950195312, cy: 362.7293395996094
    */
-   float fx = 602.259, fy = 603.040, cx = 321.375, cy = 240.515;
+   float fx = 526.1423950195312, cx = 632.4866943359375, fy = 526.1423950195312, cy = 362.7293395996094;
    float data[9] = {   fx, 0, cx, 0, fy, cy, 0, 0, 1 };
    cv::Mat K = cv::Mat(3, 3, CV_32FC1, data);
    cv::Mat R(3,3,CV_32FC1), t(1,3,CV_32FC1), mask;

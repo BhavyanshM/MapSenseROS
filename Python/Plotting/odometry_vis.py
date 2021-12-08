@@ -8,7 +8,7 @@ import numpy as np
 fig = plt.figure(figsize=(10,8))
 
 SHOW_3D = True
-GT = True
+GT = False
 
 if SHOW_3D:
     ax = Axes3D(fig)
@@ -20,18 +20,20 @@ else:
 
 
 
-gt_data = np.loadtxt("/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt", delimiter=' ', dtype=np.float64)
-data = np.loadtxt("odometry_1.txt", delimiter=' ', dtype=np.float64)
+if GT:
+    gt_data = np.loadtxt("/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt", delimiter=' ', dtype=np.float64)
+data = np.loadtxt("odometry_zed.txt", delimiter=' ', dtype=np.float64)
 
 # data = data[:120, :]
 
 print(data.shape)
 
-trajectory = np.empty(shape=(data.shape[0], 3))
-gt_trajectory = np.empty(shape=(gt_data.shape[0], 3))
+if GT:
+    gt_trajectory = np.empty(shape=(gt_data.shape[0], 3))
+    final_gt_pose = np.eye(4,4)
 
+trajectory = np.empty(shape=(data.shape[0], 3))
 final_pose = np.eye(4,4)
-final_gt_pose = np.eye(4,4)
 
 old_pose_count = 0
 pose_count = 0
@@ -41,14 +43,15 @@ for i in range(data.shape[0]):
     pose = np.eye(4,4)
     pose[:3,:] = np.reshape(data[i,:], (3,4))
 
-    gt_pose = np.eye(4,4)
-    gt_pose[:3,:] = np.reshape(gt_data[i,:], (3,4))
-
-    final_gt_pose = final_gt_pose @ gt_pose
-    gt_trajectory[i, :3] = gt_pose[:3,3].T
-
     final_pose = final_pose @ pose
     trajectory[i, :3] = final_pose[:3,3].T
+
+    if GT:
+        gt_pose = np.eye(4,4)
+        gt_pose[:3,:] = np.reshape(gt_data[i,:], (3,4))
+
+        final_gt_pose = final_gt_pose @ gt_pose
+        gt_trajectory[i, :3] = gt_pose[:3,3].T
 
 # trajectory[:,1] = 0
 
@@ -71,8 +74,9 @@ else:
         if SHOW_3D:
             line.set_data([], [])
             line.set_3d_properties([])
-            gt_line.set_data([], [])
-            gt_line.set_3d_properties([])
+            if GT:
+                gt_line.set_data([], [])
+                gt_line.set_3d_properties([])
         else:
             line.set_data([], [])
         return line,
@@ -81,12 +85,23 @@ else:
         if SHOW_3D:
             line.set_data(trajectory[:i,0], -trajectory[:i,2])
             line.set_3d_properties(-trajectory[:i,1])
-            gt_line.set_data(gt_trajectory[:i,0], -gt_trajectory[:i,2])
-            gt_line.set_3d_properties(-gt_trajectory[:i,1])
+            if GT:
+                gt_line.set_data(gt_trajectory[:i,0], -gt_trajectory[:i,2])
+                gt_line.set_3d_properties(-gt_trajectory[:i,1])
         else:
             line.set_data(trajectory[:i,0], -trajectory[:i,2])
-        return line, gt_line
 
-    anim = animation.FuncAnimation(fig, animate, init_func=init, fargs=(line, gt_line, trajectory, gt_trajectory),
+        if GT:
+            return line, gt_line
+        else:
+            return line,
+
+    if GT:
+        anim = animation.FuncAnimation(fig, animate, init_func=init, fargs=(line, gt_line, trajectory, gt_trajectory),
                                    frames=trajectory.shape[0], interval=1)
-    plt.show()
+
+    else:
+        anim = animation.FuncAnimation(fig, animate, init_func=init, fargs=(line, None, trajectory, None),
+                                   frames=trajectory.shape[0], interval=1)
+
+plt.show()
