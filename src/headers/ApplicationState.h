@@ -113,6 +113,10 @@ class ApplicationState
       string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
       string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
 
+      string KITTI_LEFT_IMG_RECT = "/kitti/left/image_rect/compressed";
+      string KITTI_RIGHT_IMG_RECT = "/kitti/right/image_rect/compressed";
+      string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
+
       string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
       string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
 

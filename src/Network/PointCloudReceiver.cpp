@@ -64,8 +64,8 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
             cloud->InsertVertex(-pt.y, pt.z, -pt.x);
          }
       }
-      CLAY_LOG_INFO("Points: {}", cloud->GetSize());
       _clouds.push_back(std::move(cloud));
+      CLAY_LOG_INFO("Clouds: {}", _clouds.size());
    }
    if(_saveScans) {
       if(_scanCount % _skipScans == 0)DataManager::WriteScanPoints(cloudMsg, _scanCount);

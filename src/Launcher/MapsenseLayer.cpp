@@ -74,7 +74,7 @@ namespace Clay
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(secondCloud));
 
-      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[appState.OUSTER_POINTS]);
+      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[appState.KITTI_LIDAR_POINTS]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
 
@@ -179,12 +179,13 @@ namespace Clay
          {
             if(model != nullptr)
             {
+               CLAY_LOG_INFO("Got ICP Points: {}", model->GetSize());
                _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
             }
             if(_models.size() > 2)
             {
                _models.erase(_models.begin());
-               GetICPUpdate();
+//               GetICPUpdate();
             }
          }
 

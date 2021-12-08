@@ -49,7 +49,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
                                                                                                                          "/depth/camera_info";
    string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
 
-   string colorCompressedTopicName = "/camera/color/image_raw/_compressed";
+   string colorCompressedTopicName = "/camera/color/image_raw/compressed";
    string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
    app.L515_DEPTH = depthTopicName;
@@ -62,6 +62,10 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
    addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
    addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
+
+   addReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
