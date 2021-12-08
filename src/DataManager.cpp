@@ -2,24 +2,27 @@
 #include "AppUtils.h"
 
 
-DataManager::DataManager(const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
+DataManager::DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
     : _directory(directory), _secondDirectory(secondDirectory)
 {
-   AppUtils::getFileNames(_directory, _fileNames, false);
-   if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
-   if(poseFile != "")
-   {
-      ifstream in_file;
-      in_file.open(poseFile);
-      _poses = xt::load_csv<double>(in_file, ' ');
+    if(appState.DATASET_ENABLED)
+    {
+        AppUtils::getFileNames(_directory, _fileNames, false);
+        if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
+        if(poseFile != "")
+        {
+            ifstream in_file;
+            in_file.open(poseFile);
+            _poses = xt::load_csv<double>(in_file, ' ');
 
-      _poses.reshape({-1, 12});
+            _poses.reshape({-1, 12});
 
-      CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
+            CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
 
-      CLAY_LOG_INFO("Poses Value: {}", _poses.at(1, 2));
+            CLAY_LOG_INFO("Poses Value: {}", _poses.at(1, 2));
 
-   }
+        }
+    }
 }
 
 void DataManager::ShowNext()

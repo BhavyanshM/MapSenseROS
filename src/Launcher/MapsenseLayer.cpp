@@ -46,9 +46,9 @@ namespace Clay
       _icp = new IterativeClosestPoint();
       _icp->SetOpenCLManager(_openCLManager);
 
-      _kitti = new DataManager("/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
+      _kitti = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
                                "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
-                                          "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
+                               "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
 
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _kitti);
       _slamModule = new SLAMModule(argc, argv);

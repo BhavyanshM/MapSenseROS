@@ -11,11 +11,12 @@
 #include <xtensor/xcsv.hpp>
 #include "MapsenseHeaders.h"
 #include "Core/Log.h"
+#include "ApplicationState.h"
 
 class DataManager
 {
    public:
-      DataManager(const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
+      DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
 

@@ -17,7 +17,7 @@ find_package(GTest REQUIRED) # Find the google testing framework on your system
 
 find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
-find_package( OpenCV 4.5.2 REQUIRED )
+find_package( OpenCV REQUIRED )
 find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
@@ -195,6 +195,7 @@ include_directories(
 		/usr/include/CL/
 		Vendor/spdlog/include
 		Vendor/xtensor/include
+		/usr/local/include/ClayEngine/Vendor/
 )
 
 #set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
@@ -229,6 +230,7 @@ target_link_libraries(icp Eigen3::Eigen)
 add_executable(Mapsense_Clay ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
 target_include_directories(Mapsense_Clay PUBLIC
 		"/usr/local/include/ClayEngine"
+		"/usr/local/include/ClayEngine/Vendor/"
 		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
 		"/usr/local/include/ClayEngine/Vendor/glfw/include"
 		"/usr/local/include/ClayEngine/Vendor/glm"
@@ -255,6 +257,7 @@ if(BUILD_HEADLESS)
 			src/Launcher/MapsenseHeadlessLauncher.cpp
 			src/headers/MapsenseHeadlessLauncher.h)
 	target_include_directories(mapsense_headless PUBLIC
+			"/usr/local/include/ClayEngine/Vendor/"
 			"/usr/local/include/ClayEngine"
 			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
 			"/usr/local/include/ClayEngine/Vendor/glfw/include"
