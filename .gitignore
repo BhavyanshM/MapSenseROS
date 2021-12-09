@@ -9,3 +9,4 @@ cmake-*
 Vendor/libtorch*
 build*
 Extras/Clouds/Archived*
+*.pyc
