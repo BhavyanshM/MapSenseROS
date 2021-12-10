@@ -8,11 +8,11 @@ from Camera import *
 
 fig = plt.figure(figsize=(24,9))
 
-solver = NonLinearSolver(11)
+solver = NonLinearSolver(162)
 print(solver.GetProjectionJacobian(np.array([1,2,3])))
 print(solver.GetPointJacobian(np.array([1,2,3]), np.eye(3)))
 print(solver.GetCameraJacobian(np.array([1,2,3])))
-A = solver.Linearize()
+A, b = solver.Linearize(None, None)
 
 # plt.spy(A)
 # plt.show()
@@ -43,12 +43,12 @@ cam = Camera()
 imgPoints = np.empty(shape=(data.shape[0],2))
 for i in range(data.shape[0]):
     homo_point = np.array([data[i,0], data[i,1], data[i,2], 1])
-    print(cam.Project(homo_point))
+    # print(cam.Project(homo_point))
     proj = cam.Project(homo_point)
     if 0 < proj[0] < cam.width and 0 < proj[1] < cam.height:
         imgPoints[i,:] = proj
 
-
+solver.Compute(imgPoints)
 
 
 ax1 = fig.add_subplot(1, 2, 2)

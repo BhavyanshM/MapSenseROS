@@ -20,3 +20,6 @@ class Camera:
         x = (cam_point[0] * self.fx) + self.cx
         y = (cam_point[1] * self.fy) + self.cy
         return np.array([x, y])
+
+    def SetTransform(self, transform):
+        self.transform = transform

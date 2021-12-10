@@ -59,7 +59,7 @@ def so3_down(matrix):
 
 def SE3Exp(pose):
     so3_mat = so3_up(pose[:3])
-    R = Exp(pose)
+    R = SO3Exp(pose)
     theta = np.linalg.norm(pose[:3])
     V = np.eye(3) + ((1 - np.cos(theta))/(theta*theta)) * so3_mat + ((theta - np.sin(theta))/(theta*theta*theta)) * (so3_mat @ so3_mat)
     t = V @ pose[3:6]
