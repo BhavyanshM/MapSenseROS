@@ -22,8 +22,10 @@ find_package(OpenCL REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
 find_package(xtl REQUIRED)
+find_package(BLAS REQUIRED)
 
 add_subdirectory(Vendor/xtensor)
+add_subdirectory(Vendor/xtensor-blas)
 
 include_directories(${GTSAM_INCLUDE_DIR})
 
@@ -195,6 +197,7 @@ include_directories(
 		/usr/include/CL/
 		Vendor/spdlog/include
 		Vendor/xtensor/include
+		Vendor/xtensor-blas/include
 		/usr/local/include/ClayEngine/Vendor/
 )
 
@@ -244,7 +247,7 @@ target_link_libraries(Mapsense_Clay
 		Eigen3::Eigen tbb gtsam
 		geom-tools planar-regions slam icp
 		ClayEngine
-		glad imgui glfw3 ${CMAKE_DL_LIBS} )
+		glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
 add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
 target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
 target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")

@@ -14,9 +14,7 @@ class Camera:
 
     def Project(self, homo_point):
         cam_point = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]]) @ self.transform @ homo_point
-        # print("CamPoint: ", cam_point)
         cam_point /= cam_point[2]
-        # print("ImagePoint: ", cam_point)
         x = (cam_point[0] * self.fx) + self.cx
         y = (cam_point[1] * self.fy) + self.cy
         return np.array([x, y])

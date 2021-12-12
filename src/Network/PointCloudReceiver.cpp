@@ -6,6 +6,11 @@
 #include <xtensor/xarray.hpp>
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xio.hpp>
+#include <xtensor/xview.hpp>
+#include <xtensor/xmasked_view.hpp>
+#include <xtensor/xindex_view.hpp>
+#include <xtensor/xdynamic_view.hpp>
+#include <xtensor-blas/xlinalg.hpp>
 
 PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, bool compressed)
 {
@@ -78,6 +83,13 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
 
 void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image)
 {
+
+   xt::xarray<float> ProjMat = {{1,0,0,0},{0,1,0,0},{0,0,1,0}};
+
+   xt::xarray<float> xImage = xt::adapt(
+         (float*) image.data, image.cols * image.rows,
+         xt::no_ownership(), std::vector<std::size_t> {(uint32_t)image.rows, (uint32_t)image.cols});
+
    const uint32_t length = cloud->GetSize();
 //   auto points = xt::zeros<float>({3, length});
    auto ones = xt::ones<float>({1, (int)length});
@@ -91,29 +103,44 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
 //      vel_points = np.insert(xyz, 3, 1, axis=1).T
    auto homo_points = xt::vstack(xt::xtuple(points, ones));
 
-   std::cout << homo_points << std::endl;
+   //   # Remove all points with X-forward negative.
+   //      vel_points = np.delete(vel_points, np.where(vel_points[0, :] < 0), axis=1)
+   auto xPositiveIndices = xt::from_indices(xt::argwhere(xt::view(homo_points, 0) > 0));
+   auto pointsX = xt::view(homo_points, xt::all(), xt::keep(xPositiveIndices));
 
-//
-//   # Remove all points with X-forward negative.
-//      vel_points = np.delete(vel_points, np.where(vel_points[0, :] < 0), axis=1)
-//
-//   # Create non-homogeneous copy.
-//      cloud = vel_points.copy()
-//      cloud = np.delete(cloud, 3, axis=0)
-//
-//   # Project onto Camera
-//      cam_points = ProjMat @ TransformToCam @ vel_points
-//
-//   # Remove all 3D points from 'cloud' behind the Camera (Z-forward negative).
-//      cloud = np.delete(cloud, np.where(cam_points[2, :] < 0), axis=1)
-//
-//   # Remove all 2D projected with Z-forward negative.
-//      cam_points = np.delete(cam_points, np.where(cam_points[2, :] < 0), axis=1)
-//
-//   # Normalize by the Z-coordinate of Projected points.
-//      cam_points[:2] /= cam_points[2, :]
-//      u, v, z = cam_points
-//
+
+   //   # Create non-homogeneous copy.
+   //      cloud = vel_points.copy()
+   //      cloud = np.delete(cloud, 3, axis=0)
+
+   //
+   //   # Project onto Camera
+   //      cam_points = ProjMat @ TransformToCam @ vel_points
+   //
+
+
+   auto cam_points = xt::linalg::dot(ProjMat, pointsX);
+
+   xt::view(cam_points, 0, xt::all()) = xt::view(cam_points, 0, xt::all()) / xt::view(cam_points, 2, xt::all());
+   xt::view(cam_points, 1, xt::all()) = xt::view(cam_points, 1, xt::all()) / xt::view(cam_points, 2, xt::all());
+
+
+   //   # Remove all 3D points from 'cloud' behind the Camera (Z-forward negative).
+
+   //      cloud = np.delete(cloud, np.where(cam_points[2, :] < 0), axis=1)
+   // TODO: Remove all 3D points that are behind the camera.
+
+   //   # Remove all 2D projected with Z-forward negative.
+   //      cam_points = np.delete(cam_points, np.where(cam_points[2, :] < 0), axis=1)
+   auto zCamPositiveIndices = xt::from_indices(xt::argwhere(xt::view(cam_points, 2) > 0));
+   auto camPointsZ = xt::view(cam_points, xt::all(), xt::keep(zCamPositiveIndices));
+
+
+   CLAY_LOG_INFO("Before Shape: {} {}", cam_points.shape()[0], cam_points.shape()[1]);
+   CLAY_LOG_INFO("After Shape: {} {}", camPointsZ.shape()[0], camPointsZ.shape()[1]);
+
+   std::cout << camPointsZ << std::endl;
+
 //   # Remove all points outside that were projected outside the image frame.
 //      u_out = np.logical_or(u < 0, u > width)
 //      v_out = np.logical_or(v < 0, v > height)

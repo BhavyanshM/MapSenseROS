@@ -186,7 +186,7 @@ namespace Clay
             {
 //               CLAY_LOG_INFO("Got ICP Points: {}", model->GetSize());
                _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
-//               _pclReceiver->ColorPointsByImage(model, image);
+               _pclReceiver->ColorPointsByImage(model, image);
             }
             if(_models.size() > 2)
             {

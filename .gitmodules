@@ -7,3 +7,6 @@
 [submodule "Vendor/xtensor"]
 	path = Vendor/xtensor
 	url = https://github.com/xtensor-stack/xtensor.git
+[submodule "Vendor/xtensor-blas"]
+	path = Vendor/xtensor-blas
+	url = https://github.com/xtensor-stack/xtensor-blas.git
