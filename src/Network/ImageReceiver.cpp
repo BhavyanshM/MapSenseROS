@@ -49,7 +49,7 @@ void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
    }
 }
 
-void ImageReceiver::render()
+void ImageReceiver::render(ApplicationState& app)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Render: %s", this->topicName.c_str());
@@ -65,7 +65,7 @@ void ImageReceiver::render()
 //         disp = ImageTools::cvUndistort(this->_image, cv::Mat(), cv::Mat());
       } else
          disp = this->_image;
-      appUtils->appendToDebugOutput(disp);
+      AppUtils::DisplayImage(disp, app);
    }
 }
 
@@ -114,6 +114,7 @@ void ImageReceiver::processMessage(ApplicationState& app)
 void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& timestamp)
 {
    MAPSENSE_PROFILE_FUNCTION();
+    ROS_DEBUG("Image Received: %s", topicName.c_str());
    timestamp = this->timestampLastReceived;
    if(this->_image.rows != 0 && this->_image.cols != 0 && !this->_image.empty())
    {

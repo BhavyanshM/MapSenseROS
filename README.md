@@ -68,7 +68,7 @@ rosbag play --loop L515_MotionCinderBlocks.bag
 ## Output Topics
 
 ```
-/map/regions/test
+/mapsense/planar_regionsd
 ```
 
 ## Configuration Parameters

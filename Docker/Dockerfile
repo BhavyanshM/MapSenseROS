@@ -51,6 +51,7 @@ RUN apt-get --quiet 2 --yes update \
     libxi-dev \
     ros-noetic-pcl-conversions \
     ros-noetic-pcl-ros \
+    ros-noetic-usb-cam \
     > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 

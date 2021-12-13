@@ -32,7 +32,7 @@ void PointCloudReceiver::getData(cv::Mat& image, ApplicationState& app, double& 
 
 }
 
-void PointCloudReceiver::render()
+void PointCloudReceiver::render(ApplicationState& app)
 {
    if (_available && _renderEnabled )
    {
@@ -67,13 +67,13 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
       for(const pcl::PointXYZ& pt : _cloudMessage->points)
       {
          count++;
-         if(!(pt.x == 0 && pt.y == 0 && pt.z == 0) && count % 4 == 0)
+         if(!(pt.x == 0 && pt.y == 0 && pt.z == 0))
          {
             cloud->InsertVertex(pt.x, pt.y, pt.z);
          }
       }
       _clouds.push_back(std::move(cloud));
-//      CLAY_LOG_INFO("Clouds: {}", _clouds.size());
+      CLAY_LOG_INFO("Clouds: {} {}", topicName, _clouds.size());
    }
    if(_saveScans) {
       if(_scanCount % _skipScans == 0)DataManager::WriteScanPoints(cloudMsg, _scanCount);
@@ -93,6 +93,8 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
                   [          0           0           1           0]]
     */
 
+    CLAY_LOG_INFO("Color Pointcloud Update");
+
    // Initialize Projection and Transformation Matrices
    xt::xarray<float> ProjMat = { {     707.05,           0,      604.08,           0},
                                  {          0,      707.05,      180.51,           0},
@@ -105,8 +107,10 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    // Create XTensor array for OpenCV Image
    size_t size = image.total();
    size_t channels = image.channels();
-   xt::xarray<float> xImage = xt::adapt((float*) image.data, image.cols * image.rows * 3,
+   xt::xarray<float> xImage = xt::adapt((uint8_t *) image.data, image.cols * image.rows * 3,
          xt::no_ownership(), std::vector<std::size_t>{(uint32_t)image.rows, (uint32_t)image.cols, (uint32_t)image.channels()});
+
+    CLAY_LOG_INFO("xImage: {} {}", xImage.shape()[0], xImage.shape()[1], xImage.shape()[2]);
 
    const uint32_t length = cloud->GetSize();
    auto ones = xt::ones<float>({1, (int)length});
@@ -142,6 +146,8 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    std::cout << camPointsImg << std::endl;
    std::cout << hCamPoints3DXZImg << std::endl;
 
+    CLAY_LOG_INFO("HCamPoints3D: {} {}", hCamPoints3DXZImg.shape()[0], hCamPoints3DXZImg.shape()[1]);
+
    int count = 0;
    cloud->Reset();
    for(int i = 0; i<hCamPoints3DXZImg.shape()[1]; i++)
@@ -149,7 +155,8 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
       count++;
       if(!(hCamPoints3DXZImg(0,i) == 0 && hCamPoints3DXZImg(1,i) == 0 && hCamPoints3DXZImg(2,i) == 0))
       {
-         cloud->InsertVertex(-hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i), -hCamPoints3DXZImg(0,i));
+//         cloud->InsertVertex(-hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i), -hCamPoints3DXZImg(0,i));
+          cloud->InsertVertex(hCamPoints3DXZImg(0,i), hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i));
          cloud->InsertIndex(i);
 
          cv::Vec3b color = image.at<cv::Vec3b>(camPointsImg(0,i),camPointsImg(1,i));

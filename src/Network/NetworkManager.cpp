@@ -39,7 +39,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    rosNode = new NodeHandle();
 
    // ROSTopic Publishers
-   planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
+   planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/mapsense/planar_regions", 3);
    slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
    coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
@@ -61,12 +61,13 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    addReceiver(TopicInfo(app.L515_DEPTH, "sensor_msgs/Image"), TopicInfo(app.L515_DEPTH_INFO, "sensor_msgs/CameraInfo"));
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
    addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
-   addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
-   addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
+   addReceiver(TopicInfo(app.BLACKFLY_RIGHT_RAW, "sensor_msgs/Image"));
+//   addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
+//   addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
 
-   addReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
+//   addReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
+//   addReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
+//   addReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
@@ -161,7 +162,7 @@ void NetworkManager::receiverUpdate(ApplicationState& app)
    {
       ROS_DEBUG("RenderUpdate: {}", receiver.first.c_str());
       receiver.second->processMessage(app);
-      receiver.second->render();
+      receiver.second->render(app);
       ROS_DEBUG("RenderUpdate: Complete");
    }
 }

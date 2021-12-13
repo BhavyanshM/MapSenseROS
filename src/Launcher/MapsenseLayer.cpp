@@ -74,7 +74,7 @@ namespace Clay
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(secondCloud));
 
-      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[appState.KITTI_LIDAR_POINTS]);
+      _pclReceiver = ((PointCloudReceiver*)_networkManager->receivers[appState.OUSTER_POINTS]);
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
 
@@ -162,7 +162,7 @@ namespace Clay
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
 
             // TODO: Fix this and publish planarregions msg
-            //         _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
+             _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
             _regionCalculator->Render();
          }
 
@@ -180,14 +180,15 @@ namespace Clay
 
             double time = 2.0f;
             cv::Mat image;
-            ((ImageReceiver*)_networkManager->receivers[appState.KITTI_LEFT_IMG_RECT])->getData(image, appState, time);
+
+            ((ImageReceiver*)_networkManager->receivers[appState.BLACKFLY_RIGHT_RAW])->getData(image, appState, time);
 
             if(model != nullptr)
             {
 //               CLAY_LOG_INFO("Got ICP Points: {}", model->GetSize());
                _pclReceiver->ColorPointsByImage(model, image);
                _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
-               AppUtils::DisplayImage(image, appState);
+//               AppUtils::DisplayImage(image, appState);
 
                // TODO: Publish cloud with colors here.
                _networkManager->PublishColoredPointCloud(model);
@@ -220,6 +221,8 @@ namespace Clay
       {
          ExperimentalUpdate();
       }
+
+       ROS_DEBUG("ROS Update Completed");
 
    }
 

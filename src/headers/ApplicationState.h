@@ -88,7 +88,7 @@ class ApplicationState
       bool DEPTH_ALIGNED = false;
       bool EARLY_GAUSSIAN_BLUR = true;
 
-      bool ICP_ODOMETRY_ENABLED = true;
+      bool ICP_ODOMETRY_ENABLED = false;
       bool STEREO_ODOMETRY_ENABLED = false;
       bool PLANAR_REGIONS_ENABLED = false;
       bool SLAM_ENABLED = false;
@@ -119,6 +119,8 @@ class ApplicationState
 
       string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
       string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
+
+      string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
 
 
 };

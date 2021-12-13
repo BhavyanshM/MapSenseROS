@@ -16,7 +16,7 @@ class image_converter:
     def __init__(self):
 
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/camera/image_color", Image,self.callback)
+        self.image_sub = rospy.Subscriber("/blackfly/right/image_color", Image, self.callback)
         self.rectImage_pub = rospy.Publisher("/blackfly/rect/image_color/compressed", CompressedImage, queue_size=2)
 
         self.processor = rospy.Timer(rospy.Duration(0.01), self.processingCallback)

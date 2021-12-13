@@ -30,7 +30,7 @@ class ROS1TopicReceiver
 
    public:
       const std::string& getTopicName() {return topicName;}
-      virtual void render() = 0;
+      virtual void render(ApplicationState& app) = 0;
       virtual void ImGuiUpdate() = 0;
       virtual void processMessage(ApplicationState& app){};
       void setAppUtils(AppUtils* appUtils);

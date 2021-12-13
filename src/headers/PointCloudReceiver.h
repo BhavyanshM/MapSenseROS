@@ -23,7 +23,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
 
       void getData(cv::Mat& image, ApplicationState& app, double& timestamp);
 
-      void render() override;
+      void render(ApplicationState& app) override;
 
       void ImGuiUpdate() override;
 
