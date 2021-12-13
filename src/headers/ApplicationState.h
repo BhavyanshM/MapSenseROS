@@ -88,7 +88,7 @@ class ApplicationState
       bool DEPTH_ALIGNED = false;
       bool EARLY_GAUSSIAN_BLUR = true;
 
-      bool ICP_ODOMETRY_ENABLED = false;
+      bool ICP_ODOMETRY_ENABLED = true;
       bool STEREO_ODOMETRY_ENABLED = false;
       bool PLANAR_REGIONS_ENABLED = false;
       bool SLAM_ENABLED = false;

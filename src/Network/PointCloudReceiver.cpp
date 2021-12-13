@@ -69,7 +69,7 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
          count++;
          if(!(pt.x == 0 && pt.y == 0 && pt.z == 0) && count % 4 == 0)
          {
-            cloud->InsertVertex(-pt.y, pt.z, -pt.x);
+            cloud->InsertVertex(pt.x, pt.y, pt.z);
          }
       }
       _clouds.push_back(std::move(cloud));
@@ -83,71 +83,97 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
 
 void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image)
 {
+   /* Transform:  [   0.006928    -0.99997  -0.0027578   -0.024577]
+                [  -0.001163   0.0027498          -1   -0.061272]
+                [    0.99998   0.0069311  -0.0011439     -0.3321]
+                [          0           0           0           1]
 
-   xt::xarray<float> ProjMat = {{1,0,0,0},{0,1,0,0},{0,0,1,0}};
+      Projection: [[     707.05           0      604.08           0]
+                  [          0      707.05      180.51           0]
+                  [          0           0           1           0]]
+    */
 
+   // Initialize Projection and Transformation Matrices
+   xt::xarray<float> ProjMat = { {     707.05,           0,      604.08,           0},
+                                 {          0,      707.05,      180.51,           0},
+                                 {          0,           0,           1,           0}};
+   xt::xarray<float> TransformToCam =  {{    0.006928,    -0.99997,    -0.0027578,   -0.024577},
+                                       {     -0.001163,   0.0027498,           -1,   -0.061272},
+                                       {     0.99998,     0.0069311,   -0.0011439,     -0.3321},
+                                       {     0,                   0,            0,           1}};
+
+   std::vector<float> testPoints = {1., 2., 2.3, 3.2, 0.1, 3.,1., 3., 4.3, 6.2, 7.1, 8.,1., 9., 5.3, 3.1, 4.1, 7.8};
+   std::vector<std::size_t> s = { 6, 3 };
+   auto a1 = xt::transpose(xt::adapt(testPoints, s));
+
+   CLAY_LOG_INFO("TestPoints: ");
+   std::cout << a1 << std::endl;
+
+   // Create XTensor array for OpenCV Image
    xt::xarray<float> xImage = xt::adapt(
          (float*) image.data, image.cols * image.rows,
          xt::no_ownership(), std::vector<std::size_t> {(uint32_t)image.rows, (uint32_t)image.cols});
 
    const uint32_t length = cloud->GetSize();
-//   auto points = xt::zeros<float>({3, length});
    auto ones = xt::ones<float>({1, (int)length});
 
-   std::vector<double> v = {1., 2., 3., 4., 5., 6. };
-   std::vector<std::size_t> shape = { 3, length };
-   auto points = xt::adapt(cloud->GetMesh()->_vertices, shape);
+   // Create XTensor array for 3d points
+   std::vector<std::size_t> shape = { length, 3 };
+   auto points3D = xt::transpose(xt::adapt(cloud->GetMesh()->_vertices, shape));
+   auto hPoints3D = xt::vstack(xt::xtuple(points3D, ones));
+
+//   CLAY_LOG_INFO("Points3D:");
+//   std::cout << hPoints3D << std::endl;
+
+   // Remove all points with X-forward negative.
+   auto xPositiveIndices = xt::from_indices(xt::argwhere(xt::view(hPoints3D, 0) > 0));
+   auto hPoints3DX = xt::view(hPoints3D, xt::all(), xt::keep(xPositiveIndices));
+
+   // Matrix Multiply Projection and Transform Matrices
+   auto hCamPoints = xt::linalg::dot(xt::linalg::dot(ProjMat, TransformToCam), hPoints3DX);
+
+   // Normalize Homogeneous Image Points
+   xt::view(hCamPoints, 0, xt::all()) = xt::view(hCamPoints, 0, xt::all()) / xt::view(hCamPoints, 2, xt::all());
+   xt::view(hCamPoints, 1, xt::all()) = xt::view(hCamPoints, 1, xt::all()) / xt::view(hCamPoints, 2, xt::all());
+
+   // Select all Image Points and 3D points where Z was positive after projection.
+   auto zCamPositiveIndices = xt::from_indices(xt::argwhere(xt::view(hCamPoints, 2) > 0));
+   auto hCamPointsZ = xt::view(hCamPoints, xt::all(), xt::keep(zCamPositiveIndices));
+   auto hCamPoints3D = xt::view(hPoints3D, xt::all(), xt::keep(zCamPositiveIndices));
+
+   // Select all points for which the projection falls within Image frame bounds.
+   auto imgIndices = xt::from_indices(xt::argwhere(xt::view(hCamPointsZ, 0) > 0 && xt::view(hCamPointsZ, 0) < image.cols &&
+                                 xt::view(hCamPointsZ, 1) > 0 && xt::view(hCamPointsZ, 1) < image.rows));
+   auto camPointsImg = xt::view(hCamPointsZ, xt::all(), xt::keep(imgIndices));
+   camPointsImg = xt::cast<int>(camPointsImg);
+   auto hCamPoints3DImg = xt::view(hCamPoints3D, xt::all(), xt::keep(imgIndices));
+
+   int count = 0;
+   cloud->Reset();
+   for(int i = 0; i<hCamPoints3DImg.shape()[1]; i++)
+   {
+      count++;
+      if(!(hCamPoints3DImg(0,i) == 0 && hCamPoints3DImg(1,i) == 0 && hCamPoints3DImg(2,i) == 0))
+      {
+         cloud->InsertVertex(-hCamPoints3DImg(1,i), hCamPoints3DImg(2,i), -hCamPoints3DImg(0,i));
+         cloud->InsertIndex(i);
+      }
+   }
+
+   CLAY_LOG_INFO("Points3D Shape: {} {}", hCamPoints3DImg.shape()[0], hCamPoints3DImg.shape()[1]);
+   CLAY_LOG_INFO("CamPoints Shape: {} {}", camPointsImg.shape()[0], camPointsImg.shape()[1]);
+
+//   xt::xarray<int> colors = xt::view(xImage, xt::view(camPointsImg, 0), xt::view(camPointsImg, 0), xt::all());
 
 
-//   # Convert to Homogeneous
-//      vel_points = np.insert(xyz, 3, 1, axis=1).T
-   auto homo_points = xt::vstack(xt::xtuple(points, ones));
+   std::cout << camPointsImg << std::endl;
+   std::cout << hCamPoints3DImg << std::endl;
 
-   //   # Remove all points with X-forward negative.
-   //      vel_points = np.delete(vel_points, np.where(vel_points[0, :] < 0), axis=1)
-   auto xPositiveIndices = xt::from_indices(xt::argwhere(xt::view(homo_points, 0) > 0));
-   auto pointsX = xt::view(homo_points, xt::all(), xt::keep(xPositiveIndices));
+   for(int i = 0; i<camPointsImg.shape()[1]; i++)
+   {
+      cv::circle(image, cv::Point(camPointsImg(0,i), camPointsImg(1,i)), 2, cv::Scalar(255,255,0), -1);
+   }
 
-
-   //   # Create non-homogeneous copy.
-   //      cloud = vel_points.copy()
-   //      cloud = np.delete(cloud, 3, axis=0)
-
-   //
-   //   # Project onto Camera
-   //      cam_points = ProjMat @ TransformToCam @ vel_points
-   //
-
-
-   auto cam_points = xt::linalg::dot(ProjMat, pointsX);
-
-   xt::view(cam_points, 0, xt::all()) = xt::view(cam_points, 0, xt::all()) / xt::view(cam_points, 2, xt::all());
-   xt::view(cam_points, 1, xt::all()) = xt::view(cam_points, 1, xt::all()) / xt::view(cam_points, 2, xt::all());
-
-
-   //   # Remove all 3D points from 'cloud' behind the Camera (Z-forward negative).
-
-   //      cloud = np.delete(cloud, np.where(cam_points[2, :] < 0), axis=1)
-   // TODO: Remove all 3D points that are behind the camera.
-
-   //   # Remove all 2D projected with Z-forward negative.
-   //      cam_points = np.delete(cam_points, np.where(cam_points[2, :] < 0), axis=1)
-   auto zCamPositiveIndices = xt::from_indices(xt::argwhere(xt::view(cam_points, 2) > 0));
-   auto camPointsZ = xt::view(cam_points, xt::all(), xt::keep(zCamPositiveIndices));
-
-
-   CLAY_LOG_INFO("Before Shape: {} {}", cam_points.shape()[0], cam_points.shape()[1]);
-   CLAY_LOG_INFO("After Shape: {} {}", camPointsZ.shape()[0], camPointsZ.shape()[1]);
-
-   std::cout << camPointsZ << std::endl;
-
-//   # Remove all points outside that were projected outside the image frame.
-//      u_out = np.logical_or(u < 0, u > width)
-//      v_out = np.logical_or(v < 0, v > height)
-//      outlier = np.logical_or(u_out, v_out)
-//      cloud = np.delete(cloud, np.where(outlier), axis=1)
-//      cam_points = np.delete(cam_points, np.where(outlier), axis=1)
-//
 //      cloud = get_rotation_y(- self.pitch / 180 * np.pi) @ np.insert(cloud, 3, 1, axis=0)
 //
 //   # Return Original, Non-Homogeneous Frustrum(ized) and Projected 2D point sets.
