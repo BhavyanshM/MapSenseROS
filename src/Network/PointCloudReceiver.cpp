@@ -139,6 +139,9 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    camPointsImg = xt::cast<int>(camPointsImg);
    auto hCamPoints3DXZImg = xt::view(hCamPoints3DXZ, xt::all(), xt::keep(imgIndices));
 
+   std::cout << camPointsImg << std::endl;
+   std::cout << hCamPoints3DXZImg << std::endl;
+
    int count = 0;
    cloud->Reset();
    for(int i = 0; i<hCamPoints3DXZImg.shape()[1]; i++)
@@ -148,8 +151,13 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
       {
          cloud->InsertVertex(-hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i), -hCamPoints3DXZImg(0,i));
          cloud->InsertIndex(i);
+
+         cv::Vec3b color = image.at<cv::Vec3b>(camPointsImg(0,i),camPointsImg(1,i));
+         cloud->InsertColor({color[0], color[1], color[2], 1});
       }
    }
+
+   /*
 
    CLAY_LOG_INFO("Points3D Shape: {} {}", hCamPoints3DXZImg.shape()[0], hCamPoints3DXZImg.shape()[1]);
 
@@ -162,7 +170,7 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
 
    CLAY_LOG_INFO("CamPoints Shape: {} {} {}", colors.shape()[0], colors.shape()[1], colors.shape()[2]);
 
-//   std::cout << colors << std::endl;
+    */
 
    for(int i = 0; i<camPointsImg.shape()[1]; i++)
    {

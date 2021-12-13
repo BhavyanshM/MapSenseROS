@@ -189,6 +189,9 @@ namespace Clay
                _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
                AppUtils::DisplayImage(image, appState);
 
+               // TODO: Publish cloud with colors here.
+               _networkManager->PublishColoredPointCloud(model);
+
             }
             if(_models.size() > 2)
             {

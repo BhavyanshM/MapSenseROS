@@ -47,6 +47,7 @@ class NetworkManager
       Subscriber subMapSenseParams;
       Publisher planarRegionPub;
       Publisher slamPosePub;
+      Publisher coloredCloudPub;
 
       bool depthCamInfoSet = false;
       bool paramsAvailable = false;
@@ -90,6 +91,8 @@ class NetworkManager
       void publishSLAMPose(RigidBodyTransform pose);
 
       void acceptMapsenseConfiguration(ApplicationState& appState);
+
+      void PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud);
 };
 
 #endif //SRC_SENSORDATARECEIVER_H

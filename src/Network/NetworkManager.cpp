@@ -41,6 +41,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    // ROSTopic Publishers
    planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/map/regions/test", 3);
    slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
+   coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
    // ROSTopic Subscribers
    string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
@@ -176,6 +177,46 @@ void NetworkManager::publishSamplePose(int count)
    pose.pose.orientation = geometry_msgs::Quaternion();
 
    this->slamPosePub.publish(pose);
+}
+
+void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
+{
+
+   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
+   pcl_cloud.width = cloud->GetSize();
+   pcl_cloud.height = 1;
+
+
+
+   for(int i = 0; i<cloud->GetSize(); i++)
+   {
+      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
+      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
+      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
+      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
+
+//      uint8_t r = 255;
+//      uint8_t g = 0;
+//      uint8_t b = 0;
+//      int32_t rgb = (r << 16) | (g << 8) | b;
+
+      pcl_cloud.points.push_back(p);
+   }
+
+
+   sensor_msgs::PointCloud2 msg;
+//   msg.data = nullptr;
+//   msg.fields = nullptr;
+//   msg.header = nullptr;
+//   msg.height = nullptr;
+//   msg.width = nullptr;
+//   msg.point_step = nullptr;
+//   msg.row_step = nullptr;
+
+
+   pcl::toROSMsg(pcl_cloud, msg);
+   msg.header.frame_id = "ouster_frame";
+   coloredCloudPub.publish(msg);
 }
 
 void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app)
