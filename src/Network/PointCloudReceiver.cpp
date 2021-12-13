@@ -102,17 +102,11 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
                                        {     0.99998,     0.0069311,   -0.0011439,     -0.3321},
                                        {     0,                   0,            0,           1}};
 
-   std::vector<float> testPoints = {1., 2., 2.3, 3.2, 0.1, 3.,1., 3., 4.3, 6.2, 7.1, 8.,1., 9., 5.3, 3.1, 4.1, 7.8};
-   std::vector<std::size_t> s = { 6, 3 };
-   auto a1 = xt::transpose(xt::adapt(testPoints, s));
-
-   CLAY_LOG_INFO("TestPoints: ");
-   std::cout << a1 << std::endl;
-
    // Create XTensor array for OpenCV Image
-   xt::xarray<float> xImage = xt::adapt(
-         (float*) image.data, image.cols * image.rows,
-         xt::no_ownership(), std::vector<std::size_t> {(uint32_t)image.rows, (uint32_t)image.cols});
+   size_t size = image.total();
+   size_t channels = image.channels();
+   xt::xarray<float> xImage = xt::adapt((float*) image.data, image.cols * image.rows * 3,
+         xt::no_ownership(), std::vector<std::size_t>{(uint32_t)image.rows, (uint32_t)image.cols, (uint32_t)image.channels()});
 
    const uint32_t length = cloud->GetSize();
    auto ones = xt::ones<float>({1, (int)length});
@@ -121,9 +115,6 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    std::vector<std::size_t> shape = { length, 3 };
    auto points3D = xt::transpose(xt::adapt(cloud->GetMesh()->_vertices, shape));
    auto hPoints3D = xt::vstack(xt::xtuple(points3D, ones));
-
-//   CLAY_LOG_INFO("Points3D:");
-//   std::cout << hPoints3D << std::endl;
 
    // Remove all points with X-forward negative.
    auto xPositiveIndices = xt::from_indices(xt::argwhere(xt::view(hPoints3D, 0) > 0));
@@ -139,39 +130,45 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    // Select all Image Points and 3D points where Z was positive after projection.
    auto zCamPositiveIndices = xt::from_indices(xt::argwhere(xt::view(hCamPoints, 2) > 0));
    auto hCamPointsZ = xt::view(hCamPoints, xt::all(), xt::keep(zCamPositiveIndices));
-   auto hCamPoints3D = xt::view(hPoints3D, xt::all(), xt::keep(zCamPositiveIndices));
+   auto hCamPoints3DXZ = xt::view(hPoints3DX, xt::all(), xt::keep(zCamPositiveIndices));
 
    // Select all points for which the projection falls within Image frame bounds.
    auto imgIndices = xt::from_indices(xt::argwhere(xt::view(hCamPointsZ, 0) > 0 && xt::view(hCamPointsZ, 0) < image.cols &&
                                  xt::view(hCamPointsZ, 1) > 0 && xt::view(hCamPointsZ, 1) < image.rows));
    auto camPointsImg = xt::view(hCamPointsZ, xt::all(), xt::keep(imgIndices));
    camPointsImg = xt::cast<int>(camPointsImg);
-   auto hCamPoints3DImg = xt::view(hCamPoints3D, xt::all(), xt::keep(imgIndices));
+   auto hCamPoints3DXZImg = xt::view(hCamPoints3DXZ, xt::all(), xt::keep(imgIndices));
 
    int count = 0;
    cloud->Reset();
-   for(int i = 0; i<hCamPoints3DImg.shape()[1]; i++)
+   for(int i = 0; i<hCamPoints3DXZImg.shape()[1]; i++)
    {
       count++;
-      if(!(hCamPoints3DImg(0,i) == 0 && hCamPoints3DImg(1,i) == 0 && hCamPoints3DImg(2,i) == 0))
+      if(!(hCamPoints3DXZImg(0,i) == 0 && hCamPoints3DXZImg(1,i) == 0 && hCamPoints3DXZImg(2,i) == 0))
       {
-         cloud->InsertVertex(-hCamPoints3DImg(1,i), hCamPoints3DImg(2,i), -hCamPoints3DImg(0,i));
+         cloud->InsertVertex(-hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i), -hCamPoints3DXZImg(0,i));
          cloud->InsertIndex(i);
       }
    }
 
-   CLAY_LOG_INFO("Points3D Shape: {} {}", hCamPoints3DImg.shape()[0], hCamPoints3DImg.shape()[1]);
-   CLAY_LOG_INFO("CamPoints Shape: {} {}", camPointsImg.shape()[0], camPointsImg.shape()[1]);
+   CLAY_LOG_INFO("Points3D Shape: {} {}", hCamPoints3DXZImg.shape()[0], hCamPoints3DXZImg.shape()[1]);
 
-//   xt::xarray<int> colors = xt::view(xImage, xt::view(camPointsImg, 0), xt::view(camPointsImg, 0), xt::all());
+   auto indicesX = xt::cast<size_t>(xt::view(camPointsImg, 0));
+   auto indicesY = xt::cast<size_t>(xt::view(camPointsImg, 1));
 
+   CLAY_LOG_INFO("Image Shape: {} {}", xImage.shape()[0], xImage.shape()[1]);
 
-   std::cout << camPointsImg << std::endl;
-   std::cout << hCamPoints3DImg << std::endl;
+   xt::xarray<int> colors = xt::view(xImage, xt::keep(indicesY), xt::keep(indicesX), xt::all());
+
+   CLAY_LOG_INFO("CamPoints Shape: {} {} {}", colors.shape()[0], colors.shape()[1], colors.shape()[2]);
+
+//   std::cout << colors << std::endl;
 
    for(int i = 0; i<camPointsImg.shape()[1]; i++)
    {
-      cv::circle(image, cv::Point(camPointsImg(0,i), camPointsImg(1,i)), 2, cv::Scalar(255,255,0), -1);
+      // cv2.circle(im0, (int(u[0, i]), int(v[0, i])), 1, (int(z[0, i] / 20 * 255), 200, int(z[0, i] / 20 * 255)),-1)
+      cv::circle(image, cv::Point(camPointsImg(0,i), camPointsImg(1,i)), 2,
+                 cv::Scalar((int) (camPointsImg(2,i) / 40 * 255),(int) (camPointsImg(2,i) / 40 * 255),200), -1);
    }
 
 //      cloud = get_rotation_y(- self.pitch / 180 * np.pi) @ np.insert(cloud, 3, 1, axis=0)
