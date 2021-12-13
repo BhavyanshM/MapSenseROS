@@ -19,19 +19,19 @@ if [[ "$OS_NAME" == *"Arch"* ]]; then
   	--privileged \
   	--gpus all \
   	--device /dev/dri:/dev/dri \
-  	ihmcrobotics/mapsense-nvidia-ros:1.0 bash
+  	ihmcrobotics/mapsense-nvidia-ros:1.1 bash
 else
   docker run -it \
     --name mapsense \
     --net=host \
     --env="DISPLAY" \
     --volume "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-    --volume "$(pwd)/../.."/SharedVolume:/home/robotlab/SharedVolume:rw \
-    --volume "$(pwd)/../..":/home/robotlab/dev/mapsense_ws/src:rw \
+    --volume "$(pwd)/.."/SharedVolume:/home/robotlab/SharedVolume:rw \
+    --volume "$(pwd)/..":/home/robotlab/dev/mapsense_ws/src/map_sense:rw \
     --volume "$HOME"/.config/JetBrains:/home/robotlab/.config/JetBrains:rw \
     --privileged \
     --runtime=nvidia \
     --gpus all \
     --device /dev/dri:/dev/dri \
-    ihmcrobotics/mapsense-nvidia-ros:1.0 bash
+    ihmcrobotics/mapsense-nvidia-ros:1.1 bash
 fi

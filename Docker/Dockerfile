@@ -45,10 +45,12 @@ RUN add-apt-repository ppa:borglab/gtsam-develop \
     libxinerama-dev \
     > /dev/null
 
-RUN apt-get --quiet 2 --yes install \
+RUN apt-get --quiet 2 --yes update \
+ && apt-get --quiet 2 --yes install \
     libxcursor-dev \
     libxi-dev \
     ros-noetic-pcl-conversions \
+    ros-noetic-pcl-ros \
     > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 
@@ -80,6 +82,18 @@ RUN mkdir packages \
     && make -j32 \
     && make install \
     && cd ../../.. \
+    && rm -rf packages
+
+
+RUN mkdir packages \ 
+    && cd packages \ 
+    && git clone https://github.com/xtensor-stack/xtl.git \
+    && cd xtl/ \
+    && mkdir build \
+    && cd build/ \
+    && cmake .. \
+    && make install \
+    && cd ../../../ \
     && rm -rf packages
 
 USER robotlab
