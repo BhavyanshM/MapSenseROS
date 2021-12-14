@@ -81,7 +81,7 @@ void PointCloudReceiver::cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::Con
    }
 }
 
-void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image)
+void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image, float ousterPitch)
 {
    /* Transform:  [   0.006928    -0.99997  -0.0027578   -0.024577]
                 [  -0.001163   0.0027498          -1   -0.061272]
@@ -93,6 +93,7 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
                   [          0           0           1           0]]
     */
 
+
     CLAY_LOG_INFO("Color Pointcloud Update");
 
    // Initialize Projection and Transformation Matrices
@@ -103,6 +104,12 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
                                        {     -0.001163,   0.0027498,           -1,   -0.061272},
                                        {     0.99998,     0.0069311,   -0.0011439,     -0.3321},
                                        {     0,                   0,            0,           1}};
+   float pitch = ousterPitch/180 * M_PI;
+
+   xt::xarray<float> TransformPitchDown =  {{    cos(pitch),   0,    sin(pitch),  0},
+                                           {     0,               1,    0,             0},
+                                           {     -sin(pitch),  0,    cos(pitch),  0},
+                                           {     0.0,             0,    0.0,           1}};
 
    // Create XTensor array for OpenCV Image
    size_t size = image.total();
@@ -119,10 +126,11 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    std::vector<std::size_t> shape = { length, 3 };
    auto points3D = xt::transpose(xt::adapt(cloud->GetMesh()->_vertices, shape));
    auto hPoints3D = xt::vstack(xt::xtuple(points3D, ones));
+   auto pitchHPoints3D = xt::linalg::dot(TransformPitchDown, hPoints3D);
 
    // Remove all points with X-forward negative.
-   auto xPositiveIndices = xt::from_indices(xt::argwhere(xt::view(hPoints3D, 0) > 0));
-   auto hPoints3DX = xt::view(hPoints3D, xt::all(), xt::keep(xPositiveIndices));
+   auto xPositiveIndices = xt::from_indices(xt::argwhere(xt::view(pitchHPoints3D, 0) > 0));
+   auto hPoints3DX = xt::view(pitchHPoints3D, xt::all(), xt::keep(xPositiveIndices));
 
    // Matrix Multiply Projection and Transform Matrices
    auto hCamPoints = xt::linalg::dot(xt::linalg::dot(ProjMat, TransformToCam), hPoints3DX);
@@ -164,9 +172,11 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
       }
    }
 
+   CLAY_LOG_INFO("Points3D Shape: {} {}", camPointsImg.shape()[0], camPointsImg.shape()[1]);
+
    /*
 
-   CLAY_LOG_INFO("Points3D Shape: {} {}", hCamPoints3DXZImg.shape()[0], hCamPoints3DXZImg.shape()[1]);
+
 
    auto indicesX = xt::cast<size_t>(xt::view(camPointsImg, 0));
    auto indicesY = xt::cast<size_t>(xt::view(camPointsImg, 1));
@@ -183,7 +193,7 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    {
       // cv2.circle(im0, (int(u[0, i]), int(v[0, i])), 1, (int(z[0, i] / 20 * 255), 200, int(z[0, i] / 20 * 255)),-1)
       cv::circle(image, cv::Point(camPointsImg(0,i), camPointsImg(1,i)), 2,
-                 cv::Scalar((int) (camPointsImg(2,i) / 40 * 255),(int) (camPointsImg(2,i) / 40 * 255),200), -1);
+                 cv::Scalar((int) (camPointsImg(2,i) / 10 * 255),(int) (camPointsImg(2,i) / 10 * 255),200), -1);
    }
 
 //      cloud = get_rotation_y(- self.pitch / 180 * np.pi) @ np.insert(cloud, 3, 1, axis=0)

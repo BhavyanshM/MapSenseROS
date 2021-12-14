@@ -36,7 +36,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
       bool IsReadyToRender() const {return _renderEnabled;}
       void SetReadyToRender(bool ready) { _renderEnabled = ready;}
       void SetRenderEnabled(bool enabled) {_renderEnabled = enabled;}
-      void ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image);
+      void ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image, float ousterPitch = 30);
       Clay::Ref<Clay::PointCloud> GetNextCloud()
       {
          if(_clouds.size() > 2)

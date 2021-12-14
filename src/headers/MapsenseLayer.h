@@ -81,6 +81,7 @@ namespace Clay
          uint32_t _scanCount = 100;
          int partCount = 40;
          int numVertBlocks = 10;
+         float ousterPitch = 30;
 
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;

@@ -186,9 +186,14 @@ namespace Clay
             if(model != nullptr)
             {
 //               CLAY_LOG_INFO("Got ICP Points: {}", model->GetSize());
-               _pclReceiver->ColorPointsByImage(model, image);
-               _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
-//               AppUtils::DisplayImage(image, appState);
+
+
+
+               _pclReceiver->ColorPointsByImage(model, image, ousterPitch);
+//               _models.emplace_back(std::move(std::dynamic_pointer_cast<Model>(model)));
+               AppUtils::DisplayImage(image, appState);
+
+               CLAY_LOG_INFO("Got Points: ", model->GetSize());
 
                // TODO: Publish cloud with colors here.
                _networkManager->PublishColoredPointCloud(model);
@@ -465,6 +470,7 @@ namespace Clay
       }
 
       ImGui::SliderInt("Part Count", &partCount, 1, 40);
+      ImGui::SliderFloat("Pitch", &ousterPitch, 0, 45);
       ImGui::End();
 
       ImGui::End();

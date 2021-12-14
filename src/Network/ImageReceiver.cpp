@@ -3,6 +3,7 @@
 //
 
 #include "ImageReceiver.h"
+#include "ImageTools.h"
 
 ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 {
@@ -62,7 +63,8 @@ void ImageReceiver::render(ApplicationState& app)
       }
       cv::Mat disp;
       if(undistortEnabled){
-//         disp = ImageTools::cvUndistort(this->_image, cv::Mat(), cv::Mat());
+
+         disp = ImageTools::cvUndistort(this->_image, cv::Mat(), cv::Mat());
       } else
          disp = this->_image;
       AppUtils::DisplayImage(disp, app);
@@ -100,7 +102,12 @@ void ImageReceiver::processMessage(ApplicationState& app)
             else if(_imageMessage->encoding.find("rgb8") != string::npos)
                this->_imageEncoding = sensor_msgs::image_encodings::TYPE_16UC3;
             img_ptr = cv_bridge::toCvCopy(*_imageMessage, _imageEncoding);
-            _image = img_ptr->image;
+
+            if(undistortEnabled)
+               _image = ImageTools::cvUndistort(img_ptr->image, cv::Mat(), cv::Mat());
+            else
+               _image = img_ptr->image;
+
             timestampLastReceived = _imageMessage.get()->header.stamp.toSec();
          }
          ROS_DEBUG("Image Processed:", _image.rows, _image.cols);
