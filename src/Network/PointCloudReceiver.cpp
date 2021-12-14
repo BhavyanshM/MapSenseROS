@@ -97,8 +97,9 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
     CLAY_LOG_INFO("Color Pointcloud Update");
 
    // Initialize Projection and Transformation Matrices
-   xt::xarray<float> ProjMat = { {     707.05,           0,      604.08,           0},
-                                 {          0,      707.05,      180.51,           0},
+   // BlackFly Intrinsics Right: 499.3716197917922, 0.0, 1043.8826790137316, 0.0, 506.42956667285574, 572.2558510618412, 0.0, 0.0, 1.0
+   xt::xarray<float> ProjMat = { {     499.3716197917922,           0,      1043.8826790137316,           0},
+                                 {          0,      506.42956667285574,      572.2558510618412,           0},
                                  {          0,           0,           1,           0}};
    xt::xarray<float> TransformToCam =  {{    0.006928,    -0.99997,    -0.0027578,   -0.024577},
                                        {     -0.001163,   0.0027498,           -1,   -0.061272},
@@ -161,7 +162,7 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    for(int i = 0; i<hCamPoints3DXZImg.shape()[1]; i++)
    {
       count++;
-      if(!(hCamPoints3DXZImg(0,i) == 0 && hCamPoints3DXZImg(1,i) == 0 && hCamPoints3DXZImg(2,i) == 0))
+      if(!(hCamPoints3DXZImg(0,i) == 0 && hCamPoints3DXZImg(1,i) == 0 && hCamPoints3DXZImg(2,i) == 0) && count % 2 == 0)
       {
 //         cloud->InsertVertex(-hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i), -hCamPoints3DXZImg(0,i));
           cloud->InsertVertex(hCamPoints3DXZImg(0,i), hCamPoints3DXZImg(1,i), hCamPoints3DXZImg(2,i));
@@ -175,8 +176,6 @@ void PointCloudReceiver::ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, c
    CLAY_LOG_INFO("Points3D Shape: {} {}", camPointsImg.shape()[0], camPointsImg.shape()[1]);
 
    /*
-
-
 
    auto indicesX = xt::cast<size_t>(xt::view(camPointsImg, 0));
    auto indicesY = xt::cast<size_t>(xt::view(camPointsImg, 1));

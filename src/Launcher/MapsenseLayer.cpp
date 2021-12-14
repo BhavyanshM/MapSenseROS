@@ -470,7 +470,7 @@ namespace Clay
       }
 
       ImGui::SliderInt("Part Count", &partCount, 1, 40);
-      ImGui::SliderFloat("Pitch", &ousterPitch, 0, 45);
+      ImGui::SliderFloat("Pitch", &ousterPitch, -60, 60);
       ImGui::End();
 
       ImGui::End();

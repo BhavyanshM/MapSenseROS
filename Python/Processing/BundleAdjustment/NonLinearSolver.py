@@ -1,7 +1,7 @@
 import scipy.sparse.linalg
 from scipy import sparse
 import numpy as np
-np.set_printoptions(precision=2)
+np.set_printoptions(precision=2, suppress=True)
 
 from TransformUtils import *
 from Camera import *
@@ -34,7 +34,6 @@ class NonLinearSolver:
 
         # Build vector of residuals for all observations at current Linearization point
         b = np.zeros(shape=(200,))
-        # TODO: Complete the vector above.
         for i in range(2):
             for j in range(50):
                 P = np.array(self.params[12 + j*3 : 12 + (j+1)*3])
