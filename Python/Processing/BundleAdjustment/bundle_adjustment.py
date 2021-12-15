@@ -21,13 +21,13 @@ ax.set_ylim(-8, 8)
 ax.set_zlim(-8, 8)
 line, = ax.plot([], [], [], 'ro')
 
-mean = np.array([0,0,5])
+mean = np.array([0,0,0])
 zero_mean = np.array([0,0,0])
 cov = np.eye(3)
-data = np.random.multivariate_normal(mean, cov * 0.5 , (50,))
+data = np.random.multivariate_normal(mean, cov * 0.5 , (500,))
 
-# for i in range(data.shape[0]):
-#     data[i,:] = data[i,:] / np.linalg.norm(data[i,:])
+for i in range(data.shape[0]):
+    data[i,:] = data[i,:] / np.linalg.norm(data[i,:])
 
 noise = np.empty_like(data)
 for i in range(noise.shape[0]):
@@ -42,7 +42,7 @@ data = data + noise
 
 # Create first camera and generate measurements
 cam = Camera()
-cam.transform = np.eye(4) @ get_rotation_z(0.1)
+cam.transform = get_translation_xyz(0,0,-2) @ get_rotation_z(0.1)
 imgPoints = np.empty(shape=(data.shape[0],2))
 for i in range(data.shape[0]):
     homo_point = np.array([data[i,0], data[i,1], data[i,2], 1])
@@ -53,7 +53,7 @@ for i in range(data.shape[0]):
 
 # Create second camera and generate measurements
 cam2 = Camera()
-cam2.transform = get_translation_xyz(2,0,0) @ get_rotation_y(0.4)
+cam2.transform = get_translation_xyz(0,0,-1) @ get_rotation_y(1)
 imgPoints2 = np.empty(shape=(data.shape[0],2))
 for i in range(data.shape[0]):
     homo_point = np.array([data[i,0], data[i,1], data[i,2], 1])
@@ -63,15 +63,15 @@ for i in range(data.shape[0]):
         imgPoints2[i,:] = proj
 
 # Instantiate and call solver methods
-solver = NonLinearSolver(162)
-
-initial = np.zeros(shape=(162,))
-initial[:6] = SE3Log(cam.transform)
-initial[6:12] = SE3Log(cam2.transform)
-initial[12:162] = np.reshape(data, (-1,))
-
-measurements = np.vstack([imgPoints, imgPoints2])
-solver.Compute(measurements, initial)
+# solver = NonLinearSolver(162)
+#
+# initial = np.zeros(shape=(162,))
+# initial[:6] = SE3Log(cam.transform)
+# initial[6:12] = SE3Log(cam2.transform)
+# initial[12:162] = np.reshape(data, (-1,))
+#
+# measurements = np.vstack([imgPoints, imgPoints2])
+# solver.Compute(measurements, initial)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ------------------------------Data Plotting Here ----------------------------------
@@ -82,17 +82,17 @@ ax.plot([cam2.transform[0, 3]], [cam2.transform[1, 3]], [cam2.transform[2, 3]], 
 
 # Plot both measurements and 3D points
 ax1 = fig.add_subplot(2, 2, 2)
-ax1.set_xlim(0,800)
-ax1.set_ylim(0,600)
-# ax1.set((0,800))
-# ax1.ylim((0,600))
+ax1.set_xlim(-1,1)
+ax1.set_ylim(-1,1)
+# ax1.set((-1,1))
+# ax1.ylim((-1,1))
 ax1.plot(imgPoints[:,0], imgPoints[:,1], 'bo', markersize=4)
 
 ax2 = fig.add_subplot(2, 2, 4)
-ax2.set_xlim(0,800)
-ax2.set_ylim(0,600)
-# ax2.set((0,800))
-# ax2.ylim((0,600))
+ax2.set_xlim(-1,1)
+ax2.set_ylim(-1,1)
+# ax2.set((-1,1))
+# ax2.ylim((-1,1))
 ax2.plot(imgPoints2[:,0], imgPoints2[:,1], 'go', markersize=4)
 
 

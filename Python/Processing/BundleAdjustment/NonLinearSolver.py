@@ -74,7 +74,10 @@ class NonLinearSolver:
     def Compute(self, measurements, initial):
 
         self.params = initial
+        total_err = 0
         for i in range(self.iterations):
+
+            print(i, "Error: ", total_err, "Params: ", self.params[12:24])
 
             A, b = self.Linearize(self.params, measurements)
             total_err = np.sum(np.abs(b))
@@ -85,6 +88,6 @@ class NonLinearSolver:
             dx = self.Solve(A, b)
             self.params = self.Update(self.params, np.array(dx))
 
-            print("Iteration: ", i, "Total Error: ", total_err, "Update:", dx[10:20])
+
 
 

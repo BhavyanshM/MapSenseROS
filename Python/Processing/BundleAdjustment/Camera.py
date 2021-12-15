@@ -4,8 +4,8 @@ from TransformUtils import *
 
 class Camera:
     def __init__(self):
-        self.fx = 800
-        self.fy = 800
+        self.fx = 1
+        self.fy = 1
         self.width = 800
         self.height = 600
         self.cx = 400
@@ -15,8 +15,15 @@ class Camera:
     def Project(self, homo_point):
         cam_point = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]]) @ self.transform @ homo_point
         cam_point /= cam_point[2]
-        x = (cam_point[0] * self.fx) + self.cx
-        y = (cam_point[1] * self.fy) + self.cy
+
+        # x = (cam_point[0] * self.fx) + self.cx
+        # y = (cam_point[1] * self.fy) + self.cy
+
+
+        x = (cam_point[0])
+        y = (cam_point[1])
+
+        print("Point: ", cam_point)
         return np.array([x, y])
 
     def SetTransform(self, transform):
