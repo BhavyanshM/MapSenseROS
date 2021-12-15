@@ -85,6 +85,6 @@ class NonLinearSolver:
             dx = self.Solve(A, b)
             self.params = self.Update(self.params, np.array(dx))
 
-            print("Iteration: ", i, "Total Error: ", total_err, "Update:", dx[:12])
+            print("Iteration: ", i, "Total Error: ", total_err, "Update:", dx[10:20])
 
 

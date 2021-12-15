@@ -10,7 +10,7 @@ class Camera:
         self.height = 600
         self.cx = 400
         self.cy = 300
-        self.transform = get_translation_xyz(0,0,4) @ get_rotation_y(0.5)
+        self.transform = np.eye(4)
 
     def Project(self, homo_point):
         cam_point = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]]) @ self.transform @ homo_point
