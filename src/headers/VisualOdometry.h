@@ -42,7 +42,7 @@ class VisualOdometry
 
    private:
       uint32_t count = 0;
-      uint32_t kFeatures = 400;
+      uint32_t kFeatures = 300;
       uint32_t kMinFeatures = 100;
       uint32_t width = 0;
       uint32_t height = 0;
@@ -64,6 +64,8 @@ class VisualOdometry
 
       NetworkManager *_dataReceiver;
       DataManager *_data;
+
+      Eigen::Matrix4f _cameraPose = Eigen::Matrix4f::Identity();
 };
 
 #endif //PLOTTER3D_PY_KEYPOINTDETECTOR_H

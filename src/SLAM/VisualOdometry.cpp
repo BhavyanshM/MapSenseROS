@@ -58,10 +58,11 @@ void VisualOdometry::TrackKeypoints(cv::Mat prev, cv::Mat cur, std::vector<cv::P
          cur_pts.erase(cur_pts.begin() + i);
          lastIndex++;
       }
-      else if((status.at(i) == 1))
+      else
+      if((status.at(i) == 1))
       {
          float dist = norm((cur_pts[i] - prev_pts[i]));
-         if(err[i] > 10.0f || dist > 40)
+         if(err[i] > 3.0f || dist > 20)
          {
             prev_pts.erase(prev_pts.begin() + i);
             cur_pts.erase(cur_pts.begin() + i);
@@ -424,8 +425,8 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState)
       rightImage = _data->GetNextSecondImage();
    } else
    {
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_LEFT_IMAGE_RAW])->getData(leftImage, appState, timestamp);
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
+      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_LEFT_IMG_RECT])->getData(leftImage, appState, timestamp);
+      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_RIGHT_IMG_RECT])->getData(rightImage, appState, timestamp);
    }
 
    if (!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
@@ -445,6 +446,7 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState)
 
       cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
       TrackKeypoints(prevLeft, curLeft, prevFeaturesLeft, curFeaturesLeft);
+
       DrawMatches(leftImage, prevFeaturesLeft, curFeaturesLeft);
 
 
@@ -462,6 +464,13 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState)
              cvPose.at<float>(0), cvPose.at<float>(1), cvPose.at<float>(2), cvPose.at<float>(3),
              cvPose.at<float>(4), cvPose.at<float>(5), cvPose.at<float>(6), cvPose.at<float>(7),
              cvPose.at<float>(8), cvPose.at<float>(9), cvPose.at<float>(10), cvPose.at<float>(11));
+
+      for(int i = 0; i<3; i++)
+         for (int j = 0; j<4; j++)
+            _cameraPose(i,j) = cvPose.at<float>(i,j);
+
+      std::cout << _cameraPose << std::endl;
+      std::cout << cvPose << std::endl;
 
       /*
        * Find inlier points from 5-point algorithm RANSAC mask.

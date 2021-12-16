@@ -62,12 +62,13 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
    addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
    addReceiver(TopicInfo(app.BLACKFLY_RIGHT_RAW, "sensor_msgs/Image"));
-//   addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
-//   addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
 
-//   addReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
-//   addReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
-//   addReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
+   addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
+   addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
+
+   addReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
