@@ -7,11 +7,15 @@ from TransformUtils import *
 from Camera import *
 
 class NonLinearSolver:
-    def __init__(self, num_params):
-        self.params = np.zeros(shape=(num_params,))
+    def __init__(self, P, C, N):
+        self.params = np.zeros(shape=(P,))
         self.Jacobian = None
         self.iterations = 10
         self.cam = Camera()
+        self.C = C
+        self.P = P
+        self.N = N
+        self.error = 1000000000000
 
     def GetCameraJacobian(self, point):
         dg = np.array([[0, -point[2], point[1], -1, 0, 0],
@@ -27,39 +31,39 @@ class NonLinearSolver:
         yp = - point[1] / point[2]
         return 1/point[2] * (np.array([[1, 0, -xp],[0, 1, -yp]]))
 
-    def Linearize(self, params, measurements):
-
-        transform = np.eye(4)
-        self.cam.SetTransform(transform)
-
-        # Build vector of residuals for all observations at current Linearization point
-        b = np.zeros(shape=(200,))
-        for i in range(2):
-            for j in range(50):
+    def CalculateError(self, measurements):
+        b = np.zeros(shape=(2 * self.C * self.N,))
+        for i in range(self.C):
+            for j in range(self.N):
                 P = np.array(self.params[12 + j*3 : 12 + (j+1)*3])
                 P = np.array([P[0], P[1], P[2], 1])
                 # print(i, j, "Point:", P)
                 h = self.cam.Project(P)
-                b[i*100 + j*2 : i*100 + (j+1)*2] = h - measurements[i*50 + j , :]
+                b[i * (2 * self.N) + j * 2: i * (2 * self.N) + (j + 1) * 2] = h - measurements[i * self.N + j , :]
+        return b
 
+    def Linearize(self, params):
+
+        transform = np.eye(4)
+        self.cam.SetTransform(transform)
 
         # Build the large Jacobian for the current Linearization point
-        A = np.zeros(shape=(200,162))
+        A = np.zeros(shape=(2 * self.C * self.N, self.P))
 
         # Set Camera Jacobian in first few columns of A
-        for i in range(2): # No. of Cameras
-            for j in range(50): # No. of 3D Points
+        for i in range(self.C): # No. of Cameras
+            for j in range(self.N): # No. of 3D Points
                 if i != 0:
-                    A[i*100 + j*2 : (i*100 + (j+1)*2), i*6 : (i+1)*6] = self.GetCameraJacobian(self.params[12 + j*3 : 12 + (j+1)*3])
+                    A[i*(2*self.N) + j*2 : (i*(2*self.N) + (j+1)*2), i*6 : (i+1)*6] = self.GetCameraJacobian(self.params[12 + j*3 : 12 + (j+1)*3])
 
         # Set Point Jacobian in remaining columns of A
-        for i in range(2): # No. of Cameras
-            for j in range(50): # No. of 3D Points
-                A[i*100 + j*2 : (i*100 + (j+1)*2), 12 + j*3 : (12 + j*3 + 3)] = self.GetPointJacobian(self.params[12 + j*3 : 12 + (j+1)*3],
+        for i in range(self.C): # No. of Cameras
+            for j in range(self.N): # No. of 3D Points
+                A[i*(2*self.N) + j*2 : (i*(2*self.N) + (j+1)*2), 12 + j*3 : (12 + j*3 + 3)] = self.GetPointJacobian(self.params[12 + j*3 : 12 + (j+1)*3],
                                                                                                       SO3Exp(self.params[i*6 : (i*6 + 3)]))
 
         self.Jacobian = A
-        return A, b
+        return A
 
 
     def Solve(self, A, b):
@@ -71,22 +75,30 @@ class NonLinearSolver:
         self.params += dx
         return self.params
 
-    def Compute(self, measurements, initial):
+    def Compute(self, measurements, initial, true_points):
 
         self.params = initial
         total_err = 0
         for i in range(self.iterations):
 
-            print(i, "Error: ", total_err, "Params: ", self.params[12:24])
 
-            A, b = self.Linearize(self.params, measurements)
+            # Calculate Jacobian at the current linearization point
+            A = self.Linearize(self.params)
+
+            # Build vector of residuals for all observations at current Linearization point
+            b = self.CalculateError(measurements)
             total_err = np.sum(np.abs(b))
 
-            # if total_err < 10:
-            #     break
+            if total_err < self.error:
+                self.error = total_err
+            else:
+                break
+
+            print(i, "Error: ", total_err, "Params: ", self.params[6:12])
 
             dx = self.Solve(A, b)
             self.params = self.Update(self.params, np.array(dx))
+
 
 
 

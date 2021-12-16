@@ -6,8 +6,10 @@ class Camera:
     def __init__(self):
         self.fx = 1
         self.fy = 1
-        self.width = 800
-        self.height = 600
+        self.width = 2
+        self.height = 2
+        self.min_x = -1
+        self.min_y = -1
         self.cx = 400
         self.cy = 300
         self.transform = np.eye(4)
@@ -23,7 +25,6 @@ class Camera:
         x = (cam_point[0])
         y = (cam_point[1])
 
-        print("Point: ", cam_point)
         return np.array([x, y])
 
     def SetTransform(self, transform):
