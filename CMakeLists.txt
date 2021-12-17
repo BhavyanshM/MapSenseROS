@@ -23,7 +23,6 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
 find_package(xtl REQUIRED)
 find_package(BLAS REQUIRED)
-find_package(Sophus REQUIRED)
 
 add_subdirectory(Vendor/xtensor)
 add_subdirectory(Vendor/xtensor-blas)
