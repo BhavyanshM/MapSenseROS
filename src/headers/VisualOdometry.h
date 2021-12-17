@@ -30,6 +30,7 @@ class VisualOdometry
       void DrawMatches(cv::Mat& img, std::vector<cv::Point2f> prev_pts, std::vector<cv::Point2f> cur_pts);
       void DrawAllMatches(cv::Mat& image);
       const Eigen::Matrix4f& EstimateMotion(std::vector<PointLandmark> points, int cameraID);
+      cv::Mat EstimateMotion_2D2D(std::vector<cv::Point2f>& prevFeatures, std::vector<cv::Point2f>& curFeatures, cv::Mat& mask);
 
       void Show();
       void TriangulateStereoNormal(std::vector<cv::KeyPoint>& pointsTrain, std::vector<cv::KeyPoint>& pointsQuery, std::vector<cv::DMatch>& matches,
@@ -42,7 +43,7 @@ class VisualOdometry
 
    private:
       uint32_t count = 0;
-      uint32_t kFeatures = 300;
+      uint32_t kFeatures = 2400;
       uint32_t kMinFeatures = 100;
       uint32_t width = 0;
       uint32_t height = 0;
@@ -65,7 +66,6 @@ class VisualOdometry
       NetworkManager *_dataReceiver;
       DataManager *_data;
 
-      Eigen::Matrix4f _cameraPose = Eigen::Matrix4f::Identity();
 };
 
 #endif //PLOTTER3D_PY_KEYPOINTDETECTOR_H

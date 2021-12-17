@@ -14,9 +14,10 @@ class DatasetNode:
         rospy.init_node('dataset_publisher', anonymous=True)
         self.rate = rospy.Rate(20) # 10hz
         self.counter = 0
-        self.leftImagesPath = '/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/'
-        self.rightImagesPath = '/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/'
-        self.lidarPath = '/home/quantum/Workspace/Storage/Other/Temp/dataset/velodyne_dataset/sequences/00/velodyne/'
+        self.sequence = "05"
+        self.leftImagesPath = '/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/' + self.sequence + '/image_0/'
+        self.rightImagesPath = '/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/' + self.sequence + '/image_1/'
+        self.lidarPath = '/home/quantum/Workspace/Storage/Other/Temp/dataset/velodyne_dataset/sequences/' + self.sequence + '/velodyne/'
         self.leftImgFiles = sorted(os.listdir(self.leftImagesPath))
         self.rightImgFiles = sorted(os.listdir(self.rightImagesPath))
         self.lidarFiles = sorted(os.listdir(self.lidarPath))

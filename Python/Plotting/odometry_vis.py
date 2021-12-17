@@ -8,7 +8,7 @@ import numpy as np
 fig = plt.figure(figsize=(10,8))
 
 SHOW_3D = True
-GT = False
+GT = True
 
 if SHOW_3D:
     ax = Axes3D(fig)
@@ -22,7 +22,7 @@ else:
 
 if GT:
     gt_data = np.loadtxt("/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt", delimiter=' ', dtype=np.float64)
-data = np.loadtxt("odometry_zed.txt", delimiter=' ', dtype=np.float64)
+data = np.loadtxt("odometry_1.txt", delimiter=' ', dtype=np.float64)
 
 # data = data[:120, :]
 
