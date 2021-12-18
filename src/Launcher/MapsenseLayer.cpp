@@ -63,6 +63,7 @@ namespace Clay
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
       Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootPCL);
+      MeshTools::CoordinateAxes(pose);
       _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
 //      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
@@ -170,8 +171,14 @@ namespace Clay
          if(appState.STEREO_ODOMETRY_ENABLED)
          {
             ROS_DEBUG("Stereo Odom Update");
-            _visualOdometry->Update(appState);
+            Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootPCL);
+            MeshTools::CoordinateAxes(pose);
+            _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
+
+            _visualOdometry->Update(appState, pose);
             _visualOdometry->Show();
+
+
          }
 
          Clay::Ref<Clay::PointCloud> model = _pclReceiver->GetNextCloud();
@@ -399,6 +406,11 @@ namespace Clay
          if (ImGui::BeginTabItem("Network"))
          {
             _networkManager->ImGuiUpdate();
+            ImGui::EndTabItem();
+         }
+         if (ImGui::BeginTabItem("Visual Odometry"))
+         {
+            _visualOdometry->ImGuiUpdate(appState);
             ImGui::EndTabItem();
          }
          if (ImGui::BeginTabItem("Extras"))

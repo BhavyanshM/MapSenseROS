@@ -109,6 +109,19 @@ class ApplicationState
 
       float REGION_GROWTH_FACTOR = 0.01;
 
+      /* Stereo Matching Parameters */
+      int STEREO_NUM_DISPARITIES = 1;
+      int STEREO_BLOCK_SIZE = 2;
+      int STEREO_PRE_FILTER_SIZE = 2;
+      int STEREO_PRE_FILTER_TYPE = 1;
+      int STEREO_PRE_FILTER_CAP = 31;
+      int STEREO_MIN_DISPARITY = 0;
+      int STEREO_TEXTURE_THRESHOLD = 10;
+      int STEREO_UNIQUENESS_RATIO = 15;
+      int STEREO_SPECKLE_RANGE = 0;
+      int STEREO_SPECKLE_WINDOW_SIZE = 0;
+      int STEREO_DISP_12_MAX_DIFF = -1;
+
       string OUSTER_POINTS = "/os_cloud_node/points";
       string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
       string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";

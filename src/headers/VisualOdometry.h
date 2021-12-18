@@ -10,6 +10,7 @@
 #include "NetworkManager.h"
 #include "ApplicationState.h"
 #include "Scene/Mesh/PointCloud.h"
+#include "Scene/Mesh/TriangleMesh.h"
 #include "PointLandmark.h"
 
 class VisualOdometry
@@ -17,7 +18,7 @@ class VisualOdometry
    public:
       VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data = nullptr);
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
-      void Update(ApplicationState& appState);
+      void Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes);
 
       void ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1);
       void ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc);
@@ -38,8 +39,9 @@ class VisualOdometry
       void TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector<cv::KeyPoint> kpLeft, std::vector<cv::KeyPoint> kpRight, std::vector<cv::DMatch> stereoMatches,
                                    std::vector<PointLandmark> points3D);
 
-      void CalculateOdometry_ORB(ApplicationState& appState);
-      void CalculateOdometry_FAST(ApplicationState& appState);
+      void CalculateOdometry_ORB(ApplicationState& appState, Eigen::Matrix4f& transform);
+      void CalculateOdometry_FAST(ApplicationState& appState, Eigen::Matrix4f& transform);
+      void ImGuiUpdate(ApplicationState& app);
 
    private:
       uint32_t count = 0;
@@ -57,10 +59,12 @@ class VisualOdometry
       cv::Mat desc_prevRight, desc_prevLeft, desc_curRight, desc_curLeft;
       cv::Mat curFinalDisplay, prevFinalDisplay;
       cv::Mat curPoseLeft, prevPosLeft, curPoseRight, prevPoseRight;
+      cv::Mat curDisparity;
       std::vector<cv::KeyPoint> kp_prevLeft, kp_prevRight, kp_curLeft, kp_curRight;
       cv::Mat cvCurPose = cv::Mat::eye(4,4, CV_32F);
       std::vector<PointLandmark> _prevPoints3D, _curPoints3D;
 
+      cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create();
       std::vector<cv::Point2f> prevFeaturesLeft, curFeaturesLeft;
 
       NetworkManager *_dataReceiver;

@@ -6,6 +6,36 @@
 
 VisualOdometry::VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data) : _dataReceiver(network), _data(data)
 {
+   // initialize values for StereoSGBM parameters
+   stereo->setNumDisparities( app.STEREO_NUM_DISPARITIES * 16);
+   stereo->setBlockSize( 2 * app.STEREO_BLOCK_SIZE + 1);
+   stereo->setPreFilterSize( 2 * app.STEREO_PRE_FILTER_SIZE + 1);
+   stereo->setPreFilterType( app.STEREO_PRE_FILTER_TYPE);
+   stereo->setPreFilterCap( app.STEREO_PRE_FILTER_CAP);
+   stereo->setMinDisparity( app.STEREO_MIN_DISPARITY);
+   stereo->setTextureThreshold( app.STEREO_TEXTURE_THRESHOLD);
+   stereo->setUniquenessRatio( app.STEREO_UNIQUENESS_RATIO);
+   stereo->setSpeckleRange( app.STEREO_SPECKLE_RANGE);
+   stereo->setSpeckleWindowSize( app.STEREO_SPECKLE_WINDOW_SIZE);
+   stereo->setDisp12MaxDiff( app.STEREO_DISP_12_MAX_DIFF);
+}
+
+void VisualOdometry::ImGuiUpdate(ApplicationState& app)
+{
+   ImGui::Text("Stereo SGBM");
+   ImGui::SliderInt("Num Disparities", &app.STEREO_NUM_DISPARITIES, 1, 4);
+   ImGui::SliderInt("Block Size", &app.STEREO_BLOCK_SIZE, 2, 15);
+   ImGui::SliderInt("PreFilter Size", &app.STEREO_PRE_FILTER_SIZE, 5, 40);
+   stereo->setNumDisparities( app.STEREO_NUM_DISPARITIES * 16);
+   stereo->setBlockSize( 2 * app.STEREO_BLOCK_SIZE + 1);
+   stereo->setPreFilterSize( 2 * app.STEREO_PRE_FILTER_SIZE + 1);
+//   ImGui::SliderInt("PreFilter Cap", &app.STEREO_PRE_FILTER_CAP, 31, 32);
+//   ImGui::SliderInt("Min Disparity", &app.STEREO_MIN_DISPARITY);
+//   ImGui::SliderInt("Texture Threshold", &app.STEREO_TEXTURE_THRESHOLD);
+//   ImGui::SliderInt("Uniqueness Ratio", &app.STEREO_UNIQUENESS_RATIO);
+//   ImGui::SliderInt("Speckle Range", &app.STEREO_SPECKLE_RANGE);
+//   ImGui::SliderInt("Speckle Window Size", &app.STEREO_SPECKLE_WINDOW_SIZE);
+//   ImGui::SliderInt("Disp 12 Max-Diff", &app.STEREO_DISP_12_MAX_DIFF);
 }
 
 void VisualOdometry::DrawMatches(cv::Mat& img, std::vector<cv::Point2f> prev_pts, std::vector<cv::Point2f> cur_pts){
@@ -432,7 +462,7 @@ cv::Mat VisualOdometry::EstimateMotion_2D2D(std::vector<cv::Point2f>& prevFeatur
 
 }
 
-void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState)
+void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState, Eigen::Matrix4f& transform)
 {
    double timestamp = 0;
    using namespace cv;
@@ -518,10 +548,11 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState)
       count++;
 
       prevFinalDisplay = leftImage;
+
    }
 }
 
-void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState)
+void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Eigen::Matrix4f& transform)
 {
    double timestamp = 0;
    if (appState.DATASET_ENABLED)
@@ -547,12 +578,13 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState)
       }
 
 //      TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
-
       cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
+      cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
+
+      stereo->compute(curLeft, curRight, curDisparity);
+      curDisparity.convertTo(curDisparity,CV_8U, 1.0);
+
       ExtractKeypoints(curLeft, orb, kp_curLeft, desc_curLeft);
-
-//      MatchKeypoints(desc_curLeft, desc_curRight, curMatchesStereo);
-
       MatchKeypoints(desc_prevLeft, desc_curLeft, matchesLeft);
 
       for (int i = matchesLeft.size() - 1; i>=0; i--)
@@ -561,15 +593,9 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState)
          float dist = cv::norm(kp_curLeft[m.queryIdx].pt - kp_prevLeft[m.trainIdx].pt);
          if (dist > 50.0f)
          {
-//            CLAY_LOG_INFO("Removing: i:{} dist:{} x:{} y:{} x:{} y:{}", i, dist, kp_curLeft[m.queryIdx].pt.x, kp_curLeft[m.queryIdx].pt.y,
-//                          kp_prevLeft[m.trainIdx].pt.x, kp_prevLeft[m.trainIdx].pt.y);
             matchesLeft.erase(matchesLeft.begin() + i);
          }
       }
-//      CLAY_LOG_INFO("Total: {}", matchesLeft.size());
-
-
-//      ExtractFinalSet(matchesLeft, kp_curLeft, _prevPoints3D);
 
       std::vector<cv::Point2f> prevPoints2D, curPoints2D;
       for(auto m : matchesLeft)
@@ -588,81 +614,39 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState)
              cvPose.at<float>(4), cvPose.at<float>(5), cvPose.at<float>(6), cvPose.at<float>(7),
              cvPose.at<float>(8), cvPose.at<float>(9), cvPose.at<float>(10), cvPose.at<float>(11));
 
+      this->cvCurPose = this->cvCurPose * cvPose;
+
+      for(int i = 0; i<3; i++)
+         for (int j = 0; j<4; j++)
+            transform(i,j) = this->cvCurPose.at<float>(i,j);
+
 //      cv::drawMatches(curLeft, kp_curLeft, prevLeft, kp_prevLeft, matchesLeft, prevFinalDisplay);
 
-
-      //      cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
-      //      cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
-      //      ExtractKeypoints(curLeft, orb, kp_curLeft, desc_curLeft);
-      //      ExtractKeypoints(curRight, orb, kp_curRight, desc_curRight);
-      //
-      //      /* Match previously found keypoints in current frame */
-      //      MatchKeypoints(desc_prevLeft, desc_curLeft, matchesLeft);
-      //      MatchKeypoints(desc_prevRight,desc_curRight, matchesRight);
-      //
-      ////      cv::drawMatches(prevLeft, kp_prevLeft, curLeft, kp_curLeft, matchesLeft, curFinalDisplay);
-      //
-      //      CLAY_LOG_INFO("Total Matches (Left): {}", matchesLeft.size());
-      //      CLAY_LOG_INFO("Total Matches (Right): {}", matchesRight.size());
-      //
-      ////      GridSampleKeypoints(kp_curLeft, matchesLeft);
-      ////      GridSampleKeypoints(kp_curRight, matchesRight);
-      //
-      //      CLAY_LOG_INFO("Sampled Matches (Left): {}", matchesLeft.size());
-      //      CLAY_LOG_INFO("Sampled Matches (Right): {}", matchesRight.size());
-      //
-      //      /* Match Keypoints between Left and Right images, and include those that are optimally matched. */
-      //      MatchKeypoints(desc_curLeft, desc_curRight, prevMatchesStereo);
-      //
-      //
-      //      DrawAllMatches(curFinalDisplay);
-      //
-      //
-      //      /* Calculate 3D points corresponding to left-right matches found in last step. */
-      //      std::vector<PointLandmark> points3D;
-      //      TriangulateStereoPoints(curPoseLeft, kp_curLeft, kp_curRight, prevMatchesStereo, points3D);
-      //
-      //      CLAY_LOG_INFO("Triangulated Points: {}", points3D.size());
-
-      //      /* Solve Non-Linear Least Squares to compute motion estimate for time-pair wrt only left image. */
-      //      EstimateCameraMotion(prevPoints3D, curPoints3D, kp_prevLeft, kp_curLeft, curPoseLeft);
-
-      /*Archived*/
-
-
-      //      /* Extract ORB Keypoints from Current Image if number of tracked points falls below threshold */
-      //      if (matchesLeft.size() < kMinFeatures)
-      //      {
-      //
-      //         /* Bucket Sample the Points.*/
-      //
-      //         CLAY_LOG_INFO("Total Keypoints Found (Left): {}", kp_curLeft.size());
-      //      }
-      //      if (matchesRight.size() < kMinFeatures)
-      //      {
-      //         /* Bucket Sample the Points.*/
-      //
-      //         CLAY_LOG_INFO("Total Keypoints Found (Right): {}", kp_curRight.size());
-      //      }
-
-      prevMatchesStereo = curMatchesStereo;
       prevLeft = curLeft.clone();
-      prevRight = curRight.clone();
       desc_prevLeft = desc_curLeft.clone();
-      desc_prevRight = desc_curRight.clone();
       kp_prevLeft = kp_curLeft;
-      kp_prevRight = kp_curRight;
       count++;
 
-      prevFinalDisplay = leftImage;
+      prevFinalDisplay = curDisparity;
+
    }
 }
 
-void VisualOdometry::Update(ApplicationState& appState)
+void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes)
 {
    auto start_point = std::chrono::steady_clock::now();
 
-   CalculateOdometry_ORB(appState);
+   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+   CalculateOdometry_ORB(appState, transform);
+
+   std::cout << transform << std::endl;
+
+   glm::mat4 glmTransform;
+   for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) glmTransform[j][i] = transform(i, j);
+   glmTransform[3][0] *= 0.01;
+   glmTransform[3][1] *= 0.01;
+   glmTransform[3][2] *= 0.01;
+   axes->ApplyTransform(glmTransform);
 
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();

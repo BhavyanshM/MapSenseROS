@@ -7,7 +7,7 @@
 NonLinearOptimizer::NonLinearOptimizer(uint32_t numCameras, uint32_t numPoints) : _numCameras(numCameras), _numPoints(numPoints)
 {
    _numTotalParams = 6 * numCameras + 3 * numPoints;
-   _params = Eigen::VectorXf::Zero(_numTotalParams);
+   _params = Eigen::VectorXd::Zero(_numTotalParams);
 
 
 }
