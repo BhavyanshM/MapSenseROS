@@ -13,6 +13,14 @@
 #include "Scene/Mesh/TriangleMesh.h"
 #include "PointLandmark.h"
 
+struct Keyframe
+{
+   cv::Mat descriptor;
+   std::vector<cv::KeyPoint> keypoints;
+   Eigen::Matrix4f pose;
+   cv::Mat image;
+};
+
 class VisualOdometry
 {
    public:
@@ -39,7 +47,7 @@ class VisualOdometry
       void TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector<cv::KeyPoint> kpLeft, std::vector<cv::KeyPoint> kpRight, std::vector<cv::DMatch> stereoMatches,
                                    std::vector<PointLandmark> points3D);
 
-      void CalculateOdometry_ORB(ApplicationState& appState, Eigen::Matrix4f& transform);
+      void CalculateOdometry_ORB(ApplicationState& appState, cv::Mat leftImage, cv::Mat rightImage, Eigen::Matrix4f& transform);
       void CalculateOdometry_FAST(ApplicationState& appState, Eigen::Matrix4f& transform);
       void ImGuiUpdate(ApplicationState& app);
 
@@ -69,6 +77,8 @@ class VisualOdometry
 
       NetworkManager *_dataReceiver;
       DataManager *_data;
+
+      std::vector<Keyframe> _keyframes;
 
 };
 

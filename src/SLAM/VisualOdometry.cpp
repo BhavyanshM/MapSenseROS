@@ -552,19 +552,8 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState, Eigen::M
    }
 }
 
-void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Eigen::Matrix4f& transform)
+void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, cv::Mat leftImage, cv::Mat rightImage, Eigen::Matrix4f& transform)
 {
-   double timestamp = 0;
-   if (appState.DATASET_ENABLED)
-   {
-      leftImage = _data->GetNextImage();
-      rightImage = _data->GetNextSecondImage();
-   } else
-   {
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_LEFT_IMG_RECT])->getData(leftImage, appState, timestamp);
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_RIGHT_IMG_RECT])->getData(rightImage, appState, timestamp);
-   }
-
    if (!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
    {
       if (count == 0)
@@ -581,8 +570,8 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Eigen::Ma
       cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
       cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
 
-      stereo->compute(curLeft, curRight, curDisparity);
-      curDisparity.convertTo(curDisparity,CV_8U, 1.0);
+//      stereo->compute(curLeft, curRight, curDisparity);
+//      curDisparity.convertTo(curDisparity,CV_8U, 1.0);
 
       ExtractKeypoints(curLeft, orb, kp_curLeft, desc_curLeft);
       MatchKeypoints(desc_prevLeft, desc_curLeft, matchesLeft);
@@ -627,7 +616,7 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Eigen::Ma
       kp_prevLeft = kp_curLeft;
       count++;
 
-      prevFinalDisplay = curDisparity;
+      prevFinalDisplay = leftImage;
 
    }
 }
@@ -636,16 +625,27 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
 {
    auto start_point = std::chrono::steady_clock::now();
 
+   double timestamp = 0;
+   if (appState.DATASET_ENABLED)
+   {
+      leftImage = _data->GetNextImage();
+      rightImage = _data->GetNextSecondImage();
+   } else
+   {
+      ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_LEFT_IMAGE_RAW])->getData(leftImage, appState, timestamp);
+      ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
+   }
+
    Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-   CalculateOdometry_ORB(appState, transform);
+   CalculateOdometry_ORB(appState, leftImage, rightImage, transform);
 
    std::cout << transform << std::endl;
 
    glm::mat4 glmTransform;
    for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) glmTransform[j][i] = transform(i, j);
-   glmTransform[3][0] *= 0.01;
-   glmTransform[3][1] *= 0.01;
-   glmTransform[3][2] *= 0.01;
+   glmTransform[3][0] *= 0.03;
+   glmTransform[3][1] *= 0.03;
+   glmTransform[3][2] *= 0.03;
    axes->ApplyTransform(glmTransform);
 
    auto end_point = std::chrono::steady_clock::now();
