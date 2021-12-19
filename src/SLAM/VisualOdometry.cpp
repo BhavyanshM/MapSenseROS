@@ -6,6 +6,8 @@
 
 VisualOdometry::VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data) : _dataReceiver(network), _data(data)
 {
+   cameraPose = Eigen::Matrix4f::Identity();
+
    // initialize values for StereoSGBM parameters
    stereo->setNumDisparities( app.STEREO_NUM_DISPARITIES * 16);
    stereo->setBlockSize( 2 * app.STEREO_BLOCK_SIZE + 1);
@@ -552,73 +554,57 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState, Eigen::M
    }
 }
 
-void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, cv::Mat leftImage, cv::Mat rightImage, Eigen::Matrix4f& transform)
+void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe& kf,
+                                           cv::Mat leftImage, cv::Mat rightImage, cv::Mat& cvPose)
 {
-   if (!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
+   //      TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
+   //      stereo->compute(curLeft, curRight, curDisparity);
+   //      curDisparity.convertTo(curDisparity,CV_8U, 1.0);
+
+   ExtractKeypoints(leftImage, orb, kp_curLeft, desc_curLeft);
+   MatchKeypoints(kf.descriptor, desc_curLeft, matchesLeft);
+
+   for (int i = matchesLeft.size() - 1; i>=0; i--)
    {
-      if (count == 0)
+      auto m = matchesLeft[i];
+      float dist = cv::norm(kp_curLeft[m.queryIdx].pt - kf.keypoints[m.trainIdx].pt);
+      if (dist > 50.0f)
       {
-         width = leftImage.cols;
-         height = leftImage.rows;
-         cvtColor(leftImage, prevLeft, cv::COLOR_BGR2GRAY);
-         ExtractKeypoints(prevLeft, orb, kp_prevLeft, desc_prevLeft);
-         count++;
-         return;
+         matchesLeft.erase(matchesLeft.begin() + i);
       }
-
-//      TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
-      cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
-      cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
-
-//      stereo->compute(curLeft, curRight, curDisparity);
-//      curDisparity.convertTo(curDisparity,CV_8U, 1.0);
-
-      ExtractKeypoints(curLeft, orb, kp_curLeft, desc_curLeft);
-      MatchKeypoints(desc_prevLeft, desc_curLeft, matchesLeft);
-
-      for (int i = matchesLeft.size() - 1; i>=0; i--)
-      {
-         auto m = matchesLeft[i];
-         float dist = cv::norm(kp_curLeft[m.queryIdx].pt - kp_prevLeft[m.trainIdx].pt);
-         if (dist > 50.0f)
-         {
-            matchesLeft.erase(matchesLeft.begin() + i);
-         }
-      }
-
-      std::vector<cv::Point2f> prevPoints2D, curPoints2D;
-      for(auto m : matchesLeft)
-      {
-         prevPoints2D.emplace_back(cv::Point2f(kp_prevLeft[m.trainIdx].pt));
-         curPoints2D.emplace_back(cv::Point2f(kp_curLeft[m.queryIdx].pt));
-      }
-      DrawMatches(leftImage, prevPoints2D, curPoints2D);
-
-      cv::Mat mask;
-      cv::Mat cvPose = EstimateMotion_2D2D(prevPoints2D, curPoints2D, mask);
-
-
-      printf("%.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf\n",
-             cvPose.at<float>(0), cvPose.at<float>(1), cvPose.at<float>(2), cvPose.at<float>(3),
-             cvPose.at<float>(4), cvPose.at<float>(5), cvPose.at<float>(6), cvPose.at<float>(7),
-             cvPose.at<float>(8), cvPose.at<float>(9), cvPose.at<float>(10), cvPose.at<float>(11));
-
-      this->cvCurPose = this->cvCurPose * cvPose;
-
-      for(int i = 0; i<3; i++)
-         for (int j = 0; j<4; j++)
-            transform(i,j) = this->cvCurPose.at<float>(i,j);
-
-//      cv::drawMatches(curLeft, kp_curLeft, prevLeft, kp_prevLeft, matchesLeft, prevFinalDisplay);
-
-      prevLeft = curLeft.clone();
-      desc_prevLeft = desc_curLeft.clone();
-      kp_prevLeft = kp_curLeft;
-      count++;
-
-      prevFinalDisplay = leftImage;
-
    }
+
+   prevPoints2D.clear();
+   curPoints2D.clear();
+   for(auto m : matchesLeft)
+   {
+      prevPoints2D.emplace_back(cv::Point2f(kf.keypoints[m.trainIdx].pt));
+      curPoints2D.emplace_back(cv::Point2f(kp_curLeft[m.queryIdx].pt));
+   }
+
+
+   cv::Mat mask;
+   cv::Mat pose = EstimateMotion_2D2D(prevPoints2D, curPoints2D, mask);
+   cvPose = pose;
+
+
+//   printf("%.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf\n",
+//          cvPose.at<float>(0), cvPose.at<float>(1), cvPose.at<float>(2), cvPose.at<float>(3),
+//          cvPose.at<float>(4), cvPose.at<float>(5), cvPose.at<float>(6), cvPose.at<float>(7),
+//          cvPose.at<float>(8), cvPose.at<float>(9), cvPose.at<float>(10), cvPose.at<float>(11));
+
+
+
+//   cv::drawMatches(curLeft, kp_curLeft, kf.image, kf.keypoints, matchesLeft, prevFinalDisplay);
+
+   prevLeft = curLeft.clone();
+   desc_prevLeft = desc_curLeft.clone();
+   kp_prevLeft = kp_curLeft;
+   count++;
+
+   prevFinalDisplay = leftImage;
+
+
 }
 
 void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes)
@@ -636,17 +622,89 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
       ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
    }
 
-   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-   CalculateOdometry_ORB(appState, leftImage, rightImage, transform);
+   cv::Mat cvPose;
 
-   std::cout << transform << std::endl;
+   if (!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
+   {
+      if (count == 0)
+      {
+         width = leftImage.cols;
+         height = leftImage.rows;
+         cvtColor(leftImage, prevLeft, cv::COLOR_BGR2GRAY);
+//         cvtColor(rightImage, prevRight, cv::COLOR_BGR2GRAY);
+         ExtractKeypoints(prevLeft, orb, kp_prevLeft, desc_prevLeft);
+         _keyframes.emplace_back(Keyframe(desc_prevLeft.clone(), kp_prevLeft, Eigen::Matrix4f::Identity()));
+         count++;
+         return;
+      }
 
-   glm::mat4 glmTransform;
-   for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) glmTransform[j][i] = transform(i, j);
-   glmTransform[3][0] *= 0.03;
-   glmTransform[3][1] *= 0.03;
-   glmTransform[3][2] *= 0.03;
-   axes->ApplyTransform(glmTransform);
+      cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
+//      cvtColor(rightImage, curRight, cv::COLOR_BGR2GRAY);
+
+      if(!_initialized)
+      {
+         auto kf = _keyframes[0];
+         CalculateOdometry_ORB(appState, kf, curLeft, curRight, cvPose);
+
+         Eigen::Map<Eigen::Matrix<float, 4, 4>, Eigen::RowMajor> eigenPose(reinterpret_cast<float *>(cvPose.data));
+         eigenPose.transposeInPlace();
+
+         cameraPose = cameraPose * eigenPose;
+
+         prevFinalDisplay = leftImage.clone();
+         DrawMatches(prevFinalDisplay, prevPoints2D, curPoints2D);
+
+         std::cout << eigenPose << std::endl;
+         std::cout << cameraPose << std::endl;
+         CLAY_LOG_INFO("Norm: {}", eigenPose.block<3,1>(0,3).norm());
+
+         if(cameraPose.block<3,1>(0,3).norm() > 1)
+         {
+            _initialized = true;
+            _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), kp_curLeft, cameraPose));
+         }
+      }
+      else
+      {
+         auto kf = _keyframes[_keyframes.size() - 1];
+         CalculateOdometry_ORB(appState, kf, curLeft, curRight, cvPose);
+
+         Eigen::Map<Eigen::Matrix<float, 4, 4>, Eigen::RowMajor> eigenPose(reinterpret_cast<float *>(cvPose.data));
+         eigenPose.transposeInPlace();
+
+         cameraPose = cameraPose * eigenPose;
+
+         std::cout << "After Transform: " << cameraPose << std::endl;
+         std::cout << "After Pose: " << eigenPose << std::endl;
+
+         prevFinalDisplay = leftImage.clone();
+         DrawMatches(prevFinalDisplay, prevPoints2D, curPoints2D);
+
+
+
+         CLAY_LOG_INFO("Norm: {} KF: {}", eigenPose.block<3,1>(0,3).norm(), kf.keypoints.size());
+         if(eigenPose.block<3,1>(0,3).norm() > 0.5)
+         {
+            _initialized = true;
+            _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), kp_curLeft, cameraPose));
+            CLAY_LOG_INFO("Added New Keyframe: {}", _keyframes.size());
+
+            glm::mat4 glmTransform;
+            for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) glmTransform[j][i] = cameraPose(i, j);
+            glmTransform[3][0] *= 0.03;
+            glmTransform[3][1] *= 0.03;
+            glmTransform[3][2] *= 0.03;
+            axes->ApplyTransform(glmTransform);
+         }
+
+
+      }
+
+   }
+
+
+
+
 
    auto end_point = std::chrono::steady_clock::now();
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();

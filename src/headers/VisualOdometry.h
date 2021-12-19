@@ -15,15 +15,20 @@
 
 struct Keyframe
 {
-   cv::Mat descriptor;
-   std::vector<cv::KeyPoint> keypoints;
-   Eigen::Matrix4f pose;
-   cv::Mat image;
+   public:
+      Keyframe(cv::Mat desc, std::vector<cv::KeyPoint> kp, Eigen::Matrix4f pose)
+         : descriptor(desc), keypoints(kp), pose(pose) {};
+      cv::Mat descriptor;
+      std::vector<cv::KeyPoint> keypoints;
+      Eigen::Matrix4f pose;
+      cv::Mat image;
+
 };
 
 class VisualOdometry
 {
    public:
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data = nullptr);
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
       void Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes);
@@ -47,11 +52,14 @@ class VisualOdometry
       void TriangulateStereoPoints(cv::Mat& leftPoseWorld, std::vector<cv::KeyPoint> kpLeft, std::vector<cv::KeyPoint> kpRight, std::vector<cv::DMatch> stereoMatches,
                                    std::vector<PointLandmark> points3D);
 
-      void CalculateOdometry_ORB(ApplicationState& appState, cv::Mat leftImage, cv::Mat rightImage, Eigen::Matrix4f& transform);
+      void CalculateOdometry_ORB(ApplicationState& appState, Keyframe& kf, cv::Mat leftImage, cv::Mat rightImage, cv::Mat& cvPose);
       void CalculateOdometry_FAST(ApplicationState& appState, Eigen::Matrix4f& transform);
       void ImGuiUpdate(ApplicationState& app);
 
    private:
+      Eigen::Matrix4f cameraPose;
+
+      bool _initialized = false;
       uint32_t count = 0;
       uint32_t kFeatures = 2400;
       uint32_t kMinFeatures = 100;
@@ -74,11 +82,14 @@ class VisualOdometry
 
       cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create();
       std::vector<cv::Point2f> prevFeaturesLeft, curFeaturesLeft;
+      std::vector<cv::Point2f> prevPoints2D, curPoints2D;
 
       NetworkManager *_dataReceiver;
       DataManager *_data;
 
       std::vector<Keyframe> _keyframes;
+
+
 
 };
 
