@@ -162,7 +162,7 @@ set(MAPSENSE_CLAY_SOURCES
 		src/Network/PointCloudReceiver.cpp)
 
 set(GEOMTOOLS_HEADERS
-		src/Geometry/include/Camera.h
+		src/Geometry/include/CameraParams.h
 		src/Geometry/include/NonLinearOptimizer.h
 		src/Geometry/include/GeomTools.h
 		src/Geometry/include/KDTree.h
@@ -177,7 +177,7 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/PointLandmark.h)
 
 set(GEOMTOOLS_SOURCE
-		src/Geometry/src/Elements/Camera.cpp
+		src/Geometry/src/Elements/CameraParams.cpp
 		src/Geometry/src/Optimizers/NonLinearOptimizer.cpp
 		src/Geometry/src/GeomTools.cpp
 		src/Geometry/src/Structures/KDTree.cpp

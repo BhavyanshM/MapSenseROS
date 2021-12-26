@@ -48,7 +48,7 @@ mkdir -p Shared_Volume #Volume mapping to share ROSBags for testing MapSense ins
 docker build -t bmishra/mapsense-nvidia-ros .
 ```
 
-## Using Own Depth Camera
+## Using Own Depth CameraParams
 
 For using MapSense with a depth camera, simply direct the `camera_info` and `depth` topics to the appropriate input topics.
 

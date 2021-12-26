@@ -41,7 +41,7 @@ void ImageReceiver::imageCallback(const ImageConstPtr& colorMsg)
 
 void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
 {
-   ROS_DEBUG("Camera Info Callback: %s", message->distortion_model.c_str());
+   ROS_DEBUG("CameraParams Info Callback: %s", message->distortion_model.c_str());
    if(!_infoMessageSaved)
    {
       _cameraInfoMessage = message;

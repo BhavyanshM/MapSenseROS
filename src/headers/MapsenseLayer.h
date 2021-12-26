@@ -95,6 +95,7 @@ namespace Clay
          OpenCLManager *_openCLManager;
          PointCloudReceiver* _pclReceiver;
          DataManager* _kitti;
+         Ref<PointCloud> firstCloud;
 
    };
 }

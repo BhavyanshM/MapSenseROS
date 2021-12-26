@@ -12,10 +12,12 @@
 #include "MapsenseHeaders.h"
 #include "Core/Log.h"
 #include "ApplicationState.h"
+#include "CameraParams.h"
 
 class DataManager
 {
    public:
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
@@ -36,6 +38,12 @@ class DataManager
 
       static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
 
+      void SetCamera(const CameraParams& leftCam, const CameraParams& rightCam = CameraParams()) {_leftCam = leftCam; _rightCam = rightCam; };
+
+      const CameraParams& GetLeftCamera() const {return _leftCam; }
+
+      const CameraParams& GetRightCamera() const {return _rightCam; }
+
    private:
       std::string _directory, _secondDirectory;
       std::vector<std::string> _fileNames;
@@ -43,6 +51,7 @@ class DataManager
       uint32_t _counter = 0;
       uint32_t _secondCounter = 0;
       xt::xarray<float> _poses;
+      CameraParams _leftCam, _rightCam;
 };
 
 #endif //FILEIO_H

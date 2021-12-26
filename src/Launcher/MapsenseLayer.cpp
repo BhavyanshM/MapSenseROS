@@ -16,6 +16,8 @@
 #include <xtensor/xarray.hpp>
 #include <xtensor/xio.hpp>
 
+#include "CameraParams.h"
+
 namespace Clay
 {
    MapsenseLayer::MapsenseLayer(int argc, char **argv) : Layer("Sandbox2D")
@@ -46,9 +48,14 @@ namespace Clay
       _icp = new IterativeClosestPoint();
       _icp->SetOpenCLManager(_openCLManager);
 
+
       _kitti = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
                                "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
                                "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
+
+      /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
+      _kitti->SetCamera(CameraParams(718.856, 718.856, 607.193, 185.216),
+                                 CameraParams(718.856, 718.856, 607.193, 185.216));
 
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _kitti);
 //      _slamModule = new SLAMModule(argc, argv);
@@ -79,9 +86,9 @@ namespace Clay
 //      Ref<PointCloud> pclCloud = _pclReceiver->GetRenderable();
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(pclCloud));
 
-//      Ref<PointCloud> firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+      firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
 //      _visualOdometry->Initialize(firstCloud);
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 
    }
 
@@ -175,7 +182,7 @@ namespace Clay
             MeshTools::CoordinateAxes(pose);
             _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
-            _visualOdometry->Update(appState, pose);
+            _visualOdometry->Update(appState, pose, firstCloud);
             _visualOdometry->Show();
 
 
