@@ -460,6 +460,8 @@ cv::Mat VisualOdometry::TriangulatePoints(std::vector<cv::Point2f>& prevPoints, 
    float data[9] = {   cam._fx, 0, cam._cx, 0, cam._fy, cam._cy, 0, 0, 1 };
    Mat K = Mat(3, 3, CV_32FC1, data);
 
+   std::cout << "Pose for Triangulation:" << std::endl << relativePose << std::endl;
+
    Mat RtCurrent = cvCurPose * relativePose;
    Mat Rt0 = cvCurPose(Range(0,3), Range(0,4));
    Mat Rt1 = RtCurrent(Range(0,3), Range(0,4));;
@@ -528,7 +530,6 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe&
 
 //   cv::drawMatches(curLeft, kp_curLeft, kf.image, kf.keypoints, matchesLeft, prevFinalDisplay);
 
-   this->cvCurPose = this->cvCurPose * pose;
    prevLeft = curLeft.clone();
    desc_prevLeft = desc_curLeft.clone();
    kp_prevLeft = kp_curLeft;
@@ -688,6 +689,7 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
       {
          auto kf = _keyframes[_keyframes.size() - 1];
          CalculateOdometry_ORB(appState, kf, curLeft, curRight, cvPose, points4D);
+         cvCurPose = cvCurPose * cvPose;
 
          Eigen::Map<Eigen::Matrix<float, 4, 4>, Eigen::RowMajor> eigenPose(reinterpret_cast<float *>(cvPose.data));
          eigenPose.transposeInPlace();
@@ -716,12 +718,12 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
             glmTransform[3][2] *= 0.03;
             axes->ApplyTransform(glmTransform);
 
-            for(int i = 0; i<points4D.cols; i++)
-            {
-//               if(points4D.at<float>(2,i) > 0)
-                  if(i%2 == 0)
-                     cloud->InsertVertex(points4D.at<float>(0,i) , points4D.at<float>(1,i) , points4D.at<float>(2,i) );
-            }
+//            for(int i = 0; i<points4D.cols; i++)
+//            {
+////               if(points4D.at<float>(2,i) > 0)
+//                  if(i%2 == 0)
+//                     cloud->InsertVertex(points4D.at<float>(0,i) , points4D.at<float>(1,i) , points4D.at<float>(2,i) );
+//            }
          }
       }
    }

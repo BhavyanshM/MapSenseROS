@@ -48,8 +48,8 @@ class DataManager
       std::string _directory, _secondDirectory;
       std::vector<std::string> _fileNames;
       std::vector<std::string> _secondFileNames;
-      uint32_t _counter = 0;
-      uint32_t _secondCounter = 0;
+      uint32_t _counter = 600;
+      uint32_t _secondCounter = 600;
       xt::xarray<float> _poses;
       CameraParams _leftCam, _rightCam;
 };
