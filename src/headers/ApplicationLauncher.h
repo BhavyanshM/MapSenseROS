@@ -11,6 +11,7 @@
 #include "ImGuiLayout.h"
 #include "AppUtils.h"
 #include "NetworkManager.h"
+#include "OpenCLManager.h"
 
 namespace Clay
 {
@@ -21,19 +22,21 @@ namespace Clay
 
          ~ApplicationLauncher() = default;
 
+        virtual void MapsenseUpdate() = 0;
+
+        virtual void MapsenseInit(int argc, char** argv) = 0;
+
+        virtual void ImGuiUpdate(ApplicationState& appState) = 0;
+
          void OnAttach() override;
 
          void OnDetach() override;
 
          void OnUpdate(Timestep ts) override;
 
-         void MapsenseUpdate();
-
          void OnEvent(Event& e) override;
 
          void OnImGuiRender() override;
-
-         void ImGuiUpdate(ApplicationState& appState);
 
          void GetICPUpdate();
 
@@ -45,12 +48,6 @@ namespace Clay
          Ref<FrameBuffer> _frameBuffer;
          CameraController _cameraController;
          glm::vec4 _squareColor;
-         Ref<Texture2D> _texture;
-         Ref<Texture2D> _checkerTexture;
-         std::vector<Ref<Model>> _models;
-         std::vector<Ref<Model>> _poses;
-
-         Ref<Model> _rootPCL;
 
          struct ProfileResult
          {
@@ -72,8 +69,15 @@ namespace Clay
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;
 
-         AppUtils appUtils;
-         NetworkManager *_networkManager;
+   protected:
+        AppUtils appUtils;
+        NetworkManager *_networkManager;
+        OpenCLManager *_openCLManager;
+
+        std::vector<Ref<Model>> _models;
+        std::vector<Ref<Model>> _poses;
+
+        Ref<Model> _rootPCL;
 
    };
 }

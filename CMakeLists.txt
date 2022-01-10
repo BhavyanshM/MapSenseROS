@@ -132,8 +132,6 @@ set(SOURCE
 		)
 
 set (HEADERS
-
-
 		src/headers/NetworkManager.h
 		src/headers/ApplicationState.h
 		src/headers/AppUtils.h
@@ -154,13 +152,11 @@ set(MAPSENSE_CLAY_HEADERS
 		src/headers/ClayApp.h
 		src/headers/ClayApp.h
 		src/headers/PointCloudReceiver.h
-		src/headers/MapsenseLayer.h
-		src/headers/ApplicationLauncher.h)
+		src/headers/MapsenseLayer.h)
 set(MAPSENSE_CLAY_SOURCES
 		src/Launcher/ClayApp.cpp
 		src/Launcher/ClayApp.cpp
 		src/Launcher/MapsenseLayer.cpp
-		src/Launcher/ApplicationLauncher.cpp
 		src/Network/PointCloudReceiver.cpp)
 
 set(GEOMTOOLS_HEADERS
@@ -234,28 +230,58 @@ target_link_libraries(icp Eigen3::Eigen)
 #[[
 	Develop all executables here.
 ]]
-add_executable(Mapsense_Clay ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
-target_include_directories(Mapsense_Clay PUBLIC
-		"/usr/local/include/ClayEngine"
-		"/usr/local/include/ClayEngine/Vendor/"
-		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
-		"/usr/local/include/ClayEngine/Vendor/glfw/include"
-		"/usr/local/include/ClayEngine/Vendor/glm"
-		"/usr/local/include/ClayEngine/Vendor/ImGui"
-		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
-		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
-		"/usr/local/include/ClayEngine/Vendor/stb_image/")
-target_link_libraries(Mapsense_Clay
-		${OpenCV_LIBS} ${catkin_LIBRARIES}
-		/usr/lib/x86_64-linux-gnu/libOpenCL.so
-		Eigen3::Eigen tbb gtsam
-		geom-tools planar-regions slam icp
-		ClayEngine
-		glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
-add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
-target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
-target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
+if(MAPSENSE)
+	add_executable(Mapsense_Clay ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
+	target_include_directories(Mapsense_Clay PUBLIC
+			"/usr/local/include/ClayEngine"
+			"/usr/local/include/ClayEngine/Vendor/"
+			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+			"/usr/local/include/ClayEngine/Vendor/glfw/include"
+			"/usr/local/include/ClayEngine/Vendor/glm"
+			"/usr/local/include/ClayEngine/Vendor/ImGui"
+			"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+			"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+			"/usr/local/include/ClayEngine/Vendor/stb_image/")
+	target_link_libraries(Mapsense_Clay
+			${OpenCV_LIBS} ${catkin_LIBRARIES}
+			/usr/lib/x86_64-linux-gnu/libOpenCL.so
+			Eigen3::Eigen tbb gtsam
+			geom-tools planar-regions slam icp
+			ClayEngine
+			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
+	add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
+	target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
+	target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
+endif()
 
+
+## ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+if(VISUAL_TERRAIN_SLAM)
+	add_executable(VisualTerrainSLAM ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
+	target_include_directories(Mapsense_Clay PUBLIC
+			"/usr/local/include/ClayEngine"
+			"/usr/local/include/ClayEngine/Vendor/"
+			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+			"/usr/local/include/ClayEngine/Vendor/glfw/include"
+			"/usr/local/include/ClayEngine/Vendor/glm"
+			"/usr/local/include/ClayEngine/Vendor/ImGui"
+			"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+			"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+			"/usr/local/include/ClayEngine/Vendor/stb_image/")
+	target_link_libraries(Mapsense_Clay
+			${OpenCV_LIBS} ${catkin_LIBRARIES}
+			/usr/lib/x86_64-linux-gnu/libOpenCL.so
+			Eigen3::Eigen tbb gtsam
+			geom-tools planar-regions slam
+			ClayEngine
+			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
+	add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
+	target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
+	target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
+endif()
+
+## //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 if(BUILD_HEADLESS)
