@@ -168,10 +168,10 @@ namespace Clay
             ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.L515_DEPTH]);
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
+            _regionCalculator->Render();
 
             // TODO: Fix this and publish planarregions msg
-             _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
-            _regionCalculator->Render();
+              _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
          }
 
 

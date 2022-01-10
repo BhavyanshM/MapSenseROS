@@ -15,12 +15,16 @@ class image_converter:
     def __init__(self):
 
         self.bridge = CvBridge()
-        self.compressed = False
+        self.compressed = True
 
         if self.compressed is True:
+            print("Subscriber Added: ", "/zed/zed_node/left/image_rect_color/compressed")
+            print("Subscriber Added: ", "/zed/zed_node/right/image_rect_color/compressed")
             self.leftImage_sub = rospy.Subscriber("/zed/zed_node/left/image_rect_color/compressed", CompressedImage,self.leftCallback)
             self.rightImage_sub = rospy.Subscriber("/zed/zed_node/right/image_rect_color/compressed", CompressedImage,self.rightCallback)
         else:
+            print("Subscriber Added: ", "/zed/color/left/image_raw")
+            print("Subscriber Added: ", "/zed/color/right/image_raw")
             self.leftImage_sub = rospy.Subscriber("/zed/color/left/image_raw", Image,self.leftCallback)
             self.rightImage_sub = rospy.Subscriber("/zed/color/right/image_raw", Image,self.rightCallback)
 
@@ -87,13 +91,17 @@ class image_converter:
 
             self.disparity = self.stereo.compute(leftImage, rightImage)
 
+            self.disparity = 100 / np.abs(self.disparity)
+
             norm_image = cv2.normalize(self.disparity, None, alpha = 0, beta = 1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
             final = np.hstack([leftImage, rightImage])
-            cv2.imshow("Final", norm_image)
+            cv2.imshow("Final", self.disparity)
             cv2.imshow("Color", final)
             cv2.waitKey(1)
 
+
+            print("Disparity: ", self.disparity)
 
             # cv2.imwrite("LeftImage.jpg", self.leftImage)
             # exit()

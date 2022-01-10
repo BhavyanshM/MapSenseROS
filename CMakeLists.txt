@@ -154,11 +154,13 @@ set(MAPSENSE_CLAY_HEADERS
 		src/headers/ClayApp.h
 		src/headers/ClayApp.h
 		src/headers/PointCloudReceiver.h
-		src/headers/MapsenseLayer.h)
+		src/headers/MapsenseLayer.h
+		src/headers/ApplicationLauncher.h)
 set(MAPSENSE_CLAY_SOURCES
 		src/Launcher/ClayApp.cpp
 		src/Launcher/ClayApp.cpp
 		src/Launcher/MapsenseLayer.cpp
+		src/Launcher/ApplicationLauncher.cpp
 		src/Network/PointCloudReceiver.cpp)
 
 set(GEOMTOOLS_HEADERS

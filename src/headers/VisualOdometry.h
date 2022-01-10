@@ -59,6 +59,8 @@ class VisualOdometry
       void CalculateOdometry_FAST(ApplicationState& appState, Eigen::Matrix4f& transform);
       void ImGuiUpdate(ApplicationState& app);
 
+      cv::Mat CalculateStereoDepth(cv::Mat left, cv::Mat right);
+
    private:
       Eigen::Matrix4f cameraPose;
 

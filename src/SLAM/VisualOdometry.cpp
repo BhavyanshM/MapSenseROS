@@ -473,12 +473,17 @@ cv::Mat VisualOdometry::TriangulatePoints(std::vector<cv::Point2f>& prevPoints, 
    return points4D;
 }
 
+cv::Mat VisualOdometry::CalculateStereoDepth(cv::Mat left, cv::Mat right)
+{
+   cv::Mat disparity;
+   stereo->compute(left, right, disparity);
+   disparity.convertTo(disparity,CV_8U, 1.0);
+}
+
 void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe& kf,
                                            cv::Mat leftImage, cv::Mat rightImage, cv::Mat& cvPose, cv::Mat& points4D)
 {
-   //      TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
-   //      stereo->compute(curLeft, curRight, curDisparity);
-   //      curDisparity.convertTo(curDisparity,CV_8U, 1.0);
+//   TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
 
    ExtractKeypoints(leftImage, orb, kp_curLeft, desc_curLeft);
    MatchKeypoints(kf.descriptor, desc_curLeft, matchesLeft);
@@ -639,8 +644,8 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
       rightImage = _data->GetNextSecondImage();
    } else
    {
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_LEFT_IMAGE_RAW])->getData(leftImage, appState, timestamp);
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.ZED_RIGHT_IMAGE_RAW])->getData(rightImage, appState, timestamp);
+      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_LEFT_IMG_RECT])->getData(leftImage, appState, timestamp);
+      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_RIGHT_IMG_RECT])->getData(rightImage, appState, timestamp);
    }
 
    cv::Mat cvPose, points4D;
@@ -705,7 +710,7 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
 
 
          CLAY_LOG_INFO("Norm: {} KF: {}", eigenPose.block<3,1>(0,3).norm(), kf.keypoints.size());
-         if(eigenPose.block<3,1>(0,3).norm() > 0.5)
+         if(eigenPose.block<3,1>(0,3).norm() > 0.8)
          {
             _initialized = true;
             _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), kp_curLeft, cameraPose));
@@ -718,12 +723,19 @@ void VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
             glmTransform[3][2] *= 0.03;
             axes->ApplyTransform(glmTransform);
 
+            /* Triangulated Points */
+            /* TODO: Filter points by 5-point algorithm mask before triangulation. */
 //            for(int i = 0; i<points4D.cols; i++)
 //            {
-////               if(points4D.at<float>(2,i) > 0)
-//                  if(i%2 == 0)
-//                     cloud->InsertVertex(points4D.at<float>(0,i) , points4D.at<float>(1,i) , points4D.at<float>(2,i) );
+//               if(points4D.at<float>(2,i) / points4D.at<float>(3,i) > 0)
+//                  if(i%4 == 0)
+//                     cloud->InsertVertex(points4D.at<float>(0,i) / points4D.at<float>(3,i) ,
+//                                          points4D.at<float>(1,i) / points4D.at<float>(3,i) ,
+//                                          points4D.at<float>(2,i) / points4D.at<float>(3,i) );
 //            }
+
+
+
          }
       }
    }
