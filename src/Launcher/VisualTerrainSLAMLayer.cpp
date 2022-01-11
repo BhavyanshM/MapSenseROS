@@ -2,11 +2,11 @@
 // Created by isr-lab on 1/10/22.
 //
 
-#include "VisualTerrainSLAMLauncher.h"
+#include "VisualTerrainSLAMLayer.h"
 
 namespace Clay {
 
-    void VisualTerrainSLAMLauncher::MapsenseInit(int argc, char** argv)
+    void VisualTerrainSLAMLayer::MapsenseInit(int argc, char** argv)
     {
         _kitti = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
                                  "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
@@ -19,7 +19,7 @@ namespace Clay {
         _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _kitti);
     }
 
-    void VisualTerrainSLAMLauncher::MapsenseUpdate() {
+    void VisualTerrainSLAMLayer::MapsenseUpdate() {
         //      ROS_DEBUG("TickEvent: %d", count++);
         if (appState.ROS_ENABLED)
         {
@@ -38,7 +38,7 @@ namespace Clay {
         }
     }
 
-    void VisualTerrainSLAMLauncher::ImGuiUpdate(ApplicationState& appState)
+    void VisualTerrainSLAMLayer::ImGuiUpdate(ApplicationState& appState)
     {
         ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT, appState.PATCH_WIDTH,
                     appState.KERNEL_SLIDER_LEVEL);

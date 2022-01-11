@@ -2,8 +2,8 @@
 // Created by quantum on 6/30/21.
 //
 
-#ifndef PLOTTER3D_PY_KEYPOINTDETECTOR_H
-#define PLOTTER3D_PY_KEYPOINTDETECTOR_H
+#ifndef VISUAL_ODOMETRY_H
+#define VISUAL_ODOMETRY_H
 
 #include "MapsenseHeaders.h"
 #include "opencv2/opencv.hpp"
@@ -98,4 +98,4 @@ class VisualOdometry
 
 };
 
-#endif //PLOTTER3D_PY_KEYPOINTDETECTOR_H
+#endif //VISUAL_ODOMETRY_H

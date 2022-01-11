@@ -2,8 +2,8 @@
 // Created by isr-lab on 1/10/22.
 //
 
-#ifndef MAP_SENSE_VISUALTERRAINSLAMLAUNCHER_H
-#define MAP_SENSE_VISUALTERRAINSLAMLAUNCHER_H
+#ifndef MAP_SENSE_VISUALTERRAINSLAMLAYER_H
+#define MAP_SENSE_VISUALTERRAINSLAMLAYER_H
 
 
 #include "ApplicationLauncher.h"
@@ -13,9 +13,10 @@
 #include "SLAMModule.h"
 
 namespace Clay {
-    class VisualTerrainSLAMLauncher : public ApplicationLauncher {
+    class VisualTerrainSLAMLayer : public ApplicationLauncher {
 
     public:
+        VisualTerrainSLAMLayer(int argc, char **argv) : ApplicationLauncher(argc, argv) {};
         void MapsenseInit(int argc, char** argv) override;
         void MapsenseUpdate() override;
         void ImGuiUpdate(ApplicationState& appState) override;
@@ -32,4 +33,4 @@ namespace Clay {
 
 }
 
-#endif //MAP_SENSE_VISUALTERRAINSLAMLAUNCHER_H
+#endif //MAP_SENSE_VISUALTERRAINSLAMLAYER_H

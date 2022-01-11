@@ -9,7 +9,6 @@
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
 
-#include "Core/Core.h"
 #include "AppUtils.h"
 #include "imgui.h"
 #include "MapsenseHeaders.h"

@@ -85,7 +85,6 @@ set(PLANAR_REGION_LIB
 		src/FeatureDetection/PlanarRegionCalculator.cpp
 		src/FeatureDetection/MapFrame.cpp
 		src/FeatureDetection/MapFrameProcessor.cpp
-		src/Geometry/src/Elements/PlanarRegion.cpp
 		src/Geometry/src/Elements/RegionRing.cpp
 		src/FeatureDetection/PlanarRegionProcessor.cpp
 		src/OpenCL/OpenCLManager.cpp
@@ -96,7 +95,7 @@ set(PLANAR_REGION_LIB
 		src/headers/PlanarRegionCalculator.h
 		src/headers/MapFrameProcessor.h
 		src/headers/MapFrame.h
-		src/headers/PlanarRegion.h
+
 		src/headers/RegionRing.h
 		src/FeatureDetection/PlanarRegionProcessor.h)
 
@@ -107,6 +106,10 @@ set(SLAM_LIB
 		src/headers/SLAMModule.h
 		src/headers/FactorGraphHandler.h
 		src/headers/PlanarRegionMapHandler.h)
+
+set(VISUAL_ODOMETRY_LIB
+		src/SLAM/VisualOdometry.cpp
+		src/headers/VisualOdometry.h)
 
 
 set(ICP_LIB
@@ -122,11 +125,7 @@ set(SOURCE
 		src/ImageProcessing/ImageTools.cpp
 		src/Network/ROS1TopicReceiver.cpp
 		src/Network/ImageReceiver.cpp
-		src/ImPlot/implot.cpp
-		src/ImPlot/implot_demo.cpp
-		src/ImPlot/implot_items.cpp
 		src/DataManager.cpp
-		src/SLAM/VisualOdometry.cpp
 		src/OpenCL/OpenCLManager.cpp
 		src/UI/ImGuiLayout.cpp
 		)
@@ -138,28 +137,35 @@ set (HEADERS
 		src/headers/ImageTools.h
 		src/headers/ImageReceiver.h
 		src/headers/ROS1TopicReceiver.h
+		src/headers/PointCloudReceiver.h
 		src/headers/DataManager.h
-		src/headers/VisualOdometry.h
 		src/headers/OpenCLManager.h
 		src/headers/Log.h
 		src/headers/Instrumentor.h
-		src/headers/Timer.h src/headers/Core.h
+		src/headers/Timer.h
+		src/headers/Core.h
 		src/headers/ImGuiLayout.h
 		src/headers/MapsenseHeaders.h
+		src/Network/PointCloudReceiver.cpp
+		src/headers/ApplicationLauncher.h
+		src/Launcher/ApplicationLauncher.cpp
 		)
 
 set(MAPSENSE_CLAY_HEADERS
 		src/headers/ClayApp.h
-		src/headers/ClayApp.h
-		src/headers/PointCloudReceiver.h
 		src/headers/MapsenseLayer.h)
 set(MAPSENSE_CLAY_SOURCES
 		src/Launcher/ClayApp.cpp
-		src/Launcher/ClayApp.cpp
-		src/Launcher/MapsenseLayer.cpp
-		src/Network/PointCloudReceiver.cpp)
+		src/Launcher/MapsenseLayer.cpp)
 
-set(GEOMTOOLS_HEADERS
+set(TERRAIN_SLAM_SOURCES
+		src/headers/VisualTerrainSLAMApp.h
+		src/headers/VisualTerrainSLAMLayer.h
+		src/Launcher/VisualTerrainSLAMApp.cpp
+		src/Launcher/VisualTerrainSLAMLayer.cpp
+		)
+
+set(GEOMTOOLS_SRC
 		src/Geometry/include/CameraParams.h
 		src/Geometry/include/NonLinearOptimizer.h
 		src/Geometry/include/GeomTools.h
@@ -172,9 +178,7 @@ set(GEOMTOOLS_HEADERS
 		src/Geometry/include/Plane3D.h
 		src/Geometry/include/Point3D.h
 		src/Geometry/include/StructureFromMotion.h
-		src/Geometry/include/PointLandmark.h)
-
-set(GEOMTOOLS_SOURCE
+		src/Geometry/include/PointLandmark.h
 		src/Geometry/src/Elements/CameraParams.cpp
 		src/Geometry/src/Optimizers/NonLinearOptimizer.cpp
 		src/Geometry/src/GeomTools.cpp
@@ -187,7 +191,9 @@ set(GEOMTOOLS_SOURCE
 		src/Geometry/src/Elements/Line3D.cpp
 		src/Geometry/src/Elements/Plane3D.cpp
 		src/Geometry/src/Modules/StructureFromMotion.cpp
-		src/Geometry/src/Elements/PointLandmark.cpp)
+		src/Geometry/src/Elements/PointLandmark.cpp
+		src/Geometry/src/Elements/PlanarRegion.cpp
+		src/headers/PlanarRegion.h)
 
 include_directories(
 		include
@@ -206,7 +212,7 @@ include_directories(
 #[[
 	Develop all libraries here.
 ]]
-add_library(geom-tools STATIC ${GEOMTOOLS_SOURCE} ${GEOMTOOLS_HEADERS})
+add_library(geom-tools STATIC ${GEOMTOOLS_SRC})
 target_link_libraries(geom-tools
 		Eigen3::Eigen
 		${OpenCV_LIBS})
@@ -224,6 +230,37 @@ target_link_libraries(slam
 		${OpenCV_LIBS}
 		geom-tools)
 
+add_library(visual_odometry STATIC ${VISUAL_ODOMETRY_LIB})
+target_link_libraries(visual_odometry
+		Eigen3::Eigen
+		${OpenCV_LIBS})
+target_include_directories(visual_odometry PUBLIC
+		"/usr/local/include/ClayEngine"
+		"/usr/local/include/ClayEngine/Vendor/"
+		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+		"/usr/local/include/ClayEngine/Vendor/glfw/include"
+		"/usr/local/include/ClayEngine/Vendor/glm"
+		"/usr/local/include/ClayEngine/Vendor/ImGui"
+		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+		"/usr/local/include/ClayEngine/Vendor/stb_image/")
+
+add_library(mapsense STATIC ${SOURCE} ${HEADERS})
+target_link_libraries(mapsense
+		${OpenCV_LIBS} ${catkin_LIBRARIES}
+		/usr/lib/x86_64-linux-gnu/libOpenCL.so
+		Eigen3::Eigen tbb geom-tools ClayEngine imgui)
+target_include_directories(mapsense PUBLIC
+		"/usr/local/include/ClayEngine"
+		"/usr/local/include/ClayEngine/Vendor/"
+		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+		"/usr/local/include/ClayEngine/Vendor/glfw/include"
+		"/usr/local/include/ClayEngine/Vendor/glm"
+		"/usr/local/include/ClayEngine/Vendor/ImGui"
+		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+		"/usr/local/include/ClayEngine/Vendor/stb_image/")
+
 add_library(icp STATIC ${ICP_LIB})
 target_link_libraries(icp Eigen3::Eigen)
 
@@ -231,7 +268,7 @@ target_link_libraries(icp Eigen3::Eigen)
 	Develop all executables here.
 ]]
 if(MAPSENSE)
-	add_executable(Mapsense_Clay ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
+	add_executable(Mapsense_Clay ${MAPSENSE_CLAY_SOURCES} ${MAPSENSE_CLAY_HEADERS} )
 	target_include_directories(Mapsense_Clay PUBLIC
 			"/usr/local/include/ClayEngine"
 			"/usr/local/include/ClayEngine/Vendor/"
@@ -247,7 +284,7 @@ if(MAPSENSE)
 			/usr/lib/x86_64-linux-gnu/libOpenCL.so
 			Eigen3::Eigen tbb gtsam
 			geom-tools planar-regions slam icp
-			ClayEngine
+			ClayEngine visual_odometry mapsense
 			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
 	add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
 	target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
@@ -256,10 +293,17 @@ endif()
 
 
 ## ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+set(VISUAL_TERRAIN_SLAM 1)
 if(VISUAL_TERRAIN_SLAM)
-	add_executable(VisualTerrainSLAM ${SOURCE} ${MAPSENSE_CLAY_SOURCES} ${HEADERS} ${MAPSENSE_CLAY_HEADERS} )
-	target_include_directories(Mapsense_Clay PUBLIC
+	add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES})
+	target_link_libraries(VisualTerrainSLAM
+			${OpenCV_LIBS} ${catkin_LIBRARIES}
+			/usr/lib/x86_64-linux-gnu/libOpenCL.so
+			Eigen3::Eigen tbb gtsam
+			geom-tools planar-regions slam
+			ClayEngine mapsense visual_odometry
+			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
+	target_include_directories(VisualTerrainSLAM PUBLIC
 			"/usr/local/include/ClayEngine"
 			"/usr/local/include/ClayEngine/Vendor/"
 			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
@@ -269,16 +313,9 @@ if(VISUAL_TERRAIN_SLAM)
 			"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
 			"/usr/local/include/ClayEngine/Vendor/spdlog/include"
 			"/usr/local/include/ClayEngine/Vendor/stb_image/")
-	target_link_libraries(Mapsense_Clay
-			${OpenCV_LIBS} ${catkin_LIBRARIES}
-			/usr/lib/x86_64-linux-gnu/libOpenCL.so
-			Eigen3::Eigen tbb gtsam
-			geom-tools planar-regions slam
-			ClayEngine
-			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
-	add_dependencies(Mapsense_Clay map_sense_generate_messages_cpp)
-	target_precompile_headers(Mapsense_Clay PUBLIC src/headers/MapsenseHeaders.h)
-	target_compile_definitions(Mapsense_Clay PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
+	add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
+	target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)
+	target_compile_definitions(VisualTerrainSLAM PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
 endif()
 
 ## //////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -7,7 +7,6 @@
 
 #include "ROS1TopicReceiver.h"
 #include "MapsenseHeaders.h"
-#include "Core/Core.h"
 #include "Scene/Mesh/PointCloud.h"
 #include "DataManager.h"
 

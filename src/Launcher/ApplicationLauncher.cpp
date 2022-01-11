@@ -154,13 +154,14 @@ namespace Clay {
         ImGui::Begin("MapSense Panel");
         if (ImGui::BeginTabBar("Configuration")) {
             if (ImGui::BeginTabItem("Application")) {
-                ImGuiLayout::getImGuiAppLayout(appState);
+//                ImGuiLayout::getImGuiAppLayout(appState);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
         }
         if (ImGui::BeginTabBar("Modules")) {
 
+           ImGui::EndTabBar();
         }
         ImGui::End(); /* MapSense Panel */
 

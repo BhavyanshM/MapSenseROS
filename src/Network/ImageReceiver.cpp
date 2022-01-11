@@ -4,6 +4,7 @@
 
 #include "ImageReceiver.h"
 #include "ImageTools.h"
+#include "Core/Log.h"
 
 ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 {
