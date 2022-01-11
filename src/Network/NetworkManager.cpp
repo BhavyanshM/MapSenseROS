@@ -48,7 +48,6 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    string depthInfoTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH_INFO : app.L515_DEPTH_INFO;
    string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
 
-   string colorCompressedTopicName = "/camera/color/image_raw/compressed";
    string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
    app.L515_DEPTH = depthTopicName;
@@ -58,7 +57,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    CLAY_LOG_INFO("L515 Depth Info Topic: {}", depthInfoTopicName);
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
-   addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
+   addReceiver(TopicInfo(app.L515_COLOR, "sensor_msgs/CompressedImage"));
    addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
    addReceiver(TopicInfo(app.BLACKFLY_RIGHT_RAW, "sensor_msgs/Image"));
 

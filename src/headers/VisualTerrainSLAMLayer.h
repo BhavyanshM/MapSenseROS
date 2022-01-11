@@ -24,7 +24,7 @@ namespace Clay {
         PlanarRegionCalculator *_regionCalculator;
         VisualOdometry* _visualOdometry;
         SLAMModule *_slamModule;
-        DataManager* _kitti;
+        DataManager* _data;
 
         Ref<PointCloud> firstCloud;
 

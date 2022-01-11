@@ -126,6 +126,7 @@ class ApplicationState
       string KITTI_RIGHT_IMG_RECT = "/kitti/right/image_rect/compressed";
       string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
 
+      string L515_COLOR = "/camera/color/image_raw/compressed";
       string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
       string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
 

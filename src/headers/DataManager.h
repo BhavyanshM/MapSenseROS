@@ -38,7 +38,11 @@ class DataManager
 
       static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
 
-      void SetCamera(const CameraParams& leftCam, const CameraParams& rightCam = CameraParams()) {_leftCam = leftCam; _rightCam = rightCam; };
+      void SetCamera(const CameraParams& leftCam, const CameraParams& rightCam = CameraParams())
+      {
+          _leftCam = leftCam; _rightCam = rightCam;
+          CLAY_LOG_INFO("Params: {} {} {} {}", leftCam._fx, leftCam._cx, leftCam._fy, leftCam._cy);
+      };
 
       const CameraParams& GetLeftCamera() const {return _leftCam; }
 

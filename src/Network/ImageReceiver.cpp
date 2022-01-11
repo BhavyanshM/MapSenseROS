@@ -32,12 +32,14 @@ void ImageReceiver::compressedImageCallback(const CompressedImageConstPtr& compr
 {
    ROS_DEBUG("Compressed Image Callback: %.6lf", compressedMsg->header.stamp.toSec());
    _compressedImageMessage = compressedMsg;
+    if(!_available) _available = true;
 }
 
 void ImageReceiver::imageCallback(const ImageConstPtr& colorMsg)
 {
    ROS_DEBUG("Image Callback: %.6lf", colorMsg->header.stamp.toSec());
    _imageMessage = colorMsg;
+    if(!_available) _available = true;
 }
 
 void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
@@ -116,6 +118,7 @@ void ImageReceiver::processMessage(ApplicationState& app)
       {
          ROS_ERROR("Could not convert to _image! %s", e.what());
       }
+      if(!_processed) _processed = true;
    }
 }
 
@@ -141,4 +144,6 @@ void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& times
       app.DEPTH_CY = _cameraInfoMessage->K[5] / app.DIVISION_FACTOR;
       app.update();
    }
+   _available = false;
+   _processed = false;
 }

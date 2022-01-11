@@ -32,7 +32,7 @@ class VisualOdometry
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data = nullptr);
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
-      void Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes, Clay::Ref<Clay::PointCloud> cloud);
+      bool Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes, Clay::Ref<Clay::PointCloud> cloud);
 
       void ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1);
       void ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc);

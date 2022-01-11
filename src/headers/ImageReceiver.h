@@ -34,6 +34,8 @@ class ImageReceiver : public ROS1TopicReceiver
       bool _compressed = false;
       bool _cameraInfoSet = false;
       bool _infoMessageSaved = false;
+      bool _available = false;
+      bool _processed = false;
       cv::Mat _image;
 
    public:
