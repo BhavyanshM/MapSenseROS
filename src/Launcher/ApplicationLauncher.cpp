@@ -16,7 +16,38 @@
 #include "CameraParams.h"
 
 namespace Clay {
+
     ApplicationLauncher::ApplicationLauncher(int argc, char **argv) : Layer("Sandbox2D") {
+
+       std::vector<std::string> args(argv, argv + argc);
+       for (int i = 0; i < argc; i++)
+       {
+          if (args[i] == "--export")
+          {
+             printf("Setting EXPORT_REGIONS: true\n");
+             appState.EXPORT_REGIONS = true;
+          }
+          if (args[i] == "--kernel-level")
+          {
+             printf("Setting KERNEL_LEVEL_SLIDER: %d\n", stoi(args[i + 1]));
+             appState.KERNEL_SLIDER_LEVEL = stoi(args[i + 1]);
+          }
+          if (args[i] == "--stereo-driver")
+          {
+             printf("Setting STEREO_DRIVER: true\n");
+             appState.STEREO_DRIVER = true;
+          }
+          if (args[i] == "--depth-aligned")
+          {
+             printf("Setting DEPTH_ALIGNED: true\n");
+             appState.DEPTH_ALIGNED = true;
+          }
+          if (args[i] == "--camera-name")
+          {
+             printf("Setting TOPIC_CAMERA_NAME: %s\n", args[i + 1].c_str());
+             appState.TOPIC_CAMERA_NAME = args[i + 1];
+          }
+       }
 
         opt_fullscreen = true;
         dockspace_flags = ImGuiDockNodeFlags_None;
@@ -26,6 +57,7 @@ namespace Clay {
 
 
         /* TODO: Instantiate the Information Processors */
+         _openCLManager = new OpenCLManager(ros::package::getPath("map_sense"));
         _networkManager = new NetworkManager(appState, &appUtils);
         _networkManager->init_ros_node(argc, argv, appState);
 
@@ -42,7 +74,7 @@ namespace Clay {
         MeshTools::CoordinateAxes(pose);
         _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
-        MapsenseInit(argc, argv);
+        printf("Here\n");
 
     }
 
@@ -154,19 +186,18 @@ namespace Clay {
         ImGui::Begin("MapSense Panel");
         if (ImGui::BeginTabBar("Configuration")) {
             if (ImGui::BeginTabItem("Application")) {
-//                ImGuiLayout::getImGuiAppLayout(appState);
+                ImGuiLayout::getImGuiAppLayout(appState);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
         }
         if (ImGui::BeginTabBar("Modules")) {
-
+           ImGuiUpdate(appState);
            ImGui::EndTabBar();
         }
+       ImGui::Text("Models: %d", _models.size());
+
         ImGui::End(); /* MapSense Panel */
-
-        ImGui::Text("Models: %d", _models.size());
-
         ImGui::End(); /* Mapsense Dockspace */
     }
 

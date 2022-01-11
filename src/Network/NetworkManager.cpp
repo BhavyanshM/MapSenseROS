@@ -44,10 +44,8 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
    // ROSTopic Subscribers
-   string depthTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/image_raw" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                   "/depth/image_rect_raw";
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? "/" + app.TOPIC_CAMERA_NAME + "/aligned_depth_to_color/camera_info" : "/" + app.TOPIC_CAMERA_NAME +
-                                                                                                                         "/depth/camera_info";
+   string depthTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH : app.L515_DEPTH;
+   string depthInfoTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH_INFO : app.L515_DEPTH_INFO;
    string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
 
    string colorCompressedTopicName = "/camera/color/image_raw/compressed";
@@ -55,10 +53,11 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    app.L515_DEPTH = depthTopicName;
    app.L515_DEPTH_INFO = depthInfoTopicName;
-   CLAY_LOG_INFO("L515 Depth Topic: {}", app.L515_DEPTH);
-   CLAY_LOG_INFO("L515 Depth Info Topic: {}", app.L515_DEPTH_INFO);
 
-   addReceiver(TopicInfo(app.L515_DEPTH, "sensor_msgs/Image"), TopicInfo(app.L515_DEPTH_INFO, "sensor_msgs/CameraInfo"));
+   CLAY_LOG_INFO("L515 Depth Topic: {}", depthTopicName);
+   CLAY_LOG_INFO("L515 Depth Info Topic: {}", depthInfoTopicName);
+
+   addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
    addReceiver(TopicInfo(colorCompressedTopicName, "sensor_msgs/CompressedImage"));
    addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
    addReceiver(TopicInfo(app.BLACKFLY_RIGHT_RAW, "sensor_msgs/Image"));
@@ -98,15 +97,20 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
    return receivers.size() - 1;
 }
 
-void NetworkManager::ImGuiUpdate()
+void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 {
-   /* Testing Combo Drop Downs */
-   vector<TopicInfo> topics = getROSTopicList();
-   getTopicSelection(topics, currentDataTopic);
-   if (ImGui::Button("Add Receiver"))
-      addReceiver(currentDataTopic);
-   for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
-      receiver.second->ImGuiUpdate();
+   if (ImGui::BeginTabItem("Network"))
+   {
+      vector<TopicInfo> topics = getROSTopicList();
+      getTopicSelection(topics, currentDataTopic);
+      if (ImGui::Button("Add Receiver"))
+         addReceiver(currentDataTopic);
+      for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
+         receiver.second->ImGuiUpdate();
+
+      ImGui::EndTabItem();
+   }
+
 }
 
 void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)

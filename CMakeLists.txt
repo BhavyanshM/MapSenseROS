@@ -195,6 +195,17 @@ set(GEOMTOOLS_SRC
 		src/Geometry/src/Elements/PlanarRegion.cpp
 		src/headers/PlanarRegion.h)
 
+set(MAPSENSE_INCLUDE_DIRS
+		"/usr/local/include/ClayEngine"
+		"/usr/local/include/ClayEngine/Vendor/"
+		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
+		"/usr/local/include/ClayEngine/Vendor/glfw/include"
+		"/usr/local/include/ClayEngine/Vendor/glm"
+		"/usr/local/include/ClayEngine/Vendor/ImGui"
+		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
+		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
+		"/usr/local/include/ClayEngine/Vendor/stb_image/")
+
 include_directories(
 		include
 		src/headers
@@ -205,6 +216,7 @@ include_directories(
 		Vendor/xtensor/include
 		Vendor/xtensor-blas/include
 		/usr/local/include/ClayEngine/Vendor/
+		${MAPSENSE_INCLUDE_DIRS}
 )
 
 #set_target_properties(Mapsense_Launcher_UI PROPERTIES LINK_FLAGS -Wl,-z, stack-size, 1000000000000)
@@ -234,32 +246,14 @@ add_library(visual_odometry STATIC ${VISUAL_ODOMETRY_LIB})
 target_link_libraries(visual_odometry
 		Eigen3::Eigen
 		${OpenCV_LIBS})
-target_include_directories(visual_odometry PUBLIC
-		"/usr/local/include/ClayEngine"
-		"/usr/local/include/ClayEngine/Vendor/"
-		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
-		"/usr/local/include/ClayEngine/Vendor/glfw/include"
-		"/usr/local/include/ClayEngine/Vendor/glm"
-		"/usr/local/include/ClayEngine/Vendor/ImGui"
-		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
-		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
-		"/usr/local/include/ClayEngine/Vendor/stb_image/")
+target_include_directories(visual_odometry PUBLIC ${MAPSENSE_INCLUDE_DIRS})
 
 add_library(mapsense STATIC ${SOURCE} ${HEADERS})
 target_link_libraries(mapsense
 		${OpenCV_LIBS} ${catkin_LIBRARIES}
 		/usr/lib/x86_64-linux-gnu/libOpenCL.so
 		Eigen3::Eigen tbb geom-tools ClayEngine imgui)
-target_include_directories(mapsense PUBLIC
-		"/usr/local/include/ClayEngine"
-		"/usr/local/include/ClayEngine/Vendor/"
-		"/usr/local/include/ClayEngine/Vendor/GLAD/include"
-		"/usr/local/include/ClayEngine/Vendor/glfw/include"
-		"/usr/local/include/ClayEngine/Vendor/glm"
-		"/usr/local/include/ClayEngine/Vendor/ImGui"
-		"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
-		"/usr/local/include/ClayEngine/Vendor/spdlog/include"
-		"/usr/local/include/ClayEngine/Vendor/stb_image/")
+target_include_directories(mapsense PUBLIC ${MAPSENSE_INCLUDE_DIRS})
 
 add_library(icp STATIC ${ICP_LIB})
 target_link_libraries(icp Eigen3::Eigen)
@@ -269,16 +263,7 @@ target_link_libraries(icp Eigen3::Eigen)
 ]]
 if(MAPSENSE)
 	add_executable(Mapsense_Clay ${MAPSENSE_CLAY_SOURCES} ${MAPSENSE_CLAY_HEADERS} )
-	target_include_directories(Mapsense_Clay PUBLIC
-			"/usr/local/include/ClayEngine"
-			"/usr/local/include/ClayEngine/Vendor/"
-			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
-			"/usr/local/include/ClayEngine/Vendor/glfw/include"
-			"/usr/local/include/ClayEngine/Vendor/glm"
-			"/usr/local/include/ClayEngine/Vendor/ImGui"
-			"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
-			"/usr/local/include/ClayEngine/Vendor/spdlog/include"
-			"/usr/local/include/ClayEngine/Vendor/stb_image/")
+	target_include_directories(Mapsense_Clay PUBLIC ${MAPSENSE_INCLUDE_DIRS})
 	target_link_libraries(Mapsense_Clay
 			${OpenCV_LIBS} ${catkin_LIBRARIES}
 			/usr/lib/x86_64-linux-gnu/libOpenCL.so
@@ -303,16 +288,7 @@ if(VISUAL_TERRAIN_SLAM)
 			geom-tools planar-regions slam
 			ClayEngine mapsense visual_odometry
 			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
-	target_include_directories(VisualTerrainSLAM PUBLIC
-			"/usr/local/include/ClayEngine"
-			"/usr/local/include/ClayEngine/Vendor/"
-			"/usr/local/include/ClayEngine/Vendor/GLAD/include"
-			"/usr/local/include/ClayEngine/Vendor/glfw/include"
-			"/usr/local/include/ClayEngine/Vendor/glm"
-			"/usr/local/include/ClayEngine/Vendor/ImGui"
-			"/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
-			"/usr/local/include/ClayEngine/Vendor/spdlog/include"
-			"/usr/local/include/ClayEngine/Vendor/stb_image/")
+	target_include_directories(VisualTerrainSLAM PUBLIC ${MAPSENSE_INCLUDE_DIRS})
 	add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
 	target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)
 	target_compile_definitions(VisualTerrainSLAM PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")

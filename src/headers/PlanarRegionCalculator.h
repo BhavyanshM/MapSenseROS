@@ -25,14 +25,42 @@ using namespace chrono;
 class PlanarRegionCalculator
 {
    public:
-//      cl::Kernel filterKernel, packKernel, mergeKernel;
-//      cl::Context context;
-//      cl::CommandQueue commandQueue;
-//      cl::Event event;
+      PlanarRegionCalculator(int argc, char **argv, ApplicationState& app);
+
+      void Render();
+
+      void ImGuiUpdate(ApplicationState& appState);
+
+      bool generatePatchGraph(ApplicationState& appState);
+
+      bool generatePatchGraphFromStereo(ApplicationState& appState);
+
+//      void initOpenCL();
+
+      void generateRegionsFromDepth(ApplicationState& appState, cv::Mat& depth, double inputTimestamp);
+
+      void generateRegionsFromStereo(ApplicationState& appState);
+
+      map_sense::RawGPUPlanarRegionList publishRegions();
+
+      void getFilteredDepth(cv::Mat& dispDepth, ApplicationState& appState);
+
+      static void onMouse(int event, int x, int y, int flags, void *userdata);
+
+      void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
+
+      uint8_t loadParameters(const ApplicationState& app);
+
+
+   public:
+      //      cl::Kernel filterKernel, packKernel, mergeKernel;
+      //      cl::Context context;
+      //      cl::CommandQueue commandQueue;
+      //      cl::Event event;
 
       cl::size_t<3> origin;
 
-      ApplicationState app;
+      ApplicationState& app;
       AppUtils appUtils;
 
       cv::Mat inputDepth;
@@ -42,40 +70,13 @@ class PlanarRegionCalculator
       cv::Mat inputStereoLeft, inputStereoRight;
 
       MapFrame output;
-      MapFrameProcessor _mapFrameProcessor;
+      MapFrameProcessor* _mapFrameProcessor;
       OpenCLManager* _openCL;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
       int frameId = 0;
       int depthReceiverId = -1;
-
-      explicit PlanarRegionCalculator(int argc, char **argv, ApplicationState& app);
-
-      void Render();
-
-      bool generatePatchGraph(ApplicationState appState);
-
-      bool generatePatchGraphFromStereo(ApplicationState& appState);
-
-      void ImGuiUpdate(ApplicationState& appState);
-
-//      void initOpenCL();
-
-      void generateRegionsFromDepth(ApplicationState appState, cv::Mat& depth, double inputTimestamp);
-
-      void generateRegionsFromStereo(ApplicationState appState);
-
-      map_sense::RawGPUPlanarRegionList publishRegions();
-
-      void getFilteredDepth(cv::Mat& dispDepth, ApplicationState appState);
-
-      static void onMouse(int event, int x, int y, int flags, void *userdata);
-
-      void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
-
-      uint8_t loadParameters(const ApplicationState& app);
-
 };
 
 #endif //PLANARREGIONCALCULATOR_H

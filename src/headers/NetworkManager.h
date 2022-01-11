@@ -62,7 +62,7 @@ class NetworkManager
 
       void getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic);
 
-      void ImGuiUpdate();
+      void ImGuiUpdate(ApplicationState& appState);
 
       int addReceiver(TopicInfo data, TopicInfo info = TopicInfo());
 

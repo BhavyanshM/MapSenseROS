@@ -14,8 +14,6 @@ CameraParams::CameraParams(float fx, float fy, float cx, float cy)  : _fx(fx), _
 
    cv::Mat camMat(_cameraMatrix.rows(), _cameraMatrix.cols(), CV_32FC1, _cameraMatrix.data());
    _cvCameraMatrix = camMat;
-
-   std::cout << "CamMat: " << std::endl << _cvCameraMatrix;
 }
 
 const Eigen::Vector2f& CameraParams::Project(const Eigen::Vector3f& point)

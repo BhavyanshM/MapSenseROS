@@ -22,11 +22,9 @@ namespace Clay
 
          ~ApplicationLauncher() = default;
 
-        virtual void MapsenseUpdate() {};
+        virtual void MapsenseUpdate() = 0;
 
-        virtual void MapsenseInit(int argc, char** argv) {};
-
-        virtual void ImGuiUpdate(ApplicationState& appState) {};
+        virtual void ImGuiUpdate(ApplicationState& appState) = 0;
 
          void OnAttach() override;
 

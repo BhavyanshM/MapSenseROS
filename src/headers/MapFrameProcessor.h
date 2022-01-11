@@ -13,14 +13,7 @@ using namespace ros;
 class MapFrameProcessor
 {
    public:
-
-      MapFrame frame;
-      cv::Mat debug;
-      MatrixXi visited;
-      MatrixXi boundary;
-      MatrixXi region;
-      ApplicationState app;
-      Vector2i connect[8] = {Vector2i(-1,-1), Vector2i(1,0),Vector2i(2,0),Vector2i(0,1),Vector2i(2,1),Vector2i(0,2),Vector2i(1,2), Vector2i(2,2)};
+      MapFrameProcessor(ApplicationState& app);
 
       void init(ApplicationState& app);
 
@@ -40,6 +33,17 @@ class MapFrameProcessor
 
       int adx[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
       int ady[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
+
+   public:
+      MapFrame frame;
+      cv::Mat debug;
+      MatrixXi visited;
+      MatrixXi boundary;
+      MatrixXi region;
+      ApplicationState& app;
+      Vector2i connect[8] = {Vector2i(-1,-1), Vector2i(1,0),Vector2i(2,0),Vector2i(0,1),Vector2i(2,1),Vector2i(0,2),Vector2i(1,2), Vector2i(2,2)};
+
+
 };
 
 #endif //SRC_MAPFRAMEPROCESSOR_H

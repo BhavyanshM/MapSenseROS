@@ -22,10 +22,6 @@ class ApplicationState
 
       void update();
 
-   private:
-      string depthFile = "/data/Depth_L515.png";
-      string colorFile = "/data/Color_L515.png";
-
    public:
       float MERGE_DISTANCE_THRESHOLD = 0.016;
       float MERGE_ANGULAR_THRESHOLD = 0.82;
@@ -132,6 +128,9 @@ class ApplicationState
 
       string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
       string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
+
+      string L515_ALIGNED_DEPTH = "/camera/aligned_depth_to_color/image_raw";
+      string L515_ALIGNED_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";
 
       string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
 

@@ -16,9 +16,6 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
          _poses.reshape({-1, 12});
 
          CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
-
-         CLAY_LOG_INFO("Poses Value: {}", _poses.at(1, 2));
-
      }
 }
 

@@ -1,16 +1,52 @@
 #include <map_sense/RawGPUPlanarRegionList.h>
 #include <AppUtils.h>
 #include "PlanarRegionCalculator.h"
+#include "imgui.h"
 
-PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, ApplicationState& app)
+PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, ApplicationState& app) : app(app)
 {
-   ROS_DEBUG("Creating PlanarRegionCalculator");
-   this->_mapFrameProcessor.init(app);
-   this->inputDepth = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
-   this->inputColor = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
+   std::cout << "PlanarRegionCalculator Created" << std::endl;
+   ROS_INFO("Creating PlanarRegionCalculator");
+   _mapFrameProcessor = new MapFrameProcessor(app);
+   _mapFrameProcessor->init(app);
+   inputDepth = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_16UC1);
+   inputColor = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
    origin[0] = 0;
    origin[0] = 0;
    origin[0] = 0;
+}
+
+void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
+{
+   if (ImGui::BeginTabItem("Planar Regions"))
+   {
+      /* Display 2D */
+      ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT, appState.PATCH_WIDTH,
+                  appState.KERNEL_SLIDER_LEVEL);
+      ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
+      ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
+      ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
+      ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 4);
+      ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
+      ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
+      ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
+      ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
+      ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
+      ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
+      if (ImGui::Button("Hide Display"))
+      {
+         cv::destroyAllWindows();
+      }
+      ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
+      ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
+      ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
+      ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
+      ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
+      ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
+      ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
+
+      ImGui::EndTabItem();
+   }
 }
 
 
@@ -18,8 +54,8 @@ void PlanarRegionCalculator::Render()
 {
    if (this->app.SHOW_REGION_COMPONENTS)
    {
-      ROS_DEBUG("Appending Region Components");
-      AppUtils::DisplayImage(_mapFrameProcessor.debug, app);
+      ROS_INFO("Appending Region Components");
+      AppUtils::DisplayImage(_mapFrameProcessor->debug, app);
       //      appUtils.appendToDebugOutput(this->_mapFrameProcessor.debug);
    }
 }
@@ -30,7 +66,7 @@ uint8_t PlanarRegionCalculator::loadParameters(const ApplicationState& app)
                      (float) app.PATCH_WIDTH, (float) app.SUB_H, (float) app.SUB_W, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY,
                      (float) app.FILTER_KERNEL_SIZE, (float) app.FILTER_SUB_H, (float) app.FILTER_SUB_W, (float) app.INPUT_HEIGHT, (float) app.INPUT_WIDTH};
 
-   ROS_DEBUG("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.PATCH_HEIGHT, app.PATCH_WIDTH, app.SUB_H,
+   ROS_INFO("GenerateRegions:(%d, %d, %d, %d, %d, %d) Filter:(%d,%d):%d", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.PATCH_HEIGHT, app.PATCH_WIDTH, app.SUB_H,
              app.SUB_W, app.FILTER_SUB_H, app.FILTER_SUB_W, app.FILTER_KERNEL_SIZE);
 
    return _openCL->CreateLoadBufferFloat(params, sizeof(params) / sizeof(float));
@@ -46,15 +82,15 @@ uint8_t PlanarRegionCalculator::loadParameters(const ApplicationState& app)
     R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
     P: [459.97265625, 0.0, 341.83984375, 0.0, 0.0, 459.8046875, 249.173828125, 0.0, 0.0, 0.0, 1.0, 0.0]
  * */
-bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
+bool PlanarRegionCalculator::generatePatchGraph(ApplicationState& appState)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
+   ROS_INFO("Generating Patch Graph on GPU: Color:[%d,%d] Depth:[%d,%d] Output:[%d,%d]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
              output.getRegionOutput().cols, output.getRegionOutput().rows);
 
    if (inputDepth.rows <= 0 || inputDepth.cols <= 0 || inputDepth.dims <= 0)
    {
-      ROS_DEBUG("Depth image width, height, or dimensions are zero! Skipping Frame.");
+      ROS_INFO("Depth image width, height, or dimensions are zero! Skipping Frame.");
       return false;
    }
 
@@ -87,7 +123,7 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
    uint8_t clBuffer_gz = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
    uint8_t clBuffer_graph = _openCL->CreateReadWriteImage2D_R8(appState.SUB_W, appState.SUB_H);
 
-   ROS_DEBUG("Created All Input Images.");
+   ROS_INFO("Created All Input Images.");
 
    /* Setting Kernel arguments for patch-packing kernel */
    {
@@ -143,7 +179,7 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
       _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
       _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
    }
-   ROS_DEBUG("Reading Images Now: (%d, %d, %d, %d, %d, %d, %d, %d)", clFilterDepth, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy,
+   ROS_INFO("Reading Images Now: (%d, %d, %d, %d, %d, %d, %d, %d)", clFilterDepth, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy,
              clBuffer_gz, clBuffer_graph);
 
    /* Read the output data from OpenCL buffers into CPU buffers */
@@ -174,7 +210,7 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
 
    _openCL->Reset();
 
-   ROS_DEBUG("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
+   ROS_INFO("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
 
    return true;
 }
@@ -182,7 +218,7 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState appState)
 bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appState)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Generating Patch Graph on GPU: Color:[%d,%d]", inputColor.cols, inputColor.rows, output.getRegionOutput().cols);
+   ROS_INFO("Generating Patch Graph on GPU: Color:[%d,%d]", inputColor.cols, inputColor.rows, output.getRegionOutput().cols);
 
    if (inputColor.rows <= 0 || inputColor.cols <= 0 || inputColor.dims <= 0)
    {
@@ -259,7 +295,7 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
 //      output.setRegionOutput(regionOutput);
 //      output.setPatchData(output_6);
 //   }
-//   ROS_DEBUG("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
+//   ROS_INFO("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
 
    _openCL->Reset();
 
@@ -272,10 +308,10 @@ void PlanarRegionCalculator::onMouse(int event, int x, int y, int flags, void *u
    MapFrame out = *((MapFrame *) userdata);
    if (event == cv::EVENT_MOUSEMOVE)
    {
-      ROS_DEBUG("[%d,%d]:", y / 8, x / 8);
-      ROS_DEBUG("%hu ", out.getPatchData().at<uint8_t>(y / 8, x / 8));
+      ROS_INFO("[%d,%d]:", y / 8, x / 8);
+      ROS_INFO("%hu ", out.getPatchData().at<uint8_t>(y / 8, x / 8));
       cv::Vec6f patch = out.getRegionOutput().at<cv::Vec6f>(y / 8, x / 8);
-      ROS_DEBUG("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3], patch[4], patch[5], patch[0], patch[1], patch[2]);
+      ROS_INFO("Center:(%.3lf, %.3lf, %.3lf), Normal:(%.3lf, %.3lf, %.3lf)\n", patch[3], patch[4], patch[5], patch[0], patch[1], patch[2]);
    }
 }
 
@@ -283,31 +319,35 @@ void logPlanarRegions(vector <shared_ptr<PlanarRegion>> planarRegionList)
 {
    for (int i = 0; i < planarRegionList.size(); i++)
    {
-      ROS_DEBUG("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->getCenter().x(),
+      ROS_INFO("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->getCenter().x(),
                 planarRegionList[i]->getCenter().y(), planarRegionList[i]->getCenter().z(), planarRegionList[i]->getNormal().x(),
                 planarRegionList[i]->getNormal().y(), planarRegionList[i]->getNormal().z());
    }
 }
 
-void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState appState, cv::Mat& depth, double inputTimestamp)
+void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState, cv::Mat& depth, double inputTimestamp)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Generating Regions");
+   ROS_INFO("Generating Regions");
 
+   _mapFrameProcessor->init(appState);
+
+   ROS_INFO("Setting Depth");
    inputDepth = depth;
    inputTimestamp = inputTimestamp;
 
+   ROS_INFO("Generating Patch Graph.");
+
    // Generate patch graph of connected patches on GPU
-   _mapFrameProcessor.init(appState);
    bool patchGraphGenerated = generatePatchGraph(appState);
    if (!patchGraphGenerated)
       return;
 
-   _mapFrameProcessor.generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
    PlanarRegion::SetZeroId(planarRegionList);
 
    /* Planar Regions Ready To Be Published Right Here. */
-   ROS_DEBUG("Number of Planar Regions: %d", planarRegionList.size());
+   ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
    if (appState.EXPORT_REGIONS)
    {
       if (frameId % 10 == 0)
@@ -320,7 +360,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState appState,
    //   extractRealPlanes();
 }
 
-void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState appState)
+void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState& appState)
 {
    MAPSENSE_PROFILE_FUNCTION();
 
@@ -328,8 +368,8 @@ void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState appState
    if (!patchGraphGenerated)
       return;
 
-   _mapFrameProcessor.init(appState);
-   _mapFrameProcessor.generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   _mapFrameProcessor->init(appState);
+   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
 
    PlanarRegion::SetZeroId(planarRegionList);
 }
@@ -337,7 +377,7 @@ void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState appState
 map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Publishing Regions");
+   ROS_INFO("Publishing Regions");
 
    if (planarRegionList.size() > 0)
    {
@@ -369,7 +409,7 @@ map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
       _planarRegionsToPublish.numOfRegions = planarRegionList.size();
       _planarRegionsToPublish.header.stamp.fromSec(inputTimestamp);
       return _planarRegionsToPublish;
-      ROS_DEBUG("Published Regions");
+      ROS_INFO("Published Regions");
    }
 }
 

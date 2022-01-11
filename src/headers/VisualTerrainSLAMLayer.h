@@ -16,8 +16,7 @@ namespace Clay {
     class VisualTerrainSLAMLayer : public ApplicationLauncher {
 
     public:
-        VisualTerrainSLAMLayer(int argc, char **argv) : ApplicationLauncher(argc, argv) {};
-        void MapsenseInit(int argc, char** argv) override;
+        VisualTerrainSLAMLayer(int argc, char **argv);
         void MapsenseUpdate() override;
         void ImGuiUpdate(ApplicationState& appState) override;
 
@@ -27,6 +26,7 @@ namespace Clay {
         SLAMModule *_slamModule;
         DataManager* _kitti;
 
+        Ref<PointCloud> firstCloud;
 
     };
 
