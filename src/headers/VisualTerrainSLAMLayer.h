@@ -27,6 +27,7 @@ namespace Clay {
         DataManager* _data;
 
         Ref<PointCloud> firstCloud;
+        std::vector<std::shared_ptr<PlanarRegion>> _regions;
 
     };
 

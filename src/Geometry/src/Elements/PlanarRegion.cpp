@@ -89,7 +89,7 @@ void PlanarRegion::insertBoundaryVertex(Vector3f vertex)
 
 vector<Vector3f> PlanarRegion::getBoundaryVertices()
 {
-   return this->boundaryVertices;
+   return boundaryVertices;
 }
 
 void PlanarRegion::insertLeafPatch(Vector2i pos)

@@ -716,23 +716,21 @@ bool VisualOdometry::Update(ApplicationState &appState, Clay::Ref<Clay::Triangle
 
                 glm::mat4 glmTransform;
                 for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) glmTransform[j][i] = cameraPose(i, j);
-                glmTransform[3][0] *= 0.05;
-                glmTransform[3][1] *= 0.05;
-                glmTransform[3][2] *= 0.05;
+                glmTransform[3][0] *= 0.1;
+                glmTransform[3][1] *= 0.1;
+                glmTransform[3][2] *= 0.1;
                 axes->ApplyTransform(glmTransform);
 
                 /* Triangulated Points */
                 /* TODO: Filter points by 5-point algorithm mask before triangulation. */
-               for(int i = 0; i<points4D.cols; i++)
-               {
-                  if(points4D.at<float>(2,i) / points4D.at<float>(3,i) > 0)
-                     if(i%4 == 0)
-                        cloud->InsertVertex(points4D.at<float>(0,i) / points4D.at<float>(3,i) ,
-                                             points4D.at<float>(1,i) / points4D.at<float>(3,i) ,
-                                             points4D.at<float>(2,i) / points4D.at<float>(3,i) );
-               }
-
-
+//               for(int i = 0; i<points4D.cols; i++)
+//               {
+//                  if(points4D.at<float>(2,i) / points4D.at<float>(3,i) > 0)
+//                     if(i%4 == 0)
+//                        cloud->InsertVertex(points4D.at<float>(0,i) / points4D.at<float>(3,i) ,
+//                                             points4D.at<float>(1,i) / points4D.at<float>(3,i) ,
+//                                             points4D.at<float>(2,i) / points4D.at<float>(3,i) );
+//               }
 
             }
         }

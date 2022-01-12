@@ -4,6 +4,8 @@
 
 #include "VisualTerrainSLAMLayer.h"
 #include "Scene/Mesh/MeshTools.h"
+#include "MeshGenerator.h"
+#include "PlanarRegion.h"
 
 namespace Clay
 {
@@ -32,6 +34,21 @@ namespace Clay
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
       //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
+
+//      std::shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
+//      region->insertBoundaryVertex(Eigen::Vector3f(-1,-1,0));
+//      region->insertBoundaryVertex(Eigen::Vector3f(-1,1,0));
+//      region->insertBoundaryVertex(Eigen::Vector3f(1,1,0));
+//      region->insertBoundaryVertex(Eigen::Vector3f(1,-1,0));
+//
+//      Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+//      MeshGenerator mesher;
+//      mesher.generateRegionLineMesh(region, regionMesh, false);
+//
+//      _regions.push_back(std::move(region));
+//      _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));
+//
+//      CLAY_LOG_INFO("Added region mesh.");
    }
 
    void VisualTerrainSLAMLayer::MapsenseUpdate()

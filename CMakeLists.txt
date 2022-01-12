@@ -128,6 +128,7 @@ set(SOURCE
 		src/DataManager.cpp
 		src/OpenCL/OpenCLManager.cpp
 		src/UI/ImGuiLayout.cpp
+		src/Rendering/MeshGenerator.cpp
 		)
 
 set (HEADERS
@@ -149,6 +150,7 @@ set (HEADERS
 		src/Network/PointCloudReceiver.cpp
 		src/headers/ApplicationLauncher.h
 		src/Launcher/ApplicationLauncher.cpp
+		src/headers/MeshGenerator.h
 		)
 
 set(MAPSENSE_CLAY_HEADERS
