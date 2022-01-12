@@ -35,20 +35,29 @@ namespace Clay
       //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 
+
+      /* Testing Planar Region Visualization Here. */
+      std::vector<string> files;
+      string path = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Real_Set_01";
+      AppUtils::getFileNames(path, files);
+      GeomTools::loadRegions(0, _regions, path, files);
+
+
 //      std::shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
 //      region->insertBoundaryVertex(Eigen::Vector3f(-1,-1,0));
 //      region->insertBoundaryVertex(Eigen::Vector3f(-1,1,0));
 //      region->insertBoundaryVertex(Eigen::Vector3f(1,1,0));
 //      region->insertBoundaryVertex(Eigen::Vector3f(1,-1,0));
-//
-//      Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-//      MeshGenerator mesher;
-//      mesher.generateRegionLineMesh(region, regionMesh, false);
-//
+//      region->insertBoundaryVertex(Eigen::Vector3f(0,-2,0));
+
+      Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+      MeshGenerator mesher;
+      mesher.generateRegionLineMesh(_regions[0], regionMesh, false);
+
 //      _regions.push_back(std::move(region));
-//      _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));
-//
-//      CLAY_LOG_INFO("Added region mesh.");
+      _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));
+
+      CLAY_LOG_INFO("Added region mesh.");
    }
 
    void VisualTerrainSLAMLayer::MapsenseUpdate()
