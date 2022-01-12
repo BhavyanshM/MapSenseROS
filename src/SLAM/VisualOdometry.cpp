@@ -438,6 +438,17 @@ VisualOdometry::EstimateMotion_2D2D(std::vector<cv::Point2f> &prevFeatures, std:
     cv::Mat E = findEssentialMat(prevFeatures, curFeatures, K, cv::RANSAC, 0.999, 1.0, mask);
     recoverPose(E, prevFeatures, curFeatures, K, R, t, mask);
 
+   CLAY_LOG_INFO("Features: {} {} {} {}", prevFeatures.size(), curFeatures.size(), mask.rows, mask.cols);
+    for(int i = prevFeatures.size() - 1; i>=0; i--)
+    {
+         if((int) mask.at<unsigned char>(i, 0) == 1)
+         {
+            prevFeatures.erase(prevFeatures.begin() + i);
+            curFeatures.erase(curFeatures.begin() + i);
+         }
+    }
+   CLAY_LOG_INFO("Inliers: {} {}", prevFeatures.size(), curFeatures.size());
+
     Mat cvPose = Mat::eye(4, 4, CV_32FC1);
     R.copyTo(cvPose(Range(0, 3), Range(0, 3))); /* Excludes the 'end' element */
     t.copyTo(cvPose(Range(0, 3), Range(3, 4)));
@@ -498,20 +509,24 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState &appState, Keyframe 
     CLAY_LOG_INFO("Params: {} {} {} {}", _data->GetLeftCamera()._fx, _data->GetLeftCamera()._cx,
                   _data->GetLeftCamera()._fy, _data->GetLeftCamera()._cy);
 
-    cv::Mat mask;
-    cv::Mat pose = EstimateMotion_2D2D(prevPoints2D, curPoints2D, mask, _data->GetLeftCamera());
-    cvPose = pose;
+   cv::Mat mask, pose;
+   if(prevPoints2D.size() >= 10 && curPoints2D.size() >= 10)
+    {
+       pose = EstimateMotion_2D2D(prevPoints2D, curPoints2D, mask, _data->GetLeftCamera());
+       cvPose = pose;
 
+       CLAY_LOG_INFO("Points To Be Triangulated: {} {}", prevPoints2D.size(), curPoints2D.size());
 
-    CLAY_LOG_INFO("Points To Be Triangulated: {} {}", prevPoints2D.size(), curPoints2D.size());
+       /* Triangulate Feature Points */
+       if (prevPoints2D.size() > 10) {
+          cv::Mat points = TriangulatePoints(prevPoints2D, curPoints2D, _data->GetLeftCamera(), pose);
+          points4D = points;
+       }
 
-    /* Triangulate Feature Points */
-    if (prevPoints2D.size() > 10) {
-        cv::Mat points = TriangulatePoints(prevPoints2D, curPoints2D, _data->GetLeftCamera(), pose);
-        points4D = points;
+       CLAY_LOG_INFO("Points Triangulated: {} {}", points4D.rows, points4D.cols);
     }
 
-    CLAY_LOG_INFO("Points Triangulated: {} {}", points4D.rows, points4D.cols);
+
 
 
 //   printf("%.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf\n",
@@ -621,6 +636,8 @@ void VisualOdometry::CalculateOdometry_FAST(ApplicationState &appState, Eigen::M
 
 bool VisualOdometry::Update(ApplicationState &appState, Clay::Ref<Clay::TriangleMesh> axes,
                             Clay::Ref<Clay::PointCloud> cloud) {
+
+   CLAY_LOG_INFO("VisualOdometry Update");
     auto start_point = std::chrono::steady_clock::now();
 
     double timestamp = 0;
@@ -631,17 +648,8 @@ bool VisualOdometry::Update(ApplicationState &appState, Clay::Ref<Clay::Triangle
         ImageReceiver *left = (ImageReceiver *) this->_dataReceiver->receivers[appState.L515_COLOR];
         ImageReceiver *right = (ImageReceiver *) this->_dataReceiver->receivers[appState.L515_COLOR];
 
-        if (left->_available && left->_processed) {
-            left->getData(leftImage, appState, timestamp);
-//            right->getData(rightImage, appState, timestamp);
-            rightImage = leftImage.clone();
-            CLAY_LOG_INFO("Available");
-        }
-        else
-        {
-            CLAY_LOG_INFO("Not Available");
-            return false;
-        }
+         left->getData(leftImage, appState, timestamp);
+         right->getData(rightImage, appState, timestamp);
     }
 
     cv::Mat cvPose, points4D;
@@ -708,21 +716,21 @@ bool VisualOdometry::Update(ApplicationState &appState, Clay::Ref<Clay::Triangle
 
                 glm::mat4 glmTransform;
                 for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) glmTransform[j][i] = cameraPose(i, j);
-                glmTransform[3][0] *= 0.03;
-                glmTransform[3][1] *= 0.03;
-                glmTransform[3][2] *= 0.03;
+                glmTransform[3][0] *= 0.05;
+                glmTransform[3][1] *= 0.05;
+                glmTransform[3][2] *= 0.05;
                 axes->ApplyTransform(glmTransform);
 
                 /* Triangulated Points */
                 /* TODO: Filter points by 5-point algorithm mask before triangulation. */
-//            for(int i = 0; i<points4D.cols; i++)
-//            {
-//               if(points4D.at<float>(2,i) / points4D.at<float>(3,i) > 0)
-//                  if(i%4 == 0)
-//                     cloud->InsertVertex(points4D.at<float>(0,i) / points4D.at<float>(3,i) ,
-//                                          points4D.at<float>(1,i) / points4D.at<float>(3,i) ,
-//                                          points4D.at<float>(2,i) / points4D.at<float>(3,i) );
-//            }
+               for(int i = 0; i<points4D.cols; i++)
+               {
+                  if(points4D.at<float>(2,i) / points4D.at<float>(3,i) > 0)
+                     if(i%4 == 0)
+                        cloud->InsertVertex(points4D.at<float>(0,i) / points4D.at<float>(3,i) ,
+                                             points4D.at<float>(1,i) / points4D.at<float>(3,i) ,
+                                             points4D.at<float>(2,i) / points4D.at<float>(3,i) );
+               }
 
 
 
