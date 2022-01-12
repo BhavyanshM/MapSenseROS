@@ -68,13 +68,15 @@ namespace Clay
             ROS_DEBUG("Stereo Odom Update");
             Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootPCL);
             MeshTools::CoordinateAxes(pose);
+            _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
-             bool result = _visualOdometry->Update(appState, pose, firstCloud);
+            bool result = _visualOdometry->Update(appState, pose, firstCloud);
 
-             CLAY_LOG_INFO("Result: {}", result);
-             if(result) _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
+            CLAY_LOG_INFO("Result: {}", result);
 
              _visualOdometry->Show();
+
+            CLAY_LOG_INFO("Calculated Visual Odometry");
          }
 
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _slamModule->_mapper.SLAM_ENABLED)

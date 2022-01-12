@@ -10,12 +10,49 @@ from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 
+import yaml
+from sensor_msgs.msg import CameraInfo
+
+def yaml_to_CameraInfo(yaml_fname):
+    """
+    Parse a yaml file containing camera calibration data (as produced by
+    rosrun camera_calibration cameracalibrator.py) into a
+    sensor_msgs/CameraInfo msg.
+
+    Parameters
+    ----------
+    yaml_fname : str
+        Path to yaml file containing camera calibration data
+    Returns
+    -------
+    camera_info_msg : sensor_msgs.msg.CameraInfo
+        A sensor_msgs.msg.CameraInfo message containing the camera calibration
+        data
+    """
+    # Load data from file
+    with open(yaml_fname, "r") as file_handle:
+        calib_data = yaml.load(file_handle)
+    # Parse
+    camera_info_msg = CameraInfo()
+    camera_info_msg.width = calib_data["image_width"]
+    camera_info_msg.height = calib_data["image_height"]
+    camera_info_msg.K = calib_data["camera_matrix"]["data"]
+    camera_info_msg.D = calib_data["distortion_coefficients"]["data"]
+    camera_info_msg.R = calib_data["rectification_matrix"]["data"]
+    camera_info_msg.P = calib_data["projection_matrix"]["data"]
+    camera_info_msg.distortion_model = calib_data["distortion_model"]
+    return camera_info_msg
+
+
 class image_converter:
 
     def __init__(self):
 
         self.bridge = CvBridge()
         self.compressed = True
+
+        self.depthPub = rospy.Publisher('/camera/aligned_depth_to_color/image_raw', Image, queue_size=2)
+        self.depthInfo = rospy.Publisher('/camera/aligned_depth_to_color/camera_info', CameraInfo, queue_size=2)
 
         if self.compressed is True:
             print("Subscriber Added: ", "/zed/zed_node/left/image_rect_color/compressed")
@@ -91,25 +128,26 @@ class image_converter:
 
             self.disparity = self.stereo.compute(leftImage, rightImage)
 
-            self.disparity = 100 / np.abs(self.disparity)
+            depthMap = 65536 / np.abs(self.disparity)
+            depth = np.array(depthMap, dtype=np.uint16)
 
-            norm_image = cv2.normalize(self.disparity, None, alpha = 0, beta = 1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+            norm_image = cv2.normalize(depth, None, alpha = 0, beta = 1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
             final = np.hstack([leftImage, rightImage])
-            cv2.imshow("Final", self.disparity)
+            cv2.imshow("Final", depthMap)
             cv2.imshow("Color", final)
             cv2.waitKey(1)
 
 
-            print("Disparity: ", self.disparity)
+
+            depthMsg = self.bridge.cv2_to_imgmsg(depth, "16UC1")
+            self.depthPub.publish(depthMsg)
 
             # cv2.imwrite("LeftImage.jpg", self.leftImage)
             # exit()
 
             self.rightSet = False
             self.leftSet = False
-
-    # def calculateStereo(self, left, right):
 
 
 def main(args):

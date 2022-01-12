@@ -196,6 +196,7 @@ namespace Clay {
            ImGui::EndTabBar();
         }
        ImGui::Text("Models: %d", _models.size());
+       ImGui::Text("Poses: %d", _poses.size());
 
         ImGui::End(); /* MapSense Panel */
         ImGui::End(); /* Mapsense Dockspace */

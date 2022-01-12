@@ -30,16 +30,14 @@ ImageReceiver::ImageReceiver(NodeHandle *nh, std::string imageTopic, std::string
 
 void ImageReceiver::compressedImageCallback(const CompressedImageConstPtr& compressedMsg)
 {
-   ROS_DEBUG("Compressed Image Callback: %.6lf", compressedMsg->header.stamp.toSec());
-   _compressedImageMessage = compressedMsg;
-    if(!_available) _available = true;
+       ROS_DEBUG("Compressed Image Callback: %s", topicName.c_str());
+       _compressedImageMessage = compressedMsg;
 }
 
 void ImageReceiver::imageCallback(const ImageConstPtr& colorMsg)
 {
-   ROS_DEBUG("Image Callback: %.6lf", colorMsg->header.stamp.toSec());
-   _imageMessage = colorMsg;
-    if(!_available) _available = true;
+       ROS_DEBUG("Image Callback: %s", topicName.c_str());
+       _imageMessage = colorMsg;
 }
 
 void ImageReceiver::cameraInfoCallback(const CameraInfoConstPtr& message)
@@ -118,7 +116,6 @@ void ImageReceiver::processMessage(ApplicationState& app)
       {
          ROS_ERROR("Could not convert to _image! %s", e.what());
       }
-      if(!_processed) _processed = true;
    }
 }
 
@@ -129,7 +126,7 @@ void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& times
    timestamp = this->timestampLastReceived;
    if(this->_image.rows != 0 && this->_image.cols != 0 && !this->_image.empty())
    {
-      image = this->_image;
+      image = this->_image.clone();
    }
    //   CLAY_LOG_INFO("Receiver: {}, DEPTH_SET: {}, Message Saved: {}", topicName, _cameraInfoSet, _infoMessageSaved);
    if (_cameraInfoMessage != nullptr && _infoMessageSaved)
@@ -144,6 +141,4 @@ void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& times
       app.DEPTH_CY = _cameraInfoMessage->K[5] / app.DIVISION_FACTOR;
       app.update();
    }
-   _available = false;
-   _processed = false;
 }

@@ -66,8 +66,8 @@ class VisualOdometry
 
       bool _initialized = false;
       uint32_t count = 0;
-      uint32_t kFeatures = 2400;
-      uint32_t kMinFeatures = 100;
+      uint32_t kFeatures = 2000;
+      uint32_t kMinFeatures = 1000;
       uint32_t width = 0;
       uint32_t height = 0;
       uint32_t xGridCount = 60;
