@@ -31,7 +31,7 @@ def yaml_to_CameraInfo(yaml_fname):
     """
     # Load data from file
     with open(yaml_fname, "r") as file_handle:
-        calib_data = yaml.load(file_handle)
+        calib_data = yaml.load(file_handle, Loader=yaml.FullLoader)
     # Parse
     camera_info_msg = CameraInfo()
     camera_info_msg.width = calib_data["image_width"]
@@ -52,7 +52,7 @@ class image_converter:
         self.compressed = True
 
         self.depthPub = rospy.Publisher('/camera/aligned_depth_to_color/image_raw', Image, queue_size=2)
-        self.depthInfo = rospy.Publisher('/camera/aligned_depth_to_color/camera_info', CameraInfo, queue_size=2)
+        self.depthInfoPub = rospy.Publisher('/camera/aligned_depth_to_color/camera_info', CameraInfo, queue_size=2)
 
         if self.compressed is True:
             print("Subscriber Added: ", "/zed/zed_node/left/image_rect_color/compressed")
@@ -138,7 +138,8 @@ class image_converter:
             cv2.imshow("Color", final)
             cv2.waitKey(1)
 
-
+            infoMsg = yaml_to_CameraInfo('zed.yaml')
+            self.depthInfoPub.publish(infoMsg)
 
             depthMsg = self.bridge.cv2_to_imgmsg(depth, "16UC1")
             self.depthPub.publish(depthMsg)
