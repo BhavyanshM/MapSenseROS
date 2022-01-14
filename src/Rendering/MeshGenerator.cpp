@@ -7,8 +7,7 @@ namespace Clay
       CLAY_LOG_INFO("Generating Region Mesh.");
       for(int i = 0; i<planarRegion->getNumOfBoundaryVertices(); i++)
       {
-         CLAY_LOG_INFO("Region Mesh: {}", i);
-         Eigen::Vector3f point = planarRegion->getBoundaryVertices()[i];
+         Eigen::Vector3f point = 2 * (planarRegion->getBoundaryVertices()[i]);
          model->InsertVertex(point.x(), point.y(), point.z());
       }
       uint32_t offset = 0;

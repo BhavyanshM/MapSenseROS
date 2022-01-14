@@ -38,7 +38,7 @@ namespace Clay
 
       /* Testing Planar Region Visualization Here. */
       std::vector<string> files;
-      string path = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Real_Set_01";
+      string path = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_01/";
       AppUtils::getFileNames(path, files);
       GeomTools::loadRegions(0, _regions, path, files);
 
@@ -50,12 +50,18 @@ namespace Clay
 //      region->insertBoundaryVertex(Eigen::Vector3f(1,-1,0));
 //      region->insertBoundaryVertex(Eigen::Vector3f(0,-2,0));
 
-      Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
-      MeshGenerator mesher;
-      mesher.generateRegionLineMesh(_regions[0], regionMesh, false);
+      for(int i = 1; i<_regions.size() + 1; i++)
+      {
+         Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)(i*123 % 255) / 255.0f,
+                                                                                    (float)(i*326 % 255) / 255.0f,
+                                                                                    (float)(i*231 % 255) / 255.0f, 1.0f), _rootPCL);
+         MeshGenerator mesher;
+         mesher.generateRegionLineMesh(_regions[i-1], regionMesh, false);
 
-//      _regions.push_back(std::move(region));
-      _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));
+         //      _regions.push_back(std::move(region));
+         _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));
+      }
+
 
       CLAY_LOG_INFO("Added region mesh.");
    }

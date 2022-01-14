@@ -346,6 +346,7 @@ void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
    {
       shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
       getNextLineSplit(regionFile, subStrings, ':'); // Get regionId
+      printf("Loader: %s\n", subStrings[0].c_str());
       region->setId(-1);
       //      region->setId(stoi(subStrings[1]));
       getNextLineSplit(regionFile, subStrings, ':'); // Get regionCenter
@@ -356,9 +357,11 @@ void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
       int length = stoi(subStrings[1]);
       for (int i = 0; i < length; i++)
       {
-         cout << i << " : ";
+//         cout << i << " : ";
          getNextLineSplit(regionFile, subStrings, ',');
-         region->insertBoundaryVertex(getVec3f(subStrings[0]));
+         Vector3f point = Vector3f(stof(subStrings[0]), stof(subStrings[1]), stof(subStrings[2]));
+//         cout << point << endl;
+         region->insertBoundaryVertex(point);
       }
       //      GeomTools::compressPointSetLinear(region);
       regions.emplace_back(region);
