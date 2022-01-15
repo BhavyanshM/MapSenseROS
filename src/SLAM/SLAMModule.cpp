@@ -23,7 +23,7 @@ SLAMModule::SLAMModule(int argc, char **argv)
 
    // SLAM Unit Test Setup
    shared_ptr <PlanarRegion> region = std::make_shared<PlanarRegion>(0);
-   region->setToUnitSquare();
+   region->SetToUnitSquare();
 
    RigidBodyTransform transform;
    transform.setRotationAndTranslation(Vector3d(0, 0, 0), Vector3d(0, 0, 0));
@@ -164,14 +164,14 @@ void SLAMModule::renderSLAMOutput()
 {
    /* Generate World Frame Region Mesh. */
    //         for (int k = 0; k < _mapper.regionsInMapFrame.size(); k++)
-   //            _mapper.regionsInMapFrame[k]->retainConvexHull();
+   //            _mapper.regionsInMapFrame[k]->RetainConvexHull();
 
    /* Extracting Landmarks from Factor Graph. */
    _mapper.extractFactorGraphLandmarks();
 
    /* Reducing Vertex Count on Region Boundaries. */
    for (int k = 0; k < _mapper.mapRegions.size(); k++)
-      _mapper.mapRegions[k]->retainConvexHull();
+      _mapper.mapRegions[k]->RetainConvexHull();
 
    /* Generating Pose Mesh */
    _mapper.fgSLAM->getPoses(_mapper.poses);

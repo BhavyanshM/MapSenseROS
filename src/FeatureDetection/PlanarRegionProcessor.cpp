@@ -12,12 +12,12 @@ void PlanarRegionProcessor::extractRealPlanes(vector<shared_ptr<PlanarRegion>> p
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       shared_ptr<PlanarRegion> region = planarRegionList[i];
-      regionSupportPlane << region->getNormal(), -region->getNormal().dot(region->getCenter());
+      regionSupportPlane << region->GetNormal(), -region->GetNormal().dot(region->GetCenter());
       for (int index : planes)
       {
          shared_ptr<PlanarRegion> plane = planarRegionList[index];
-         uniquePlane << plane->getNormal(), -plane->getNormal().dot(plane->getCenter());
-         if ((regionSupportPlane - uniquePlane).norm() < 0.1 && (plane->getCenter() - region->getCenter()).norm() < 0.3)
+         uniquePlane << plane->GetNormal(), -plane->GetNormal().dot(plane->GetCenter());
+         if ((regionSupportPlane - uniquePlane).norm() < 0.1 && (plane->GetCenter() - region->GetCenter()).norm() < 0.3)
          {
             exists = true;
          }

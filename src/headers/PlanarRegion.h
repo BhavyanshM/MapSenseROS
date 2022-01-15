@@ -31,45 +31,49 @@ class PlanarRegion
    public:
       vector<Vector3f> boundaryVertices;
 
-      void computeBoundaryVerticesPlanar();
+      void SubSampleBoundary(int skip);
 
-      void computeBoundaryVertices3D(vector<Vector2f> points2D);
+      void ComputeBoundaryVerticesPlanar();
 
-      void retainLinearApproximation();
+      void ComputeBoundaryVertices3D(vector<Vector2f> points2D);
 
-      void retainConvexHull();
+      void RetainLinearApproximation();
 
-      int getNumOfMeasurements() const;
+      void RetainConvexHull();
 
-      void setNumOfMeasurements(int numOfMeasurements);
+      int GetNumOfMeasurements() const;
 
-      int getPoseId() const;
+      void SetNumOfMeasurements(int numOfMeasurements);
+
+      int GetPoseId() const;
 
       void setPoseId(int poseId);
 
-      Vector3f getPCANormal();
+      Vector3f GetPCANormal();
 
       Vector3f getMeanCenter();
 
-      Vector3f getMeanNormal();
+      Vector3f GetMeanNormal();
 
       PlanarRegion(int id);
 
-      void addPatch(Vector3f normal, Vector3f center);
+      void AddPatch(Vector3f normal, Vector3f center);
 
       void insertBoundaryVertex(Vector3f vertex);
 
       void insertLeafPatch(Vector2i pos);
 
-      void getClockWise2D(vector<Vector2f>& points);
+      void GetClockWise2D(vector<Vector2f>& points);
+
+      void SortOrderClockwise();
 
       vector<Vector3f> getBoundaryVertices();
 
-      int getNumOfBoundaryVertices();
+      int GetNumOfBoundaryVertices();
 
-      Vector3f getNormal();
+      Vector3f GetNormal();
 
-      Vector3f getCenter();
+      Vector3f GetCenter();
 
       vector<Vector3f> getVertices();
 
@@ -81,11 +85,11 @@ class PlanarRegion
 
       void setId(int id);
 
-      void setNormal(const Vector3f& normal);
+      void SetNormal(const Vector3f& normal);
 
-      void setCenter(const Vector3f& center);
+      void SetCenter(const Vector3f& center);
 
-      void writeToFile(ofstream& file);
+      void WriteToFile(ofstream& file);
 
       vector<shared_ptr<RegionRing>> rings;
 
@@ -93,13 +97,13 @@ class PlanarRegion
 
       void transform(Vector3d translation, Matrix3d rotation);
 
-      void copyAndTransform(shared_ptr<PlanarRegion>& planarRegion, RigidBodyTransform transform);
+      void CopyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform);
 
       string toString();
 
-      void projectToPlane(Vector4f plane);
+      void ProjectToPlane(Vector4f plane);
 
-      void setToUnitSquare();
+      void SetToUnitSquare();
 
       static void PrintRegionList(const vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name);
 

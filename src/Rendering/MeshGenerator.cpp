@@ -4,14 +4,14 @@ namespace Clay
 {
    void MeshGenerator::generateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model, bool erase)
    {
-      CLAY_LOG_INFO("Generating Region Mesh.");
-      for(int i = 0; i<planarRegion->getNumOfBoundaryVertices(); i++)
+      CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
+      for(int i = 0; i< planarRegion->GetNumOfBoundaryVertices(); i++)
       {
          Eigen::Vector3f point = 2 * (planarRegion->getBoundaryVertices()[i]);
          model->InsertVertex(point.x(), point.y(), point.z());
       }
       uint32_t offset = 0;
-      for(uint16_t i = 0; i< (planarRegion->getNumOfBoundaryVertices() - 2) * 3; i+=3)
+      for(uint16_t i = 0; i< (planarRegion->GetNumOfBoundaryVertices() - 2) * 3; i+=3)
       {
          model->InsertIndex(0);
          model->InsertIndex(offset + 1);
@@ -40,7 +40,7 @@ namespace Clay
 //         //                              (planarRegion->getId() * 113 % 255) / 255.0f}};
 //      }
 //      Object3D& regionOrigin = parent->addChild<Object3D>();
-//      regionOrigin.translateLocal({planarRegion->getCenter().x(), planarRegion->getCenter().y(), planarRegion->getCenter().z()});
+//      regionOrigin.translateLocal({planarRegion->getCenter().x(), planarRegion->getCenter().y(), planarRegion->GetCenter().z()});
 //      regionOrigin.scaleLocal({0.002, 0.002, 0.002});
 //      new DrawableObject{regionOrigin, drawables, Magnum::Primitives::cubeSolid(),
 //                         {(color * 123 % 255) / 255.0f, (color * 161 % 255) / 255.0f, (color * 113 % 255) / 255.0f}};
@@ -64,8 +64,8 @@ namespace Clay
 //   clearMesh(edges);
 //   for (int i = 0; i < matches.size(); i++)
 //   {
-//      Vector3f first = regions[matches[i].first]->getCenter();
-//      Vector3f second = latestRegions[matches[i].second]->getCenter();
+//      Vector3f first = regions[matches[i].first]->GetCenter();
+//      Vector3f second = latestRegions[matches[i].second]->GetCenter();
 //      Object3D& matchEdge = parent->addChild<Object3D>();
 //      edges.emplace_back(&matchEdge);
 //      new DrawableObject{matchEdge, drawables, Magnum::Primitives::line3D({first.x(), first.y(), first.z()}, {second.x(), second.y(), second.z()}),

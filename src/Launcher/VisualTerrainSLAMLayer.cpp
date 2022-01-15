@@ -38,7 +38,7 @@ namespace Clay
 
       /* Testing Planar Region Visualization Here. */
       std::vector<string> files;
-      string path = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_01/";
+      string path = "/home/quantum/Workspace/Volume/Python/TerrainUnderstanding/regions/";
       AppUtils::getFileNames(path, files);
       GeomTools::loadRegions(0, _regions, path, files);
 
@@ -50,13 +50,22 @@ namespace Clay
 //      region->insertBoundaryVertex(Eigen::Vector3f(1,-1,0));
 //      region->insertBoundaryVertex(Eigen::Vector3f(0,-2,0));
 
-      for(int i = 1; i<_regions.size() + 1; i++)
+      for(int i = 0; i<_regions.size(); i++)
       {
-         Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)(i*123 % 255) / 255.0f,
-                                                                                    (float)(i*326 % 255) / 255.0f,
-                                                                                    (float)(i*231 % 255) / 255.0f, 1.0f), _rootPCL);
+//         GeomTools::compressPointSetLinear(_regions[i]);
+//         _regions[i]->SubSampleBoundary(2);
+//         _regions[i]->SortOrderClockwise();
+
+         for(int j = 0; j<_regions[i]->GetNumOfBoundaryVertices(); j++)
+         {
+            printf("%.3lf %.3lf\n", i, j, _regions[i]->getBoundaryVertices()[j].y(), _regions[i]->getBoundaryVertices()[j].z());
+         }
+
+         Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)((i+1)*123 % 255) / 255.0f,
+                                                                                    (float)((i+1)*326 % 255) / 255.0f,
+                                                                                    (float)((i+1)*231 % 255) / 255.0f, 1.0f), _rootPCL);
          MeshGenerator mesher;
-         mesher.generateRegionLineMesh(_regions[i-1], regionMesh, false);
+         mesher.generateRegionLineMesh(_regions[i], regionMesh, false);
 
          //      _regions.push_back(std::move(region));
          _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));

@@ -9,12 +9,12 @@ PlanarRegion::PlanarRegion(int id)
    this->id = id;
 }
 
-Vector3f PlanarRegion::getMeanNormal()
+Vector3f PlanarRegion::GetMeanNormal()
 {
    return this->normal / (float) this->numPatches;
 }
 
-Vector3f PlanarRegion::getPCANormal()
+Vector3f PlanarRegion::GetPCANormal()
 {
    Matrix<float, 3, Dynamic> patchMatrix(3, patchCentroids.size());
    for (int i = 0; i < patchCentroids.size(); i++)
@@ -30,19 +30,19 @@ Vector3f PlanarRegion::getPCANormal()
    return plane_normal;
 }
 
-Vector3f PlanarRegion::getNormal()
+Vector3f PlanarRegion::GetNormal()
 {
    if (!normalCalculated)
    {
       normalCalculated = true;
-      this->normal = getPCANormal();
+      this->normal = GetPCANormal();
       this->normal.normalize();
       this->normal *= -this->normal.z() / fabs(this->normal.z());
    }
    return this->normal;
 }
 
-Vector3f PlanarRegion::getCenter()
+Vector3f PlanarRegion::GetCenter()
 {
    if (!centroidCalculated)
    {
@@ -67,12 +67,12 @@ vector<Vector2i> PlanarRegion::getLeafPatches()
    return leafPatches;
 }
 
-int PlanarRegion::getNumOfBoundaryVertices()
+int PlanarRegion::GetNumOfBoundaryVertices()
 {
    return this->boundaryVertices.size();
 }
 
-void PlanarRegion::addPatch(Vector3f normal, Vector3f center)
+void PlanarRegion::AddPatch(Vector3f normal, Vector3f center)
 {
    this->normal += normal;
    this->center += center;
@@ -112,13 +112,41 @@ void PlanarRegion::setId(int id)
    this->id = id;
 }
 
-void PlanarRegion::getClockWise2D(vector<Vector2f>& points)
+void PlanarRegion::SubSampleBoundary(int skip)
+{
+   ROS_INFO("Before Boundary Size: %d", boundaryVertices.size());
+   for(int i = boundaryVertices.size() - 1; i>= 0; i--)
+   {
+
+      if(i % skip == 0 || boundaryVertices[i].norm() > 1000.0f)
+      {
+         boundaryVertices.erase(boundaryVertices.begin() + i);
+      }
+   }
+   ROS_INFO("After Boundary Size: %d", boundaryVertices.size());
+}
+
+void PlanarRegion::SortOrderClockwise()
+{
+   ROS_INFO("Order Clockwise: %d", boundaryVertices.size());
+   Vector3f center = this->getMeanCenter();
+   Vector3f normal = this->GetMeanNormal();
+
+   Vector3f first = this->getVertices()[0] - center;
+   sort(boundaryVertices.begin(), boundaryVertices.end(), [=](const Vector3f& a, Vector3f& b) -> bool
+   {
+      return acos(a.dot(first) / (a.norm() * first.norm())) < acos(b.dot(first) / (b.norm() * first.norm()));
+   });
+   ROS_INFO("Ordered Clockwise\n");
+}
+
+void PlanarRegion::GetClockWise2D(vector<Vector2f>& points)
 {
    printf("Getting ClockWise 2D\n");
    Vector3f center = this->getMeanCenter();
-   Vector3f normal = this->getMeanNormal();
+   Vector3f normal = this->GetMeanNormal();
 
-   for (int i = 0; i < this->getNumOfBoundaryVertices(); i++)
+   for (int i = 0; i < this->GetNumOfBoundaryVertices(); i++)
    {
       Vector3f vec = this->getVertices()[i] - center;
       Vector3f up(0, 0, 1);
@@ -156,24 +184,24 @@ void PlanarRegion::getClockWise2D(vector<Vector2f>& points)
    printf("ClockWise 2D Generated\n");
 }
 
-void PlanarRegion::setNormal(const Vector3f& normal)
+void PlanarRegion::SetNormal(const Vector3f& normal)
 {
    this->normal = normal;
    normalCalculated = true;
 }
 
-void PlanarRegion::setCenter(const Vector3f& center)
+void PlanarRegion::SetCenter(const Vector3f& center)
 {
    this->center = center;
    centroidCalculated = true;
 }
 
-void PlanarRegion::writeToFile(ofstream& file)
+void PlanarRegion::WriteToFile(ofstream& file)
 {
    file << "RegionID:" << this->id << endl;
    file << boost::format("Center:%.3f,%.3f,%.3f\n") % center.x() % center.y() % center.z();
    file << boost::format("Normal:%.3f,%.3f,%.3f\n") % normal.x() % normal.y() % normal.z();
-   file << "NumPatches:" << this->getNumOfBoundaryVertices() << endl;
+   file << "NumPatches:" << this->GetNumOfBoundaryVertices() << endl;
    for (int i = 0; i < boundaryVertices.size(); i++)
    {
       file << boost::format("%.3lf, %.3lf, %.3lf\n") % boundaryVertices[i].x() % boundaryVertices[i].y() % boundaryVertices[i].z();
@@ -189,21 +217,21 @@ void PlanarRegion::transform(Vector3d translation, Matrix3d rotation)
 {
    this->center = (rotation * this->center.cast<double>() + translation).cast<float>();
    this->normal = (rotation * this->normal.cast<double>()).cast<float>();
-   for (int i = 0; i < getNumOfBoundaryVertices(); i++)
+   for (int i = 0; i < GetNumOfBoundaryVertices(); i++)
    {
       this->boundaryVertices[i] = (rotation * this->boundaryVertices[i].cast<double>() + translation).cast<float>();
    }
 }
 
-void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform)
+void PlanarRegion::CopyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform)
 {
-   planarRegionToPack->setNormal(this->getNormal());
-   planarRegionToPack->setCenter(this->getCenter());
+   planarRegionToPack->SetNormal(this->GetNormal());
+   planarRegionToPack->SetCenter(this->GetCenter());
    planarRegionToPack->centroidCalculated = true;
    planarRegionToPack->normalCalculated = true;
-   planarRegionToPack->setNumOfMeasurements(this->getNumOfMeasurements());
+   planarRegionToPack->SetNumOfMeasurements(this->GetNumOfMeasurements());
    planarRegionToPack->setId(this->getId());
-   planarRegionToPack->setPoseId(this->getPoseId());
+   planarRegionToPack->setPoseId(this->GetPoseId());
    planarRegionToPack->numPatches = this->numPatches;
    for (int i = 0; i < this->boundaryVertices.size(); i++)
    {
@@ -212,11 +240,11 @@ void PlanarRegion::copyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack
    planarRegionToPack->transform(transform);
 }
 
-void PlanarRegion::projectToPlane(Vector4f plane)
+void PlanarRegion::ProjectToPlane(Vector4f plane)
 {
    this->normal = plane.block<3,1>(0,0);
-   this->center = GeomTools::getProjectedPoint(plane, this->getCenter());
-   for(int i = 0; i<getNumOfBoundaryVertices(); i++)
+   this->center = GeomTools::getProjectedPoint(plane, this->GetCenter());
+   for(int i = 0; i < GetNumOfBoundaryVertices(); i++)
    {
       this->boundaryVertices[i] = GeomTools::getProjectedPoint(plane, this->boundaryVertices[i]);
    }
@@ -225,12 +253,12 @@ void PlanarRegion::projectToPlane(Vector4f plane)
 string PlanarRegion::toString()
 {
    boost::format formatter("Id(%d) PoseId(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) NumPoints(%d) Measured(%d)");
-   formatter % this->id % this->getPoseId() % this->getCenter().x() % this->getCenter().y() % this->getCenter().z() % this->getNormal().x() % this->getNormal().y() %
-   this->getNormal().z() % -this->getNormal().dot(this->getCenter()) % this->getNumOfBoundaryVertices() % this->getNumOfMeasurements();
+   formatter % this->id % this->GetPoseId() % this->GetCenter().x() % this->GetCenter().y() % this->GetCenter().z() % this->GetNormal().x() % this->GetNormal().y() %
+   this->GetNormal().z() % -this->GetNormal().dot(this->GetCenter()) % this->GetNumOfBoundaryVertices() % this->GetNumOfMeasurements();
    return formatter.str();
 }
 
-int PlanarRegion::getPoseId() const
+int PlanarRegion::GetPoseId() const
 {
    return poseId;
 }
@@ -240,20 +268,20 @@ void PlanarRegion::setPoseId(int poseId)
    PlanarRegion::poseId = poseId;
 }
 
-int PlanarRegion::getNumOfMeasurements() const
+int PlanarRegion::GetNumOfMeasurements() const
 {
    return numOfMeasurements;
 }
 
-void PlanarRegion::setNumOfMeasurements(int numOfMeasurements)
+void PlanarRegion::SetNumOfMeasurements(int numOfMeasurements)
 {
    PlanarRegion::numOfMeasurements = numOfMeasurements;
 }
 
-void PlanarRegion::computeBoundaryVerticesPlanar()
+void PlanarRegion::ComputeBoundaryVerticesPlanar()
 {
-   float angle = acos(this->getNormal().dot(Vector3f(0,0,1)));
-   Vector3f axis = -this->getNormal().cross(Vector3f(0,0,1)).normalized();
+   float angle = acos(this->GetNormal().dot(Vector3f(0, 0, 1)));
+   Vector3f axis = -this->GetNormal().cross(Vector3f(0, 0, 1)).normalized();
    AngleAxisf angleAxis(angle, axis);
    Matrix3d rotation = angleAxis.toRotationMatrix().cast<double>();
    Vector3d translation = Vector3d(this->center.cast<double>());
@@ -266,7 +294,7 @@ void PlanarRegion::computeBoundaryVerticesPlanar()
    }
 }
 
-void PlanarRegion::computeBoundaryVertices3D(vector<Vector2f> points2D)
+void PlanarRegion::ComputeBoundaryVertices3D(vector<Vector2f> points2D)
 {
    vector<Vector3f> points3D;
    for(int i = 0; i<points2D.size(); i++)
@@ -277,29 +305,29 @@ void PlanarRegion::computeBoundaryVertices3D(vector<Vector2f> points2D)
    this->boundaryVertices = points3D;
 }
 
-void PlanarRegion::retainConvexHull()
+void PlanarRegion::RetainConvexHull()
 {
-   computeBoundaryVerticesPlanar();
+   ComputeBoundaryVerticesPlanar();
    vector<Vector2f> convexHull = GeomTools::grahamScanConvexHull(this->planarPatchCentroids);
-   computeBoundaryVertices3D(convexHull);
+   ComputeBoundaryVertices3D(convexHull);
 }
 
-void PlanarRegion::retainLinearApproximation()
+void PlanarRegion::RetainLinearApproximation()
 {
-   computeBoundaryVerticesPlanar();
+   ComputeBoundaryVerticesPlanar();
    vector<Vector2f> concaveHull = GeomTools::canvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
    MatrixXf parametricCurve(2,14);
 
    GeomTools::getParametricCurve(concaveHull, 13, parametricCurve);
-   computeBoundaryVertices3D(concaveHull);
+   ComputeBoundaryVertices3D(concaveHull);
 
    cout << "Parameters:" << endl << parametricCurve << endl;
 }
 
-void PlanarRegion::setToUnitSquare()
+void PlanarRegion::SetToUnitSquare()
 {
-   setCenter(Vector3f(0,0,0));
-   setNormal(Vector3f(0,0,1));
+   SetCenter(Vector3f(0, 0, 0));
+   SetNormal(Vector3f(0, 0, 1));
    insertBoundaryVertex(Vector3f(-1,-1,1));
    insertBoundaryVertex(Vector3f(-1,1,1));
    insertBoundaryVertex(Vector3f(1,1,1));

@@ -40,7 +40,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
                int num = 0;
                shared_ptr <PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
                dfs(i, j, components, num, debug, planarRegion);
-               if (num > app.REGION_MIN_PATCHES && num - planarRegion->getNumOfBoundaryVertices() > app.REGION_BOUNDARY_DIFF)
+               if (num > app.REGION_MIN_PATCHES && num - planarRegion->GetNumOfBoundaryVertices() > app.REGION_BOUNDARY_DIFF)
                {
                   planarRegionList.emplace_back(planarRegion);
                   components++;
@@ -140,7 +140,7 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
             ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
          }
 
-         Vector3f center = regions[i]->getCenter();
+         Vector3f center = regions[i]->GetCenter();
          vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
          for (int j = 0; j < ring.size(); j++)
          {
@@ -159,7 +159,7 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
    //         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
    //      }
    //
-   //      Vector3f center = regions[i]->getCenter();
+   //      Vector3f center = regions[i]->GetCenter();
    //      vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
    //      for (int j = 0; j < ring.size(); j++)
    //      {
@@ -240,7 +240,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
    visited(x, y) = 1;
    region(x, y) = component;
    cv::Vec6f patch = this->frame.getRegionOutput().at<cv::Vec6f>(x, y);
-   planarRegion->addPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
+   planarRegion->AddPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
    if (app.SHOW_PATCHES)
       circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
              cv::Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);

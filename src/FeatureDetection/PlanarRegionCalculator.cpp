@@ -319,9 +319,9 @@ void logPlanarRegions(vector <shared_ptr<PlanarRegion>> planarRegionList)
 {
    for (int i = 0; i < planarRegionList.size(); i++)
    {
-      ROS_INFO("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->getCenter().x(),
-                planarRegionList[i]->getCenter().y(), planarRegionList[i]->getCenter().z(), planarRegionList[i]->getNormal().x(),
-                planarRegionList[i]->getNormal().y(), planarRegionList[i]->getNormal().z());
+      ROS_INFO("ID:(%d) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->GetCenter().x(),
+               planarRegionList[i]->GetCenter().y(), planarRegionList[i]->GetCenter().z(), planarRegionList[i]->GetNormal().x(),
+               planarRegionList[i]->GetNormal().y(), planarRegionList[i]->GetNormal().z());
    }
 }
 
@@ -387,13 +387,13 @@ map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
          region.numOfPatches = planarRegionList[i]->getNumPatches();
          region.id = planarRegionList[i]->getId();
          region.normal = geometry_msgs::Vector3();
-         region.normal.x = static_cast<double>(planarRegionList[i]->getNormal().x());
-         region.normal.y = static_cast<double>(planarRegionList[i]->getNormal().y());
-         region.normal.z = static_cast<double>(planarRegionList[i]->getNormal().z());
+         region.normal.x = static_cast<double>(planarRegionList[i]->GetNormal().x());
+         region.normal.y = static_cast<double>(planarRegionList[i]->GetNormal().y());
+         region.normal.z = static_cast<double>(planarRegionList[i]->GetNormal().z());
          region.centroid = geometry_msgs::Point();
-         region.centroid.x = static_cast<double>(planarRegionList[i]->getCenter().x());
-         region.centroid.y = static_cast<double>(planarRegionList[i]->getCenter().y());
-         region.centroid.z = static_cast<double>(planarRegionList[i]->getCenter().z());
+         region.centroid.x = static_cast<double>(planarRegionList[i]->GetCenter().x());
+         region.centroid.y = static_cast<double>(planarRegionList[i]->GetCenter().y());
+         region.centroid.z = static_cast<double>(planarRegionList[i]->GetCenter().z());
 
          for (int j = 0; j < planarRegionList[i]->getVertices().size(); j++)
          {

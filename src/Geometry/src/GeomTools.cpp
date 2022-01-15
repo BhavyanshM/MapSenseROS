@@ -29,7 +29,7 @@ Vector3f GeomTools::getProjectedPoint(Vector4f plane, Vector3f point)
 
 void GeomTools::compressPointSetLinear(shared_ptr<PlanarRegion> region)
 {
-   printf("Extended Boundary Size: %d\t|\t", region->getNumOfBoundaryVertices());
+   printf("Extended Boundary Size: %d\t|\t", region->GetNumOfBoundaryVertices());
    vector<Vector3f> boundary = region->getBoundaryVertices();
    region->boundaryVertices.clear();
    uint8_t SKIP = 10;
@@ -40,7 +40,7 @@ void GeomTools::compressPointSetLinear(shared_ptr<PlanarRegion> region)
          region->boundaryVertices.emplace_back(boundary[i + 1]);
       }
    }
-   printf("Reduced Boundary Size: %d\n", region->getNumOfBoundaryVertices());
+   printf("Reduced Boundary Size: %d\n", region->GetNumOfBoundaryVertices());
 }
 
 int nextToTop(stack<int> S)
@@ -326,7 +326,7 @@ void GeomTools::saveRegions(vector<shared_ptr<PlanarRegion>> regions, string fil
    file << "NumRegions:" << regions.size() << endl;
    for (shared_ptr<PlanarRegion> region : regions)
    {
-      region->writeToFile(file);
+      region->WriteToFile(file);
    }
    file.close();
    //   cout << "Writing Regions to:" << fileName << endl;
@@ -350,9 +350,9 @@ void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
       region->setId(-1);
       //      region->setId(stoi(subStrings[1]));
       getNextLineSplit(regionFile, subStrings, ':'); // Get regionCenter
-      region->setCenter(getVec3f(subStrings[1]));
+      region->SetCenter(getVec3f(subStrings[1]));
       getNextLineSplit(regionFile, subStrings, ':'); // Get regionNormal
-      region->setNormal(getVec3f(subStrings[1]));
+      region->SetNormal(getVec3f(subStrings[1]));
       getNextLineSplit(regionFile, subStrings, ':'); // Get numBoundaryVertices
       int length = stoi(subStrings[1]);
       for (int i = 0; i < length; i++)
