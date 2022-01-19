@@ -31,6 +31,7 @@ class VisualOdometry
    public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data = nullptr);
+      void LoadImages(ApplicationState& appState);
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
       bool Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes, Clay::Ref<Clay::PointCloud> cloud);
 

@@ -280,7 +280,7 @@ endif()
 
 
 ## ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-set(VISUAL_TERRAIN_SLAM 1)
+set(VISUAL_TERRAIN_SLAM 0)
 if(VISUAL_TERRAIN_SLAM)
 	add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES})
 	target_link_libraries(VisualTerrainSLAM
@@ -297,6 +297,25 @@ if(VISUAL_TERRAIN_SLAM)
 endif()
 
 ## //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+set(VIS_ODOM 1)
+if(VIS_ODOM)
+	add_executable(Vis_Odom src/Launcher/VisualOdometryLauncher.cpp)
+	target_link_libraries(Vis_Odom
+			${OpenCV_LIBS} ${catkin_LIBRARIES}
+			/usr/lib/x86_64-linux-gnu/libOpenCL.so
+			Eigen3::Eigen tbb
+			geom-tools slam
+			mapsense visual_odometry
+			${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
+	target_include_directories(Vis_Odom PUBLIC ${MAPSENSE_INCLUDE_DIRS})
+	add_dependencies(Vis_Odom map_sense_generate_messages_cpp)
+	target_precompile_headers(Vis_Odom PUBLIC src/headers/MapsenseHeaders.h)
+endif()
+
+## //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 if(BUILD_HEADLESS)
