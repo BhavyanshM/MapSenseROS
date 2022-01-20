@@ -337,7 +337,7 @@ void VisualOdometry::ExtractFinalSet(std::vector<cv::DMatch> leftMatches, std::v
          }
       }
    }
-   //   CLAY_LOG_INFO("ExtractFinalSet(): Total Overlap PointLandmarks: {}", overlap);
+   CLAY_LOG_INFO("Total Overlap PointLandmarks: {}", overlap);
 }
 
 const Eigen::Matrix4f& VisualOdometry::EstimateMotion(std::vector<PointLandmark> points, int cameraID)
@@ -502,95 +502,6 @@ cv::Mat VisualOdometry::CalculateStereoDepth(cv::Mat left, cv::Mat right)
    disparity.convertTo(disparity, CV_8U, 1.0);
 }
 
-void VisualOdometry::CalculateOdometry_FAST(ApplicationState& appState, Eigen::Matrix4f& transform)
-{
-   double timestamp = 0;
-   using namespace cv;
-   /* Calculate Essential Matrix from Correspondences and Intrinsics
-       (TUM-RGBD) - fx:517.3 fy:516.5 cx:318.6 cy:255.3
-       (KITTI) - fx:718.856 fy:718.856 cx:607.193 cy:185.216
-       (IHMC-Chest-L515) - fx:602.259 fy:603.040 cx:321.375 cy:240.515
-
-        ZED2 Parameters:
-            height: 720 width: 1280
-            distortion_model: "plumb_bob"
-            K: fx: 526.1423950195312, cx: 632.4866943359375, fy: 526.1423950195312, cy: 362.7293395996094
-   */
-
-
-   if (appState.DATASET_ENABLED)
-   {
-      leftImage = _data->GetNextImage();
-      rightImage = _data->GetNextSecondImage();
-   } else
-   {
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_LEFT_IMG_RECT])->getData(leftImage, appState, timestamp);
-      ((ImageReceiver *) this->_dataReceiver->receivers[appState.KITTI_RIGHT_IMG_RECT])->getData(rightImage, appState, timestamp);
-   }
-
-   if (!leftImage.empty() && leftImage.rows > 0 && leftImage.cols > 0 && !rightImage.empty() && rightImage.rows > 0 && rightImage.cols > 0)
-   {
-      std::vector<cv::Point2f> points1, points2;
-      if (count == 0)
-      {
-         width = leftImage.cols;
-         height = leftImage.rows;
-         cvtColor(leftImage, prevLeft, cv::COLOR_BGR2GRAY);
-         ExtractKeypoints_FAST(prevLeft, prevFeaturesLeft);
-         count++;
-         return;
-      }
-
-      //      CLAY_LOG_INFO("Features: {}", prevFeaturesLeft.size());
-
-      cvtColor(leftImage, curLeft, cv::COLOR_BGR2GRAY);
-      TrackKeypoints(prevLeft, curLeft, prevFeaturesLeft, curFeaturesLeft);
-
-      DrawMatches(leftImage, prevFeaturesLeft, curFeaturesLeft);
-
-      cv::Mat mask;
-      cv::Mat cvPose = EstimateMotion_2D2D(prevFeaturesLeft, curFeaturesLeft, mask, _data->GetLeftCamera());
-
-      this->cvCurPose = (this->cvCurPose * cvPose);
-
-      printf("%.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf %.4lf\n", cvPose.at<float>(0), cvPose.at<float>(1), cvPose.at<float>(2),
-             cvPose.at<float>(3), cvPose.at<float>(4), cvPose.at<float>(5), cvPose.at<float>(6), cvPose.at<float>(7), cvPose.at<float>(8), cvPose.at<float>(9),
-             cvPose.at<float>(10), cvPose.at<float>(11));
-
-      Eigen::Matrix4f cameraPose = Eigen::Matrix4f::Identity();
-      for (int i = 0; i < 3; i++)
-         for (int j = 0; j < 4; j++)
-            cameraPose(i, j) = cvPose.at<float>(i, j);
-
-      /*
-       * Find inlier points from 5-point algorithm RANSAC mask.
-       * */
-      //      vector <Point2f> trip_prev, trip_cur;
-      //      for (int i = 0; i < mask.rows; i++)
-      //      {
-      //         if (!mask.at<unsigned char>(i))
-      //         {
-      //            trip_prev.push_back(cv::Point2d((double) prevFeaturesLeft[i].pt.x, (double) prevFeaturesLeft[i].pt.y));
-      //            trip_cur.push_back(cv::Point2d((double) curFeaturesLeft[i].pt.x, (double) curFeaturesLeft[i].pt.y));
-      //         }
-      //      }
-      //
-      //      printf("Inlier Points: %d\n", trip_prev.size());
-
-      /* Extract ORB Keypoints from Current Image if number of tracked points falls below threshold */
-      if (kp_prevLeft.size() < kMinFeatures)
-      {
-         ExtractKeypoints_FAST(curLeft, curFeaturesLeft);
-      }
-
-      prevLeft = curLeft.clone();
-      prevFeaturesLeft = curFeaturesLeft;
-      count++;
-
-      prevFinalDisplay = leftImage;
-   }
-}
-
 void VisualOdometry::LoadImages(ApplicationState& appState)
 {
    double timestamp = 0;
@@ -613,29 +524,47 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe&
    //   TriangulateStereoNormal(kp_prevLeft, kp_prevRight, prevMatchesStereo, _prevPoints3D, 0.54, 718.856);
 
    ExtractKeypoints(leftImage, orb, kp_curLeft, desc_curLeft);
-   MatchKeypoints(kf.descriptor, desc_curLeft, matchesLeft);
+   ExtractKeypoints(rightImage, orb, kp_curRight, desc_curRight);
+   MatchKeypoints(kf.descLeft, desc_curLeft, matchesLeft);
+   MatchKeypoints(kf.descLeft, kf.descRight, prevMatchesStereo);
+
+   CLAY_LOG_INFO("Stereo Matches: {} {} {}", prevMatchesStereo.size(), kf.descLeft.rows, kf.descRight.rows);
+   cv::drawMatches(kf.rightImage, kf.keypointsRight, kf.leftImage, kf.keypointsLeft, prevMatchesStereo, prevFinalDisplay);
 
    for (int i = matchesLeft.size() - 1; i >= 0; i--)
    {
       auto m = matchesLeft[i];
-      float dist = cv::norm(kp_curLeft[m.queryIdx].pt - kf.keypoints[m.trainIdx].pt);
+      float dist = cv::norm(kp_curLeft[m.queryIdx].pt - kf.keypointsLeft[m.trainIdx].pt);
       if (dist > 50.0f)
       {
          matchesLeft.erase(matchesLeft.begin() + i);
       }
    }
 
+   for (int i = prevMatchesStereo.size() - 1; i >= 0; i--)
+   {
+      auto m = prevMatchesStereo[i];
+      int dist = kp_curLeft[m.queryIdx].pt.y - kf.keypointsLeft[m.trainIdx].pt.y;
+      if (dist > 8)
+      {
+         prevMatchesStereo.erase(prevMatchesStereo.begin() + i);
+      }
+   }
+
+   CLAY_LOG_INFO("Points To Be Triangulated: {}", prevMatchesStereo.size());
+   std::vector<PointLandmark> points3D;
+   TriangulateStereoNormal(kf.keypointsLeft, kf.keypointsRight, prevMatchesStereo, points3D, 0.54, 718.856);
+   CLAY_LOG_INFO("Points Triangulated: {}", points3D.size());
+
    prevPoints2D.clear();
    curPoints2D.clear();
    for (auto m: matchesLeft)
    {
-      prevPoints2D.emplace_back(cv::Point2f(kf.keypoints[m.trainIdx].pt));
+      prevPoints2D.emplace_back(cv::Point2f(kf.keypointsLeft[m.trainIdx].pt));
       curPoints2D.emplace_back(cv::Point2f(kp_curLeft[m.queryIdx].pt));
    }
 
    CLAY_LOG_INFO("Points for Motion Estimation: {} {}", prevPoints2D.size(), curPoints2D.size());
-
-   CLAY_LOG_INFO("Params: {} {} {} {}", _data->GetLeftCamera()._fx, _data->GetLeftCamera()._cx, _data->GetLeftCamera()._fy, _data->GetLeftCamera()._cy);
 
    cv::Mat mask, pose;
    if (prevPoints2D.size() >= 10 && curPoints2D.size() >= 10)
@@ -643,16 +572,15 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe&
       pose = EstimateMotion_2D2D(prevPoints2D, curPoints2D, mask, _data->GetLeftCamera());
       cvPose = pose;
 
-      CLAY_LOG_INFO("Points To Be Triangulated: {} {}", prevPoints2D.size(), curPoints2D.size());
 
       /* Triangulate Feature Points */
-      if (prevPoints2D.size() > 10)
-      {
-         cv::Mat points = TriangulatePoints(prevPoints2D, curPoints2D, _data->GetLeftCamera(), pose);
-         points4D = points;
-      }
+//      if (prevPoints2D.size() > 10)
+//      {
+//         cv::Mat points = TriangulatePoints(prevPoints2D, curPoints2D, _data->GetLeftCamera(), pose);
+//         points4D = points;
+//      }
 
-      CLAY_LOG_INFO("Points Triangulated: {} {}", points4D.rows, points4D.cols);
+
    }
 
 
@@ -670,9 +598,14 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe&
    prevLeft = curLeft.clone();
    desc_prevLeft = desc_curLeft.clone();
    kp_prevLeft = kp_curLeft;
+
+   prevRight = curRight.clone();
+   desc_prevRight = desc_curRight.clone();
+   kp_prevRight = kp_curRight;
+
    count++;
 
-   prevFinalDisplay = leftImage;
+//   prevFinalDisplay = leftImage;
 }
 
 bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes, Clay::Ref<Clay::PointCloud> cloud)
@@ -694,7 +627,7 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
          cvtColor(rightImage, prevRight, cv::COLOR_BGR2GRAY);
          ExtractKeypoints(prevLeft, orb, kp_prevLeft, desc_prevLeft);
          ExtractKeypoints(prevRight, orb, kp_prevRight, desc_prevRight);
-         _keyframes.emplace_back(Keyframe(desc_prevLeft.clone(), kp_prevLeft, Eigen::Matrix4f::Identity()));
+         _keyframes.emplace_back(Keyframe(desc_prevLeft.clone(), desc_prevRight.clone(), kp_prevLeft, kp_prevRight, Eigen::Matrix4f::Identity(), leftImage.clone(), rightImage.clone()));
          count++;
          return false;
       }
@@ -713,13 +646,14 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
          eigenPose.transposeInPlace();
          cameraPose = cameraPose * eigenPose;
 
-         prevFinalDisplay = leftImage.clone();
-         DrawMatches(prevFinalDisplay, prevPoints2D, curPoints2D);
+//         prevFinalDisplay = leftImage.clone();
+//         DrawMatches(prevFinalDisplay, prevPoints2D, curPoints2D);
 
          if (cameraPose.block<3, 1>(0, 3).norm() > 1)
          {
             _initialized = true;
-            _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), kp_curLeft, cameraPose));
+            _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), desc_curRight.clone(),
+                                             kp_curLeft, kp_curRight, cameraPose, leftImage.clone(), rightImage.clone()));
          }
       } else
       {
@@ -731,13 +665,14 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
          eigenPose.transposeInPlace();
          cameraPose = cameraPose * eigenPose;
 
-         prevFinalDisplay = leftImage.clone();
-         DrawMatches(prevFinalDisplay, prevPoints2D, curPoints2D);
+//         prevFinalDisplay = leftImage.clone();
+//         DrawMatches(prevFinalDisplay, prevPoints2D, curPoints2D);
 
          if (eigenPose.block<3, 1>(0, 3).norm() > 0.8)
          {
             _initialized = true;
-            _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), kp_curLeft, cameraPose));
+            _keyframes.emplace_back(Keyframe(desc_curLeft.clone(), desc_curRight.clone(),
+                                             kp_curLeft, kp_curRight, cameraPose, leftImage.clone(), rightImage.clone()));
 
             if (axes)
             {
@@ -751,19 +686,19 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
                axes->ApplyTransform(glmTransform);
             }
 
-            /* Triangulated Points */
-            /* TODO: Filter points by 5-point algorithm mask before triangulation. */
-            if (cloud)
-            {
-               for (int i = 0; i < points4D.cols; i++)
-               {
-                  if (points4D.at<float>(2, i) / points4D.at<float>(3, i) > 0)
-                     if (i % 4 == 0)
-                        cloud->InsertVertex(0.01f * points4D.at<float>(0, i) / points4D.at<float>(3, i),
-                                            0.01f * points4D.at<float>(1, i) / points4D.at<float>(3, i),
-                                            0.01f * points4D.at<float>(2, i) / points4D.at<float>(3, i));
-               }
-            }
+//            /* Triangulated Points */
+//            /* TODO: Filter points by 5-point algorithm mask before triangulation. */
+//            if (cloud)
+//            {
+//               for (int i = 0; i < points4D.cols; i++)
+//               {
+//                  if (points4D.at<float>(2, i) / points4D.at<float>(3, i) > 0)
+//                     if (i % 4 == 0)
+//                        cloud->InsertVertex(0.01f * points4D.at<float>(0, i) / points4D.at<float>(3, i),
+//                                            0.01f * points4D.at<float>(1, i) / points4D.at<float>(3, i),
+//                                            0.01f * points4D.at<float>(2, i) / points4D.at<float>(3, i));
+//               }
+//            }
          }
       }
    }

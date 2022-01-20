@@ -18,11 +18,13 @@ struct Keyframe
 {
    public:
       Keyframe(cv::Mat desc, std::vector<cv::KeyPoint> kp, Eigen::Matrix4f pose)
-         : descriptor(desc), keypoints(kp), pose(pose) {};
-      cv::Mat descriptor;
-      std::vector<cv::KeyPoint> keypoints;
+         : descLeft(desc), keypointsLeft(kp), pose(pose) {};
+      Keyframe(cv::Mat descLeft, cv::Mat descRight, std::vector<cv::KeyPoint> kpLeft, std::vector<cv::KeyPoint> kpRight, Eigen::Matrix4f pose, cv::Mat left, cv::Mat right)
+            : descLeft(descLeft), descRight(descRight), keypointsLeft(kpLeft), keypointsRight(kpRight), pose(pose), leftImage(left), rightImage(right) {};
+      cv::Mat descLeft, descRight;
+      std::vector<cv::KeyPoint> keypointsLeft, keypointsRight;
       Eigen::Matrix4f pose;
-      cv::Mat image;
+      cv::Mat leftImage, rightImage;
 
 };
 
@@ -67,7 +69,7 @@ class VisualOdometry
 
       bool _initialized = false;
       uint32_t count = 0;
-      uint32_t kFeatures = 2000;
+      uint32_t kFeatures = 800;
       uint32_t kMinFeatures = 1000;
       uint32_t width = 0;
       uint32_t height = 0;
