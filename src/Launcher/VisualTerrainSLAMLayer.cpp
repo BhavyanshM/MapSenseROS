@@ -18,15 +18,7 @@ namespace Clay
 
       /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
       /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */
-      ROS_INFO("VisualOdometry Created.");
-//      _data->SetCamera(CameraParams(718.856, 718.856, 607.193, 185.216), CameraParams(718.856, 718.856, 607.193, 185.216));
-       _data->SetCamera(CameraParams(602.25927734375, 603.0400390625, 321.3750915527344, 240.51527404785156),
-                        CameraParams(602.25927734375, 603.0400390625, 321.3750915527344, 240.51527404785156));
-
-       CLAY_LOG_INFO("Params: {} {} {} {}", _data->GetLeftCamera()._fx, _data->GetLeftCamera()._cx, _data->GetLeftCamera()._fy, _data->GetLeftCamera()._cy);
-
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _data);
-
 
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
@@ -34,8 +26,6 @@ namespace Clay
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
       //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
-
-
 
    }
 
@@ -76,12 +66,7 @@ namespace Clay
             _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
             bool result = _visualOdometry->Update(appState, pose, firstCloud);
-
-            CLAY_LOG_INFO("Result: {}", result);
-
              _visualOdometry->Show();
-
-            CLAY_LOG_INFO("Calculated Visual Odometry");
          }
 
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _slamModule->_mapper.SLAM_ENABLED)

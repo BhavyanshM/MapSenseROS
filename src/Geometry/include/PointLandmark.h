@@ -7,18 +7,19 @@
 
 #include "Eigen/Core"
 #include "vector"
+#include "Core/Log.h"
 
 class PointLandmark
 {
 
    public:
-      PointLandmark(const Eigen::Vector3f& point3D);
+      PointLandmark(Eigen::Vector3f point3D) : _point3D(point3D){};
 
       const Eigen::Vector3f& GetPoint3D() const {return _point3D;}
       const std::vector<Eigen::Vector2f>& GetMeasurements2D() const {return _measurements2D;}
       const std::vector<int>& GetCameraIDs() const {return _cameraIDs;}
 
-      void AddMeasurement2D(const Eigen::Vector2f& measurement, int index, int cameraID)
+      void AddMeasurement2D(Eigen::Vector2f measurement, int index, int cameraID)
       {
          _measurements2D.emplace_back(measurement);
          _cameraIDs.emplace_back(cameraID);

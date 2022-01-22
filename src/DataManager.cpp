@@ -5,6 +5,10 @@
 DataManager::DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
     : _directory(directory), _secondDirectory(secondDirectory)
 {
+   _leftCam.SetParams(718.856, 718.856, 607.193, 185.216);
+   _rightCam.SetParams(718.856, 718.856, 607.193, 185.216);
+   _baseline =0.54;
+
     if(boost::filesystem::exists(_directory))
     {
         AppUtils::getFileNames(_directory, _fileNames, false);

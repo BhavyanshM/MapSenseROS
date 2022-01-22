@@ -280,7 +280,7 @@ endif()
 
 
 ## ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-set(VISUAL_TERRAIN_SLAM 0)
+set(VISUAL_TERRAIN_SLAM 1)
 if(VISUAL_TERRAIN_SLAM)
 	add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES})
 	target_link_libraries(VisualTerrainSLAM
@@ -298,7 +298,7 @@ endif()
 
 ## //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-set(VIS_ODOM 1)
+set(VIS_ODOM 0)
 if(VIS_ODOM)
 	add_executable(Vis_Odom src/Launcher/VisualOdometryLauncher.cpp)
 	target_link_libraries(Vis_Odom

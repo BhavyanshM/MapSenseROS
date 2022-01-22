@@ -38,17 +38,22 @@ class DataManager
 
       static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
 
-      void SetCamera(const CameraParams& leftCam, const CameraParams& rightCam = CameraParams())
+      void SetCamera(CameraParams& leftCam, CameraParams& rightCam)
       {
           _leftCam = leftCam; _rightCam = rightCam;
           CLAY_LOG_INFO("Params: {} {} {} {}", leftCam._fx, leftCam._cx, leftCam._fy, leftCam._cy);
       };
 
-      const CameraParams& GetLeftCamera() const {return _leftCam; }
+      CameraParams& GetLeftCamera() {return _leftCam; }
 
-      const CameraParams& GetRightCamera() const {return _rightCam; }
+      CameraParams& GetRightCamera() {return _rightCam; }
+
+      void SetStereoBaseline(float baseline) { _baseline = baseline; }
+
+      float GetStereoBaseline() const { return _baseline;}
 
    private:
+      float _baseline;
       std::string _directory, _secondDirectory;
       std::vector<std::string> _fileNames;
       std::vector<std::string> _secondFileNames;
