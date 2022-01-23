@@ -8,6 +8,7 @@ VisualOdometry::VisualOdometry(int argc, char **argv, NetworkManager *network, A
 {
    _dataReceiver = network;
    _data = data;
+   _bundleAdjustment = new BundleAdjustment();
 
    CLAY_LOG_INFO("Params: {} {} {} {}", data->GetLeftCamera()._fx, data->GetLeftCamera()._cx, data->GetLeftCamera()._fy, data->GetLeftCamera()._cy);
 
@@ -63,7 +64,7 @@ void VisualOdometry::DrawLandmarks(cv::Mat& img, std::vector<PointLandmark>& lan
       cv::Point2f second(landmarks[i].GetMeasurements2D()[1].x() + _data->GetLeftCamera()._cx, landmarks[i].GetMeasurements2D()[1].y() + _data->GetLeftCamera()._cy);
 
       float dist = cv::norm(first - second);
-      CLAY_LOG_INFO("DrawLandmark: First({}, {}), Second:({} {}), Dist({}), Total Measurements: {}", first.x, first.y, second.x, second.y, dist, landmarks[i].GetMeasurements2D().size());
+//      CLAY_LOG_INFO("DrawLandmark: First({}, {}), Second:({} {}), Dist({}), Total Measurements: {}", first.x, first.y, second.x, second.y, dist, landmarks[i].GetMeasurements2D().size());
 
       if(dist < 100)
       {
@@ -231,8 +232,8 @@ void VisualOdometry::ExtractFinalSet(std::vector<cv::DMatch> leftMatches, std::v
             Eigen::Vector2f prevMeasurement = points3D[i].GetMeasurements2D()[0];
             Eigen::Vector2f oneMeasurement = points3D[i].GetMeasurements2D()[1];
 
-            CLAY_LOG_INFO("Match: PrevStereoPoint({}, {})", measurement.x(), measurement.y());
-            CLAY_LOG_INFO("Match: Zero({}, {}), One:({} {})", prevMeasurement.x(), prevMeasurement.y(), oneMeasurement.x(), oneMeasurement.y());
+//            CLAY_LOG_INFO("Match: PrevStereoPoint({}, {})", measurement.x(), measurement.y());
+//            CLAY_LOG_INFO("Match: Zero({}, {}), One:({} {})", prevMeasurement.x(), prevMeasurement.y(), oneMeasurement.x(), oneMeasurement.y());
 
             points3D[i].AddMeasurement2D(measurement, match.queryIdx, 1);
          }
@@ -372,6 +373,8 @@ void VisualOdometry::CalculateOdometry_ORB(ApplicationState& appState, Keyframe&
 
    DrawLandmarks(prevFinalDisplay, points3D);
 
+
+
 //   for(auto point : points3D)
 //   {
 //      CLAY_LOG_INFO("Landmark: {} {} {}", point.GetMeasurements2D()[0].y(), point.GetMeasurements2D()[1].y(), point.GetMeasurements2D()[2].y());
@@ -468,6 +471,11 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
             _initialized = true;
             _keyframes.emplace_back(
                   Keyframe(desc_curLeft.clone(), desc_curRight.clone(), kp_curLeft, kp_curRight, cameraPose, leftImage.clone(), rightImage.clone()));
+
+            std::vector<Eigen::Matrix4f> poses;
+            poses.emplace_back(_keyframes[_keyframes.size() - 2].pose);
+            poses.emplace_back(_keyframes[_keyframes.size() - 1].pose);
+            _bundleAdjustment->Update(points3D, poses);
 
             if (axes)
             {

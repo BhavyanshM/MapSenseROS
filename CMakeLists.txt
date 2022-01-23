@@ -109,7 +109,9 @@ set(SLAM_LIB
 
 set(VISUAL_ODOMETRY_LIB
 		src/SLAM/VisualOdometry.cpp
-		src/headers/VisualOdometry.h)
+		src/headers/VisualOdometry.h
+		src/SLAM/BundleAdjustment.cpp
+		src/headers/BundleAdjustment.h)
 
 
 set(ICP_LIB

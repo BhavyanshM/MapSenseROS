@@ -13,6 +13,7 @@
 #include "Scene/Mesh/TriangleMesh.h"
 #include "PointLandmark.h"
 #include "CameraParams.h"
+#include "BundleAdjustment.h"
 
 struct Keyframe
 {
@@ -94,6 +95,7 @@ class VisualOdometry
       std::vector<cv::Point2f> prevFeaturesLeft, curFeaturesLeft;
       std::vector<cv::Point2f> prevPoints2D, curPoints2D;
 
+      BundleAdjustment* _bundleAdjustment;
       NetworkManager *_dataReceiver;
       DataManager *_data;
 

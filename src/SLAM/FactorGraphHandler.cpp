@@ -1,3 +1,4 @@
+
 #include "FactorGraphHandler.h"
 
 FactorGraphHandler::FactorGraphHandler()
@@ -22,6 +23,8 @@ FactorGraphHandler::FactorGraphHandler()
    gtsam::Vector6 priorVariance2;
    priorVariance2 << 1e2, 1e2, 1e2, 1e2, 1e2, 1e2;
    priorNoise2 = gtsam::noiseModel::Diagonal::Variances(priorVariance2);
+
+
 }
 
 void FactorGraphHandler::getPoses(std::vector<RigidBodyTransform>& poses)
