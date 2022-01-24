@@ -19,8 +19,6 @@ int main(int argc, char** argv)
    /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
    /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */
    ROS_INFO("VisualOdometry Created.");
-   data->SetCamera(CameraParams(718.856, 718.856, 607.193, 185.216), CameraParams(718.856, 718.856, 607.193, 185.216));
-   data->SetStereoBaseline(0.54);
 //   data->SetCamera(CameraParams(602.25927734375, 603.0400390625, 321.3750915527344, 240.51527404785156),
 //                    CameraParams(602.25927734375, 603.0400390625, 321.3750915527344, 240.51527404785156));
 

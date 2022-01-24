@@ -26,12 +26,12 @@ SLAMModule::SLAMModule(int argc, char **argv)
    region->SetToUnitSquare();
 
    RigidBodyTransform transform;
-   transform.setRotationAndTranslation(Vector3d(0, 0, 0), Vector3d(0, 0, 0));
+   transform.setRotationAndTranslation(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(0, 0, 0));
 
    region->transform(transform);
    _mapper._testLatestRegions.emplace_back(region);
 
-   _mapper._atlasSensorPose.setRotationAndTranslation(Vector3d(0, 0, 0), Vector3d(0, 0, 0));
+   _mapper._atlasSensorPose.setRotationAndTranslation(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(0, 0, 0));
 }
 
 void SLAMModule::extractArgs(int argc, char **argv)
@@ -104,8 +104,8 @@ void SLAMModule::slamUpdate()
       _mapper._atlasSensorPose.print();
       _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
       _mapper.regions = _mapper._latestRegionsZUp;
-      _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
-      _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+      _mapper.fgSLAM->addPriorPoseFactor(Eigen::MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+      _mapper.fgSLAM->setPoseInitialValue(currentPoseId, Eigen::MatrixXd(_mapper._atlasSensorPose.getMatrix()));
       poseAvailable = false;
    } else if (poseAvailable)
    {
@@ -127,10 +127,10 @@ void SLAMModule::slamUpdate()
          }
          _frameId++;
 
-         _mapper.fgSLAM->addPriorPoseFactor(MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+         _mapper.fgSLAM->addPriorPoseFactor(Eigen::MatrixXd(_mapper._atlasSensorPose.getMatrix()));
 
-         currentPoseId = _mapper.fgSLAM->addOdometryFactor(MatrixXd(odometry.getMatrix()));
-         _mapper.fgSLAM->setPoseInitialValue(currentPoseId, MatrixXd(_mapper._atlasSensorPose.getMatrix()));
+         currentPoseId = _mapper.fgSLAM->addOdometryFactor(Eigen::MatrixXd(odometry.getMatrix()));
+         _mapper.fgSLAM->setPoseInitialValue(currentPoseId, Eigen::MatrixXd(_mapper._atlasSensorPose.getMatrix()));
          _mapper._atlasPreviousSensorPose.setMatrix(_mapper._atlasSensorPose.getMatrix());
 
          /* Initialize poses and landmarks with map frame values. */
@@ -184,7 +184,7 @@ void SLAMModule::SLAMTesterUpdate()
    //   AppUtils::getFileNames(_mapper.directory, _mapper.files, true);
    //   GeomTools::loadRegions(_frameId, fileRegions, _mapper.directory, _mapper.files);
 
-   //   Vector3d position;
+   //   Eigen::Vector3d position;
    //   Quaterniond orientation;
    //
    //   cout << _mapper.directory + "poses.txt" << endl;
@@ -231,8 +231,8 @@ void SLAMModule::SLAMTesterUpdate()
 //   if (!poseAvailable)
 //   {
 //
-//      Vector3d position;
-//      Vector3d previous;
+//      Eigen::Vector3d position;
+//      Eigen::Vector3d previous;
 //
 //      position << poseMsg->pose.position.x, poseMsg->pose.position.y, poseMsg->pose.position.z;
 //      previous << this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y, this->_sensorPoseMessage->pose.position.z;
@@ -248,7 +248,7 @@ void SLAMModule::SLAMTesterUpdate()
 //         this->_mapper._atlasSensorPose.setRotationAndTranslation(
 //               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,
 //                                  this->_sensorPoseMessage->pose.orientation.y, this->_sensorPoseMessage->pose.orientation.z),
-//               Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y,
+//               Eigen::Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y,
 //                               this->_sensorPoseMessage->pose.position.z));
 //
 //         poseAvailable = true;

@@ -119,6 +119,12 @@ int main(int argc, char* argv[]) {
             initialEstimate.insert<Point3>(Symbol('l', j), points[j] + kDeltaPoint);
 
       } else {
+
+         graph.print("Graph");
+         initialEstimate.print("Initial");
+         isam.printStats();
+         isam.print("ISAM");
+
          // Update iSAM with the new factors
          isam.update(graph, initialEstimate);
          // Each call to iSAM2 update(*) performs one iteration of the iterative
