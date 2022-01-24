@@ -8,9 +8,9 @@ void MapFrameProcessor::init(ApplicationState& app)
    ROS_INFO("Initializing MapFrameProcessor");
    this->app = app;
    this->debug = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
-   this->visited = MatrixXi(app.SUB_H, app.SUB_W).setZero();
-   this->boundary = MatrixXi(app.SUB_H, app.SUB_W).setZero();
-   this->region = MatrixXi(app.SUB_H, app.SUB_W).setZero();
+   this->visited = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
+   this->boundary = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
+   this->region = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
    ROS_INFO("MapFrameProcessor Initialized.");
 }
 
@@ -71,7 +71,7 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
       for (int i = r.begin(); i < r.end(); i++)
       {
          int components = 0;
-         vector<Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
+         vector<Eigen::Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
          for (int j = 0; j < leafPatches.size(); j++)
          {
             int num = 0;
@@ -88,11 +88,11 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
             return a->getNumOfVertices() > b->getNumOfVertices();
          };
          sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
-         //      vector<Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
+         //      vector<Eigen::Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
          //      for (int j = 0; j < ring.size(); j++)
          //      {
          //         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-         //         planarRegionList[i]->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
+         //         planarRegionList[i]->insertBoundaryVertex(Eigen::Vector3f(patch[3], patch[4], patch[5]));
          //      }
       }
    });
@@ -100,7 +100,7 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
 //   for (int i = 0; i < planarRegionList.size(); i++)
 //   {
 //      int components = 0;
-//      vector<Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
+//      vector<Eigen::Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
 //      for (int j = 0; j < leafPatches.size(); j++)
 //      {
 //         int num = 0;
@@ -117,11 +117,11 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
 //         return a->getNumOfVertices() > b->getNumOfVertices();
 //      };
 //      sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
-////      vector<Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
+////      vector<Eigen::Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
 ////      for (int j = 0; j < ring.size(); j++)
 ////      {
 ////         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-////         planarRegionList[i]->insertBoundaryVertex(Vector3f(patch[3], patch[4], patch[5]));
+////         planarRegionList[i]->insertBoundaryVertex(Eigen::Vector3f(patch[3], patch[4], patch[5]));
 ////      }
 //   }
 }
@@ -140,12 +140,12 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
             ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
          }
 
-         Vector3f center = regions[i]->GetCenter();
-         vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+         Eigen::Vector3f center = regions[i]->GetCenter();
+         vector<Eigen::Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
          for (int j = 0; j < ring.size(); j++)
          {
             cv::Vec6f patch = this->frame.getRegionOutput().at<cv::Vec6f>(ring[j].x(), ring[j].y());
-            Vector3f vertex(patch[3], patch[4], patch[5]);
+            Eigen::Vector3f vertex(patch[3], patch[4], patch[5]);
             regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
          }
       }
@@ -159,12 +159,12 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
    //         ROS_ASSERT_MSG(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
    //      }
    //
-   //      Vector3f center = regions[i]->GetCenter();
-   //      vector<Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+   //      Eigen::Vector3f center = regions[i]->GetCenter();
+   //      vector<Eigen::Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
    //      for (int j = 0; j < ring.size(); j++)
    //      {
    //         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
-   //         Vector3f vertex(patch[3], patch[4], patch[5]);
+   //         Eigen::Vector3f vertex(patch[3], patch[4], patch[5]);
    //         regions[i]->insertBoundaryVertex(vertex + (vertex - center).normalized() * this->app.REGION_GROWTH_FACTOR);
    //      }
    //   }
@@ -213,7 +213,7 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, 
 
    num++;
    visited(x, y) = 1;
-   regionRing->insertBoundaryIndex(Vector2i(x,y));
+   regionRing->insertBoundaryIndex(Eigen::Vector2i(x,y));
    if (app.SHOW_BOUNDARIES)
       circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
              cv::Scalar((component + 1) * 130 % 255, (component + 1) * 227 % 255, (component + 1) * 332 % 255), -1);
@@ -240,7 +240,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
    visited(x, y) = 1;
    region(x, y) = component;
    cv::Vec6f patch = this->frame.getRegionOutput().at<cv::Vec6f>(x, y);
-   planarRegion->AddPatch(Vector3f(patch[0], patch[1], patch[2]), Vector3f(patch[3], patch[4], patch[5]));
+   planarRegion->AddPatch(Eigen::Vector3f(patch[0], patch[1], patch[2]), Eigen::Vector3f(patch[3], patch[4], patch[5]));
    if (app.SHOW_PATCHES)
       circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
              cv::Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);
@@ -261,7 +261,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
    if (count != 8)
    {
       boundary(x, y) = 1;
-      planarRegion->insertLeafPatch(Vector2i(x, y));
+      planarRegion->insertLeafPatch(Eigen::Vector2i(x, y));
       if (app.SHOW_BOUNDARIES)
          circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2, cv::Scalar(255, 255, 255), -1);
    }

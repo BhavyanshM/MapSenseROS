@@ -37,11 +37,11 @@ class MapFrameProcessor
    public:
       MapFrame frame;
       cv::Mat debug;
-      MatrixXi visited;
-      MatrixXi boundary;
-      MatrixXi region;
+      Eigen::MatrixXi visited;
+      Eigen::MatrixXi boundary;
+      Eigen::MatrixXi region;
       ApplicationState& app;
-      Vector2i connect[8] = {Vector2i(-1,-1), Vector2i(1,0),Vector2i(2,0),Vector2i(0,1),Vector2i(2,1),Vector2i(0,2),Vector2i(1,2), Vector2i(2,2)};
+      Eigen::Vector2i connect[8] = {Eigen::Vector2i(-1,-1), Eigen::Vector2i(1,0),Eigen::Vector2i(2,0),Eigen::Vector2i(0,1),Eigen::Vector2i(2,1),Eigen::Vector2i(0,2),Eigen::Vector2i(1,2), Eigen::Vector2i(2,2)};
 
 
 };

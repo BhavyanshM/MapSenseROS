@@ -69,21 +69,21 @@ namespace Clay
              _visualOdometry->Show();
          }
 
-         if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _slamModule->_mapper.SLAM_ENABLED)
-         {
-            PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
-            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
-            _slamModule->slamUpdate();
-
-            /* TODO: Publish the latest optimized pose from Factor Graph SLAM. */
-
-            //         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
-            //         if (sensorTransforms.size() > 0 && _slamModule->enabled)
-            //         {
-            //            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
-            //            printf("After SLAM Publisher.\n");
-            //         }
-         }
+//         if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _slamModule->_mapper.SLAM_ENABLED)
+//         {
+//            PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
+//            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
+//            _slamModule->slamUpdate();
+//
+//            /* TODO: Publish the latest optimized pose from Factor Graph SLAM. */
+//
+//            //         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
+//            //         if (sensorTransforms.size() > 0 && _slamModule->enabled)
+//            //         {
+//            //            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+//            //            printf("After SLAM Publisher.\n");
+//            //         }
+//         }
 
          ROS_DEBUG("ROS Update Completed");
       }

@@ -8,21 +8,20 @@
 #include <Eigen/Dense>
 #include "MapsenseHeaders.h"
 
-using namespace Eigen;
 using namespace std;
 
 class RegionRing
 {
    public:
-      vector<Vector3f> boundaryVertices;
-      vector<Vector2i> boundaryIndices;
+      vector<Eigen::Vector3f> boundaryVertices;
+      vector<Eigen::Vector2i> boundaryIndices;
       int id;
 
       RegionRing(int id);
 
-      void insertBoundaryVertex(Vector3f pos);
+      void insertBoundaryVertex(Eigen::Vector3f pos);
 
-      void insertBoundaryIndex(Vector2i pos);
+      void insertBoundaryIndex(Eigen::Vector2i pos);
 
       int getNumOfVertices() const;
 

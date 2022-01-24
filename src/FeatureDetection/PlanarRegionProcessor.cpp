@@ -8,7 +8,7 @@ void PlanarRegionProcessor::extractRealPlanes(vector<shared_ptr<PlanarRegion>> p
 {
    bool exists = false;
    this->planes.clear();
-   Vector4f regionSupportPlane, uniquePlane;
+   Eigen::Vector4f regionSupportPlane, uniquePlane;
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       shared_ptr<PlanarRegion> region = planarRegionList[i];

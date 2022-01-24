@@ -312,8 +312,8 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
 
 void NetworkManager::publishSLAMPose(RigidBodyTransform worldToSensorTransform)
 {
-   Quaterniond quaternion = worldToSensorTransform.getQuaternion();
-   Vector3d position = worldToSensorTransform.getTranslation();
+   Eigen::Quaterniond quaternion = worldToSensorTransform.getQuaternion();
+   Eigen::Vector3d position = worldToSensorTransform.getTranslation();
 
    geometry_msgs::PoseStamped pose;
    pose.pose.position = geometry_msgs::Point();

@@ -397,7 +397,7 @@ map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
 
          for (int j = 0; j < planarRegionList[i]->getVertices().size(); j++)
          {
-            Vector3f vertex = planarRegionList[i]->getVertices()[j];
+            Eigen::Vector3f vertex = planarRegionList[i]->getVertices()[j];
             geometry_msgs::Point point;
             point.x = static_cast<double>(vertex.x());
             point.y = static_cast<double>(vertex.y());

@@ -31,7 +31,7 @@ class PlanarRegionMapHandler
       vector<RigidBodyTransform> poses, atlasPoses;
 
       string directory;
-      Vector3d translationToReference, eulerAnglesToReference;
+      Eigen::Vector3d translationToReference, eulerAnglesToReference;
 
       RigidBodyTransform _sensorToMapTransform;
       RigidBodyTransform _sensorPoseRelative;

@@ -7,24 +7,24 @@ PlanarRegionMapHandler::PlanarRegionMapHandler()
 
 void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
 {
-   Matrix4f T = Matrix4f::Identity();
+   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
    for (int i = 0; i < this->matches.size(); i++)
    {
       totalNumOfBoundaryPoints += this->_latestRegionsZUp[this->matches[i].second]->GetNumOfBoundaryVertices();
    }
-   MatrixXf A(totalNumOfBoundaryPoints, 6);
-   VectorXf b(totalNumOfBoundaryPoints);
+   Eigen::MatrixXf A(totalNumOfBoundaryPoints, 6);
+   Eigen::VectorXf b(totalNumOfBoundaryPoints);
 
    int i = 0;
    for (int m = 0; m < this->matches.size(); m++)
    {
       for (int n = 0; n < this->_latestRegionsZUp[this->matches[m].second]->GetNumOfBoundaryVertices(); n++)
       {
-         Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
-         Vector3f correspondingMapCentroid = regions[matches[m].first]->GetCenter();
-         Vector3f correspondingMapNormal = regions[matches[m].first]->GetNormal();
-         Vector3f cross = latestPoint.cross(correspondingMapNormal);
+         Eigen::Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
+         Eigen::Vector3f correspondingMapCentroid = regions[matches[m].first]->GetCenter();
+         Eigen::Vector3f correspondingMapNormal = regions[matches[m].first]->GetNormal();
+         Eigen::Vector3f cross = latestPoint.cross(correspondingMapNormal);
          A(i, 0) = cross(0);
          A(i, 1) = cross(1);
          A(i, 2) = cross(2);
@@ -38,10 +38,10 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
 
    //   printf("PlanarICP: (A:(%d, %d), b:(%d))\n", A.rows(), A.cols(), b.rows());
 
-   VectorXf solution(6);
-   solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
-   eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
-   translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
+   Eigen::VectorXf solution(6);
+   solution = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+   eulerAnglesToReference = Eigen::Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
+   translationToReference = Eigen::Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
 
    //   printf("ICP Result: Rotation(%.2lf, %.2lf, %.2lf) Translation(%.2lf, %.2lf, %.2lf)\n", eulerAnglesToReference.x(), eulerAnglesToReference.y(),
    //          eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
@@ -53,25 +53,25 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
 
 void PlanarRegionMapHandler::registerRegionsPointToPoint()
 {
-   Matrix4f T = Matrix4f::Identity();
+   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
    for (int i = 0; i < this->matches.size(); i++)
    {
       totalNumOfBoundaryPoints += this->_latestRegionsZUp[this->matches[i].second]->GetNumOfBoundaryVertices();
    }
-   MatrixXf A(totalNumOfBoundaryPoints, 6);
-   VectorXf b(totalNumOfBoundaryPoints);
+   Eigen::MatrixXf A(totalNumOfBoundaryPoints, 6);
+   Eigen::VectorXf b(totalNumOfBoundaryPoints);
 
    int i = 0;
    for (int m = 0; m < this->matches.size(); m++)
    {
       for (int n = 0; n < this->_latestRegionsZUp[this->matches[m].second]->GetNumOfBoundaryVertices(); n++)
       {
-         Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
+         Eigen::Vector3f latestPoint = _latestRegionsZUp[matches[m].second]->getVertices()[n];
          //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
-         Vector3f correspondingMapCentroid = regions[matches[m].first]->GetCenter();
-         Vector3f correspondingMapNormal = regions[matches[m].first]->GetNormal();
-         Vector3f cross = latestPoint.cross(correspondingMapNormal);
+         Eigen::Vector3f correspondingMapCentroid = regions[matches[m].first]->GetCenter();
+         Eigen::Vector3f correspondingMapNormal = regions[matches[m].first]->GetNormal();
+         Eigen::Vector3f cross = latestPoint.cross(correspondingMapNormal);
          A(i, 0) = cross(0);
          A(i, 1) = cross(1);
          A(i, 2) = cross(2);
@@ -82,10 +82,10 @@ void PlanarRegionMapHandler::registerRegionsPointToPoint()
          i++;
       }
    }
-   VectorXf solution(6);
-   solution = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);
-   eulerAnglesToReference = Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
-   translationToReference = Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
+   Eigen::VectorXf solution(6);
+   solution = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+   eulerAnglesToReference = Eigen::Vector3d((double) solution(0), (double) solution(1), (double) solution(2));
+   translationToReference = Eigen::Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
    _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
@@ -103,12 +103,12 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap()
          {
             if (_latestRegionsZUp[j]->GetNumOfBoundaryVertices() > 8)
             {
-               Vector3f prevNormal = regions[i]->GetNormal();
-               Vector3f curNormal = _latestRegionsZUp[j]->GetNormal();
+               Eigen::Vector3f prevNormal = regions[i]->GetNormal();
+               Eigen::Vector3f curNormal = _latestRegionsZUp[j]->GetNormal();
                float angularDiff = fabs(prevNormal.dot(curNormal));
 
-               Vector3f prevCenter = regions[i]->GetCenter();
-               Vector3f curCenter = _latestRegionsZUp[j]->GetCenter();
+               Eigen::Vector3f prevCenter = regions[i]->GetCenter();
+               Eigen::Vector3f curCenter = _latestRegionsZUp[j]->GetCenter();
                float dist = (curCenter - prevCenter).norm();
                //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 

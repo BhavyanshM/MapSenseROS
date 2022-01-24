@@ -33,11 +33,12 @@
 
 #include "PointLandmark.h"
 #include "FactorGraphHandler.h"
+#include "CameraParams.h"
 
 class BundleAdjustment
 {
    public:
-      BundleAdjustment();
+      BundleAdjustment(CameraParams& params);
 
       void InsertProjectionFactor();
 
@@ -52,17 +53,17 @@ class BundleAdjustment
       void Update(std::vector<PointLandmark>& landmarks, std::vector<Eigen::Matrix4f>& eigenPoses);
 
    private:
-      FactorGraphHandler *fgHandle;
-
-      gtsam::noiseModel::Isotropic::shared_ptr cameraMeasurementNoise;
-      gtsam::ISAM2Params parameters;
-      gtsam::ISAM2 isam;
-
-      gtsam::NonlinearFactorGraph graph;
-      gtsam::noiseModel::Diagonal::shared_ptr odometryNoise;
-      std::unordered_set<std::string> structure;
-      gtsam::Values initial, result;
-      gtsam::Cal3_S2::shared_ptr K;
+//      FactorGraphHandler *fgHandle;
+//
+//      gtsam::noiseModel::Isotropic::shared_ptr cameraMeasurementNoise;
+//      gtsam::ISAM2Params parameters;
+//      gtsam::ISAM2 isam;
+//      gtsam::NonlinearFactorGraph graph;
+//
+//      gtsam::noiseModel::Diagonal::shared_ptr odometryNoise;
+//      std::unordered_set<std::string> structure;
+//      gtsam::Values initial, result;
+//      gtsam::Cal3_S2::shared_ptr K;
 };
 
 #endif //MAP_SENSE_BUNDLEADJUSTMENT_H

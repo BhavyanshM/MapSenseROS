@@ -289,7 +289,7 @@ if(VISUAL_TERRAIN_SLAM)
 			${OpenCV_LIBS} ${catkin_LIBRARIES}
 			/usr/lib/x86_64-linux-gnu/libOpenCL.so
 			Eigen3::Eigen tbb gtsam
-			geom-tools planar-regions slam
+			geom-tools planar-regions
 			ClayEngine mapsense visual_odometry
 			glad imgui glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
 	target_include_directories(VisualTerrainSLAM PUBLIC ${MAPSENSE_INCLUDE_DIRS})

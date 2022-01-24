@@ -16,7 +16,7 @@
 
 using namespace std;
 
-typedef Eigen::Matrix<bool, Dynamic, Dynamic> BoolDynamicMatrix;
+typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> BoolDynamicMatrix;
 
 class AppUtils
 {
@@ -29,13 +29,13 @@ class AppUtils
 
       void display(uint16_t delay);
 
-      void displayPointSet2D(vector<Vector2f> points, Vector2f offset, int scale);
+      void displayPointSet2D(vector<Eigen::Vector2f> points, Eigen::Vector2f offset, int scale);
 
       void setDisplayResolution(uint16_t rows, uint16_t cols);
 
-      void canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize);
+      void canvasToMat(BoolDynamicMatrix canvas, Eigen::Vector2i windowPos, uint8_t windowSize);
 
-      void displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize);
+      void displayCanvasWithWindow(BoolDynamicMatrix canvas, Eigen::Vector2i windowPos, uint8_t windowSize);
 
       static void
       capture_data(std::string projectPath, std::string filename, cv::Mat depth, cv::Mat color, cv::Mat filteredDepth, cv::Mat debug, ApplicationState appState, vector<shared_ptr<PlanarRegion>> regions);

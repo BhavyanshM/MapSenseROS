@@ -10,26 +10,24 @@
 #include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 
-using namespace Eigen;
-
-typedef Eigen::Matrix<bool, Dynamic, Dynamic> BoolDynamicMatrix;
+typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> BoolDynamicMatrix;
 
 class AppUtils;
 
 class GeomTools
 {
    public:
-      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Vector2f>& concaveHull, Vector2f start, AppUtils& appUtils, float scale);
+      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start, AppUtils& appUtils, float scale);
 
-      static vector<Vector2f> canvasApproximateConcaveHull(vector<Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
+      static vector<Eigen::Vector2f> canvasApproximateConcaveHull(vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
 
-      static Matrix3f getRotationFromAngleApproximations(Vector3f eulerAngles);
+      static Eigen::Matrix3f getRotationFromAngleApproximations(Eigen::Vector3f eulerAngles);
 
-      static Vector3f getProjectedPoint(Vector4f plane, Vector3f point);
+      static Eigen::Vector3f getProjectedPoint(Eigen::Vector4f plane, Eigen::Vector3f point);
 
-      static vector<Vector2f> grahamScanConvexHull(vector<Vector2f> points);
+      static vector<Eigen::Vector2f> grahamScanConvexHull(vector<Eigen::Vector2f> points);
 
-      static void getParametricCurve(vector<Vector2f> points, uint8_t m, MatrixXf& params);
+      static void getParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params);
 
       static void compressPointSetLinear(shared_ptr<PlanarRegion> region);
 
@@ -39,9 +37,9 @@ class GeomTools
 
       static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform);
 
-      static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Vector3d translation, Matrix3d rotation);
+      static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation);
 
-      static void loadPoseStamped(ifstream& poseFile, Vector3d& position, Quaterniond& orientation);
+      static void loadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
 
 };
 

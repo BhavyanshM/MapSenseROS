@@ -87,7 +87,7 @@ void AppUtils::setDisplayResolution(uint16_t rows, uint16_t cols)
    displayOutput.setTo(0);
 }
 
-void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize)
+void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Eigen::Vector2i windowPos, uint8_t windowSize)
 {
    for (int i = 0; i < canvas.rows(); i++)
    {
@@ -104,7 +104,7 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t
    }
 }
 
-void AppUtils::displayPointSet2D(vector<Vector2f> points, Vector2f offset, int scale)
+void AppUtils::displayPointSet2D(vector<Eigen::Vector2f> points, Eigen::Vector2f offset, int scale)
 {
    displayOutput.setTo(0);
    for (int i = 0; i < points.size(); i++)
@@ -115,7 +115,7 @@ void AppUtils::displayPointSet2D(vector<Vector2f> points, Vector2f offset, int s
    }
 }
 
-void AppUtils::displayCanvasWithWindow(BoolDynamicMatrix canvas, Vector2i windowPos, uint8_t windowSize)
+void AppUtils::displayCanvasWithWindow(BoolDynamicMatrix canvas, Eigen::Vector2i windowPos, uint8_t windowSize)
 {
    canvasToMat(canvas, windowPos, windowSize);
    display(20);
