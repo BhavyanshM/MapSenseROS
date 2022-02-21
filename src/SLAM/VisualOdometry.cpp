@@ -483,7 +483,7 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
 //            _bundleAdjustment->Update(points3D, poses);
             /* ------------------------- BUNDLE ADJUSTMENT ------------------------------*/
 
-            _bundleAdjustment->Optimize();
+//            _bundleAdjustment->Optimize();
 
 
             if (axes)

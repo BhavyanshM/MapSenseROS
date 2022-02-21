@@ -12,6 +12,7 @@
 #include "AppUtils.h"
 #include "NetworkManager.h"
 #include "OpenCLManager.h"
+#include "MeshGenerator.h"
 
 namespace Clay
 {
@@ -75,7 +76,9 @@ namespace Clay
         std::vector<Ref<Model>> _models;
         std::vector<Ref<Model>> _poses;
 
-        Ref<Model> _rootPCL;
+        MeshGenerator mesher;
+
+        Ref<Model> _rootModel;
 
    };
 }

@@ -29,6 +29,8 @@ class PlanarRegionCalculator
 
       void Render();
 
+      void LoadRegions(std::string path);
+
       void ImGuiUpdate(ApplicationState& appState);
 
       bool generatePatchGraph(ApplicationState& appState);

@@ -2,7 +2,7 @@
 
 namespace Clay
 {
-   void MeshGenerator::generateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model, bool erase)
+   void MeshGenerator::GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model)
    {
       CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
       for(int i = 0; i< planarRegion->GetNumOfBoundaryVertices(); i++)
@@ -19,6 +19,26 @@ namespace Clay
          offset++;
       }
    }
+
+   void MeshGenerator::GenerateMeshForRegions(std::vector<Ref<PlanarRegion>>& planarRegions, Ref<Model> parent)
+   {
+      for (int i = 0; i< planarRegions.size(); i++)
+      {
+         Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)((i+1)*123 % 255) / 255.0f,
+                                                                                 (float)((i+1)*326 % 255) / 255.0f,
+                                                                                 (float)((i+1)*231 % 255) / 255.0f, 1.0f), parent);
+         Ref<PlanarRegion> region = planarRegions[i];
+
+         GenerateRegionLineMesh(region, regionMesh);
+         InsertModel(regionMesh);
+      }
+   }
+
+   void MeshGenerator::InsertModel(Ref<TriangleMesh> model)
+   {
+      meshes.emplace_back(std::dynamic_pointer_cast<Model>(model));
+   }
+
 }
 //void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
 //{

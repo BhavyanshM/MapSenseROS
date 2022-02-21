@@ -21,7 +21,13 @@ namespace Clay
 
          MeshGenerator() {};
 
-         void generateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model, bool erase = false);
+         void GenerateMeshForRegions(std::vector<Ref<PlanarRegion>>& planarRegions, Ref<Model> parent);
+
+         void GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model);
+
+         void InsertModel(Ref<TriangleMesh> model);
+
+         const std::vector<Ref<Model>>& GetModels() const {return meshes;}
 
          //      void generateMatchLineMesh(vector<pair<int,int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
          //
@@ -37,6 +43,8 @@ namespace Clay
       private:
 
          const int SKIP_EDGES = 5;
+
+         std::vector<Ref<Model>> meshes;
 
    };
 

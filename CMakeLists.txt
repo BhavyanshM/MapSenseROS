@@ -300,7 +300,7 @@ endif()
 
 ## //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-set(VIS_ODOM 1)
+set(VIS_ODOM 0)
 if(VIS_ODOM)
 	add_executable(Vis_Odom src/Launcher/VisualOdometryLauncher.cpp)
 	target_link_libraries(Vis_Odom
