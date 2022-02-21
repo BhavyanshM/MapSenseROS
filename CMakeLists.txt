@@ -265,6 +265,7 @@ target_link_libraries(icp Eigen3::Eigen)
 #[[
 	Develop all executables here.
 ]]
+set(MAPSENSE 0)
 if(MAPSENSE)
 	add_executable(Mapsense_Clay ${MAPSENSE_CLAY_SOURCES} ${MAPSENSE_CLAY_HEADERS} )
 	target_include_directories(Mapsense_Clay PUBLIC ${MAPSENSE_INCLUDE_DIRS})

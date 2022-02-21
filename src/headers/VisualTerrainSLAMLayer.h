@@ -12,6 +12,7 @@
 #include "DataManager.h"
 #include "SLAMModule.h"
 
+
 namespace Clay {
     class VisualTerrainSLAMLayer : public ApplicationLauncher {
 
@@ -28,6 +29,7 @@ namespace Clay {
 
         Ref<PointCloud> firstCloud;
         std::vector<std::shared_ptr<PlanarRegion>> _regions;
+
 
     };
 

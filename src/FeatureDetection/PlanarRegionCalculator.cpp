@@ -413,4 +413,26 @@ map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
    }
 }
 
+void PlanarRegionCalculator::LoadRegions(std::string path)
+{
+   planarRegionList.clear();
+
+   /* Testing Planar Region Visualization Here. */
+   std::vector<string> files;
+   AppUtils::getFileNames(path, files);
+   GeomTools::loadRegions(0, planarRegionList, path, files);
+
+//   for(int i = 0; i<planarRegionList.size(); i++)
+//   {
+//      //         GeomTools::compressPointSetLinear(_regions[i]);
+//      //         _regions[i]->SubSampleBoundary(2);
+//      //         _regions[i]->SortOrderClockwise();
+//
+//      for(int j = 0; j<planarRegionList[i]->GetNumOfBoundaryVertices(); j++)
+//      {
+//         printf("%.3lf %.3lf\n", i, j, planarRegionList[i]->getBoundaryVertices()[j].y(), planarRegionList[i]->getBoundaryVertices()[j].z());
+//      }
+//   }
+}
+
 

@@ -4,7 +4,7 @@
 
 #include "VisualTerrainSLAMLayer.h"
 #include "Scene/Mesh/MeshTools.h"
-#include "MeshGenerator.h"
+
 #include "PlanarRegion.h"
 
 namespace Clay
@@ -23,7 +23,9 @@ namespace Clay
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
 
-      firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootPCL);
+      _slamModule = new SLAMModule(argc, argv);
+
+      firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootModel);
       //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 
@@ -61,7 +63,7 @@ namespace Clay
          if (appState.STEREO_ODOMETRY_ENABLED)
          {
             ROS_DEBUG("Stereo Odom Update");
-            Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootPCL);
+            Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootModel);
             MeshTools::CoordinateAxes(pose);
             _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
@@ -99,40 +101,8 @@ namespace Clay
          _regions.clear();
          _models.clear();
 
-         /* Testing Planar Region Visualization Here. */
-         std::vector<string> files;
-         string path = "/home/quantum/Workspace/Volume/Python/TerrainUnderstanding/regions/";
-         AppUtils::getFileNames(path, files);
-         GeomTools::loadRegions(0, _regions, path, files);
-
-
-         //      std::shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
-         //      region->insertBoundaryVertex(Eigen::Vector3f(-1,-1,0));
-         //      region->insertBoundaryVertex(Eigen::Vector3f(-1,1,0));
-         //      region->insertBoundaryVertex(Eigen::Vector3f(1,1,0));
-         //      region->insertBoundaryVertex(Eigen::Vector3f(1,-1,0));
-         //      region->insertBoundaryVertex(Eigen::Vector3f(0,-2,0));
-
-         for(int i = 0; i<_regions.size(); i++)
-         {
-            //         GeomTools::compressPointSetLinear(_regions[i]);
-            //         _regions[i]->SubSampleBoundary(2);
-            //         _regions[i]->SortOrderClockwise();
-
-            for(int j = 0; j<_regions[i]->GetNumOfBoundaryVertices(); j++)
-            {
-               printf("%.3lf %.3lf\n", i, j, _regions[i]->getBoundaryVertices()[j].y(), _regions[i]->getBoundaryVertices()[j].z());
-            }
-
-            Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)((i+1)*123 % 255) / 255.0f,
-                                                                                    (float)((i+1)*326 % 255) / 255.0f,
-                                                                                    (float)((i+1)*231 % 255) / 255.0f, 1.0f), _rootPCL);
-            MeshGenerator mesher;
-            mesher.generateRegionLineMesh(_regions[i], regionMesh, false);
-
-            //      _regions.push_back(std::move(region));
-            _models.push_back(std::move(std::dynamic_pointer_cast<Model>(regionMesh)));
-         }
+         _regionCalculator->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/");
+         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, _rootModel);
 
 
          CLAY_LOG_INFO("Added region mesh.");

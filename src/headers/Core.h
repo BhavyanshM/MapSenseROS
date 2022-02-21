@@ -8,4 +8,10 @@
 #include "Instrumentor.h"
 #include "Log.h"
 
+template<typename T>
+using Ref = std::shared_ptr<T>;
+
+template<typename T>
+using Scope = std::unique_ptr<T>;
+
 #endif //CORE_H

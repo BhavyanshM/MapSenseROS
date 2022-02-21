@@ -2,7 +2,7 @@
 
 namespace Clay
 {
-   void MeshGenerator::generateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model, bool erase)
+   void MeshGenerator::GenerateRegionLineMesh(Ref<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model)
    {
       CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
       for(int i = 0; i< planarRegion->GetNumOfBoundaryVertices(); i++)
@@ -19,13 +19,34 @@ namespace Clay
          offset++;
       }
    }
+
+   void MeshGenerator::GenerateMeshForRegions(std::vector<Ref<PlanarRegion>>& planarRegions, Ref<Model> parent)
+   {
+      for (int i = 0; i< planarRegions.size(); i++)
+      {
+         Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)((i+1)*123 % 255) / 255.0f,
+                                                                                 (float)((i+1)*326 % 255) / 255.0f,
+                                                                                 (float)((i+1)*231 % 255) / 255.0f, 1.0f), parent);
+         Ref<PlanarRegion> region = planarRegions[i];
+
+         GenerateRegionLineMesh(region, regionMesh);
+         InsertModel(regionMesh);
+      }
+   }
+
+   void MeshGenerator::InsertModel(Ref<TriangleMesh> model)
+   {
+      meshes.emplace_back(std::dynamic_pointer_cast<Model>(model));
+   }
 }
-//void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
+
+
+//void MeshGenerator::GenerateRegionLineMesh(vector<Ref<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
 //{
 //   if(erase) clearMesh(edges);
 //   for (int i = 0; i < planarRegionList.size(); i+=1)
 //   {
-//      shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
+//      Ref<PlanarRegion> planarRegion = planarRegionList[i];
 //      vector<Vector3f> vertices = planarRegion->getVertices();
 //      for (int j = SKIP_EDGES; j < vertices.size() + SKIP_EDGES; j += SKIP_EDGES)
 //      {
@@ -58,7 +79,7 @@ namespace Clay
 //}
 //
 //void
-//MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions,
+//MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<Ref<PlanarRegion>> regions, vector<Ref<PlanarRegion>> latestRegions,
 //                                     vector<Object3D *>& edges, Object3D *parent)
 //{
 //   clearMesh(edges);

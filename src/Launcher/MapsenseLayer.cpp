@@ -54,8 +54,8 @@ namespace Clay
                                "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
 
       /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
-      _kitti->SetCamera(CameraParams(718.856, 718.856, 607.193, 185.216),
-                                 CameraParams(718.856, 718.856, 607.193, 185.216));
+//      _kitti->SetCamera(CameraParams(718.856, 718.856, 607.193, 185.216),
+//                                 CameraParams(718.856, 718.856, 607.193, 185.216));
 
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _kitti);
 //      _slamModule = new SLAMModule(argc, argv);
@@ -412,7 +412,7 @@ namespace Clay
 //         }
          if (ImGui::BeginTabItem("Network"))
          {
-            _networkManager->ImGuiUpdate();
+            _networkManager->ImGuiUpdate(appState);
             ImGui::EndTabItem();
          }
          if (ImGui::BeginTabItem("Visual Odometry"))
@@ -429,7 +429,7 @@ namespace Clay
             if (ImGui::Button("Save All"))
             {
                AppUtils::capture_data(ros::package::getPath("map_sense"), "/Extras/Images/Capture", _regionCalculator->inputDepth,
-                                      _regionCalculator->inputColor, _regionCalculator->filteredDepth, _regionCalculator->_mapFrameProcessor.debug, appState,
+                                      _regionCalculator->inputColor, _regionCalculator->filteredDepth, _regionCalculator->_mapFrameProcessor->debug, appState,
                                       _regionCalculator->planarRegionList);
             }
             if (ImGui::Button("Save Regions"))

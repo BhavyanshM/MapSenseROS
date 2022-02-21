@@ -199,9 +199,9 @@ void VisualOdometry::TriangulateStereoNormal(std::vector<cv::KeyPoint>& pointsTr
       {
          y_hat = (y1 + y2) / 2;
 
-         Z = _data->GetStereoBaseline() / (x1 - x2);
+         Z = _data->GetLeftCamera()._fx * _data->GetStereoBaseline() / (x1 - x2);
          X = x1 * _data->GetStereoBaseline() / (x1 - x2);
-         Y = (y_hat / 2) * (_data->GetStereoBaseline() / (x1 - x2));
+         Y = (y_hat) * (_data->GetStereoBaseline() / (x1 - x2));
 
          //         CLAY_LOG_INFO("Point3D: {} {} {}", X, Y, Z);
          if (Z > 0)
@@ -472,10 +472,10 @@ bool VisualOdometry::Update(ApplicationState& appState, Clay::Ref<Clay::Triangle
             _keyframes.emplace_back(
                   Keyframe(desc_curLeft.clone(), desc_curRight.clone(), kp_curLeft, kp_curRight, cameraPose, leftImage.clone(), rightImage.clone()));
 
-            std::vector<Eigen::Matrix4f> poses;
-            poses.emplace_back(_keyframes[_keyframes.size() - 2].pose);
-            poses.emplace_back(_keyframes[_keyframes.size() - 1].pose);
-            _bundleAdjustment->Update(points3D, poses);
+//            std::vector<Eigen::Matrix4f> poses;
+//            poses.emplace_back(_keyframes[_keyframes.size() - 2].pose);
+//            poses.emplace_back(_keyframes[_keyframes.size() - 1].pose);
+//            _bundleAdjustment->Update(points3D, poses);
 
             if (axes)
             {

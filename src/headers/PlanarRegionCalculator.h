@@ -11,6 +11,7 @@
 #include <CL/cl.hpp>
 #include <map_sense/RawGPUPlanarRegionList.h>
 
+#include "Core.h"
 #include "MapsenseHeaders.h"
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"
@@ -51,6 +52,8 @@ class PlanarRegionCalculator
 
       uint8_t loadParameters(const ApplicationState& app);
 
+      void LoadRegions(std::string path);
+
 
    public:
       //      cl::Kernel filterKernel, packKernel, mergeKernel;
@@ -72,7 +75,7 @@ class PlanarRegionCalculator
       MapFrame output;
       MapFrameProcessor* _mapFrameProcessor;
       OpenCLManager* _openCL;
-      vector<shared_ptr<PlanarRegion>> planarRegionList;
+      vector<std::shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
       int frameId = 0;
