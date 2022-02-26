@@ -50,6 +50,8 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
          LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/");
       }
 
+      ImGui::Checkbox("Render 3D", &_render);
+
       ImGui::EndTabItem();
    }
 }

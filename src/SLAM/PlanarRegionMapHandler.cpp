@@ -1,24 +1,41 @@
 #include "PlanarRegionMapHandler.h"
-#include "imgui.h"
-#include "implot.h"
+#include "ImGuiTools.h"
 
 PlanarRegionMapHandler::PlanarRegionMapHandler()
 {
    this->fgSLAM = new FactorGraphHandler();
 }
 
+void PlanarRegionMapHandler::InsertMapRegions(const std::vector<shared_ptr<PlanarRegion>>& regions)
+{
+   for (auto region : regions)
+   {
+      mapRegions.push_back(std::move(region));
+   }
+}
+
 void PlanarRegionMapHandler::ImGuiUpdate()
 {
-   float x_data[3] = {1,2,3};
-   float y_data[3] = {1,2,3};
+
    if(ImGui::BeginTabItem("Mapper"))
    {
-      if (ImPlot::BeginPlot("Mapper Plots"))
+      if(ImGui::Button("Plot Region"))
       {
-         ImPlot::PlotScatter("Region 2D", x_data, y_data, 3);
-         ImPlot::EndPlot();
+         plotter2D = true;
       }
       ImGui::EndTabItem();
+   }
+
+   if(plotter2D)
+   {
+      _regionCalculator->planarRegionList[0]->ComputeBoundaryVerticesPlanar();
+      const std::vector<Eigen::Vector2f>& points = _regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids();
+      ImGuiTools::ScatterPlotXY(points);
+      if(ImGui::Button("Close"))
+      {
+         plotter2D = false;
+      }
+
    }
 
 }

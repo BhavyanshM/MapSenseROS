@@ -349,3 +349,11 @@ void PlanarRegion::SetZeroId( vector<shared_ptr<PlanarRegion>>& regionList)
    for(auto region : regionList)
       region->setId(-1);
 }
+
+void PlanarRegion::ComputeSegmentIndices()
+{
+   for(int i = 0; i<this->planarPatchCentroids.size(); i++)
+   {
+
+   }
+}

@@ -7,18 +7,17 @@
 #include "KDTree.h"
 #include "MapsenseHeaders.h"
 
-using namespace std;
-
 class PlanarRegion
 {
    private:
       Eigen::Vector3f normal;
       Eigen::Vector3f center;
-      vector<Eigen::Vector3f> patchCentroids;
-      vector<Eigen::Vector2f> planarPatchCentroids;
-      RigidBodyTransform transformToWorldFrame;
+      std::vector<Eigen::Vector3f> patchCentroids;
+      std::vector<Eigen::Vector2f> planarPatchCentroids;
+      std::vector<Eigen::Vector2i> leafPatches;
+      std::vector<int> _segmentIndices;
 
-      vector<Eigen::Vector2i> leafPatches;
+      RigidBodyTransform transformToWorldFrame;
       KDTree tree;
       bool normalCalculated = false;
       bool centroidCalculated = false;
@@ -28,13 +27,15 @@ class PlanarRegion
       int numOfMeasurements = 1;
 
    public:
-      vector<Eigen::Vector3f> boundaryVertices;
+      std::vector<Eigen::Vector3f> boundaryVertices;
 
       void SubSampleBoundary(int skip);
 
+      void ComputeSegmentIndices();
+
       void ComputeBoundaryVerticesPlanar();
 
-      void ComputeBoundaryVertices3D(vector<Eigen::Vector2f> points2D);
+      void ComputeBoundaryVertices3D(std::vector<Eigen::Vector2f> points2D);
 
       void RetainLinearApproximation();
 
@@ -62,11 +63,11 @@ class PlanarRegion
 
       void insertLeafPatch(Eigen::Vector2i pos);
 
-      void GetClockWise2D(vector<Eigen::Vector2f>& points);
+      void GetClockWise2D(std::vector<Eigen::Vector2f>& points);
 
       void SortOrderClockwise();
 
-      vector<Eigen::Vector3f> getBoundaryVertices();
+      std::vector<Eigen::Vector3f> getBoundaryVertices();
 
       int GetNumOfBoundaryVertices();
 
@@ -74,9 +75,9 @@ class PlanarRegion
 
       Eigen::Vector3f GetCenter();
 
-      vector<Eigen::Vector3f> getVertices();
+      std::vector<Eigen::Vector3f> getVertices();
 
-      vector<Eigen::Vector2i> getLeafPatches();
+      std::vector<Eigen::Vector2i> getLeafPatches();
 
       int getNumPatches();
 
@@ -90,7 +91,7 @@ class PlanarRegion
 
       void WriteToFile(ofstream& file);
 
-      vector<shared_ptr<RegionRing>> rings;
+      std::vector<shared_ptr<RegionRing>> rings;
 
       void transform(RigidBodyTransform transform);
 
@@ -104,9 +105,11 @@ class PlanarRegion
 
       void SetToUnitSquare();
 
-      static void PrintRegionList(const vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name);
+      static void PrintRegionList(const std::vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name);
 
-      static void SetZeroId( vector<shared_ptr<PlanarRegion>>& regionList);
+      static void SetZeroId( std::vector<shared_ptr<PlanarRegion>>& regionList);
+
+      const std::vector<Eigen::Vector2f>& GetPlanarPatchCentroids() const {return planarPatchCentroids;}
 };
 
 #endif //SRC_PLANARREGION_H

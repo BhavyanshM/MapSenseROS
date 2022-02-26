@@ -8,6 +8,7 @@ set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../../devel;/opt/ros/noetic")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 #MATH(EXPR stack_size "2048000 * 1024 * 1024") # 16 Mb
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,stack-size=${stack_size}")
 
@@ -130,6 +131,7 @@ set(SOURCE
         src/DataManager.cpp
         src/OpenCL/OpenCLManager.cpp
         src/UI/ImGuiLayout.cpp
+        src/UI/ImGuiTools.cpp
         src/Rendering/MeshGenerator.cpp
         )
 
@@ -148,6 +150,7 @@ set(HEADERS
         src/headers/Timer.h
         src/headers/Core.h
         src/headers/ImGuiLayout.h
+        src/headers/ImGuiTools.h
         src/headers/MapsenseHeaders.h
         src/Network/PointCloudReceiver.cpp
         src/headers/ApplicationLayer.h

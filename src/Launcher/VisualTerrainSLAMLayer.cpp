@@ -19,9 +19,10 @@ namespace Clay
       /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _data);
 
-      _mapper = new PlanarRegionMapHandler();
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
+      _mapper = new PlanarRegionMapHandler();
+      _mapper->SetRegionCalculator(_regionCalculator);
 
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootModel);
       //      _visualOdometry->Initialize(firstCloud);

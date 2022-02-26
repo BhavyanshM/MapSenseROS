@@ -79,7 +79,7 @@ class PlanarRegionCalculator
 
       int frameId = 0;
       int depthReceiverId = -1;
-      bool _render = true;
+      bool _render = false;
 
       bool RenderEnabled();
 };
