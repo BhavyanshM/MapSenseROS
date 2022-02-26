@@ -3,6 +3,8 @@
 //
 
 #include "SLAMModule.h"
+#include "imgui.h"
+#include "implot.h"
 
 SLAMModule::SLAMModule(int argc, char **argv)
 {
@@ -201,24 +203,30 @@ void SLAMModule::SLAMTesterUpdate()
    slamUpdate();
 }
 
-//void SLAMModule::ImGuiUpdate()
-//{
-//   ImGui::Checkbox("SLAM Enabled", &this->enabled);
-//   ImGui::Checkbox("ICP Enabled", &this->ICPEnabled);
-//   ImGui::SliderFloat("Interpolation", &_interp, 0.0f, 1.0f);
-//
-//
-//   if (this->matchCountVec.size() > 20)
-//   {
-//      this->matchCountVec.erase(this->matchCountVec.begin());
-//      int *data = this->matchCountVec.data();
-//      if (ImPlot::BeginPlot("SLAM Plots"))
-//      {
-//         ImPlot::PlotLine("Line Plot", data, 10);
-//         ImPlot::EndPlot();
-//      }
-//   }
-//}
+void SLAMModule::ImGuiUpdate()
+{
+   if (ImGui::BeginTabItem("SLAM"))
+   {
+      ImGui::Text("SLAM");
+      ImGui::EndTabItem();
+
+
+      ImPlot::ShowDemoWindow(&render);
+
+      //   if (this->matchCountVec.size() > 20)
+      //   {
+      //      this->matchCountVec.erase(this->matchCountVec.begin());
+      //      int *data = this->matchCountVec.data();
+      //      if (ImPlot::BeginPlot("SLAM Plots"))
+      //      {
+      //         ImPlot::PlotLine("Line Plot", data, 10);
+      //         ImPlot::EndPlot();
+      //      }
+      //   }
+   }
+}
+
+
 
 //void SLAMModule::sensorPoseCallback(const geometry_msgs::PoseStampedConstPtr& poseMsg)
 //{

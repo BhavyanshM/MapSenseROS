@@ -22,6 +22,7 @@ class SLAMModule
       int _frameId = 0;
 
       RigidBodyTransform _transformZUp;
+      bool render = true;
 
    public:
 //      NetworkManager* network;

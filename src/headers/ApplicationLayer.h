@@ -21,7 +21,7 @@ namespace Clay
       public:
          ApplicationLayer(int argc, char** argv);
 
-         ~ApplicationLayer() = default;
+         ~ApplicationLayer();
 
         virtual void MapsenseUpdate() = 0;
 

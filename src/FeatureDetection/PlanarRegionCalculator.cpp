@@ -45,6 +45,11 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
       ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
       ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
 
+      if(ImGui::Button("Load Regions"))
+      {
+         LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/");
+      }
+
       ImGui::EndTabItem();
    }
 }
@@ -433,4 +438,9 @@ void PlanarRegionCalculator::LoadRegions(std::string path)
    //         printf("%.3lf %.3lf\n", i, j, planarRegionList[i]->getBoundaryVertices()[j].y(), planarRegionList[i]->getBoundaryVertices()[j].z());
    //      }
    //   }
+}
+
+bool PlanarRegionCalculator::RenderEnabled()
+{
+   return _render;
 }
