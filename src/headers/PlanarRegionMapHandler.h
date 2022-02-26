@@ -23,9 +23,9 @@ class PlanarRegionMapHandler
 
       void getFileNames(string dirName);
 
-      void registerRegionsPointToPlane(uint8_t iterations);
+      void RegisterRegionsPointToPlane(uint8_t iterations);
 
-      void registerRegionsPointToPoint();
+      void RegisterRegionsPointToPoint();
 
       void MergeLatestRegions();
 
@@ -41,9 +41,9 @@ class PlanarRegionMapHandler
 
       void Optimize();
 
-      void printRefCounts();
+      void PrintRefCounts();
 
-      void transformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
+      void TransformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
 
       void ImGuiUpdate();
 

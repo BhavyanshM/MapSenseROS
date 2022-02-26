@@ -40,7 +40,7 @@ void AppUtils::capture_data(std::string projectPath, std::string filename, cv::M
    imwrite(projectPath + filename + "_Color.png", color);
    imwrite(projectPath + filename + "_FilteredDepth.png", finalFilteredDepth);
    imwrite(projectPath + filename + "_Components.png", components);
-   GeomTools::saveRegions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
+   GeomTools::SaveRegions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
 }
 
 void AppUtils::appendToDebugOutput(cv::Mat disp)

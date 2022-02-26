@@ -84,7 +84,7 @@ void SLAMModule::extractArgs(int argc, char **argv)
 void SLAMModule::setLatestRegionsToZUp(const vector <shared_ptr<PlanarRegion>>& regions)
 {
    _mapper->latestRegions = regions;
-   _mapper->transformAndCopyRegions(_mapper->latestRegions, _mapper->_latestRegionsZUp, _transformZUp);
+   _mapper->TransformAndCopyRegions(_mapper->latestRegions, _mapper->_latestRegionsZUp, _transformZUp);
 }
 
 void SLAMModule::slamUpdate()
@@ -97,7 +97,7 @@ void SLAMModule::slamUpdate()
    ROS_DEBUG("Regions Matched: (%d).\n", _mapper->matches.size());
 
    if (ICPEnabled && _mapper->matches.size() > 0)
-      _mapper->registerRegionsPointToPlane(1);
+      _mapper->RegisterRegionsPointToPlane(1);
 
    int currentPoseId = 1;
    if (initial && poseAvailable)
@@ -124,8 +124,8 @@ void SLAMModule::slamUpdate()
 
          if (false)
          {
-            GeomTools::saveRegions(_mapper->_latestRegionsZUp, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-                                                              string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
+            GeomTools::SaveRegions(_mapper->_latestRegionsZUp, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                                               string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
          }
          _frameId++;
 
@@ -139,7 +139,7 @@ void SLAMModule::slamUpdate()
          _mapper->InsertOrientedPlaneFactors(currentPoseId);
 
          /* Transform and copy the latest planar regions from current sensor frame to map frame. NOTE: This copies ids from _latestRegionsZUp to regionsInMapFrame  */
-         _mapper->transformAndCopyRegions(_mapper->_latestRegionsZUp, _mapper->regionsInMapFrame, _mapper->_atlasSensorPose);
+         _mapper->TransformAndCopyRegions(_mapper->_latestRegionsZUp, _mapper->regionsInMapFrame, _mapper->_atlasSensorPose);
 
          _mapper->SetOrientedPlaneInitialValues();
          _mapper->Optimize();
@@ -184,14 +184,14 @@ void SLAMModule::renderSLAMOutput()
 void SLAMModule::SLAMTesterUpdate()
 {
    //   AppUtils::getFileNames(_mapper->directory, _mapper->files, true);
-   //   GeomTools::loadRegions(_frameId, fileRegions, _mapper->directory, _mapper->files);
+   //   GeomTools::LoadRegions(_frameId, fileRegions, _mapper->directory, _mapper->files);
 
    //   Eigen::Vector3d position;
    //   Quaterniond orientation;
    //
    //   cout << _mapper->directory + "poses.txt" << endl;
    //   ifstream fs(_mapper->directory + "poses.txt");
-   //   GeomTools::loadPoseStamped(fs, position, orientation);
+   //   GeomTools::LoadPoseStamped(fs, position, orientation);
 
    //   _frameId++;
 

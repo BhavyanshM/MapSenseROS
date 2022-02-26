@@ -359,7 +359,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
    {
       if (frameId % 10 == 0)
       {
-         GeomTools::saveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+         GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
                                                   string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
       }
       frameId++;
@@ -427,11 +427,11 @@ void PlanarRegionCalculator::LoadRegions(std::string path)
    /* Testing Planar Region Visualization Here. */
    std::vector<string> files;
    AppUtils::getFileNames(path, files);
-   GeomTools::loadRegions(0, planarRegionList, path, files);
+   GeomTools::LoadRegions(0, planarRegionList, path, files);
 
    //   for(int i = 0; i<planarRegionList.size(); i++)
    //   {
-   //      //         GeomTools::compressPointSetLinear(_regions[i]);
+   //      //         GeomTools::CompressPointSetLinear(_regions[i]);
    //      //         _regions[i]->SubSampleBoundary(2);
    //      //         _regions[i]->SortOrderClockwise();
    //

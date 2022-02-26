@@ -5,7 +5,7 @@
 #include "GeomTools.h"
 #include "AppUtils.h"
 
-Eigen::Matrix3f GeomTools::getRotationFromAngleApproximations(Eigen::Vector3f eulerAngles)
+Eigen::Matrix3f GeomTools::GetRotationFromAngleApproximations(Eigen::Vector3f eulerAngles)
 {
    float alpha = eulerAngles.x();
    float beta = eulerAngles.y();
@@ -21,13 +21,13 @@ Eigen::Matrix3f GeomTools::getRotationFromAngleApproximations(Eigen::Vector3f eu
    return rotation;
 }
 
-Eigen::Vector3f GeomTools::getProjectedPoint(Eigen::Vector4f plane, Eigen::Vector3f point)
+Eigen::Vector3f GeomTools::GetProjectedPoint(Eigen::Vector4f plane, Eigen::Vector3f point)
 {
    Eigen::Vector3f normal = plane.block<3, 1>(0, 0).normalized();
    return point - normal * (normal.dot(point) + plane(3) / plane.block<3, 1>(0, 0).norm());
 }
 
-void GeomTools::compressPointSetLinear(shared_ptr<PlanarRegion> region)
+void GeomTools::CompressPointSetLinear(shared_ptr<PlanarRegion> region)
 {
    printf("Extended Boundary Size: %d\t|\t", region->GetNumOfBoundaryVertices());
    vector<Eigen::Vector3f> boundary = region->getBoundaryVertices();
@@ -83,7 +83,7 @@ void printHull(stack<int> convexHull, vector<Eigen::Vector2f> points)
    cout << endl;
 }
 
-vector<Eigen::Vector2f> getConvexHullPoints(stack<int> indices, vector<Eigen::Vector2f> points)
+vector<Eigen::Vector2f> GetConvexHullPoints(stack<int> indices, vector<Eigen::Vector2f> points)
 {
    vector<Eigen::Vector2f> convexHull;
    while (!indices.empty())
@@ -94,7 +94,7 @@ vector<Eigen::Vector2f> getConvexHullPoints(stack<int> indices, vector<Eigen::Ve
    return convexHull;
 }
 
-vector<Eigen::Vector2f> GeomTools::grahamScanConvexHull(vector<Eigen::Vector2f> points)
+vector<Eigen::Vector2f> GeomTools::GrahamScanConvexHull(vector<Eigen::Vector2f> points)
 {
    Eigen::Vector2f minY(10000, 10000);
    int minYIndex = 0;
@@ -127,7 +127,7 @@ vector<Eigen::Vector2f> GeomTools::grahamScanConvexHull(vector<Eigen::Vector2f> 
       convexHull.push(i);
    }
 
-   return getConvexHullPoints(convexHull, points);
+   return GetConvexHullPoints(convexHull, points);
 }
 
 void printCanvas(BoolDynamicMatrix canvas, Eigen::Vector2i windowPos)
@@ -173,7 +173,7 @@ bool loopComplete(Eigen::Vector2f current, Eigen::Vector2f start, int concaveHul
    return (current - start).norm() < 0.1 && concaveHullSize > 10;
 }
 
-float checkConcavity(vector<Eigen::Vector2f> concaveHull, Eigen::Vector2f node)
+float CheckConcavity(vector<Eigen::Vector2f> concaveHull, Eigen::Vector2f node)
 {
    Eigen::Vector2f candidate(node.x(), node.y());
    Eigen::Vector2f current = concaveHull.rbegin()[0];
@@ -181,7 +181,7 @@ float checkConcavity(vector<Eigen::Vector2f> concaveHull, Eigen::Vector2f node)
    return ((current - previous).normalized()).dot((candidate - current).normalized());
 }
 
-void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start,
+void GeomTools::CanvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start,
                                   AppUtils& appUtils, float scale)
 {
    if (visited(x, y) || loopComplete(concaveHull.rbegin()[0], Eigen::Vector2f((start.x() - canvas.rows()/2) / scale, (start.y() - canvas.cols()/2) / scale), concaveHull.size()))
@@ -189,7 +189,8 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
 
    visited(x, y) = 1;
 
-   if(concaveHull.size() < 2 || checkConcavity(concaveHull, Eigen::Vector2f(((float) x - canvas.rows()/2) / (float) scale  , ((float)y - canvas.cols()/2) / (float)scale)) > -0.9)
+   if(concaveHull.size() < 2 ||
+         CheckConcavity(concaveHull, Eigen::Vector2f(((float) x - canvas.rows() / 2) / (float) scale, ((float) y - canvas.cols() / 2) / (float) scale)) > -0.9)
    {
       concaveHull.emplace_back(Eigen::Vector2f(((float) x - canvas.rows()/2) / (float) scale  , ((float)y - canvas.cols()/2) / (float)scale));
    }
@@ -206,7 +207,7 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
             {
                if (getVisitedCount(visited, x + i, y + j) > 24)
                   continue;
-               canvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, start, appUtils, scale);
+               CanvasBoundaryDFS(x + i, y + j, canvas, visited, concaveHull, start, appUtils, scale);
             }
             visited(x + i, y + j) = 1;
          }
@@ -216,7 +217,7 @@ void GeomTools::canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
 
 /* Novel algorithm for approximating concave hull by drawing a list of 2D points
  * on a canvas, and traversing the hull with a moving window. */
-vector<Eigen::Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth)
+vector<Eigen::Vector2f> GeomTools::CanvasApproximateConcaveHull(vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth)
 {
    int r = 120;
    int c = 120;
@@ -239,7 +240,7 @@ vector<Eigen::Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Eigen::Ve
    concaveHull.emplace_back(Eigen::Vector2f(points[0].x(), points[0].y()));
 
    /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
-   canvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull,
+   CanvasBoundaryDFS((uint16_t) (r / 2 + points[0].x() * scale), (uint16_t) (c / 2 + points[0].y() * scale), canvas, visited, concaveHull,
                      Eigen::Vector2f((r / 2 + points[0].x() * scale), (c / 2 + points[0].y() * scale)), appUtils, scale);
 
 //   appUtils.displayPointSet2D(concaveHull, Eigen::Vector2f(r/2, c/2), scale);
@@ -257,7 +258,7 @@ vector<Eigen::Vector2f> GeomTools::canvasApproximateConcaveHull(vector<Eigen::Ve
    return finalConcaveHull;
 }
 
-void GeomTools::getParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params)
+void GeomTools::GetParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params)
 {
    Eigen::MatrixXf A(points.size(), m + 1);
    for(int i = 0; i<points.size(); i++)
@@ -291,7 +292,7 @@ void GeomTools::getParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Ei
    params.row(1) = params_y;
 }
 
-Eigen::Vector3f getVec3f(string csv)
+Eigen::Vector3f GetVec3f(string csv)
 {
    vector<string> CSVSubStrings;
    stringstream csvStream(csv);
@@ -304,7 +305,7 @@ Eigen::Vector3f getVec3f(string csv)
    return Eigen::Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
-void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char delimiter = ',')
+void GetNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char delimiter = ',')
 {
    subStrings.clear();
    string regionText;
@@ -319,7 +320,7 @@ void getNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char del
       cout << endl;
 }
 
-void GeomTools::saveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
+void GeomTools::SaveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
 {
    ofstream file;
    file.open(fileName, fstream::in | fstream::out | fstream::app);
@@ -333,46 +334,46 @@ void GeomTools::saveRegions(vector<shared_ptr<PlanarRegion>> regions, string fil
 }
 
 
-void GeomTools::loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files)
+void GeomTools::LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files)
 {
    /* Generate planar region objects from the sorted list of files. */
 //   if(regions.size() > 0) regions.clear();
    ifstream regionFile(directory + files[frameId]);
    cout << "Loading Regions From: " << directory + files[frameId] << " FrameID:" << frameId << endl;
    vector<string> subStrings;
-   getNextLineSplit(regionFile, subStrings, ':'); // Get number of regions
+   GetNextLineSplit(regionFile, subStrings, ':'); // Get number of regions
    int numRegions = stoi(subStrings[1]);
    for (int r = 0; r < numRegions; r++) // For each region
    {
       shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
-      getNextLineSplit(regionFile, subStrings, ':'); // Get regionId
+      GetNextLineSplit(regionFile, subStrings, ':'); // Get regionId
       printf("Loader: %s\n", subStrings[0].c_str());
       region->setId(-1);
       //      region->setId(stoi(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings, ':'); // Get regionCenter
-      region->SetCenter(getVec3f(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings, ':'); // Get regionNormal
-      region->SetNormal(getVec3f(subStrings[1]));
-      getNextLineSplit(regionFile, subStrings, ':'); // Get numBoundaryVertices
+      GetNextLineSplit(regionFile, subStrings, ':'); // Get regionCenter
+      region->SetCenter(GetVec3f(subStrings[1]));
+      GetNextLineSplit(regionFile, subStrings, ':'); // Get regionNormal
+      region->SetNormal(GetVec3f(subStrings[1]));
+      GetNextLineSplit(regionFile, subStrings, ':'); // Get numBoundaryVertices
       int length = stoi(subStrings[1]);
       for (int i = 0; i < length; i++)
       {
 //         cout << i << " : ";
-         getNextLineSplit(regionFile, subStrings, ',');
+         GetNextLineSplit(regionFile, subStrings, ',');
          Eigen::Vector3f point = Eigen::Vector3f(stof(subStrings[0]), stof(subStrings[1]), stof(subStrings[2]));
 //         cout << point << endl;
          region->insertBoundaryVertex(point);
       }
-      //      GeomTools::compressPointSetLinear(region);
+      //      GeomTools::CompressPointSetLinear(region);
       regions.emplace_back(region);
    }
    cout << "Exiting Load Regions" << endl;
 }
 
-void GeomTools::loadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)
+void GeomTools::LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)
 {
    vector<string> subStrings;
-   getNextLineSplit(poseFile, subStrings);
+   GetNextLineSplit(poseFile, subStrings);
 
 
    position.x() = stof(subStrings[1]);
@@ -390,7 +391,7 @@ void GeomTools::loadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, E
 
 }
 
-void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform)
+void GeomTools::TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform)
 {
    for (int i = 0; i < regions.size(); i++)
    {
@@ -398,7 +399,7 @@ void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Rigi
    }
 }
 
-void GeomTools::transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation)
+void GeomTools::TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation)
 {
    for (int i = 0; i < regions.size(); i++)
    {

@@ -243,10 +243,10 @@ void PlanarRegion::CopyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack
 void PlanarRegion::ProjectToPlane(Eigen::Vector4f plane)
 {
    this->normal = plane.block<3,1>(0,0);
-   this->center = GeomTools::getProjectedPoint(plane, this->GetCenter());
+   this->center = GeomTools::GetProjectedPoint(plane, this->GetCenter());
    for(int i = 0; i < GetNumOfBoundaryVertices(); i++)
    {
-      this->boundaryVertices[i] = GeomTools::getProjectedPoint(plane, this->boundaryVertices[i]);
+      this->boundaryVertices[i] = GeomTools::GetProjectedPoint(plane, this->boundaryVertices[i]);
    }
 }
 
@@ -308,17 +308,17 @@ void PlanarRegion::ComputeBoundaryVertices3D(vector<Eigen::Vector2f> points2D)
 void PlanarRegion::RetainConvexHull()
 {
    ComputeBoundaryVerticesPlanar();
-   vector<Eigen::Vector2f> convexHull = GeomTools::grahamScanConvexHull(this->planarPatchCentroids);
+   vector<Eigen::Vector2f> convexHull = GeomTools::GrahamScanConvexHull(this->planarPatchCentroids);
    ComputeBoundaryVertices3D(convexHull);
 }
 
 void PlanarRegion::RetainLinearApproximation()
 {
    ComputeBoundaryVerticesPlanar();
-   vector<Eigen::Vector2f> concaveHull = GeomTools::canvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
+   vector<Eigen::Vector2f> concaveHull = GeomTools::CanvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
    Eigen::MatrixXf parametricCurve(2,14);
 
-   GeomTools::getParametricCurve(concaveHull, 13, parametricCurve);
+   GeomTools::GetParametricCurve(concaveHull, 13, parametricCurve);
    ComputeBoundaryVertices3D(concaveHull);
 
    cout << "Parameters:" << endl << parametricCurve << endl;

@@ -40,7 +40,7 @@ void PlanarRegionMapHandler::ImGuiUpdate()
 
 }
 
-void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
+void PlanarRegionMapHandler::RegisterRegionsPointToPlane(uint8_t iterations)
 {
    Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
@@ -86,7 +86,7 @@ void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
    _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
 }
 
-void PlanarRegionMapHandler::registerRegionsPointToPoint()
+void PlanarRegionMapHandler::RegisterRegionsPointToPoint()
 {
    Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
    int totalNumOfBoundaryPoints = 0;
@@ -223,7 +223,7 @@ void PlanarRegionMapHandler::setDirectory(const string& directory)
    this->directory = directory;
 }
 
-void PlanarRegionMapHandler::transformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform)
+void PlanarRegionMapHandler::TransformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform)
 {
    dstRegions.clear();
    for (int i = 0; i < srcRegions.size(); i++)
@@ -234,7 +234,7 @@ void PlanarRegionMapHandler::transformAndCopyRegions(const vector<shared_ptr<Pla
    }
 }
 
-void PlanarRegionMapHandler::printRefCounts()
+void PlanarRegionMapHandler::PrintRefCounts()
 {
    printf("---------- REF Counts ----------\n");
    printf("Regions(");
