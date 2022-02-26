@@ -2,14 +2,14 @@
 // Created by isr-lab on 1/10/22.
 //
 
-#include "VisualTerrainSLAMLayer.h"
+#include "NetworkedTerrainSLAMLayer.h"
 #include "Scene/Mesh/MeshTools.h"
 #include "MeshGenerator.h"
 #include "PlanarRegion.h"
 
 namespace Clay
 {
-   VisualTerrainSLAMLayer::VisualTerrainSLAMLayer(int argc, char **argv) : ApplicationLauncher(argc, argv)
+   NetworkedTerrainSLAMLayer::NetworkedTerrainSLAMLayer(int argc, char **argv) : ApplicationLayer(argc, argv)
    {
       _data = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
                                "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
@@ -28,7 +28,7 @@ namespace Clay
 
    }
 
-   void VisualTerrainSLAMLayer::MapsenseUpdate()
+   void NetworkedTerrainSLAMLayer::MapsenseUpdate()
    {
       //      ROS_DEBUG("TickEvent: %d", count++);
       if (appState.ROS_ENABLED)
@@ -88,7 +88,7 @@ namespace Clay
       }
    }
 
-   void VisualTerrainSLAMLayer::ImGuiUpdate(ApplicationState& appState)
+   void NetworkedTerrainSLAMLayer::ImGuiUpdate(ApplicationState& appState)
    {
       _networkManager->ImGuiUpdate(appState);
       _regionCalculator->ImGuiUpdate(appState);

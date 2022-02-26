@@ -16,12 +16,12 @@
 
 namespace Clay
 {
-   class ApplicationLauncher : public Layer
+   class ApplicationLayer : public Layer
    {
       public:
-         ApplicationLauncher(int argc, char** argv);
+         ApplicationLayer(int argc, char** argv);
 
-         ~ApplicationLauncher() = default;
+         ~ApplicationLayer() = default;
 
         virtual void MapsenseUpdate() = 0;
 

@@ -11,13 +11,12 @@
 #include "Scene/Mesh/MeshTools.h"
 #include "ImGui/ImGuiMenu.h"
 
-#include "ApplicationLauncher.h"
+#include "ApplicationLayer.h"
 
 #include "CameraParams.h"
 
 namespace Clay {
-
-    ApplicationLauncher::ApplicationLauncher(int argc, char **argv) : Layer("Sandbox2D") {
+    ApplicationLayer::ApplicationLayer(int argc, char **argv) : Layer("Sandbox2D") {
 
        std::vector<std::string> args(argv, argv + argc);
        for (int i = 0; i < argc; i++)
@@ -78,7 +77,7 @@ namespace Clay {
 
     }
 
-    void ApplicationLauncher::OnAttach() {
+    void ApplicationLayer::OnAttach() {
         CLAY_PROFILE_FUNCTION();
         FramebufferSpecification fbSpec;
         fbSpec.width = 1000;
@@ -86,12 +85,12 @@ namespace Clay {
         _frameBuffer = FrameBuffer::Create(fbSpec);
     }
 
-    void ApplicationLauncher::OnDetach() {
+    void ApplicationLayer::OnDetach() {
         CLAY_PROFILE_FUNCTION();
         Layer::OnDetach();
     }
 
-    void ApplicationLauncher::OnUpdate(Timestep ts) {
+    void ApplicationLayer::OnUpdate(Timestep ts) {
         CLAY_PROFILE_FUNCTION();
 
         MapsenseUpdate();
@@ -119,11 +118,11 @@ namespace Clay {
         _frameBuffer->Unbind();
     }
 
-    void ApplicationLauncher::OnEvent(Event &e) {
+    void ApplicationLayer::OnEvent(Event &e) {
         _cameraController.OnEvent(e);
     }
 
-    void ApplicationLauncher::OnImGuiRender() {
+    void ApplicationLayer::OnImGuiRender() {
         CLAY_PROFILE_FUNCTION();
 
         if (opt_fullscreen) {

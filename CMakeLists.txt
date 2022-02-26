@@ -150,8 +150,8 @@ set (HEADERS
 		src/headers/ImGuiLayout.h
 		src/headers/MapsenseHeaders.h
 		src/Network/PointCloudReceiver.cpp
-		src/headers/ApplicationLauncher.h
-		src/Launcher/ApplicationLauncher.cpp
+		src/headers/ApplicationLayer.h
+		src/Launcher/ApplicationLayer.cpp
 		src/headers/MeshGenerator.h
 		)
 
@@ -164,7 +164,7 @@ set(MAPSENSE_CLAY_SOURCES
 
 set(TERRAIN_SLAM_SOURCES
 		src/headers/VisualTerrainSLAMApp.h
-		src/headers/VisualTerrainSLAMLayer.h
+		src/headers/NetworkedTerrainSLAMLayer.h
 		src/Launcher/VisualTerrainSLAMApp.cpp
 		src/Launcher/VisualTerrainSLAMLayer.cpp
 		)
