@@ -14,6 +14,7 @@ class SLAMModule
 {
    private:
 
+      PlanarRegionMapHandler* _mapper;
       vector<shared_ptr<PlanarRegion>> fileRegions;
 
       vector<int> matchCountVec;
@@ -26,7 +27,7 @@ class SLAMModule
 
    public:
 //      NetworkManager* network;
-      PlanarRegionMapHandler _mapper;
+
 
       float _interp = 0.0f;
       bool enabled = true;
@@ -36,6 +37,8 @@ class SLAMModule
 
    public:
       SLAMModule(int argc, char **argv);
+
+      void SetMapHandler(PlanarRegionMapHandler* mapHandler) { _mapper = mapHandler;}
 
       void slamUpdate();
 

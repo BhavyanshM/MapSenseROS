@@ -21,13 +21,14 @@ namespace Clay {
         void ImGuiUpdate(ApplicationState& appState) override;
 
     private:
-        PlanarRegionCalculator *_regionCalculator;
-        VisualOdometry* _visualOdometry;
-        SLAMModule *_slamModule;
-        DataManager* _data;
+          PlanarRegionMapHandler* _mapper;
+         PlanarRegionCalculator *_regionCalculator;
+         VisualOdometry* _visualOdometry;
+         SLAMModule *_slamModule;
+         DataManager* _data;
 
-        Ref<PointCloud> firstCloud;
-        std::vector<std::shared_ptr<PlanarRegion>> _regions;
+         Ref<PointCloud> firstCloud;
+         std::vector<std::shared_ptr<PlanarRegion>> _regions;
 
     };
 

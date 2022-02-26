@@ -1,8 +1,26 @@
 #include "PlanarRegionMapHandler.h"
+#include "imgui.h"
+#include "implot.h"
 
 PlanarRegionMapHandler::PlanarRegionMapHandler()
 {
    this->fgSLAM = new FactorGraphHandler();
+}
+
+void PlanarRegionMapHandler::ImGuiUpdate()
+{
+   float x_data[3] = {1,2,3};
+   float y_data[3] = {1,2,3};
+   if(ImGui::BeginTabItem("Mapper"))
+   {
+      if (ImPlot::BeginPlot("Mapper Plots"))
+      {
+         ImPlot::PlotScatter("Region 2D", x_data, y_data, 3);
+         ImPlot::EndPlot();
+      }
+      ImGui::EndTabItem();
+   }
+
 }
 
 void PlanarRegionMapHandler::registerRegionsPointToPlane(uint8_t iterations)
@@ -92,7 +110,7 @@ void PlanarRegionMapHandler::registerRegionsPointToPoint()
    _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
 }
 
-void PlanarRegionMapHandler::matchPlanarRegionsToMap()
+void PlanarRegionMapHandler::MatchPlanarRegionsToMap()
 {
    matches.clear();
    for (int i = 0; i < regions.size(); i++)
@@ -130,7 +148,7 @@ void PlanarRegionMapHandler::matchPlanarRegionsToMap()
    }
 }
 
-void PlanarRegionMapHandler::insertOrientedPlaneFactors(int currentPoseId)
+void PlanarRegionMapHandler::InsertOrientedPlaneFactors(int currentPoseId)
 {
    for (int i = 0; i < _latestRegionsZUp.size(); i++)
    {
@@ -142,7 +160,7 @@ void PlanarRegionMapHandler::insertOrientedPlaneFactors(int currentPoseId)
    }
 }
 
-void PlanarRegionMapHandler::setOrientedPlaneInitialValues()
+void PlanarRegionMapHandler::SetOrientedPlaneInitialValues()
 {
    for (auto region : regionsInMapFrame)
    {
@@ -152,7 +170,7 @@ void PlanarRegionMapHandler::setOrientedPlaneInitialValues()
    }
 }
 
-void PlanarRegionMapHandler::mergeLatestRegions()
+void PlanarRegionMapHandler::MergeLatestRegions()
 {
    for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
    {
@@ -163,7 +181,7 @@ void PlanarRegionMapHandler::mergeLatestRegions()
    }
 }
 
-void PlanarRegionMapHandler::extractFactorGraphLandmarks()
+void PlanarRegionMapHandler::ExtractFactorGraphLandmarks()
 {
    mapRegions.clear();
    for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
@@ -178,7 +196,7 @@ void PlanarRegionMapHandler::extractFactorGraphLandmarks()
    }
 }
 
-void PlanarRegionMapHandler::optimize()
+void PlanarRegionMapHandler::Optimize()
 {
    this->ISAM2 ? this->fgSLAM->optimizeISAM2(this->ISAM2_NUM_STEPS) : this->fgSLAM->optimize();
 }

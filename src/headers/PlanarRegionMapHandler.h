@@ -38,11 +38,12 @@ class PlanarRegionMapHandler
       RigidBodyTransform _atlasSensorPose;
       RigidBodyTransform _atlasPreviousSensorPose;
 
+   public:
       PlanarRegionMapHandler();
 
       void setDirectory(const string& directory);
 
-      void matchPlanarRegionsToMap();
+      void MatchPlanarRegionsToMap();
 
       void getFileNames(string dirName);
 
@@ -50,23 +51,25 @@ class PlanarRegionMapHandler
 
       void registerRegionsPointToPoint();
 
-      void mergeLatestRegions();
+      void MergeLatestRegions();
 
-      void insertOrientedPlaneFactors(int currentPoseId);
+      void InsertOrientedPlaneFactors(int currentPoseId);
 
       int insertOdometryFactor(RigidBodyTransform odometry);
 
       int insertPosePriorFactor(RigidBodyTransform pose);
 
-      void setOrientedPlaneInitialValues();
+      void SetOrientedPlaneInitialValues();
 
-      void extractFactorGraphLandmarks();
+      void ExtractFactorGraphLandmarks();
 
-      void optimize();
+      void Optimize();
 
       void printRefCounts();
 
       void transformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
+
+      void ImGuiUpdate();
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

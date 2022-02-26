@@ -19,6 +19,7 @@ namespace Clay
       /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */
       _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _data);
 
+      _mapper = new PlanarRegionMapHandler();
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
 
@@ -68,7 +69,7 @@ namespace Clay
              _visualOdometry->Show();
          }
 
-         if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _slamModule->_mapper.SLAM_ENABLED)
+         if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _mapper->SLAM_ENABLED)
          {
             PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
             _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
@@ -97,6 +98,7 @@ namespace Clay
       _networkManager->ImGuiUpdate(appState);
       _regionCalculator->ImGuiUpdate(appState);
       _slamModule->ImGuiUpdate();
+      _mapper->ImGuiUpdate();
    }
 }
 
