@@ -371,10 +371,8 @@ void PlanarRegion::ComputeSegmentIndices(float distThreshold)
    }
 }
 
-void PlanarRegion::CompressRegionSegmentsLinear(float compressDistThreshold)
+void PlanarRegion::CompressRegionSegmentsLinear(float compressDistThreshold, float compressCosineThreshold)
 {
-   printf("Extended Boundary Size: %d\t|\t", GetPlanarPatchCentroids().size());
-
    vector<Eigen::Vector2f> reducedBoundary;
    vector<int> reducedSegments;
 
@@ -384,10 +382,13 @@ void PlanarRegion::CompressRegionSegmentsLinear(float compressDistThreshold)
    {
       if (_segmentIndices[end] == _segmentIndices[end + 1])
       {
-         Eigen::Vector3f line = GeomTools::GetLineFromTwoPoints2D(planarPatchCentroids[start], planarPatchCentroids[end]);
+         Eigen::Vector2f startPoint = planarPatchCentroids[start];
+         Eigen::Vector2f endPoint = planarPatchCentroids[end];
+         Eigen::Vector2f nextPoint = planarPatchCentroids[end+1];
+         Eigen::Vector3f line = GeomTools::GetLineFromTwoPoints2D(startPoint, endPoint);
+         float cosim = GeomTools::GetCosineSimilarity2D(endPoint - startPoint, nextPoint - endPoint);
          float dist = GeomTools::GetDistanceFromLine2D(line, planarPatchCentroids[end + 1]);
-         printf("Start: %d, End: %d, Dist: %.2lf Segment: %d\n", start, end, dist, _segmentIndices[end + 1]);
-         if (dist > compressDistThreshold)
+         if (dist > compressDistThreshold && cosim < compressCosineThreshold)
          {
             reducedBoundary.emplace_back(planarPatchCentroids[end]);
             reducedSegments.emplace_back(_segmentIndices[end]);
@@ -403,5 +404,4 @@ void PlanarRegion::CompressRegionSegmentsLinear(float compressDistThreshold)
    }
    planarPatchCentroids = reducedBoundary;
    _segmentIndices = reducedSegments;
-   printf("Reduced Boundary Size: %d\n", GetPlanarPatchCentroids().size());
 }

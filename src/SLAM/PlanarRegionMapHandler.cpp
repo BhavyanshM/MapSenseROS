@@ -18,14 +18,12 @@ void PlanarRegionMapHandler::ImGuiUpdate()
 {
    if(ImGui::BeginTabItem("Mapper"))
    {
-      ImGui::SliderFloat("Compress Dist Threshold", &COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
       ImGui::SliderFloat("Segment Dist Threshold", &SEGMENT_DIST_THRESHOLD, 0.01f, 0.5f);
+      ImGui::SliderFloat("Compress Dist Threshold", &COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
+      ImGui::SliderFloat("Compress Cosine Threshold", &COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
       if(ImGui::Button("Process Planar Region 0"))
       {
-         _regionCalculator->planarRegionList[0]->ComputeBoundaryVerticesPlanar();
-         _regionCalculator->planarRegionList[0]->ComputeSegmentIndices(SEGMENT_DIST_THRESHOLD);
-         _regionCalculator->planarRegionList[0]->CompressRegionSegmentsLinear(COMPRESS_DIST_THRESHOLD);
          plotter2D = true;
       }
       ImGui::EndTabItem();
@@ -33,6 +31,11 @@ void PlanarRegionMapHandler::ImGuiUpdate()
 
    if(plotter2D && _regionCalculator->planarRegionList.size() > 0)
    {
+
+      _regionCalculator->planarRegionList[0]->ComputeBoundaryVerticesPlanar();
+      _regionCalculator->planarRegionList[0]->ComputeSegmentIndices(SEGMENT_DIST_THRESHOLD);
+      _regionCalculator->planarRegionList[0]->CompressRegionSegmentsLinear(COMPRESS_DIST_THRESHOLD, COMPRESS_COSINE_THRESHOLD);
+
       const std::vector<Eigen::Vector2f>& points = _regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids();
       const std::vector<int>& segmentIndices = _regionCalculator->planarRegionList[0]->GetSegmentIndices();
       ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);

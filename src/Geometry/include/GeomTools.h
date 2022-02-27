@@ -43,6 +43,8 @@ class GeomTools
 
       static float GetDistanceFromLine2D(const Eigen::Vector3f& line, const Eigen::Vector2f& point);
 
+      static float GetCosineSimilarity2D(const Eigen::Vector2f& a, const Eigen::Vector2f& b);
+
 };
 
 #endif //GEOMTOOLS_H

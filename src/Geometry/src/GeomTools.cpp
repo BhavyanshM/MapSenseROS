@@ -46,6 +46,11 @@ Eigen::Vector3f GeomTools::GetLineFromTwoPoints2D(const Eigen::Vector2f& start, 
    return line;
 }
 
+float GeomTools::GetCosineSimilarity2D(const Eigen::Vector2f& a, const Eigen::Vector2f& b)
+{
+   return a.dot(b) / (a.norm() * b.norm());
+}
+
 int nextToTop(stack<int> S)
 {
    int top = S.top();

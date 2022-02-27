@@ -117,7 +117,7 @@ class PlanarRegion
 
       const std::vector<int>& GetSegmentIndices() const {return _segmentIndices;}
 
-      void CompressRegionSegmentsLinear(float compressDistanceThreshold);
+      void CompressRegionSegmentsLinear(float compressDistThreshold, float compressCosineThreshold);
 };
 
 #endif //SRC_PLANARREGION_H
