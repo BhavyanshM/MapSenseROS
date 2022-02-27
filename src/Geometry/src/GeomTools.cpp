@@ -373,6 +373,24 @@ void GeomTools::LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
    }
 }
 
+float GeomTools::ComputeWindingNumber(const std::vector<Eigen::Vector2f>& hull, const Eigen::Vector2f& point)
+{
+   float totalAngle = 0;
+   for(int i = 0; i<hull.size() - 1; i++)
+   {
+      Eigen::Vector3f v1;
+      v1 << hull[i] - point, 0;
+      Eigen::Vector3f v2;
+      v2 << hull[i+1] - point, 0;
+
+      Eigen::Vector3f cross = v1.cross(v2);
+      float cosim = v1.dot(v2) / (v1.norm() * v2.norm());
+      float angle = acos(cosim) * cross[2] / fabs(cross[2]);
+      totalAngle += angle;
+   }
+   return totalAngle / (M_2_PI);
+}
+
 void GeomTools::LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)
 {
    vector<string> subStrings;

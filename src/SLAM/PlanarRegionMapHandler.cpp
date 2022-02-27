@@ -38,7 +38,11 @@ void PlanarRegionMapHandler::ImGuiUpdate()
 
       const std::vector<Eigen::Vector2f>& points = _regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids();
       const std::vector<int>& segmentIndices = _regionCalculator->planarRegionList[0]->GetSegmentIndices();
-      ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
+      Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
+
+      ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
+      ImGui::Text("Winding Number: %.2lf", GeomTools::ComputeWindingNumber(_regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids(), mousePlotLocation));
+
       if(ImGui::Button("Close"))
       {
          plotter2D = false;

@@ -11,7 +11,6 @@
 #include <CL/cl.hpp>
 #include <map_sense/RawGPUPlanarRegionList.h>
 
-#include "MapsenseHeaders.h"
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"
 #include "PlanarRegion.h"

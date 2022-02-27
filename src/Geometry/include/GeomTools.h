@@ -45,6 +45,8 @@ class GeomTools
 
       static float GetCosineSimilarity2D(const Eigen::Vector2f& a, const Eigen::Vector2f& b);
 
+      static float ComputeWindingNumber(const std::vector<Eigen::Vector2f>& concaveHull, const Eigen::Vector2f& point);
+
 };
 
 #endif //GEOMTOOLS_H

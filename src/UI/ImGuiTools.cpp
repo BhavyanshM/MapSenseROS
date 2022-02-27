@@ -23,8 +23,10 @@ void ImGuiTools::ScatterPlotXY(const std::vector<Eigen::Vector2f>& points)
    ImGui::End();
 }
 
-void ImGuiTools::ScatterPlotRegionSegments(const std::vector<Eigen::Vector2f>& points, const std::vector<int>& segmentIDs)
+Eigen::Vector2f ImGuiTools::ScatterPlotRegionSegments(const std::vector<Eigen::Vector2f>& points, const std::vector<int>& segmentIDs)
 {
+   Eigen::Vector2f mousePlotLocation;
+   mousePlotLocation.setZero();
    std::vector<float> x_data, y_data;
    for(int i = 0; i<points.size(); i++)
    {
@@ -40,9 +42,16 @@ void ImGuiTools::ScatterPlotRegionSegments(const std::vector<Eigen::Vector2f>& p
    if (ImPlot::BeginPlot("Mapper Plots", ImVec2(1000, 1000)))
    {
       ImPlot::SetupAxesLimits(-2, 2, -2, 2, ImGuiCond_Once);
+      if(ImPlot::IsPlotHovered())
+      {
+         ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+         mousePlotLocation.x() = mouse.x;
+         mousePlotLocation.y() = mouse.y;
+      }
       ImPlot::PlotScatter("Region 2D", x_data.data(), y_data.data(), x_data.size());
       ImPlot::PlotLine("Region 2D", x_data.data(), y_data.data(), points.size() - 1);
       ImPlot::EndPlot();
    }
    ImGui::End();
+   return mousePlotLocation;
 }
