@@ -431,7 +431,7 @@ void PlanarRegionCalculator::LoadRegions(std::string path)
 
    //   for(int i = 0; i<planarRegionList.size(); i++)
    //   {
-   //      //         GeomTools::CompressPointSetLinear(_regions[i]);
+   //      //         GeomTools::CompressRegionSegmentsLinear(_regions[i]);
    //      //         _regions[i]->SubSampleBoundary(2);
    //      //         _regions[i]->SortOrderClockwise();
    //

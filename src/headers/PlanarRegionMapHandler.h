@@ -52,7 +52,7 @@ class PlanarRegionMapHandler
       bool SLAM_ENABLED = false;
 
       bool plotter2D = false;
-
+      float COMPRESS_DIST_THRESHOLD = 0.05;
       float MATCH_DIST_THRESHOLD = 0.1f;
       float MATCH_ANGULAR_THRESHOLD = 0.9f;
       int MATCH_PERCENT_VERTEX_THRESHOLD = 20;

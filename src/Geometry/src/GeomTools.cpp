@@ -27,20 +27,23 @@ Eigen::Vector3f GeomTools::GetProjectedPoint(Eigen::Vector4f plane, Eigen::Vecto
    return point - normal * (normal.dot(point) + plane(3) / plane.block<3, 1>(0, 0).norm());
 }
 
-void GeomTools::CompressPointSetLinear(shared_ptr<PlanarRegion> region)
+
+float GeomTools::GetDistanceFromLine2D(const Eigen::Vector3f& line, const Eigen::Vector2f& point)
 {
-   printf("Extended Boundary Size: %d\t|\t", region->GetNumOfBoundaryVertices());
-   vector<Eigen::Vector3f> boundary = region->getBoundaryVertices();
-   region->boundaryVertices.clear();
-   uint8_t SKIP = 10;
-   for (uint16_t i = 0; i < boundary.size() - SKIP; i++)
-   {
-      if (((boundary[i] - boundary[i + SKIP / 2]).normalized().dot((boundary[i + SKIP / 2] - boundary[i + SKIP]).normalized())) < 0.5f)
-      {
-         region->boundaryVertices.emplace_back(boundary[i + 1]);
-      }
-   }
-   printf("Reduced Boundary Size: %d\n", region->GetNumOfBoundaryVertices());
+   float dist = abs(line.head(2).dot(point) + line.z()) / line.head(2).norm();
+   return dist;
+}
+
+Eigen::Vector3f GeomTools::GetLineFromTwoPoints2D(const Eigen::Vector2f& start, const Eigen::Vector2f& end)
+{
+   Eigen::Vector2f normal = end - start;
+   float x = normal.x();
+   normal.x() = -normal.y();
+   normal.y() = x;
+   float c = -normal.dot(start);
+   Eigen::Vector3f line;
+   line << normal, c;
+   return line;
 }
 
 int nextToTop(stack<int> S)
@@ -301,7 +304,6 @@ Eigen::Vector3f GetVec3f(string csv)
    {
       CSVSubStrings.push_back(csvStr);
    }
-   cout << "Vector:" << Eigen::Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2])) << endl;
    return Eigen::Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
@@ -314,10 +316,8 @@ void GetNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char del
    string str;
    while (getline(ss, str, delimiter))
    {
-            cout << str << '\t';
       subStrings.push_back(str);
    }
-      cout << endl;
 }
 
 void GeomTools::SaveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
@@ -347,7 +347,6 @@ void GeomTools::LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
    {
       shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
       GetNextLineSplit(regionFile, subStrings, ':'); // Get regionId
-      printf("Loader: %s\n", subStrings[0].c_str());
       region->setId(-1);
       //      region->setId(stoi(subStrings[1]));
       GetNextLineSplit(regionFile, subStrings, ':'); // Get regionCenter
@@ -364,10 +363,9 @@ void GeomTools::LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
 //         cout << point << endl;
          region->insertBoundaryVertex(point);
       }
-      //      GeomTools::CompressPointSetLinear(region);
+      //      GeomTools::CompressRegionSegmentsLinear(region);
       regions.emplace_back(region);
    }
-   cout << "Exiting Load Regions" << endl;
 }
 
 void GeomTools::LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)

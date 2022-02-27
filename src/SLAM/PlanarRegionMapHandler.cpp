@@ -16,21 +16,24 @@ void PlanarRegionMapHandler::InsertMapRegions(const std::vector<shared_ptr<Plana
 
 void PlanarRegionMapHandler::ImGuiUpdate()
 {
-
    if(ImGui::BeginTabItem("Mapper"))
    {
-      if(ImGui::Button("Plot Region"))
+      ImGui::SliderFloat("Compress Dist Threshold", &COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
+      if(ImGui::Button("Process Planar Region 0"))
       {
+         _regionCalculator->planarRegionList[0]->ComputeBoundaryVerticesPlanar();
+         _regionCalculator->planarRegionList[0]->ComputeSegmentIndices();
+         _regionCalculator->planarRegionList[0]->CompressRegionSegmentsLinear(COMPRESS_DIST_THRESHOLD);
          plotter2D = true;
       }
       ImGui::EndTabItem();
    }
 
-   if(plotter2D)
+   if(plotter2D && _regionCalculator->planarRegionList.size() > 0)
    {
-      _regionCalculator->planarRegionList[0]->ComputeBoundaryVerticesPlanar();
       const std::vector<Eigen::Vector2f>& points = _regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids();
-      ImGuiTools::ScatterPlotXY(points);
+      const std::vector<int>& segmentIndices = _regionCalculator->planarRegionList[0]->GetSegmentIndices();
+      ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
       if(ImGui::Button("Close"))
       {
          plotter2D = false;

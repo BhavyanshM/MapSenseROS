@@ -22,3 +22,24 @@ void ImGuiTools::ScatterPlotXY(const std::vector<Eigen::Vector2f>& points)
    }
    ImGui::End();
 }
+
+void ImGuiTools::ScatterPlotRegionSegments(const std::vector<Eigen::Vector2f>& points, const std::vector<int>& segmentIDs)
+{
+   std::vector<float> x_data, y_data;
+   for(int i = 0; i<points.size(); i++)
+   {
+//      if(segmentIDs[i] == 0)
+      {
+         x_data.push_back(points[i].x());
+         y_data.push_back(points[i].y());
+      }
+   }
+   ImGui::Begin("Plotter2D");
+   if (ImPlot::BeginPlot("Mapper Plots"))
+   {
+      ImPlot::PlotScatter("Region 2D", x_data.data(), y_data.data(), x_data.size());
+      ImPlot::PlotLine("Region 2D", x_data.data(), y_data.data(), points.size());
+      ImPlot::EndPlot();
+   }
+   ImGui::End();
+}

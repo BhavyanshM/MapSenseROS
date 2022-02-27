@@ -29,8 +29,6 @@ class GeomTools
 
       static void GetParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params);
 
-      static void CompressPointSetLinear(shared_ptr<PlanarRegion> region);
-
       static void LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files);
 
       static void SaveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName);
@@ -40,6 +38,10 @@ class GeomTools
       static void TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation);
 
       static void LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
+
+      static Eigen::Vector3f GetLineFromTwoPoints2D(const Eigen::Vector2f& start, const Eigen::Vector2f& end);
+
+      static float GetDistanceFromLine2D(const Eigen::Vector3f& line, const Eigen::Vector2f& point);
 
 };
 

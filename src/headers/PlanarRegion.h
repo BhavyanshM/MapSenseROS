@@ -110,6 +110,14 @@ class PlanarRegion
       static void SetZeroId( std::vector<shared_ptr<PlanarRegion>>& regionList);
 
       const std::vector<Eigen::Vector2f>& GetPlanarPatchCentroids() const {return planarPatchCentroids;}
+
+      void SetPlanarPatchCentroids(std::vector<Eigen::Vector2f> points) { planarPatchCentroids = points;}
+
+      void SetSegmentIndices(std::vector<int> indices) { _segmentIndices = indices;}
+
+      const std::vector<int>& GetSegmentIndices() const {return _segmentIndices;}
+
+      void CompressRegionSegmentsLinear(float compressDistanceThreshold);
 };
 
 #endif //SRC_PLANARREGION_H
