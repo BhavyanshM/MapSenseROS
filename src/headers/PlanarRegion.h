@@ -31,7 +31,7 @@ class PlanarRegion
 
       void SubSampleBoundary(int skip);
 
-      void ComputeSegmentIndices();
+      void ComputeSegmentIndices(float distThreshold);
 
       void ComputeBoundaryVerticesPlanar();
 

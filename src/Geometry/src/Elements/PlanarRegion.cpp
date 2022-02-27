@@ -352,7 +352,7 @@ void PlanarRegion::SetZeroId(vector<shared_ptr<PlanarRegion>>& regionList)
       region->setId(-1);
 }
 
-void PlanarRegion::ComputeSegmentIndices()
+void PlanarRegion::ComputeSegmentIndices(float distThreshold)
 {
    _segmentIndices.clear();
    this->_segmentIndices.push_back(0);
@@ -361,7 +361,7 @@ void PlanarRegion::ComputeSegmentIndices()
       Eigen::Vector2f point = planarPatchCentroids[i];
       Eigen::Vector2f nextPoint = planarPatchCentroids[i + 1];
       float dist = (point - nextPoint).norm();
-      if (dist < 0.2)
+      if (dist < distThreshold)
       {
          _segmentIndices.push_back(_segmentIndices[i]);
       } else
