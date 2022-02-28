@@ -28,7 +28,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
 
 //      void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloudMsg);
 
-      void cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloudMsg);
+//      void cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloudMsg);
 
       Clay::Ref<Clay::PointCloud> GetRenderable() const {return _cloudToRender;}
       const std::string& GetTopicName() const { return topicName; }
@@ -53,7 +53,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
 //      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       bool _available = false;
       bool _renderEnabled = true;
-      pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
+//      pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
       Subscriber *_cloudSubscriber;
       Clay::Ref<Clay::PointCloud> _cloudToRender;
 

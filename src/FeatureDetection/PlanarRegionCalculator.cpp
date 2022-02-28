@@ -397,9 +397,9 @@ map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
          region.centroid.y = static_cast<double>(planarRegionList[i]->GetCenter().y());
          region.centroid.z = static_cast<double>(planarRegionList[i]->GetCenter().z());
 
-         for (int j = 0; j < planarRegionList[i]->getVertices().size(); j++)
+         for (int j = 0; j < planarRegionList[i]->GetBoundaryVertices().size(); j++)
          {
-            Eigen::Vector3f vertex = planarRegionList[i]->getVertices()[j];
+            Eigen::Vector3f vertex = planarRegionList[i]->GetBoundaryVertices()[j];
             geometry_msgs::Point point;
             point.x = static_cast<double>(vertex.x());
             point.y = static_cast<double>(vertex.y());
@@ -415,7 +415,7 @@ map_sense::RawGPUPlanarRegionList PlanarRegionCalculator::publishRegions()
    }
 }
 
-void PlanarRegionCalculator::LoadRegions(std::string path, std::vector<std::string>& fileNames, int index)
+void PlanarRegionCalculator::LoadRegions(std::string path, const std::vector<std::string>& fileNames, int index)
 {
    planarRegionList.clear();
    GeomTools::LoadRegions(index, planarRegionList, path, fileNames);

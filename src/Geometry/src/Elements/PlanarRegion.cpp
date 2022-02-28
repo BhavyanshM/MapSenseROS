@@ -57,11 +57,6 @@ Eigen::Vector3f PlanarRegion::getMeanCenter()
    return this->center / (float) this->numPatches;
 }
 
-vector<Eigen::Vector3f> PlanarRegion::getVertices()
-{
-   return boundaryVertices;
-}
-
 vector<Eigen::Vector2i> PlanarRegion::getLeafPatches()
 {
    return leafPatches;
@@ -87,7 +82,7 @@ void PlanarRegion::insertBoundaryVertex(Eigen::Vector3f vertex)
    this->boundaryVertices.push_back(vertex);
 }
 
-vector<Eigen::Vector3f> PlanarRegion::getBoundaryVertices()
+const std::vector<Eigen::Vector3f>& PlanarRegion::GetBoundaryVertices()
 {
    return boundaryVertices;
 }
@@ -132,7 +127,7 @@ void PlanarRegion::SortOrderClockwise()
    Eigen::Vector3f center = this->getMeanCenter();
    Eigen::Vector3f normal = this->GetMeanNormal();
 
-   Eigen::Vector3f first = this->getVertices()[0] - center;
+   Eigen::Vector3f first = boundaryVertices[0] - center;
    sort(boundaryVertices.begin(), boundaryVertices.end(), [=](const Eigen::Vector3f& a, Eigen::Vector3f& b) -> bool
    {
       return acos(a.dot(first) / (a.norm() * first.norm())) < acos(b.dot(first) / (b.norm() * first.norm()));
@@ -148,7 +143,7 @@ void PlanarRegion::GetClockWise2D(vector<Eigen::Vector2f>& points)
 
    for (int i = 0; i < this->GetNumOfBoundaryVertices(); i++)
    {
-      Eigen::Vector3f vec = this->getVertices()[i] - center;
+      Eigen::Vector3f vec = boundaryVertices[i] - center;
       Eigen::Vector3f up(0, 0, 1);
       Eigen::Vector3f dir(0.01f * normal.x(), 0.01f * normal.y(), 0.01f * normal.z());
       Eigen::Vector3f axis = dir.cross(up).normalized();

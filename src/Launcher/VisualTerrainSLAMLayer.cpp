@@ -24,6 +24,9 @@ namespace Clay
       _mapper = new PlanarRegionMapHandler();
       _mapper->SetRegionCalculator(_regionCalculator);
 
+      _slamModule = new SLAMModule(argc, argv);
+      _slamModule->SetMapHandler(_mapper);
+
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootModel);
       //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
@@ -73,8 +76,7 @@ namespace Clay
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _mapper->SLAM_ENABLED)
          {
             PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
-            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
-            _slamModule->slamUpdate();
+            _slamModule->Update(_regionCalculator->planarRegionList);
 
             /* TODO: Publish the latest optimized pose from Factor Graph SLAM. */
 

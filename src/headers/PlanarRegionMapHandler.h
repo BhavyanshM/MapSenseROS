@@ -47,6 +47,10 @@ class PlanarRegionMapHandler
 
       void ImGuiUpdate();
 
+      PlanarRegionCalculator* GetRegionCalculator() const {return _regionCalculator;}
+
+      const std::vector<std::string>& GetFileNames() const {return fileNames;}
+
    public:
 
       bool SLAM_ENABLED = false;
@@ -71,7 +75,7 @@ class PlanarRegionMapHandler
       vector<pair<int, int>> matches;
       vector<RigidBodyTransform> poses, atlasPoses;
 
-      string directory;
+      string _directory;
       Eigen::Vector3d translationToReference, eulerAnglesToReference;
 
       RigidBodyTransform _sensorToMapTransform;

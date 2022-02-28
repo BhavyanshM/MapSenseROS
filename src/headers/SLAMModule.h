@@ -12,35 +12,21 @@ using namespace chrono;
 
 class SLAMModule
 {
-   private:
-
-      PlanarRegionMapHandler* _mapper;
-      vector<shared_ptr<PlanarRegion>> fileRegions;
-
-      vector<int> matchCountVec;
-//      Subscriber *sensorPoseSub;
-//      geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
-      int _frameId = 0;
-
-      RigidBodyTransform _transformZUp;
-      bool render = true;
-
    public:
-//      NetworkManager* network;
-
 
       float _interp = 0.0f;
       bool enabled = true;
       bool initial = true;
-      bool ICPEnabled = false;
+      bool ICPEnabled = true;
       bool poseAvailable = false;
 
-   public:
       SLAMModule(int argc, char **argv);
 
       void SetMapHandler(PlanarRegionMapHandler* mapHandler) { _mapper = mapHandler;}
 
-      void slamUpdate();
+      void Initialize(vector<shared_ptr<PlanarRegion>>& regions);
+
+      void Update(vector<shared_ptr<PlanarRegion>>& regions);
 
       void setLatestRegionsToZUp(const vector<shared_ptr<PlanarRegion>>& regions);
 
@@ -55,6 +41,18 @@ class SLAMModule
       void renderSLAMOutput();
 
       void SLAMTesterUpdate();
+
+   private:
+      PlanarRegionMapHandler* _mapper;
+      vector<shared_ptr<PlanarRegion>> fileRegions;
+
+      vector<int> matchCountVec;
+      int _frameId = 0;
+
+      RigidBodyTransform _transformZUp;
+      bool render = true;
+
+      int count = 0;
 };
 
 #endif //SLAMMODULE_H

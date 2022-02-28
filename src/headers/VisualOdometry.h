@@ -14,6 +14,9 @@
 #include "PointLandmark.h"
 #include "CameraParams.h"
 #include "BundleAdjustment.h"
+#include "DataManager.h"
+
+#include "Eigen/Core"
 
 struct Keyframe
 {
@@ -32,13 +35,12 @@ struct Keyframe
 class VisualOdometry
 {
    public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       VisualOdometry(int argc, char **argv, NetworkManager *network, ApplicationState& app, DataManager *data = nullptr);
       void LoadImages(ApplicationState& appState);
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
       bool Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes, Clay::Ref<Clay::PointCloud> cloud);
 
-      void ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1);
+      static void ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1);
       void ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc);
       void TrackKeypoints(cv::Mat prev, cv::Mat cur, std::vector<cv::Point2f>& prev_pts, std::vector<cv::Point2f>& cur_pts);
       void MatchKeypoints(cv::Mat& desc1, cv::Mat& desc2, std::vector<cv::DMatch>& matches);
@@ -46,7 +48,7 @@ class VisualOdometry
       void ExtractFinalSet(std::vector<cv::DMatch> leftMatches, std::vector<cv::KeyPoint> curLeftKp, std::vector<PointLandmark>& points3D);
       void ExtractPoseLinear();
 
-      void DrawMatches(cv::Mat& img, std::vector<cv::Point2f> prev_pts, std::vector<cv::Point2f> cur_pts);
+      static void DrawMatches(cv::Mat& img, std::vector<cv::Point2f> prev_pts, std::vector<cv::Point2f> cur_pts);
       void DrawLandmarks(cv::Mat& img, std::vector<PointLandmark>& landmarks);
       void DrawAllMatches(cv::Mat& image);
       const Eigen::Matrix4f& EstimateMotion(std::vector<PointLandmark> points, int cameraID);

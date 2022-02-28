@@ -7,9 +7,8 @@
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
-#include <xtensor/xarray.hpp>
-#include <xtensor/xcsv.hpp>
-#include "MapsenseHeaders.h"
+//#include <xtensor/xarray.hpp>
+//#include <xtensor/xcsv.hpp>
 #include "Core/Log.h"
 #include "ApplicationState.h"
 #include "CameraParams.h"
@@ -17,7 +16,6 @@
 class DataManager
 {
    public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
@@ -36,7 +34,7 @@ class DataManager
 
       static cv::Mat ReadImage(std::string filename);
 
-      static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
+//      static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
 
       void SetCamera(CameraParams& leftCam, CameraParams& rightCam)
       {
@@ -59,7 +57,7 @@ class DataManager
       std::vector<std::string> _secondFileNames;
       uint32_t _counter = 600;
       uint32_t _secondCounter = 600;
-      xt::xarray<float> _poses;
+//      xt::xarray<float> _poses;
       CameraParams _leftCam, _rightCam;
 };
 

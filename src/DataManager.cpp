@@ -1,6 +1,7 @@
 #include "DataManager.h"
 #include "AppUtils.h"
 #include "filesystem"
+#include "boost/filesystem.hpp"
 
 DataManager::DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
     : _directory(directory), _secondDirectory(secondDirectory)
@@ -17,11 +18,11 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
         {
             ifstream in_file;
             in_file.open(poseFile);
-            _poses = xt::load_csv<double>(in_file, ' ');
+//            _poses = xt::load_csv<double>(in_file, ' ');
 
-            _poses.reshape({-1, 12});
+//            _poses.reshape({-1, 12});
 
-            CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
+//            CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
         }
     }
 
@@ -51,19 +52,19 @@ cv::Mat DataManager::GetNextSecondImage()
    return cv::imread(_secondDirectory + _secondFileNames[_secondCounter++], cv::IMREAD_COLOR);
 }
 
-void DataManager::WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id)
-{
-   std::ofstream file;
-   std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(id);
-   CLAY_LOG_INFO("Writing Regions to: {}", filename);
-   file.open(filename, std::fstream::in | std::fstream::out | std::fstream::app);
-   file << "DATA ascii" << std::endl;
-   for (const pcl::PointXYZ& pt : scan->points)
-   {
-      file << boost::format("%.3f %.3f %.3f\n") % pt.x % pt.y % pt.z;
-   }
-   file.close();
-}
+//void DataManager::WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id)
+//{
+//   std::ofstream file;
+//   std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(id);
+//   CLAY_LOG_INFO("Writing Regions to: {}", filename);
+//   file.open(filename, std::fstream::in | std::fstream::out | std::fstream::app);
+//   file << "DATA ascii" << std::endl;
+//   for (const pcl::PointXYZ& pt : scan->points)
+//   {
+//      file << boost::format("%.3f %.3f %.3f\n") % pt.x % pt.y % pt.z;
+//   }
+//   file.close();
+//}
 
 cv::Mat DataManager::ReadImage(std::string filename)
 {

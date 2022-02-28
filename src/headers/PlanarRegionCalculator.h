@@ -28,7 +28,7 @@ class PlanarRegionCalculator
 
       void Render();
 
-      void LoadRegions(std::string path, std::vector<std::string>& fileNames, int index);
+      void LoadRegions(std::string path, const std::vector<std::string>& fileNames, int index);
 
       void ImGuiUpdate(ApplicationState& appState);
 
@@ -51,6 +51,8 @@ class PlanarRegionCalculator
       void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
 
       uint8_t loadParameters(const ApplicationState& app);
+
+      std::vector<std::shared_ptr<PlanarRegion>>& GetLatestRegions() {return planarRegionList;};
 
 
    public:

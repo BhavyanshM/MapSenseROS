@@ -5,6 +5,7 @@
 #ifndef GEOMTOOLS_H
 #define GEOMTOOLS_H
 
+#include <Eigen/Core>
 #include "Eigen/Dense"
 
 #include "MapsenseHeaders.h"

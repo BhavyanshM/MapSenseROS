@@ -11,8 +11,6 @@
 
 class RigidBodyTransform
 {
-   private:
-      Eigen::Matrix4d matrix;
    public:
       RigidBodyTransform();
 
@@ -57,6 +55,9 @@ class RigidBodyTransform
       void rotateZ(float angleRad);
 
       void rotate(float rad, Eigen::Vector3d axis);
+
+   private:
+      Eigen::Matrix4d matrix;
 };
 
 #endif //RIGIDBODYTRANSFORM_H

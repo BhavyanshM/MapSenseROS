@@ -67,15 +67,13 @@ class PlanarRegion
 
       void SortOrderClockwise();
 
-      std::vector<Eigen::Vector3f> getBoundaryVertices();
+      const std::vector<Eigen::Vector3f>& GetBoundaryVertices();
 
       int GetNumOfBoundaryVertices();
 
       Eigen::Vector3f GetNormal();
 
       Eigen::Vector3f GetCenter();
-
-      std::vector<Eigen::Vector3f> getVertices();
 
       std::vector<Eigen::Vector2i> getLeafPatches();
 

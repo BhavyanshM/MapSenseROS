@@ -48,7 +48,7 @@ void VisualOdometry::ImGuiUpdate(ApplicationState& app)
 
 void VisualOdometry::DrawMatches(cv::Mat& img, std::vector<cv::Point2f> prev_pts, std::vector<cv::Point2f> cur_pts)
 {
-   for (int i = 0; i < prev_pts.size(); i++)
+   for (unsigned long i = 0; i < prev_pts.size(); i++)
    {
       line(img, prev_pts[i], cur_pts[i], cv::Scalar(0, 255, 0), 3);
       circle(img, prev_pts[i], 2, cv::Scalar(0, 0, 0), -1);
@@ -58,12 +58,12 @@ void VisualOdometry::DrawMatches(cv::Mat& img, std::vector<cv::Point2f> prev_pts
 
 void VisualOdometry::DrawLandmarks(cv::Mat& img, std::vector<PointLandmark>& landmarks)
 {
-   for (int i = 0; i < landmarks.size(); i++)
+   for (unsigned long i = 0; i < landmarks.size(); i++)
    {
       cv::Point2f first(landmarks[i].GetMeasurements2D()[0].x() + _data->GetLeftCamera()._cx, landmarks[i].GetMeasurements2D()[0].y() + _data->GetLeftCamera()._cy);
       cv::Point2f second(landmarks[i].GetMeasurements2D()[1].x() + _data->GetLeftCamera()._cx, landmarks[i].GetMeasurements2D()[1].y() + _data->GetLeftCamera()._cy);
 
-      float dist = cv::norm(first - second);
+      float dist = (float)cv::norm(first - second);
 //      CLAY_LOG_INFO("DrawLandmark: First({}, {}), Second:({} {}), Dist({}), Total Measurements: {}", first.x, first.y, second.x, second.y, dist, landmarks[i].GetMeasurements2D().size());
 
       if(dist < 100)

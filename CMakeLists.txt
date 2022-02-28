@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.4)
 project(map_sense)
 
 # This line is required for specifying the "modules" directory in the project containing .cmake files
+set (CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
 set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/../../devel;/opt/ros/noetic")
 
@@ -20,7 +22,7 @@ find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenCL REQUIRED)
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 find_package(GTSAM REQUIRED)
 find_package(xtl REQUIRED)
 find_package(BLAS REQUIRED)
@@ -28,6 +30,7 @@ find_package(BLAS REQUIRED)
 add_subdirectory(Vendor/xtensor)
 add_subdirectory(Vendor/xtensor-blas)
 
+include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${GTSAM_INCLUDE_DIR})
 
 #find_package(Corrade REQUIRED Main)
@@ -54,8 +57,8 @@ find_package(catkin REQUIRED COMPONENTS
         message_generation
         image_transport
         cv_bridge
-        pcl_ros
-        pcl_conversions
+#        pcl_ros
+#        pcl_conversions
         )
 
 add_message_files(
@@ -142,7 +145,8 @@ set(HEADERS
         src/headers/ImageTools.h
         src/headers/ImageReceiver.h
         src/headers/ROS1TopicReceiver.h
-        src/headers/PointCloudReceiver.h
+#        src/headers/PointCloudReceiver.h
+#        src/Network/PointCloudReceiver.cpp
         src/headers/DataManager.h
         src/headers/OpenCLManager.h
         src/headers/Log.h
@@ -152,7 +156,6 @@ set(HEADERS
         src/headers/ImGuiLayout.h
         src/headers/ImGuiTools.h
         src/headers/MapsenseHeaders.h
-        src/Network/PointCloudReceiver.cpp
         src/headers/ApplicationLayer.h
         src/Launcher/ApplicationLayer.cpp
         src/headers/MeshGenerator.h

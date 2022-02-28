@@ -4,36 +4,13 @@
 
 #include "SLAMModule.h"
 #include "imgui.h"
-#include "implot.h"
 
 SLAMModule::SLAMModule(int argc, char **argv)
 {
-
-   /* TODO: Fix this mess before any SLAM ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-//   this->network = networkManager;
-//
-//   this->sensorPoseSub = new Subscriber();
-//   *(this->sensorPoseSub) = networkManager->rosNode->subscribe("/atlas/sensors/chest_l515/pose", 3, &SLAMModule::sensorPoseCallback, this);
-
    this->extractArgs(argc, argv);
 
    _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
    _transformZUp.rotateY(90.0f / 180.0f * M_PI);
-
-   // SLAM Unit Test Setup
-   shared_ptr <PlanarRegion> region = std::make_shared<PlanarRegion>(0);
-   region->SetToUnitSquare();
-
-   RigidBodyTransform transform;
-   transform.setRotationAndTranslation(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(0, 0, 0));
-
-   region->transform(transform);
-   _mapper->_testLatestRegions.emplace_back(region);
-
-   _mapper->_atlasSensorPose.setRotationAndTranslation(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(0, 0, 0));
 }
 
 void SLAMModule::extractArgs(int argc, char **argv)
@@ -70,7 +47,7 @@ void SLAMModule::extractArgs(int argc, char **argv)
       {
          _mapper->ISAM2 = true;
          _mapper->ISAM2_NUM_STEPS = stoi(args[i + 1]);
-         ROS_DEBUG("Setting ISAM2_NUM_STEPS: true \nSTEPS: %d\n", _mapper->ISAM2_NUM_STEPS);
+         ROS_INFO("Setting ISAM2_NUM_STEPS: true \nSTEPS: %d\n", _mapper->ISAM2_NUM_STEPS);
       }
       if (args[i] == "--regions-dir")
       {
@@ -81,85 +58,74 @@ void SLAMModule::extractArgs(int argc, char **argv)
    }
 }
 
-void SLAMModule::setLatestRegionsToZUp(const vector <shared_ptr<PlanarRegion>>& regions)
+void SLAMModule::setLatestRegionsToZUp(const vector<shared_ptr<PlanarRegion>>& regions)
 {
-   _mapper->latestRegions = regions;
-   _mapper->TransformAndCopyRegions(_mapper->latestRegions, _mapper->_latestRegionsZUp, _transformZUp);
 }
 
-void SLAMModule::slamUpdate()
+void SLAMModule::Initialize(vector<shared_ptr<PlanarRegion>>& regions)
 {
-   if (!enabled)
+   _mapper->TransformAndCopyRegions(regions, _mapper->_latestRegionsZUp, _transformZUp);
+   _mapper->regions = _mapper->_latestRegionsZUp;
+   _mapper->fgSLAM->addPriorPoseFactor(Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
+   _mapper->fgSLAM->setPoseInitialValue(1, Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
+}
+
+void SLAMModule::Update(vector<shared_ptr<PlanarRegion>>& regions)
+{
+   _mapper->TransformAndCopyRegions(regions, _mapper->_latestRegionsZUp, _transformZUp);
+   _mapper->MatchPlanarRegionsToMap();
+
+   ROS_INFO("Regions Matched: (%d).\n", _mapper->matches.size());
+
+   if (_mapper->matches.size() > 0)
+      _mapper->RegisterRegionsPointToPlane(1);
+   else
       return;
 
-   _mapper->MatchPlanarRegionsToMap();
-   this->matchCountVec.emplace_back(_mapper->matches.size());
-   ROS_DEBUG("Regions Matched: (%d).\n", _mapper->matches.size());
-
-   if (ICPEnabled && _mapper->matches.size() > 0)
-      _mapper->RegisterRegionsPointToPlane(1);
-
    int currentPoseId = 1;
-   if (initial && poseAvailable)
-   {
-      initial = false;
-      _mapper->_atlasSensorPose.print();
-      _mapper->_atlasPreviousSensorPose.setMatrix(_mapper->_atlasSensorPose.getMatrix());
-      _mapper->regions = _mapper->_latestRegionsZUp;
-      _mapper->fgSLAM->addPriorPoseFactor(Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
-      _mapper->fgSLAM->setPoseInitialValue(currentPoseId, Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
-      poseAvailable = false;
-   } else if (poseAvailable)
-   {
 
-      if (_mapper->FACTOR_GRAPH && (_mapper->_atlasSensorPose.getTranslation() - _mapper->_atlasPreviousSensorPose.getTranslation()).norm() > 0.001)
-      {
-         RigidBodyTransform odometry;
-         odometry.setMatrix(_mapper->_atlasSensorPose.getMatrix());
-         odometry.multiplyRight(_mapper->_atlasPreviousSensorPose.getInverse());
+//   if (_mapper->FACTOR_GRAPH && (_mapper->_atlasSensorPose.getTranslation() - _mapper->_atlasPreviousSensorPose.getTranslation()).norm() > 0.001)
+//   {
+//      RigidBodyTransform odometry;
+//      odometry.setMatrix(_mapper->_atlasSensorPose.getMatrix());
+//      odometry.multiplyRight(_mapper->_atlasPreviousSensorPose.getInverse());
+//
+//      //         printf("%d, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf\n", _frameId, odometry.getTranslation().x(), odometry.getTranslation().y(),
+//      //                odometry.getTranslation().z(), odometry.getQuaternion().x(), odometry.getQuaternion().y(), odometry.getQuaternion().z(),
+//      //                odometry.getQuaternion().w());
+//
+//      if (false)
+//      {
+//         GeomTools::SaveRegions(_mapper->_latestRegionsZUp, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+//                                                            string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
+//      }
+//      _frameId++;
+//
+//      _mapper->fgSLAM->addPriorPoseFactor(Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
+//
+//      currentPoseId = _mapper->fgSLAM->addOdometryFactor(Eigen::MatrixXd(odometry.getMatrix()));
+//      _mapper->fgSLAM->setPoseInitialValue(currentPoseId, Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
+//      _mapper->_atlasPreviousSensorPose.setMatrix(_mapper->_atlasSensorPose.getMatrix());
+//
+//      /* Initialize poses and landmarks with map frame values. */
+//      _mapper->InsertOrientedPlaneFactors(currentPoseId);
+//
+//      /* Transform and copy the latest planar regions from current sensor frame to map frame. NOTE: This copies ids from _latestRegionsZUp to regionsInMapFrame  */
+//      _mapper->TransformAndCopyRegions(_mapper->_latestRegionsZUp, _mapper->regionsInMapFrame, _mapper->_atlasSensorPose);
+//
+//      _mapper->SetOrientedPlaneInitialValues();
+//      _mapper->Optimize();
+//
+//      renderSLAMOutput();
+//
+//      if (_mapper->ISAM2)
+//         _mapper->fgSLAM->clearISAM2();
+//   } else
+//   {
+//      //         _mapper->poses.emplace_back(RigidBodyTransform(_mapper->_sensorToMapTransform));
+//   }
 
-         //         printf("%d, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf, %.4lf\n", _frameId, odometry.getTranslation().x(), odometry.getTranslation().y(),
-         //                odometry.getTranslation().z(), odometry.getQuaternion().x(), odometry.getQuaternion().y(), odometry.getQuaternion().z(),
-         //                odometry.getQuaternion().w());
-
-         if (false)
-         {
-            GeomTools::SaveRegions(_mapper->_latestRegionsZUp, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-                                                               string(4 - to_string(_frameId).length(), '0').append(to_string(_frameId)) + ".txt");
-         }
-         _frameId++;
-
-         _mapper->fgSLAM->addPriorPoseFactor(Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
-
-         currentPoseId = _mapper->fgSLAM->addOdometryFactor(Eigen::MatrixXd(odometry.getMatrix()));
-         _mapper->fgSLAM->setPoseInitialValue(currentPoseId, Eigen::MatrixXd(_mapper->_atlasSensorPose.getMatrix()));
-         _mapper->_atlasPreviousSensorPose.setMatrix(_mapper->_atlasSensorPose.getMatrix());
-
-         /* Initialize poses and landmarks with map frame values. */
-         _mapper->InsertOrientedPlaneFactors(currentPoseId);
-
-         /* Transform and copy the latest planar regions from current sensor frame to map frame. NOTE: This copies ids from _latestRegionsZUp to regionsInMapFrame  */
-         _mapper->TransformAndCopyRegions(_mapper->_latestRegionsZUp, _mapper->regionsInMapFrame, _mapper->_atlasSensorPose);
-
-         _mapper->SetOrientedPlaneInitialValues();
-         _mapper->Optimize();
-
-         renderSLAMOutput();
-
-         if (_mapper->ISAM2)
-            _mapper->fgSLAM->clearISAM2();
-      } else
-      {
-         //         _mapper->poses.emplace_back(RigidBodyTransform(_mapper->_sensorToMapTransform));
-      }
-
-      ROS_DEBUG("Recycling Region Lists.\n");
-      /* Load previous and current regions. Separated by SKIP_REGIONS. */
-      _mapper->regions = _mapper->_latestRegionsZUp;
-      poseAvailable = false;
-
-      ROS_DEBUG("SLAM Update Complete.\n");
-   }
+   ROS_INFO("SLAM Update Complete.\n");
 }
 
 void SLAMModule::renderSLAMOutput()
@@ -181,48 +147,27 @@ void SLAMModule::renderSLAMOutput()
    _mapper->atlasPoses.emplace_back(_mapper->_atlasSensorPose);
 }
 
-void SLAMModule::SLAMTesterUpdate()
-{
-   //   AppUtils::getFileNames(_mapper->directory, _mapper->files, true);
-   //   GeomTools::LoadRegions(_frameId, fileRegions, _mapper->directory, _mapper->files);
-
-   //   Eigen::Vector3d position;
-   //   Quaterniond orientation;
-   //
-   //   cout << _mapper->directory + "poses.txt" << endl;
-   //   ifstream fs(_mapper->directory + "poses.txt");
-   //   GeomTools::LoadPoseStamped(fs, position, orientation);
-
-   //   _frameId++;
-
-   /* Unit Test Visualization. */
-
-
-   cout << "File SLAM End" << endl;
-
-   slamUpdate();
-}
-
 void SLAMModule::ImGuiUpdate()
 {
    if (ImGui::BeginTabItem("SLAM"))
    {
-      ImGui::Text("SLAM");
+      if (ImGui::Button("Initialize"))
+      {
+         _mapper->GetRegionCalculator()->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/",
+                                                     _mapper->GetFileNames(), count);
+         Initialize(_mapper->GetRegionCalculator()->GetLatestRegions());
+         count = 1;
+      }
+
+      if (ImGui::Button("Update"))
+      {
+         _mapper->GetRegionCalculator()->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/",
+                                                     _mapper->GetFileNames(), count);
+         Update(_mapper->GetRegionCalculator()->GetLatestRegions());
+         count++;
+      }
+
       ImGui::EndTabItem();
-
-
-      ImPlot::ShowDemoWindow(&render);
-
-      //   if (this->matchCountVec.size() > 20)
-      //   {
-      //      this->matchCountVec.erase(this->matchCountVec.begin());
-      //      int *data = this->matchCountVec.data();
-      //      if (ImPlot::BeginPlot("SLAM Plots"))
-      //      {
-      //         ImPlot::PlotLine("Line Plot", data, 10);
-      //         ImPlot::EndPlot();
-      //      }
-      //   }
    }
 }
 
@@ -251,7 +196,7 @@ void SLAMModule::ImGuiUpdate()
 //
 //      //      if(diff > 0.001)
 //      {
-//         ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
+//         ROS_INFO("Distance From Last Transform: (%.4lf)\n", diff);
 //
 //         this->_mapper->_atlasSensorPose.setRotationAndTranslation(
 //               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,

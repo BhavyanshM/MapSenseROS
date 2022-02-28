@@ -34,7 +34,7 @@ void NetworkManager::spin_ros_node()
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
-   CLAY_LOG_INFO("Starting ROS Node");
+//   CLAY_LOG_INFO("Starting ROS Node");
    init(argc, argv, "PlanarRegionPublisher");
    rosNode = new NodeHandle();
 
@@ -53,7 +53,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    app.L515_DEPTH = depthTopicName;
    app.L515_DEPTH_INFO = depthInfoTopicName;
 
-   CLAY_LOG_INFO("L515 Depth Topic: {}", depthTopicName);
+//   CLAY_LOG_INFO("L515 Depth Topic: {}", depthTopicName);
    CLAY_LOG_INFO("L515 Depth Info Topic: {}", depthInfoTopicName);
 
    addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
@@ -70,19 +70,19 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
 
-   CLAY_LOG_INFO("Started ROS Node");
+//   CLAY_LOG_INFO("Started ROS Node");
 }
 
 int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
 {
-   CLAY_LOG_INFO("Adding Receiver: Topic:{}, Info:{}, Type:{}", data.name.c_str(), info.name.c_str(), data.datatype);
+//   CLAY_LOG_INFO("Adding Receiver: Topic:{}, Info:{}, Type:{}", data.name.c_str(), info.name.c_str(), data.datatype);
    ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
    if (data.datatype == "sensor_msgs/CompressedImage")
       receiver = new ImageReceiver(rosNode, data.name, info.name, true);
-   if (data.datatype == "sensor_msgs/PointCloud2")
-      receiver = new PointCloudReceiver(rosNode, data.name, false);
+//   if (data.datatype == "sensor_msgs/PointCloud2")
+//      receiver = new PointCloudReceiver(rosNode, data.name, false);
 
    if (receiver != nullptr)
    {
@@ -92,7 +92,7 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
    {
       printf("Request to add receiver: %s\n", data.name.c_str());
    }
-   CLAY_LOG_INFO("Receiver Added Successfully");
+//   CLAY_LOG_INFO("Receiver Added Successfully");
    return receivers.size() - 1;
 }
 
@@ -184,45 +184,45 @@ void NetworkManager::publishSamplePose(int count)
    this->slamPosePub.publish(pose);
 }
 
-void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
-{
-
-   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
-   pcl_cloud.width = cloud->GetSize();
-   pcl_cloud.height = 1;
-
-
-
-   for(int i = 0; i<cloud->GetSize(); i++)
-   {
-      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
-      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
-      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
-      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
-
-//      uint8_t r = 255;
-//      uint8_t g = 0;
-//      uint8_t b = 0;
-//      int32_t rgb = (r << 16) | (g << 8) | b;
-
-      pcl_cloud.points.push_back(p);
-   }
-
-
-   sensor_msgs::PointCloud2 msg;
-//   msg.data = nullptr;
-//   msg.fields = nullptr;
-//   msg.header = nullptr;
-//   msg.height = nullptr;
-//   msg.width = nullptr;
-//   msg.point_step = nullptr;
-//   msg.row_step = nullptr;
-
-
-   pcl::toROSMsg(pcl_cloud, msg);
-   msg.header.frame_id = "ouster_frame";
-   coloredCloudPub.publish(msg);
-}
+//void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
+//{
+//
+//   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
+//   pcl_cloud.width = cloud->GetSize();
+//   pcl_cloud.height = 1;
+//
+//
+//
+//   for(int i = 0; i<cloud->GetSize(); i++)
+//   {
+//      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
+//      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
+//      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
+//      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
+//
+////      uint8_t r = 255;
+////      uint8_t g = 0;
+////      uint8_t b = 0;
+////      int32_t rgb = (r << 16) | (g << 8) | b;
+//
+//      pcl_cloud.points.push_back(p);
+//   }
+//
+//
+//   sensor_msgs::PointCloud2 msg;
+////   msg.data = nullptr;
+////   msg.fields = nullptr;
+////   msg.header = nullptr;
+////   msg.height = nullptr;
+////   msg.width = nullptr;
+////   msg.point_step = nullptr;
+////   msg.row_step = nullptr;
+//
+//
+//   pcl::toROSMsg(pcl_cloud, msg);
+//   msg.header.frame_id = "ouster_frame";
+//   coloredCloudPub.publish(msg);
+//}
 
 void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app)
 {

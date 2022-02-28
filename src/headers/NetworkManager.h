@@ -14,7 +14,8 @@
 #include "map_sense/RawGPUPlanarRegionList.h"
 #include "map_sense/MapsenseConfiguration.h"
 #include "ImageReceiver.h"
-#include "PointCloudReceiver.h"
+#include "Scene/Mesh/PointCloud.h"
+//#include "PointCloudReceiver.h"
 
 
 #include "MapsenseHeaders.h"

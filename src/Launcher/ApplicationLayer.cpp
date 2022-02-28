@@ -14,6 +14,7 @@
 #include "ApplicationLayer.h"
 #include "CameraParams.h"
 #include "implot.h"
+#include <Eigen/Core>
 
 namespace Clay
 {
