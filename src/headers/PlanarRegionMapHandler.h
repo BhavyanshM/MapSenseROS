@@ -81,7 +81,10 @@ class PlanarRegionMapHandler
 
       PlanarRegionCalculator* _regionCalculator;
 
-
+      int regionSelected = 0;
+      int fileSelected = 0;
+      int segmentSelected = 0;
+      std::vector<std::string> fileNames;
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

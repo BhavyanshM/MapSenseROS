@@ -28,7 +28,7 @@ class PlanarRegionCalculator
 
       void Render();
 
-      void LoadRegions(std::string path);
+      void LoadRegions(std::string path, std::vector<std::string>& fileNames, int index);
 
       void ImGuiUpdate(ApplicationState& appState);
 

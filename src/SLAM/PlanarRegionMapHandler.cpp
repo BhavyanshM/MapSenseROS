@@ -4,6 +4,7 @@
 PlanarRegionMapHandler::PlanarRegionMapHandler()
 {
    this->fgSLAM = new FactorGraphHandler();
+   AppUtils::getFileNames("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames);
 }
 
 void PlanarRegionMapHandler::InsertMapRegions(const std::vector<shared_ptr<PlanarRegion>>& regions)
@@ -18,37 +19,50 @@ void PlanarRegionMapHandler::ImGuiUpdate()
 {
    if(ImGui::BeginTabItem("Mapper"))
    {
+      ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);
+      if(ImGui::Button("Load Regions"))
+      {
+         _regionCalculator->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames, fileSelected);
+      }
+      std::vector<shared_ptr<PlanarRegion>> regions = _regionCalculator->planarRegionList;
+      ImGui::Text("Total Planar Regions: %d", regions.size());
+
+      ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, regions.size());
+//      ImGui::SameLine(ImGui::GetWindowWidth() - 30);
+      if(ImGui::Button("Plot"))
+      {
+         plotter2D = true;
+      }
+
+
       ImGui::SliderFloat("Segment Dist Threshold", &SEGMENT_DIST_THRESHOLD, 0.01f, 0.5f);
       ImGui::SliderFloat("Compress Dist Threshold", &COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
       ImGui::SliderFloat("Compress Cosine Threshold", &COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
-      if(ImGui::Button("Process Planar Region 0"))
+      if(plotter2D && regions.size() > 0)
       {
-         plotter2D = true;
+
+         regions[regionSelected]->ComputeBoundaryVerticesPlanar();
+         regions[regionSelected]->ComputeSegmentIndices(SEGMENT_DIST_THRESHOLD);
+         regions[regionSelected]->CompressRegionSegmentsLinear(COMPRESS_DIST_THRESHOLD, COMPRESS_COSINE_THRESHOLD);
+
+         ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, regions.size());
+         const std::vector<Eigen::Vector2f>& points = regions[regionSelected]->GetPlanarPatchCentroids();
+         const std::vector<int>& segmentIndices = regions[regionSelected]->GetSegmentIndices();
+         Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
+
+         ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
+         ImGui::Text("Winding Number: %.2lf", GeomTools::ComputeWindingNumber(regions[regionSelected]->GetPlanarPatchCentroids(), mousePlotLocation));
+
+         if(ImGui::Button("Close"))
+         {
+            plotter2D = false;
+         }
       }
+
       ImGui::EndTabItem();
    }
 
-   if(plotter2D && _regionCalculator->planarRegionList.size() > 0)
-   {
-
-      _regionCalculator->planarRegionList[0]->ComputeBoundaryVerticesPlanar();
-      _regionCalculator->planarRegionList[0]->ComputeSegmentIndices(SEGMENT_DIST_THRESHOLD);
-      _regionCalculator->planarRegionList[0]->CompressRegionSegmentsLinear(COMPRESS_DIST_THRESHOLD, COMPRESS_COSINE_THRESHOLD);
-
-      const std::vector<Eigen::Vector2f>& points = _regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids();
-      const std::vector<int>& segmentIndices = _regionCalculator->planarRegionList[0]->GetSegmentIndices();
-      Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
-
-      ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
-      ImGui::Text("Winding Number: %.2lf", GeomTools::ComputeWindingNumber(_regionCalculator->planarRegionList[0]->GetPlanarPatchCentroids(), mousePlotLocation));
-
-      if(ImGui::Button("Close"))
-      {
-         plotter2D = false;
-      }
-
-   }
 
 }
 

@@ -55,3 +55,35 @@ Eigen::Vector2f ImGuiTools::ScatterPlotRegionSegments(const std::vector<Eigen::V
    ImGui::End();
    return mousePlotLocation;
 }
+
+void ImGuiTools::GetDropDownSelection(std::string label, std::string name, int& current, int total)
+{
+   if(ImGui::BeginCombo(label.c_str(), (name + " ", std::to_string(current)).c_str()))
+   {
+      for (int n = 0; n < total; n++)
+      {
+         bool is_selected = (current == n);
+         if (ImGui::Selectable((name + " " + std::to_string(n)).c_str(), is_selected))
+            current = n;
+         if (is_selected)
+            ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+   }
+}
+
+void ImGuiTools::GetDropDownSelection(std::string label, std::vector<std::string> names, int& current)
+{
+   if(ImGui::BeginCombo(label.c_str(), (names[current]).c_str()))
+   {
+      for (int n = 0; n < names.size(); n++)
+      {
+         bool is_selected = (current == n);
+         if (ImGui::Selectable((names[n]).c_str(), is_selected))
+            current = n;
+         if (is_selected)
+            ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
+   }
+}
