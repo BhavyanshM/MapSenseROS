@@ -4,7 +4,7 @@
 #include "PlanarRegionCalculator.h"
 #include <PlanarRegion.h>
 #include "GeomTools.h"
-#include "FactorGraphHandler.h"
+//#include "FactorGraphHandler.h"
 
 using namespace std;
 
@@ -29,17 +29,17 @@ class PlanarRegionMapHandler
 
       void MergeLatestRegions();
 
-      void InsertOrientedPlaneFactors(int currentPoseId);
-
-      int insertOdometryFactor(RigidBodyTransform odometry);
-
-      int insertPosePriorFactor(RigidBodyTransform pose);
-
-      void SetOrientedPlaneInitialValues();
-
-      void ExtractFactorGraphLandmarks();
-
-      void Optimize();
+//      void InsertOrientedPlaneFactors(int currentPoseId);
+//
+//      int insertOdometryFactor(RigidBodyTransform odometry);
+//
+//      int insertPosePriorFactor(RigidBodyTransform pose);
+//
+//      void SetOrientedPlaneInitialValues();
+//
+//      void ExtractFactorGraphLandmarks();
+//
+//      void Optimize();
 
       void PrintRefCounts();
 
@@ -63,7 +63,7 @@ class PlanarRegionMapHandler
       bool ISAM2 = true;
       uint8_t ISAM2_NUM_STEPS = 4;
 
-      FactorGraphHandler* fgSLAM;
+//      FactorGraphHandler* fgSLAM;
       vector<string> files;
 
       vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;

@@ -8,7 +8,7 @@ VisualOdometry::VisualOdometry(int argc, char **argv, NetworkManager *network, A
 {
    _dataReceiver = network;
    _data = data;
-   _bundleAdjustment = new BundleAdjustment(_data->GetLeftCamera());
+//   _bundleAdjustment = new BundleAdjustment(_data->GetLeftCamera());
 
    CLAY_LOG_INFO("Params: {} {} {} {}", data->GetLeftCamera()._fx, data->GetLeftCamera()._cx, data->GetLeftCamera()._fy, data->GetLeftCamera()._cy);
 

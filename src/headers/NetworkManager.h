@@ -14,7 +14,8 @@
 #include "map_sense/RawGPUPlanarRegionList.h"
 #include "map_sense/MapsenseConfiguration.h"
 #include "ImageReceiver.h"
-#include "PointCloudReceiver.h"
+#include "Scene/Mesh/PointCloud.h"
+//#include "PointCloudReceiver.h"
 
 
 #include "MapsenseHeaders.h"
@@ -92,7 +93,7 @@ class NetworkManager
 
       void acceptMapsenseConfiguration(ApplicationState& appState);
 
-      void PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud);
+//      void PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud);
 };
 
 #endif //SRC_SENSORDATARECEIVER_H

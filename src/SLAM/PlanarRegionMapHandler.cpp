@@ -3,7 +3,7 @@
 
 PlanarRegionMapHandler::PlanarRegionMapHandler()
 {
-   this->fgSLAM = new FactorGraphHandler();
+//   this->fgSLAM = new FactorGraphHandler();
    AppUtils::getFileNames("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames);
 }
 
@@ -191,58 +191,58 @@ void PlanarRegionMapHandler::MatchPlanarRegionsToMap()
    }
 }
 
-void PlanarRegionMapHandler::InsertOrientedPlaneFactors(int currentPoseId)
-{
-   for (int i = 0; i < _latestRegionsZUp.size(); i++)
-   {
-      shared_ptr<PlanarRegion> region = _latestRegionsZUp[i];
-      Eigen::Vector4d plane;
-      plane << region->GetNormal().cast<double>(), (double) -region->GetNormal().dot(region->GetCenter());
-      region->setId(fgSLAM->addOrientedPlaneLandmarkFactor(plane, region->getId(), currentPoseId));
-      region->setPoseId(currentPoseId);
-   }
-}
-
-void PlanarRegionMapHandler::SetOrientedPlaneInitialValues()
-{
-   for (auto region : regionsInMapFrame)
-   {
-      Eigen::Vector4d plane;
-      plane << region->GetNormal().cast<double>(), (double) -region->GetNormal().dot(region->GetCenter());
-      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), gtsam::OrientedPlane3(plane(0), plane(1), plane(2), plane(3)));
-   }
-}
-
-void PlanarRegionMapHandler::MergeLatestRegions()
-{
-   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
-   {
-      if (region->GetNumOfMeasurements() < 2 && region->GetPoseId() != 0)
-      {
-         this->measuredRegions.emplace_back(region);
-      }
-   }
-}
-
-void PlanarRegionMapHandler::ExtractFactorGraphLandmarks()
-{
-   mapRegions.clear();
-   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
-   {
-      RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<gtsam::Pose3>(gtsam::Symbol('x', region->GetPoseId())).matrix());
-
-      shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
-      region->CopyAndTransform(transformedRegion, mapToSensorTransform);
-
-      transformedRegion->ProjectToPlane(fgSLAM->getResults().at<gtsam::OrientedPlane3>(gtsam::Symbol('l', region->getId())).planeCoefficients().cast<float>());
-      mapRegions.emplace_back(transformedRegion);
-   }
-}
-
-void PlanarRegionMapHandler::Optimize()
-{
-   this->ISAM2 ? this->fgSLAM->optimizeISAM2(this->ISAM2_NUM_STEPS) : this->fgSLAM->optimize();
-}
+//void PlanarRegionMapHandler::InsertOrientedPlaneFactors(int currentPoseId)
+//{
+//   for (int i = 0; i < _latestRegionsZUp.size(); i++)
+//   {
+//      shared_ptr<PlanarRegion> region = _latestRegionsZUp[i];
+//      Eigen::Vector4d plane;
+//      plane << region->GetNormal().cast<double>(), (double) -region->GetNormal().dot(region->GetCenter());
+//      region->setId(fgSLAM->addOrientedPlaneLandmarkFactor(plane, region->getId(), currentPoseId));
+//      region->setPoseId(currentPoseId);
+//   }
+//}
+//
+//void PlanarRegionMapHandler::SetOrientedPlaneInitialValues()
+//{
+//   for (auto region : regionsInMapFrame)
+//   {
+//      Eigen::Vector4d plane;
+//      plane << region->GetNormal().cast<double>(), (double) -region->GetNormal().dot(region->GetCenter());
+//      this->fgSLAM->setOrientedPlaneInitialValue(region->getId(), gtsam::OrientedPlane3(plane(0), plane(1), plane(2), plane(3)));
+//   }
+//}
+//
+//void PlanarRegionMapHandler::MergeLatestRegions()
+//{
+//   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
+//   {
+//      if (region->GetNumOfMeasurements() < 2 && region->GetPoseId() != 0)
+//      {
+//         this->measuredRegions.emplace_back(region);
+//      }
+//   }
+//}
+//
+//void PlanarRegionMapHandler::ExtractFactorGraphLandmarks()
+//{
+//   mapRegions.clear();
+//   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
+//   {
+//      RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<gtsam::Pose3>(gtsam::Symbol('x', region->GetPoseId())).matrix());
+//
+//      shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
+//      region->CopyAndTransform(transformedRegion, mapToSensorTransform);
+//
+//      transformedRegion->ProjectToPlane(fgSLAM->getResults().at<gtsam::OrientedPlane3>(gtsam::Symbol('l', region->getId())).planeCoefficients().cast<float>());
+//      mapRegions.emplace_back(transformedRegion);
+//   }
+//}
+//
+//void PlanarRegionMapHandler::Optimize()
+//{
+//   this->ISAM2 ? this->fgSLAM->optimizeISAM2(this->ISAM2_NUM_STEPS) : this->fgSLAM->optimize();
+//}
 
 void PlanarRegionMapHandler::setDirectory(const string& directory)
 {

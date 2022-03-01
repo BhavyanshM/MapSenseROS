@@ -81,8 +81,8 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
    if (data.datatype == "sensor_msgs/CompressedImage")
       receiver = new ImageReceiver(rosNode, data.name, info.name, true);
-   if (data.datatype == "sensor_msgs/PointCloud2")
-      receiver = new PointCloudReceiver(rosNode, data.name, false);
+//   if (data.datatype == "sensor_msgs/PointCloud2")
+//      receiver = new PointCloudReceiver(rosNode, data.name, false);
 
    if (receiver != nullptr)
    {
@@ -184,45 +184,45 @@ void NetworkManager::publishSamplePose(int count)
    this->slamPosePub.publish(pose);
 }
 
-void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
-{
-
-   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
-   pcl_cloud.width = cloud->GetSize();
-   pcl_cloud.height = 1;
-
-
-
-   for(int i = 0; i<cloud->GetSize(); i++)
-   {
-      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
-      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
-      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
-      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
-
-//      uint8_t r = 255;
-//      uint8_t g = 0;
-//      uint8_t b = 0;
-//      int32_t rgb = (r << 16) | (g << 8) | b;
-
-      pcl_cloud.points.push_back(p);
-   }
-
-
-   sensor_msgs::PointCloud2 msg;
-//   msg.data = nullptr;
-//   msg.fields = nullptr;
-//   msg.header = nullptr;
-//   msg.height = nullptr;
-//   msg.width = nullptr;
-//   msg.point_step = nullptr;
-//   msg.row_step = nullptr;
-
-
-   pcl::toROSMsg(pcl_cloud, msg);
-   msg.header.frame_id = "ouster_frame";
-   coloredCloudPub.publish(msg);
-}
+//void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
+//{
+//
+//   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
+//   pcl_cloud.width = cloud->GetSize();
+//   pcl_cloud.height = 1;
+//
+//
+//
+//   for(int i = 0; i<cloud->GetSize(); i++)
+//   {
+//      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
+//      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
+//      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
+//      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
+//
+////      uint8_t r = 255;
+////      uint8_t g = 0;
+////      uint8_t b = 0;
+////      int32_t rgb = (r << 16) | (g << 8) | b;
+//
+//      pcl_cloud.points.push_back(p);
+//   }
+//
+//
+//   sensor_msgs::PointCloud2 msg;
+////   msg.data = nullptr;
+////   msg.fields = nullptr;
+////   msg.header = nullptr;
+////   msg.height = nullptr;
+////   msg.width = nullptr;
+////   msg.point_step = nullptr;
+////   msg.row_step = nullptr;
+//
+//
+//   pcl::toROSMsg(pcl_cloud, msg);
+//   msg.header.frame_id = "ouster_frame";
+//   coloredCloudPub.publish(msg);
+//}
 
 void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app)
 {

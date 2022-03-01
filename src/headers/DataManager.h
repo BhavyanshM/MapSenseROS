@@ -36,7 +36,7 @@ class DataManager
 
       static cv::Mat ReadImage(std::string filename);
 
-      static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
+//      static void WriteScanPoints(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scan, uint32_t id);
 
       void SetCamera(CameraParams& leftCam, CameraParams& rightCam)
       {
