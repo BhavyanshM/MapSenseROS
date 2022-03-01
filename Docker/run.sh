@@ -19,7 +19,7 @@ if [[ "$OS_NAME" == *"Arch"* ]]; then
   	--privileged \
   	--gpus all \
   	--device /dev/dri:/dev/dri \
-  	ihmcrobotics/mapsense-nvidia-ros:1.1 bash
+  	ihmcrobotics/mapsense-nvidia-ros:1.2 bash
 else
   docker run -it \
     --name mapsense \
@@ -33,5 +33,5 @@ else
     --runtime=nvidia \
     --gpus all \
     --device /dev/dri:/dev/dri \
-    ihmcrobotics/mapsense-nvidia-ros:1.1 bash
+    ihmcrobotics/mapsense-nvidia-ros:1.2 bash
 fi

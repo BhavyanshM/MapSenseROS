@@ -16,7 +16,7 @@ RUN mkdir -p Downloads \
  && cd .. \
  && rm -rf Downloads
 
-# Install graphics and UI tools magnum and ImGui
+# For Installation purposes require priviledged user
 USER robotlab
 RUN mkdir dev
 WORKDIR /home/robotlab/dev
@@ -30,49 +30,38 @@ RUN cd /tmp && \
     cd - && \
     wget https://apt.repos.intel.com/setup/intelproducts.list -O /etc/apt/sources.list.d/intelproducts.list
 
-RUN add-apt-repository ppa:borglab/gtsam-develop \
- && apt-get --quiet 2 --yes update \
+
+RUN apt-get --quiet 2 --yes update \
  && apt-get --quiet 2 --yes install \
     libvtk7-dev \
     libboost-all-dev \
     libtbb-dev \
     intel-mkl \
-    libgtsam-dev \
-    libgtsam-unstable-dev \
     dpkg-dev \
     debhelper \
     libxrandr-dev \
     libxinerama-dev \
-    > /dev/null
-
-RUN apt-get --quiet 2 --yes update \
- && apt-get --quiet 2 --yes install \
+    ros-noetic-usb-cam \
     libxcursor-dev \
     libxi-dev \
-    ros-noetic-pcl-conversions \
-    ros-noetic-pcl-ros \
-    ros-noetic-usb-cam \
-    > /dev/null \
- && rm -rf /var/lib/apt/lists/*
+    > /dev/null
 
 
+# Install GTSAM from source (Debug Mode is Slower)
+RUN mkdir packages \
+    && cd packages \
+    && git clone https://github.com/borglab/gtsam \
+    && cd gtsam \
+    && mkdir build \
+    && cd build \
+    && cmake .. -DCMAKE_BUILD_TYPE=Debug -DGTSAM_USE_SYSTEM_EIGEN=ON \
+    && make -j15 \
+    && make install \
+    && cd ../../.. \
+    && rm -rf packages
 
 
-# Setup MapSenseROS Dependencies (Magnum, Corrade and MagnumIntegration for GUI and Rendering)
-# Reference: [https://doc.magnum.graphics/magnum/getting-started.html]
-# RUN apt-get --quiet 2 --yes update \
-#  && apt-get --quiet 2 --yes install \
-#     libopenal-dev \
-#     libglfw3-dev \
-#     libsdl2-dev \
-#     libglm-dev \
-#     dpkg-dev \
-#     debhelper \
-#     libbullet-dev \
-#     > /dev/null \
-#  && rm -rf /var/lib/apt/lists/*
-
-
+# Install ClayEngine for 3D rendering.
 RUN mkdir packages \
     && cd packages \
     && git clone --recurse-submodules -j8 git://github.com/BhavyanshM/ClayEngine \
@@ -80,12 +69,12 @@ RUN mkdir packages \
     && mkdir build \
     && cd build \
     && cmake .. \
-    && make -j32 \
+    && make -j15 \
     && make install \
     && cd ../../.. \
     && rm -rf packages
 
-
+# Install xTensor for tensor operations.
 RUN mkdir packages \ 
     && cd packages \ 
     && git clone https://github.com/xtensor-stack/xtl.git \
