@@ -164,13 +164,13 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState& appState)
 
    /* Output Data Buffers on CPU */
    cv::Mat debug(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
-   cv::Mat output_0(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_1(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_2(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_3(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+   cv::Mat output_nx(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_ny(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_nz(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gx(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gy(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gz(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_graph(appState.SUB_H, appState.SUB_W, CV_8UC1);
    this->filteredDepth = cv::Mat(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1);
 
    /* Deploy the patch-packing and patch-merging kernels patch-wise */
@@ -189,13 +189,13 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState& appState)
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCL::ReadImage(s)");
       // _openCL->commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
       _openCL->ReadImage(clFilterDepth, size, filteredDepth.data);
-      _openCL->ReadImage(clBuffer_nx, regionOutputSize, output_0.data);
-      _openCL->ReadImage(clBuffer_ny, regionOutputSize, output_1.data);
-      _openCL->ReadImage(clBuffer_nz, regionOutputSize, output_2.data);
-      _openCL->ReadImage(clBuffer_gx, regionOutputSize, output_3.data);
-      _openCL->ReadImage(clBuffer_gy, regionOutputSize, output_4.data);
-      _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_5.data);
-      _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_6.data);
+      _openCL->ReadImage(clBuffer_nx, regionOutputSize, output_nx.data);
+      _openCL->ReadImage(clBuffer_ny, regionOutputSize, output_ny.data);
+      _openCL->ReadImage(clBuffer_nz, regionOutputSize, output_nz.data);
+      _openCL->ReadImage(clBuffer_gx, regionOutputSize, output_gx.data);
+      _openCL->ReadImage(clBuffer_gy, regionOutputSize, output_gy.data);
+      _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_gz.data);
+      _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
    }
    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
    _openCL->commandQueue.finish();
@@ -204,10 +204,10 @@ bool PlanarRegionCalculator::generatePatchGraph(ApplicationState& appState)
    cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
    {
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-      vector <cv::Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
+      vector <cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
       merge(channels, regionOutput);
       output.setRegionOutput(regionOutput);
-      output.setPatchData(output_6);
+      output.setPatchData(output_graph);
    }
 
    _openCL->Reset();
@@ -267,7 +267,7 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
 
    /* Output Data Buffers on CPU */
    cv::Mat output_color(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_8UC3);
-   cv::Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+   cv::Mat output_graph(appState.SUB_H, appState.SUB_W, CV_8UC1);
 
    /* Deploy the patch-packing and patch-merging kernels patch-wise */
    {
@@ -283,7 +283,7 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCL::ReadImage(s)");
       // _openCL->commandQueue.enqueueReadImage(clDebug, CL_TRUE, origin, size, 0, 0, debug.data);
       _openCL->ReadImage(clFilterImage, size, filteredDepth.data);
-      _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_6.data);
+      _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
    }
    /* Synchronize OpenCL to CPU. Block CPU until the entire OpenCL command queue has completed. */
    _openCL->commandQueue.finish();
@@ -292,10 +292,10 @@ bool PlanarRegionCalculator::generatePatchGraphFromStereo(ApplicationState& appS
 //   Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
 //   {
 //      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-//      vector <Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
+//      vector <Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
 //      merge(channels, regionOutput);
 //      output.setRegionOutput(regionOutput);
-//      output.setPatchData(output_6);
+//      output.setPatchData(output_graph);
 //   }
 //   ROS_INFO("Patch Graph Generated on GPU: (%d,%d,%d)", regionOutput.rows, regionOutput.cols, regionOutput.channels());
 
@@ -430,43 +430,62 @@ void PlanarRegionCalculator::generateRegionsFromPointCloud(ApplicationState& app
 {
    MAPSENSE_PROFILE_FUNCTION();
 
-   cv::Mat output_0(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_1(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_2(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_3(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+    int ROWS = 64;
+    int COLS = 1024;
 
+    cv::Mat output_nx(ROWS, COLS, CV_32FC1);
+    cv::Mat output_ny(ROWS, COLS, CV_32FC1);
+    cv::Mat output_nz(ROWS, COLS, CV_32FC1);
+    cv::Mat output_gx(ROWS, COLS, CV_32FC1);
+    cv::Mat output_gy(ROWS, COLS, CV_32FC1);
+    cv::Mat output_gz(ROWS, COLS, CV_32FC1);
+    cv::Mat output_graph(ROWS, COLS, CV_8UC1);
 
+   cv::Mat indices(ROWS, COLS, CV_8UC1);
+
+   float pitchUnit = M_PI / (2 * ROWS);
+   float yawUnit = 2 * M_PI / (COLS);
    for(int i = 0; i<points.size() / 3; i++)
    {
+       float x = -points[i*3+2];
+       float y = -points[i*3];
+       float z = points[i*3+1];
 
+
+       float radius = sqrt(x*x + y*y);
+
+       float pitch = atan2(z, radius);
+       int pitchCount = 32 + (int) (pitch / pitchUnit);
+
+       float yaw = atan2(-y, x);
+       int yawCount = 512 + (int) (yaw / yawUnit);
+
+       printf("X: %.2lf, Y:%.2lf, Z:%.2lf, Pitch:%.2lf, Yaw:%.2lf, pc:%d, yc:%d\n", x, y, z, pitch, yaw, pitchCount, yawCount);
    }
 
-   /* Combine the CPU buffers into single image with multiple channels */
-   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
-   {
-      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-      vector <cv::Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
-      merge(channels, regionOutput);
-      output.setRegionOutput(regionOutput);
-      output.setPatchData(output_6);
-   }
-
-   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
-   PlanarRegion::SetZeroId(planarRegionList);
-
-   /* Planar Regions Ready To Be Published Right Here. */
-   ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
-   if (appState.EXPORT_REGIONS)
-   {
-      if (frameId % 10 == 0)
-      {
-         GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-                                                  string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
-      }
-      frameId++;
-   }
+//   /* Combine the CPU buffers into single image with multiple channels */
+//   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+//   {
+//      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
+//      vector <cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
+//      merge(channels, regionOutput);
+//      output.setRegionOutput(regionOutput);
+//      output.setPatchData(output_graph);
+//   }
+//
+//   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+//   PlanarRegion::SetZeroId(planarRegionList);
+//
+//   /* Planar Regions Ready To Be Published Right Here. */
+//   ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
+//   if (appState.EXPORT_REGIONS)
+//   {
+//      if (frameId % 10 == 0)
+//      {
+//         GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+//                                                  string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
+//      }
+//      frameId++;
+//   }
    //   extractRealPlanes();
 }
