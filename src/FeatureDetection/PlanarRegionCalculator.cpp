@@ -425,3 +425,48 @@ bool PlanarRegionCalculator::RenderEnabled()
 {
    return _render;
 }
+
+void PlanarRegionCalculator::generateRegionsFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+
+   cv::Mat output_0(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_1(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_2(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_3(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_4(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_5(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_6(appState.SUB_H, appState.SUB_W, CV_8UC1);
+
+
+   for(int i = 0; i<points.size() / 3; i++)
+   {
+
+   }
+
+   /* Combine the CPU buffers into single image with multiple channels */
+   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+   {
+      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
+      vector <cv::Mat> channels = {output_0, output_1, output_2, output_3, output_4, output_5};
+      merge(channels, regionOutput);
+      output.setRegionOutput(regionOutput);
+      output.setPatchData(output_6);
+   }
+
+   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   PlanarRegion::SetZeroId(planarRegionList);
+
+   /* Planar Regions Ready To Be Published Right Here. */
+   ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
+   if (appState.EXPORT_REGIONS)
+   {
+      if (frameId % 10 == 0)
+      {
+         GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                                  string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
+      }
+      frameId++;
+   }
+   //   extractRealPlanes();
+}

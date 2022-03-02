@@ -385,10 +385,10 @@ float GeomTools::ComputeWindingNumber(const std::vector<Eigen::Vector2f>& hull, 
 
       Eigen::Vector3f cross = v1.cross(v2);
       float cosim = v1.dot(v2) / (v1.norm() * v2.norm());
-      float angle = acos(cosim) * cross[2] / fabs(cross[2]);
+      float angle = fabs(acos(cosim)) * cross[2] / fabs(cross[2]);
       totalAngle += angle;
    }
-   return totalAngle / (M_2_PI);
+   return totalAngle;
 }
 
 void GeomTools::LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)
