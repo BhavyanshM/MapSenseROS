@@ -28,6 +28,13 @@ namespace Clay
       //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 
+      std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(90);
+      CLAY_LOG_INFO("Loading Scan From: {}", filename);
+
+      Ref<PointCloud> cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+      cloud->Load(filename);
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+
    }
 
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()

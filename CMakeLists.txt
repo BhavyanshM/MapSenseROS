@@ -171,7 +171,7 @@ set(TERRAIN_SLAM_SOURCES
         src/headers/VisualTerrainSLAMApp.h
         src/headers/NetworkedTerrainSLAMLayer.h
         src/Launcher/VisualTerrainSLAMApp.cpp
-        src/Launcher/VisualTerrainSLAMLayer.cpp
+        src/Launcher/NetworkedTerrainSLAMLayer.cpp
         )
 
 set(GEOMTOOLS_SRC
