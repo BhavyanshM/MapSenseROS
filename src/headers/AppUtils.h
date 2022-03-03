@@ -52,6 +52,10 @@ class AppUtils
 
       static void DisplayImage(cv::Mat disp, const ApplicationState& app);
 
+      static void PrintMat(cv::Mat& mat, int value = -1, bool invert = false, int rowLimit = 0, int colLimit = 0);
+
+      static void CalculateAndPrintStatsMat(cv::Mat& mat);
+
 };
 
 #endif //APPUTILS_H

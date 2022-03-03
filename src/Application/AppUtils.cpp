@@ -177,3 +177,53 @@ void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app)
    }
 }
 
+void AppUtils::PrintMat(cv::Mat& mat, int value, bool invert, int rowLimit, int colLimit)
+{
+   int rows = rowLimit;
+   int cols = colLimit;
+   if (rowLimit == 0)
+      rows = mat.rows;
+   if (colLimit == 0)
+      cols = mat.cols;
+
+   for (int i = 0; i < rows; i++)
+   {
+      for (int j = 0; j < cols; j++)
+      {
+         uint8_t current = mat.at<uint8_t>(i, j);
+         if(current == value)
+            printf("1 ");
+         else printf("%d ", current);
+         if(current == value)
+            printf("0 ");
+         else printf("%d ", current);
+      }
+      printf("ROW: %d\n", i);
+   }
+}
+
+void AppUtils::CalculateAndPrintStatsMat(cv::Mat& mat)
+{
+   int max = 0;
+   int average = 0;
+   int counts[] = {0,0,0,0,0,0,0,0};
+   for(int i = 0; i<mat.rows; i++)
+   {
+      for(int j = 0; j<mat.cols; j++)
+      {
+         if (mat.at<char>(i,j) > max)
+         {
+            max = mat.at<char>(i,j);
+         }
+         counts[mat.at<char>(i,j)] += 1;
+         average += mat.at<char>(i,j);
+      }
+   }
+
+   printf("MAXIMUM: %d, AVERAGE: %.2lf\n", max, (float)average / (float)(mat.rows * mat.cols));
+
+   for(int i = 0; i<8; i++)
+   {
+      printf("COUNT: %d\n", counts[i]);
+   }
+}
