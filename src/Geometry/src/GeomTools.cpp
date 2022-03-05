@@ -428,5 +428,17 @@ void GeomTools::TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eige
    }
 }
 
+bool GeomTools::CheckPatchConnection(const Eigen::Vector3f& ag, const Eigen::Vector3f& an, const Eigen::Vector3f& bg, const Eigen::Vector3f& bn, float distanceThreshold, float angularThreshold)
+{
+   Eigen::Vector3f vec = ag - bg;
+   float dist = vec.norm();
+   float sim = fabs(an.dot(bn));
+   float perpDist = fabs((ag-bg).dot(bn)) + fabs((bg-ag).dot(an));
+   if (perpDist < distanceThreshold * dist * 40 && sim > angularThreshold){
+      return true;
+   }else {
+      return false;
+   }
+}
 
 

@@ -360,6 +360,236 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
    //   extractRealPlanes();
 }
 
+cv::Mat& PlanarRegionCalculator::generatePatchGraphFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp)
+{
+   MAPSENSE_PROFILE_FUNCTION();
+
+   int ROWS = 64;
+   int COLS = 1024;
+
+   appState.KERNEL_SLIDER_LEVEL = 2;
+   appState.PATCH_HEIGHT = appState.KERNEL_SLIDER_LEVEL;
+   appState.PATCH_WIDTH = appState.KERNEL_SLIDER_LEVEL;
+   appState.SUB_H = ROWS / appState.PATCH_HEIGHT;
+   appState.SUB_W = COLS / appState.PATCH_WIDTH;
+
+   printf("Kernel: %d, SUB_H: %d, SUB_W: %d", appState.KERNEL_SLIDER_LEVEL, appState.SUB_H, appState.SUB_W);
+
+   cv::Mat output_nx(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_ny(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_nz(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gx(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gy(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gz(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_graph(appState.SUB_H, appState.SUB_W, CV_8UC1);
+
+   cv::Mat countMat(ROWS, COLS, CV_8UC1, cv::Scalar(0));
+   cv::Mat indexMat(ROWS, COLS, CV_16UC2, cv::Scalar(0));
+
+   float pitchUnit = M_PI / (2 * ROWS);
+   float yawUnit = 2 * M_PI / (COLS);
+   for (uint16_t i = 0; i < (uint16_t) (points.size() / 3); i++)
+   {
+      float x = -points[i * 3 + 2];
+      float y = -points[i * 3];
+      float z = points[i * 3 + 1];
+
+      float radius = sqrt(x * x + y * y);
+
+      float pitch = atan2(z, radius);
+      int pitchCount = 32 + (int) (pitch / pitchUnit);
+
+      float yaw = atan2(-y, x);
+      int yawCount = 512 + (int) (yaw / yawUnit);
+
+      if (pitchCount >= 0 && pitchCount < ROWS && yawCount >= 0 && yawCount < COLS)
+      {
+         /* countMat.at<char>(pitchCount, yawCount) */
+         indexMat.at<uint16_t>(pitchCount, yawCount, 0) = i;
+         countMat.at<char>(pitchCount, yawCount) += 1;
+         //         printf("r:%d, c:%d, i:%d\t", pitchCount, yawCount, indexMat.at<uint16_t>(pitchCount, yawCount, 0) = i);
+      }
+      printf("\n");
+      //       printf("X: %.2lf, Y:%.2lf, Z:%.2lf, Pitch:%.2lf, Yaw:%.2lf, pc:%d, yc:%d\n", x, y, z, pitch, yaw, pitchCount, yawCount);
+   }
+
+   /* Patch Packing */
+   for (int i = 0; i < appState.SUB_H; i++)
+   {
+      for (int j = 0; j < appState.SUB_W; j++)
+      {
+         Eigen::Vector3f normal = Eigen::Vector3f::Zero();
+         Eigen::Vector3f centroid = Eigen::Vector3f::Zero();
+         Eigen::Vector3f va = Eigen::Vector3f::Zero();
+         Eigen::Vector3f vb = Eigen::Vector3f::Zero();
+         Eigen::Vector3f vc = Eigen::Vector3f::Zero();
+         Eigen::Vector3f vd = Eigen::Vector3f::Zero();
+         uint16_t indexA = 0, indexB = 0, indexC = 0, indexD = 0;
+         uint8_t countA = 0, countB = 0, countC = 0, countD = 0, totalCount = 0, normalCount = 0;
+         for (int m = 0; m < appState.PATCH_HEIGHT - 1; m++)
+         {
+            for (int n = 0; n < appState.PATCH_WIDTH - 1; n++)
+            {
+               indexA = indexMat.at<uint16_t>(i + m, j + n, 0);
+               countA = countMat.at<uint8_t>(i + m, j + n);
+               va = Eigen::Vector3f(-points[indexA * 3 + 2], -points[indexA * 3], points[indexA * 3 + 1]);
+
+               indexB = indexMat.at<uint16_t>(i + m, j + n + 1, 0);
+               countB = countMat.at<uint8_t>(i + m, j + n + 1);
+               vb = Eigen::Vector3f(-points[indexB * 3 + 2], -points[indexB * 3], points[indexB * 3 + 1]);
+
+               indexC = indexMat.at<uint16_t>(i + m + 1, j + n, 0);
+               countC = countMat.at<uint8_t>(i + m + 1, j + n);
+               vc = Eigen::Vector3f(-points[indexC * 3 + 2], -points[indexC * 3], points[indexC * 3 + 1]);
+
+               indexD = indexMat.at<uint16_t>(i + m + 1, j + n + 1, 0);
+               countD = countMat.at<uint8_t>(i + m + 1, j + n + 1);
+               vd = Eigen::Vector3f(-points[indexD * 3 + 2], -points[indexD * 3], points[indexD * 3 + 1]);
+
+               totalCount = (countA != 0) + (countA != 0) + (countA != 0) + (countA != 0);
+
+               if (countA != 0 && indexA != 0)
+                  centroid += va;
+               if (countB != 0 && indexB != 0)
+                  centroid += vb;
+               if (countC != 0 && indexC != 0)
+                  centroid += vc;
+               if (countD != 0 && indexD != 0)
+                  centroid += vd;
+               if (totalCount > 0)
+                  centroid = centroid / (float) totalCount;
+
+               if (countA != 0 && countB != 0 && countC != 0 && indexA != 0 && indexB != 0 && indexC != 0)
+               {
+                  Eigen::Vector3f nmlA = ((vb));
+                  normal += nmlA;
+                  printf("A:normal:(%.2lf,%.2lf,%.2lf)\n", nmlA.x(), nmlA.y(), nmlA.z());
+                  normalCount++;
+               }
+               if (countD != 0 && countB != 0 && countC != 0 && indexA != 0 && indexB != 0 && indexC != 0)
+               {
+                  Eigen::Vector3f nmlB = ((vc));
+                  normal += nmlB;
+                  printf("B:normal:(%.2lf,%.2lf,%.2lf)\n", nmlB.x(), nmlB.y(), nmlB.z());
+                  normalCount++;
+               }
+               if (countA != 0 && countD != 0 && countC != 0 && indexA != 0 && indexB != 0 && indexC != 0)
+               {
+                  Eigen::Vector3f nmlC = ((vd));
+                  normal += nmlC;
+                  printf("C:normal:(%.2lf,%.2lf,%.2lf)\n", nmlC.x(), nmlC.y(), nmlC.z());
+                  normalCount++;
+               }
+               if (countA != 0 && countB != 0 && countD != 0 && indexA != 0 && indexB != 0 && indexC != 0)
+               {
+                  Eigen::Vector3f nmlD = ((va));
+                  normal += nmlD;
+                  printf("D:normal:(%.2lf,%.2lf,%.2lf)\n", nmlD.x(), nmlD.y(), nmlD.z());
+                  normalCount++;
+               }
+
+               normal = normal.normalized();
+
+               //               std::cout << va << std::endl << vb << std::endl << vc << std::endl << vd << std::endl;
+
+               printf(
+                     "Total: %d, i:%d, j:%d, ia:%d, ib:%d, ic:%d, id:%d, ncount:%d, cA:%d, cB:%d, cC:%d, cD:%d, normal:(%.2lf,%.2lf,%.2lf), centroid:(%.2lf,%.2lf,%.2lf)\n",
+                     (uint16_t) (points.size() / 3), i, j, indexA, indexB, indexC, indexD, normalCount, countA, countB, countC, countD, normal.x(), normal.y(),
+                     normal.z(), centroid.x(), centroid.y(), centroid.z());
+            }
+         }
+
+         output_nx.at<float>(i, j) = normal.x();
+         output_ny.at<float>(i, j) = normal.y();
+         output_nz.at<float>(i, j) = normal.z();
+         output_gx.at<float>(i, j) = centroid.x();
+         output_gy.at<float>(i, j) = centroid.y();
+         output_gz.at<float>(i, j) = centroid.z();
+      }
+   }
+
+   /* Patch Merging */
+   for (int i = 1; i < appState.SUB_H - 1; i++)
+   {
+      for (int j = 1; j < appState.SUB_W - 1; j++)
+      {
+         uint8_t patch = 0;
+         int count = 0;
+
+         Eigen::Vector3f n_a(output_nx.at<float>(i, j), output_ny.at<float>(i, j), output_nz.at<float>(i, j));
+         Eigen::Vector3f g_a(output_gx.at<float>(i, j), output_gy.at<float>(i, j), output_gz.at<float>(i, j));
+
+         for (int k = -1; k <= 1; k += 1)
+         {
+            for (int l = -1; l <= 1; l += 1)
+            {
+               if (!(k == 0 && l == 0))
+               {
+                  Eigen::Vector3f n_b(output_nx.at<float>(i+k, j+l), output_ny.at<float>(i+k, j+l), output_nz.at<float>(i+k, j+l));
+                  Eigen::Vector3f g_b(output_gx.at<float>(i+k, j+l), output_gy.at<float>(i+k, j+l), output_gz.at<float>(i+k, j+l));
+
+                  if(GeomTools::CheckPatchConnection(g_a, n_a, g_b, n_b, 0.1, 0.7))
+                  {
+                     patch = (1 << count) | patch;
+                  }
+                  count++;
+               }
+            }
+         }
+         output_graph.at<uint8_t>(i,j) = patch;
+      }
+   }
+
+   AppUtils::PrintMatR8(output_graph, 0, false, 0, 0);
+
+   /* Combine the CPU buffers into single image with multiple channels */
+   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+   vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
+   merge(channels, regionOutput);
+   output.setRegionOutput(regionOutput);
+   output.setPatchData(output_graph);
+
+   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   PlanarRegion::SetZeroId(planarRegionList);
+
+   printf("Total Regions Found: %d\n", planarRegionList.size());
+
+   return regionOutput;
+
+   /* DFS on Patch Tensor*/
+
+
+   //   AppUtils::PrintMatRG16(indexMat, -1, false, 0, 1000);
+   //   AppUtils::PrintMat(countMat, -1, false, 0, 100);
+   //   AppUtils::CalculateAndPrintStatsMat(countMat);
+
+   //   /* Combine the CPU buffers into single image with multiple channels */
+   //   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+   //   {
+   //      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
+   //      vector <cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
+   //      merge(channels, regionOutput);
+   //      output.setRegionOutput(regionOutput);
+   //      output.setPatchData(output_graph);
+   //   }
+   //
+   //   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   //   PlanarRegion::SetZeroId(planarRegionList);
+   //
+   //   /* Planar Regions Ready To Be Published Right Here. */
+   //   ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
+   //   if (appState.EXPORT_REGIONS)
+   //   {
+   //      if (frameId % 10 == 0)
+   //      {
+   //         GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+   //                                                  string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
+   //      }
+   //      frameId++;
+   //   }
+   //   extractRealPlanes();
+}
+
 void PlanarRegionCalculator::generateRegionsFromStereo(ApplicationState& appState)
 {
    MAPSENSE_PROFILE_FUNCTION();
@@ -422,118 +652,4 @@ void PlanarRegionCalculator::LoadRegions(std::string path, std::vector<std::stri
 bool PlanarRegionCalculator::RenderEnabled()
 {
    return _render;
-}
-
-void PlanarRegionCalculator::generateRegionsFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp)
-{
-   MAPSENSE_PROFILE_FUNCTION();
-
-   int ROWS = 64;
-   int COLS = 1024;
-
-   appState.KERNEL_SLIDER_LEVEL = 2;
-   appState.PATCH_HEIGHT = appState.KERNEL_SLIDER_LEVEL;
-   appState.PATCH_WIDTH = appState.KERNEL_SLIDER_LEVEL;
-   appState.SUB_H = ROWS / appState.PATCH_HEIGHT;
-   appState.SUB_W = COLS / appState.PATCH_WIDTH;
-
-   printf("Kernel: %d, SUB_H: %d, SUB_W: %d", appState.KERNEL_SLIDER_LEVEL, appState.SUB_H, appState.SUB_W);
-
-   cv::Mat output_nx(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_ny(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_nz(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_gx(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_gy(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_gz(appState.SUB_H, appState.SUB_W, CV_32FC1);
-   cv::Mat output_graph(appState.SUB_H, appState.SUB_W, CV_8UC1);
-
-   cv::Mat countMat(ROWS, COLS, CV_8UC1, cv::Scalar(0));
-   cv::Mat indexMat(ROWS, COLS, CV_16UC2, cv::Scalar(-1));
-
-   float pitchUnit = M_PI / (2 * ROWS);
-   float yawUnit = 2 * M_PI / (COLS);
-   for (int i = 0; i < points.size() / 3; i++)
-   {
-      float x = -points[i * 3 + 2];
-      float y = -points[i * 3];
-      float z = points[i * 3 + 1];
-
-      float radius = sqrt(x * x + y * y);
-
-      float pitch = atan2(z, radius);
-      int pitchCount = 32 + (int) (pitch / pitchUnit);
-
-      float yaw = atan2(-y, x);
-      int yawCount = 512 + (int) (yaw / yawUnit);
-
-      if (pitchCount > 0 && pitchCount < ROWS && yawCount > 0 && yawCount < COLS)
-      {
-         indexMat.at<uint16_t>(pitchCount, yawCount, countMat.at<char>(pitchCount, yawCount)) = i;
-         countMat.at<char>(pitchCount, yawCount) += 1;
-      }
-      //       printf("X: %.2lf, Y:%.2lf, Z:%.2lf, Pitch:%.2lf, Yaw:%.2lf, pc:%d, yc:%d\n", x, y, z, pitch, yaw, pitchCount, yawCount);
-   }
-
-   /* Patch Packing */
-   for (int i = 0; i < appState.SUB_H; i++)
-   {
-      for (int j = 0; j < appState.SUB_W; j++)
-      {
-         Eigen::Vector3f normal, centroid;
-         for (int m = 0; m <appState.PATCH_HEIGHT; m++)
-         {
-            for(int n = 0; n < appState.PATCH_WIDTH; n++)
-            {
-               Eigen::Vector3f va = Eigen::Vector3f(0,0,0);
-               Eigen::Vector3f vb = Eigen::Vector3f(0,0,0);
-               Eigen::Vector3f vc = Eigen::Vector3f(0,0,0);
-               Eigen::Vector3f vd = Eigen::Vector3f(0,0,0);
-
-               normal += (vc-vb).cross(vb-va);
-               normal += (vd-vc).cross(vc-vb);
-               normal += (va-vd).cross(vd-vc);
-               normal += (vb-va).cross(va-vd);
-            }
-         }
-
-            output_nx = 1;
-         output_ny = 1;
-         output_nz = 1;
-      }
-   }
-
-   /* Patch Merging */
-
-   /* DFS on Patch Tensor*/
-
-
-
-   //   AppUtils::PrintMat(countMat, -1, false, 0, 100);
-   //   AppUtils::CalculateAndPrintStatsMat(countMat);
-
-   //   /* Combine the CPU buffers into single image with multiple channels */
-   //   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
-   //   {
-   //      MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-   //      vector <cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
-   //      merge(channels, regionOutput);
-   //      output.setRegionOutput(regionOutput);
-   //      output.setPatchData(output_graph);
-   //   }
-   //
-   //   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
-   //   PlanarRegion::SetZeroId(planarRegionList);
-   //
-   //   /* Planar Regions Ready To Be Published Right Here. */
-   //   ROS_INFO("Number of Planar Regions: %d", planarRegionList.size());
-   //   if (appState.EXPORT_REGIONS)
-   //   {
-   //      if (frameId % 10 == 0)
-   //      {
-   //         GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-   //                                                  string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
-   //      }
-   //      frameId++;
-   //   }
-   //   extractRealPlanes();
 }

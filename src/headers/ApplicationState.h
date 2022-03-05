@@ -39,8 +39,8 @@ class ApplicationState
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
 
-      int INPUT_HEIGHT = 0;
-      int INPUT_WIDTH = 0;
+      int INPUT_HEIGHT = 64;
+      int INPUT_WIDTH = 1024;
       int KERNEL_SLIDER_LEVEL = 2;
       int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
       int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;

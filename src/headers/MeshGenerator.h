@@ -13,21 +13,21 @@
 using namespace cv;
 using namespace std;
 
-namespace Clay
-{
    class MeshGenerator
    {
       public:
 
          MeshGenerator() {};
 
-         void GenerateMeshForRegions(std::vector<Ref<PlanarRegion>>& planarRegions, Ref<Model> parent);
+         void GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent);
 
-         void GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model);
+         void GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model);
 
-         void InsertModel(Ref<TriangleMesh> model);
+         void InsertModel(Clay::Ref<Clay::TriangleMesh> model);
 
-         const std::vector<Ref<Model>>& GetModels() const {return meshes;}
+         const std::vector<Clay::Ref<Clay::Model>>& GetModels() const {return meshes;}
+
+         void GeneratePatchMesh(cv::Mat& patches);
 
          //      void generateMatchLineMesh(vector<pair<int,int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
          //
@@ -44,11 +44,9 @@ namespace Clay
 
          const int SKIP_EDGES = 5;
 
-         std::vector<Ref<Model>> meshes;
+         std::vector<Clay::Ref<Clay::Model>> meshes;
 
    };
-
-}
 
 
 

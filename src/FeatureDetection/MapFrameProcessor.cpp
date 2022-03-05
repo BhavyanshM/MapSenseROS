@@ -19,6 +19,9 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
    MAPSENSE_PROFILE_FUNCTION();
    ROS_INFO("Starting DFS for Segmentation\n");
    this->app = app;
+
+   printf("%d, %d, %d, %d, %d, %d", app.SUB_W, app.SUB_H, app.INPUT_HEIGHT, app.INPUT_WIDTH, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+
    this->frame = inputFrame;
 
    /* For initial development only. Delete all old previous regions before inserting new ones. Old and new regions should be fused instead. */

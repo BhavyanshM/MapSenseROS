@@ -177,7 +177,7 @@ void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app)
    }
 }
 
-void AppUtils::PrintMat(cv::Mat& mat, int value, bool invert, int rowLimit, int colLimit)
+void AppUtils::PrintMatR8(cv::Mat& mat, int value, bool invert, int rowLimit, int colLimit)
 {
    int rows = rowLimit;
    int cols = colLimit;
@@ -191,14 +191,49 @@ void AppUtils::PrintMat(cv::Mat& mat, int value, bool invert, int rowLimit, int 
       for (int j = 0; j < cols; j++)
       {
          uint8_t current = mat.at<uint8_t>(i, j);
-         if(current == value)
+
+         if(current > (uint8_t)value)
             printf("1 ");
-         else printf("%d ", current);
-         if(current == value)
+         else
             printf("0 ");
-         else printf("%d ", current);
+
+//         printf("%hhu ", current);
       }
-      printf("ROW: %d\n", i);
+      printf("\n", i);
+   }
+}
+
+void AppUtils::PrintMatRG16(cv::Mat& mat, int value, bool invert, int rowLimit, int colLimit, bool linear)
+{
+   int rows = rowLimit;
+   int cols = colLimit;
+   if (rowLimit == 0)
+      rows = mat.rows;
+   if (colLimit == 0)
+      cols = mat.cols;
+
+   if(!linear)
+   {
+      for (int i = 0; i < rows; i++)
+      {
+         for (int j = 0; j < cols; j++)
+         {
+            uint16_t current = mat.at<uint16_t>(i, j, 0);
+            printf("%hu ", current);
+         }
+         printf("\n");
+      }
+   } else
+   {
+      for (int i = 0; i < rows; i++)
+      {
+         for (int j = 0; j < cols; j++)
+         {
+            uint16_t current = mat.at<uint16_t>(i, j, 0);
+            printf("(%d %d): %hu\n", i, j, current);
+         }
+         printf("\n");
+      }
    }
 }
 

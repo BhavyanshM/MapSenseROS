@@ -47,6 +47,8 @@ class GeomTools
 
       static float ComputeWindingNumber(const std::vector<Eigen::Vector2f>& concaveHull, const Eigen::Vector2f& point);
 
+      static bool CheckPatchConnection(const Eigen::Vector3f& ag, const Eigen::Vector3f& an, const Eigen::Vector3f& bg, const Eigen::Vector3f& bn, float distanceThreshold, float angularThreshold);
+
 };
 
 #endif //GEOMTOOLS_H
