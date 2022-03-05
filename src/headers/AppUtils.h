@@ -54,7 +54,7 @@ class AppUtils
 
       static void PrintMatR8(cv::Mat& mat, int value = -1, bool invert = false, bool constant = false, int rowLimit = 0, int colLimit = 0);
 
-      static void PrintMatRG16(cv::Mat& mat, int value = -1, bool invert = false, int rowLimit = 0, int colLimit = 0, bool linear = false);
+      static void PrintMatR16(cv::Mat& mat, int value = -1, bool invert = false, int rowLimit = 0, int colLimit = 0, bool linear = false);
 
       static void CalculateAndPrintStatsMat(cv::Mat& mat);
 

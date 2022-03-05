@@ -363,9 +363,21 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  ICP Kernels Here
+ *  PointCloud Kernels Here
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * */
+
+/*
+ * Point hashing kernel to convert unordered point list into structured hash map.
+ * */
+
+void kernel hashKernel(global float* cloud, int size, global float* params)
+{
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+
+    printf("GID:(%d,%d), Size:%d\n", x, y, size);
+}
 
 /*
  * Correspondence Kernel for Iterative Closest Point

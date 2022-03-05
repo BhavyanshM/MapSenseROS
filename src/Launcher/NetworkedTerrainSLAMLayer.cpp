@@ -35,7 +35,7 @@ namespace Clay
       cloud->Load(filename, false);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
-      _regionCalculator->generatePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
+       _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
 
       mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, _rootModel);
 

@@ -32,7 +32,7 @@ class PlanarRegionCalculator
 
       void ImGuiUpdate(ApplicationState& appState);
 
-      bool generatePatchGraph(ApplicationState& appState);
+      bool GeneratePatchGraphFromDepth(ApplicationState& appState);
 
       bool generatePatchGraphFromStereo(ApplicationState& appState);
 
@@ -50,9 +50,9 @@ class PlanarRegionCalculator
 
       void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
 
-      uint8_t loadParameters(const ApplicationState& app);
+      uint8_t CreateParameterBuffer(const ApplicationState& app);
 
-      void generatePatchGraphFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp);
+      void GeneratePatchGraphFromPointCloud(ApplicationState& appState, std::vector<float>& points, double inputTimestamp);
 
 
    public:
