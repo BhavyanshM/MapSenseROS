@@ -177,7 +177,7 @@ void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app)
    }
 }
 
-void AppUtils::PrintMatR8(cv::Mat& mat, int value, bool invert, int rowLimit, int colLimit)
+void AppUtils::PrintMatR8(cv::Mat& mat, int value, bool invert, bool constant, int rowLimit, int colLimit)
 {
    int rows = rowLimit;
    int cols = colLimit;
@@ -192,12 +192,18 @@ void AppUtils::PrintMatR8(cv::Mat& mat, int value, bool invert, int rowLimit, in
       {
          uint8_t current = mat.at<uint8_t>(i, j);
 
-         if(current > (uint8_t)value)
-            printf("1 ");
+         if(constant)
+         {
+             if(current > (uint8_t)value)
+                 printf("1 ");
+             else
+                 printf("0 ");
+         }
          else
-            printf("0 ");
+         {
+             printf("%hhu ", current);
+         }
 
-//         printf("%hhu ", current);
       }
       printf("\n", i);
    }

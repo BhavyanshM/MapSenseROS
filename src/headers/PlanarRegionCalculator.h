@@ -52,7 +52,7 @@ class PlanarRegionCalculator
 
       uint8_t loadParameters(const ApplicationState& app);
 
-      cv::Mat& generatePatchGraphFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp);
+      void generatePatchGraphFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp);
 
 
    public:

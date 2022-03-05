@@ -32,10 +32,10 @@ namespace Clay
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
       Ref<PointCloud> cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
-      cloud->Load(filename);
+      cloud->Load(filename, false);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
-      cv::Mat& regionOutput = _regionCalculator->generatePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
+      _regionCalculator->generatePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
 
       mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, _rootModel);
 

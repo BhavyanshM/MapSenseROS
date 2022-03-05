@@ -360,7 +360,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
    //   extractRealPlanes();
 }
 
-cv::Mat& PlanarRegionCalculator::generatePatchGraphFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp)
+void PlanarRegionCalculator::generatePatchGraphFromPointCloud(ApplicationState& appState, const std::vector<float>& points, double inputTimestamp)
 {
    MAPSENSE_PROFILE_FUNCTION();
 
@@ -390,9 +390,9 @@ cv::Mat& PlanarRegionCalculator::generatePatchGraphFromPointCloud(ApplicationSta
    float yawUnit = 2 * M_PI / (COLS);
    for (uint16_t i = 0; i < (uint16_t) (points.size() / 3); i++)
    {
-      float x = -points[i * 3 + 2];
-      float y = -points[i * 3];
-      float z = points[i * 3 + 1];
+      float x = points[i * 3];
+      float y = points[i * 3 + 1];
+      float z = points[i * 3 + 2];
 
       float radius = sqrt(x * x + y * y);
 
@@ -432,19 +432,19 @@ cv::Mat& PlanarRegionCalculator::generatePatchGraphFromPointCloud(ApplicationSta
             {
                indexA = indexMat.at<uint16_t>(i + m, j + n, 0);
                countA = countMat.at<uint8_t>(i + m, j + n);
-               va = Eigen::Vector3f(-points[indexA * 3 + 2], -points[indexA * 3], points[indexA * 3 + 1]);
+               va = Eigen::Vector3f(points[indexA * 3], points[indexA * 3 + 1], points[indexA * 3 + 2]);
 
                indexB = indexMat.at<uint16_t>(i + m, j + n + 1, 0);
                countB = countMat.at<uint8_t>(i + m, j + n + 1);
-               vb = Eigen::Vector3f(-points[indexB * 3 + 2], -points[indexB * 3], points[indexB * 3 + 1]);
+               vb = Eigen::Vector3f(points[indexB * 3], points[indexB * 3 + 1], points[indexB * 3 + 2]);
 
                indexC = indexMat.at<uint16_t>(i + m + 1, j + n, 0);
                countC = countMat.at<uint8_t>(i + m + 1, j + n);
-               vc = Eigen::Vector3f(-points[indexC * 3 + 2], -points[indexC * 3], points[indexC * 3 + 1]);
+               vc = Eigen::Vector3f(points[indexC * 3], points[indexC * 3 + 1], points[indexC * 3 + 2]);
 
                indexD = indexMat.at<uint16_t>(i + m + 1, j + n + 1, 0);
                countD = countMat.at<uint8_t>(i + m + 1, j + n + 1);
-               vd = Eigen::Vector3f(-points[indexD * 3 + 2], -points[indexD * 3], points[indexD * 3 + 1]);
+               vd = Eigen::Vector3f(points[indexD * 3], points[indexD * 3 + 1], points[indexD * 3 + 2]);
 
                totalCount = (countA != 0) + (countA != 0) + (countA != 0) + (countA != 0);
 
@@ -554,13 +554,11 @@ cv::Mat& PlanarRegionCalculator::generatePatchGraphFromPointCloud(ApplicationSta
 
    printf("Total Regions Found: %d\n", planarRegionList.size());
 
-   return regionOutput;
-
    /* DFS on Patch Tensor*/
 
 
    //   AppUtils::PrintMatRG16(indexMat, -1, false, 0, 1000);
-   //   AppUtils::PrintMat(countMat, -1, false, 0, 100);
+//      AppUtils::PrintMatR8(countMat);
    //   AppUtils::CalculateAndPrintStatsMat(countMat);
 
    //   /* Combine the CPU buffers into single image with multiple channels */
