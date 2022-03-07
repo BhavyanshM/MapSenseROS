@@ -31,13 +31,13 @@ namespace Clay
       std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(90);
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
-      Ref<PointCloud> cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+      cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
       cloud->Load(filename, false);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
-       _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
-
-      mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, _rootModel);
+//       _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
+//
+//      mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, _rootModel);
 
    }
 
@@ -99,9 +99,12 @@ namespace Clay
 
          ROS_DEBUG("ROS Update Completed");
       }
+
       if(_regionCalculator->RenderEnabled())
       {
-         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, _rootModel);
+         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
+         _regionCalculator->Render();
+         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
       }
    }
 
@@ -111,6 +114,8 @@ namespace Clay
       _regionCalculator->ImGuiUpdate(appState);
       _slamModule->ImGuiUpdate();
       _mapper->ImGuiUpdate();
+
+
    }
 }
 

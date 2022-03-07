@@ -5,7 +5,7 @@ void MeshGenerator::GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegio
    CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
    for (int i = 0; i < planarRegion->GetNumOfBoundaryVertices(); i++)
    {
-      Eigen::Vector3f point = 2 * (planarRegion->getBoundaryVertices()[i]);
+      Eigen::Vector3f point = (planarRegion->getBoundaryVertices()[i]);
       model->InsertVertex(point.x(), point.y(), point.z());
    }
    uint32_t offset = 0;
@@ -20,6 +20,7 @@ void MeshGenerator::GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegio
 
 void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
 {
+   meshes.clear();
    for (int i = 0; i < planarRegions.size(); i++)
    {
       Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(
@@ -33,7 +34,7 @@ void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>&
 
 void MeshGenerator::InsertModel(Clay::Ref<Clay::TriangleMesh> model)
 {
-   meshes.emplace_back(std::dynamic_pointer_cast<Clay::Model>(model));
+   meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
 }
 
 void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)

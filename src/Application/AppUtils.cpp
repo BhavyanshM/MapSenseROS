@@ -224,8 +224,8 @@ void AppUtils::PrintMatR16(cv::Mat& mat, int value, bool invert, int rowLimit, i
       {
          for (int j = 0; j < cols; j++)
          {
-            uint16_t current = mat.at<uint16_t>(i, j);
-            printf("%hu ", current);
+            float current = mat.at<float>(i, j);
+            printf("%.2lf ", current);
          }
          printf("\n");
       }
@@ -235,8 +235,8 @@ void AppUtils::PrintMatR16(cv::Mat& mat, int value, bool invert, int rowLimit, i
       {
          for (int j = 0; j < cols; j++)
          {
-            uint16_t current = mat.at<uint16_t>(i, j);
-            printf("(%d %d): %hu\n", i, j, current);
+            float current = mat.at<float>(i, j);
+            printf("(%d %d): %.2lf\n", i, j, current);
          }
          printf("\n");
       }

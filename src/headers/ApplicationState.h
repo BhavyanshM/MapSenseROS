@@ -12,6 +12,8 @@ using namespace std;
 class ApplicationState
 {
    public:
+      ApplicationState();
+
       const string& getDepthFile() const;
 
       void setDepthFile(const string& depthFile);
@@ -23,8 +25,8 @@ class ApplicationState
       void update();
 
    public:
-      float MERGE_DISTANCE_THRESHOLD = 0.016;
-      float MERGE_ANGULAR_THRESHOLD = 0.82;
+      float MERGE_DISTANCE_THRESHOLD = 0.1; // 0.016
+      float MERGE_ANGULAR_THRESHOLD = 0.7; // 0.82
 
       bool FILTER_SELECTED = false;
       float FILTER_DISPARITY_THRESHOLD = 2000;
@@ -38,7 +40,7 @@ class ApplicationState
        * a) InputHeight should be divisible by (KernelResLevel * AspectRatioHeight)
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
-
+      int REGION_MODE = 0; // 0 for depth, 1 for point-cloud
       int INPUT_HEIGHT = 64;
       int INPUT_WIDTH = 1024;
       int KERNEL_SLIDER_LEVEL = 2;

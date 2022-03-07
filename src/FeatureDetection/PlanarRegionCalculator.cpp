@@ -224,191 +224,263 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
     int COLS = 1024;
 
     appState.KERNEL_SLIDER_LEVEL = 2;
+    appState.INPUT_WIDTH = COLS;
+    appState.INPUT_HEIGHT = ROWS;
     appState.PATCH_HEIGHT = appState.KERNEL_SLIDER_LEVEL;
     appState.PATCH_WIDTH = appState.KERNEL_SLIDER_LEVEL;
     appState.SUB_H = ROWS / appState.PATCH_HEIGHT;
     appState.SUB_W = COLS / appState.PATCH_WIDTH;
 
+   /* Setup size for reading patch-wise kernel maps from GPU */
+   cl::size_t<3> regionOutputSize;
+   regionOutputSize[0] = appState.SUB_W;
+   regionOutputSize[1] = appState.SUB_H;
+   regionOutputSize[2] = 1;
+   cl::size_t<3> origin, size;
+   origin[0] = 0;
+   origin[0] = 0;
+   origin[0] = 0;
+   size[0] = appState.INPUT_WIDTH;
+   size[1] = appState.INPUT_HEIGHT;
+   size[2] = 1;
+
+
+
     printf("Kernel: %d, SUB_H: %d, SUB_W: %d\n", appState.KERNEL_SLIDER_LEVEL, appState.SUB_H, appState.SUB_W);
 
-    uint8_t pointsBuffer = _openCL->CreateLoadBufferFloat(points.data(), points.size());
-    uint8_t indexBuffer = _openCL->CreateReadWriteImage2D_R16(appState.SUB_W, appState.SUB_H);
-    uint8_t countBuffer = _openCL->CreateReadWriteImage2D_R8(appState.SUB_W, appState.SUB_H);
+    /*-------------------------------------------------------------------------------------------------------
+     * ---------------------------------------    GPU Buffers -----------------------------------------------
+     * ------------------------------------------------------------------------------------------------------
+     * */
+   /* Input Data GPU OpenCL Buffers */
+   uint8_t paramsBuffer = CreateParameterBuffer(appState);
+   uint8_t pointsBuffer = _openCL->CreateLoadBufferFloat(points.data(), points.size());
 
-    uint8_t paramsBuffer = CreateParameterBuffer(appState);
+   /* Intermediate GPU OpenCL Buffers */
+   uint8_t indexBuffer = _openCL->CreateReadWriteImage2D_R16(appState.INPUT_WIDTH, appState.INPUT_HEIGHT);
 
-    _openCL->SetArgument("hashKernel", 0, pointsBuffer);
-    _openCL->SetArgumentInt("hashKernel", 1, points.size());
-    _openCL->SetArgument("hashKernel", 2, paramsBuffer);
+   /*Output Data GPU OpenCL Buffers */
+   uint8_t clBuffer_nx = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_ny = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_nz = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gx = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gy = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_gz = _openCL->CreateReadWriteImage2D_RFloat(appState.SUB_W, appState.SUB_H);
+   uint8_t clBuffer_graph = _openCL->CreateReadWriteImage2D_R8(appState.SUB_W, appState.SUB_H);
 
-    cv::Mat output_nx(appState.SUB_H, appState.SUB_W, CV_32FC1);
-    cv::Mat output_ny(appState.SUB_H, appState.SUB_W, CV_32FC1);
-    cv::Mat output_nz(appState.SUB_H, appState.SUB_W, CV_32FC1);
-    cv::Mat output_gx(appState.SUB_H, appState.SUB_W, CV_32FC1);
-    cv::Mat output_gy(appState.SUB_H, appState.SUB_W, CV_32FC1);
-    cv::Mat output_gz(appState.SUB_H, appState.SUB_W, CV_32FC1);
-    cv::Mat output_graph(appState.SUB_H, appState.SUB_W, CV_8UC1);
+   ROS_INFO("Created All Input Images.");
 
-    cv::Mat countMat(ROWS, COLS, CV_8UC1, cv::Scalar(0));
-    cv::Mat indexMat(ROWS, COLS, CV_16UC1, cv::Scalar(0));
+   _openCL->SetArgument("hashKernel", 0, pointsBuffer);
+   _openCL->SetArgument("hashKernel", 1, indexBuffer, true);
+   _openCL->SetArgument("hashKernel", 2, paramsBuffer);
+   _openCL->SetArgumentInt("hashKernel", 3, points.size());
 
-    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W),
+   std::vector<uint8_t> argsImgPack = {indexBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
+   for (uint8_t i = 0; i < argsImgPack.size(); i++)
+      _openCL->SetArgument("packKernel", i, argsImgPack[i], true);
+   _openCL->SetArgument("packKernel", argsImgPack.size(), paramsBuffer);
+   _openCL->SetArgument("packKernel", argsImgPack.size() + 1, pointsBuffer);
+   _openCL->SetArgumentInt("packKernel", argsImgPack.size() + 2, 1);
+
+   std::vector<uint8_t> argsImgMerge = {clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz, clBuffer_graph};
+   for (uint8_t i = 0; i < argsImgMerge.size(); i++)
+      _openCL->SetArgument("mergeKernel", i, argsImgMerge[i], true);
+   _openCL->SetArgument("mergeKernel", argsImgMerge.size(), paramsBuffer);
+
+   /*-------------------------------------------------------------------------------------------------------
+    * ---------------------------------------    CPU Buffers -----------------------------------------------
+    * ------------------------------------------------------------------------------------------------------
+    * */
+   /* Input Data CPU OpenCV Buffers */
+   cv::Mat indexMat(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, CV_16UC1, cv::Scalar(0));
+
+   /* Intermediate GPU OpenCV Buffers */
+   cv::Mat output_nx(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_ny(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_nz(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gx(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gy(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_gz(appState.SUB_H, appState.SUB_W, CV_32FC1);
+   cv::Mat output_graph(appState.SUB_H, appState.SUB_W, CV_8UC1);
+
+
+   /*-------------------------------------------------------------------------------------------------------
+    * ---------------------------------------    OpenCL Kernel Calls ---------------------------------------
+    * ------------------------------------------------------------------------------------------------------
+    * */
+
+    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange, cl::NDRange(appState.INPUT_HEIGHT, appState.INPUT_WIDTH),
                                                cl::NullRange);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
 
 
-    float pitchUnit = M_PI / (2 * ROWS);
-    float yawUnit = 2 * M_PI / (COLS);
-    for (uint16_t i = 0; i < (uint16_t) (points.size() / 3); i++)
-    {
-        float x = points[i * 3];
-        float y = points[i * 3 + 1];
-        float z = points[i * 3 + 2];
+   /*-------------------------------------------------------------------------------------------------------
+    * ---------------------------------------    OpenCL Read Buffers ---------------------------------------
+    * ------------------------------------------------------------------------------------------------------
+    * */
+   _openCL->ReadImage(indexBuffer, size, indexMat.data);
+   _openCL->ReadImage(clBuffer_nx, regionOutputSize, output_nx.data);
+   _openCL->ReadImage(clBuffer_ny, regionOutputSize, output_ny.data);
+   _openCL->ReadImage(clBuffer_nz, regionOutputSize, output_nz.data);
+   _openCL->ReadImage(clBuffer_gx, regionOutputSize, output_gx.data);
+   _openCL->ReadImage(clBuffer_gy, regionOutputSize, output_gy.data);
+   _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_gz.data);
+   _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
 
-        float radius = sqrt(x * x + y * y);
+   _openCL->commandQueue.finish();
 
-        float pitch = atan2(z, radius);
-        int pitchCount = 32 + (int) (pitch / pitchUnit);
+//   AppUtils::PrintMatR16(output_gx);
 
-        float yaw = atan2(-y, x);
-        int yawCount = 512 + (int) (yaw / yawUnit);
+//    float pitchUnit = M_PI / (2 * ROWS);
+//    float yawUnit = 2 * M_PI / (COLS);
+//    for (uint16_t i = 0; i < (uint16_t) (points.size() / 3); i++)
+//    {
+//        float x = points[i * 3];
+//        float y = points[i * 3 + 1];
+//        float z = points[i * 3 + 2];
+//
+//        float radius = sqrt(x * x + y * y);
+//
+//        float pitch = atan2(z, radius);
+//        int pitchCount = 32 + (int) (pitch / pitchUnit);
+//
+//        float yaw = atan2(-y, x);
+//        int yawCount = 512 + (int) (yaw / yawUnit);
+//
+//        if (pitchCount >= 0 && pitchCount < ROWS && yawCount >= 0 && yawCount < COLS)
+//        {
+//            /* countMat.at<char>(pitchCount, yawCount) */
+//            indexMat.at<uint16_t>(pitchCount, yawCount) = i;
+//            countMat.at<char>(pitchCount, yawCount) += 1;
+//            //         printf("r:%d, c:%d, i:%d\t", pitchCount, yawCount, indexMat.at<uint16_t>(pitchCount, yawCount, 0) = i);
+//        }
+////        printf("\n");
+//        //       printf("X: %.2lf, Y:%.2lf, Z:%.2lf, Pitch:%.2lf, Yaw:%.2lf, pc:%d, yc:%d\n", x, y, z, pitch, yaw, pitchCount, yawCount);
+//    }
+//
+//    /* Patch Packing */
+//    for (int i = 0; i < appState.SUB_H; i++)
+//    {
+//        for (int j = 0; j < appState.SUB_W; j++)
+//        {
+//            Eigen::Vector3f normal = Eigen::Vector3f::Zero();
+//            Eigen::Vector3f centroid = Eigen::Vector3f::Zero();
+//            Eigen::Vector3f va = Eigen::Vector3f::Zero();
+//            Eigen::Vector3f vb = Eigen::Vector3f::Zero();
+//            Eigen::Vector3f vc = Eigen::Vector3f::Zero();
+//            Eigen::Vector3f vd = Eigen::Vector3f::Zero();
+//            uint16_t indexA = 0, indexB = 0, indexC = 0, indexD = 0;
+//            uint8_t totalCount = 0, normalCount = 0;
+//            for (int m = 0; m < appState.PATCH_HEIGHT - 1; m++)
+//            {
+//                for (int n = 0; n < appState.PATCH_WIDTH - 1; n++)
+//                {
+//                    indexA = indexMat.at<uint16_t>(i + m, j + n);
+//                    va = Eigen::Vector3f(points[indexA * 3], points[indexA * 3 + 1], points[indexA * 3 + 2]);
+//
+//                    indexB = indexMat.at<uint16_t>(i + m, j + n + 1);
+//                    vb = Eigen::Vector3f(points[indexB * 3], points[indexB * 3 + 1], points[indexB * 3 + 2]);
+//
+//                    indexC = indexMat.at<uint16_t>(i + m + 1, j + n);
+//                    vc = Eigen::Vector3f(points[indexC * 3], points[indexC * 3 + 1], points[indexC * 3 + 2]);
+//
+//                    indexD = indexMat.at<uint16_t>(i + m + 1, j + n + 1);
+//                    vd = Eigen::Vector3f(points[indexD * 3], points[indexD * 3 + 1], points[indexD * 3 + 2]);
+//
+//                    totalCount = (indexA != 0) + (indexB != 0) + (indexC != 0) + (indexD != 0);
+//
+//                    if (indexA != 0)
+//                        centroid += va;
+//                    if (indexB != 0)
+//                        centroid += vb;
+//                    if (indexC != 0)
+//                        centroid += vc;
+//                    if (indexD != 0)
+//                        centroid += vd;
+//                    if (totalCount > 0)
+//                        centroid = centroid / (float) totalCount;
+//
+//                    if (indexA != 0 && indexB != 0 && indexC != 0)
+//                    {
+//                        Eigen::Vector3f nmlA = ((vb));
+//                        normal += nmlA;
+////                        printf("A:normal:(%.2lf,%.2lf,%.2lf)\n", nmlA.x(), nmlA.y(), nmlA.z());
+//                        normalCount++;
+//                    }
+//                    if (indexA != 0 && indexB != 0 && indexC != 0)
+//                    {
+//                        Eigen::Vector3f nmlB = ((vc));
+//                        normal += nmlB;
+////                        printf("B:normal:(%.2lf,%.2lf,%.2lf)\n", nmlB.x(), nmlB.y(), nmlB.z());
+//                        normalCount++;
+//                    }
+//                    if (indexA != 0 && indexB != 0 && indexC != 0)
+//                    {
+//                        Eigen::Vector3f nmlC = ((vd));
+//                        normal += nmlC;
+////                        printf("C:normal:(%.2lf,%.2lf,%.2lf)\n", nmlC.x(), nmlC.y(), nmlC.z());
+//                        normalCount++;
+//                    }
+//                    if (indexA != 0 && indexB != 0 && indexC != 0)
+//                    {
+//                        Eigen::Vector3f nmlD = ((va));
+//                        normal += nmlD;
+////                        printf("D:normal:(%.2lf,%.2lf,%.2lf)\n", nmlD.x(), nmlD.y(), nmlD.z());
+//                        normalCount++;
+//                    }
+//
+//                    normal = normal.normalized();
+//
+//                    //               std::cout << va << std::endl << vb << std::endl << vc << std::endl << vd << std::endl;
+//
+////                    printf(
+////                            "Total: %d, i:%d, j:%d, ia:%d, ib:%d, ic:%d, id:%d, ncount:%d, cA:%d, cB:%d, cC:%d, cD:%d, normal:(%.2lf,%.2lf,%.2lf), centroid:(%.2lf,%.2lf,%.2lf)\n",
+////                            (uint16_t) (points.size() / 3), i, j, indexA, indexB, indexC, indexD, normalCount, countA, countB, countC, countD, normal.x(), normal.y(),
+////                            normal.z(), centroid.x(), centroid.y(), centroid.z());
+//                }
+//            }
+//
+//            output_nx.at<float>(i, j) = normal.x();
+//            output_ny.at<float>(i, j) = normal.y();
+//            output_nz.at<float>(i, j) = normal.z();
+//            output_gx.at<float>(i, j) = centroid.x();
+//            output_gy.at<float>(i, j) = centroid.y();
+//            output_gz.at<float>(i, j) = centroid.z();
+//        }
+//    }
 
-        if (pitchCount >= 0 && pitchCount < ROWS && yawCount >= 0 && yawCount < COLS)
-        {
-            /* countMat.at<char>(pitchCount, yawCount) */
-            indexMat.at<uint16_t>(pitchCount, yawCount) = i;
-            countMat.at<char>(pitchCount, yawCount) += 1;
-            //         printf("r:%d, c:%d, i:%d\t", pitchCount, yawCount, indexMat.at<uint16_t>(pitchCount, yawCount, 0) = i);
-        }
-//        printf("\n");
-        //       printf("X: %.2lf, Y:%.2lf, Z:%.2lf, Pitch:%.2lf, Yaw:%.2lf, pc:%d, yc:%d\n", x, y, z, pitch, yaw, pitchCount, yawCount);
-    }
-
-    /* Patch Packing */
-    for (int i = 0; i < appState.SUB_H; i++)
-    {
-        for (int j = 0; j < appState.SUB_W; j++)
-        {
-            Eigen::Vector3f normal = Eigen::Vector3f::Zero();
-            Eigen::Vector3f centroid = Eigen::Vector3f::Zero();
-            Eigen::Vector3f va = Eigen::Vector3f::Zero();
-            Eigen::Vector3f vb = Eigen::Vector3f::Zero();
-            Eigen::Vector3f vc = Eigen::Vector3f::Zero();
-            Eigen::Vector3f vd = Eigen::Vector3f::Zero();
-            uint16_t indexA = 0, indexB = 0, indexC = 0, indexD = 0;
-            uint8_t countA = 0, countB = 0, countC = 0, countD = 0, totalCount = 0, normalCount = 0;
-            for (int m = 0; m < appState.PATCH_HEIGHT - 1; m++)
-            {
-                for (int n = 0; n < appState.PATCH_WIDTH - 1; n++)
-                {
-                    indexA = indexMat.at<uint16_t>(i + m, j + n);
-                    countA = countMat.at<uint8_t>(i + m, j + n);
-                    va = Eigen::Vector3f(points[indexA * 3], points[indexA * 3 + 1], points[indexA * 3 + 2]);
-
-                    indexB = indexMat.at<uint16_t>(i + m, j + n + 1);
-                    countB = countMat.at<uint8_t>(i + m, j + n + 1);
-                    vb = Eigen::Vector3f(points[indexB * 3], points[indexB * 3 + 1], points[indexB * 3 + 2]);
-
-                    indexC = indexMat.at<uint16_t>(i + m + 1, j + n);
-                    countC = countMat.at<uint8_t>(i + m + 1, j + n);
-                    vc = Eigen::Vector3f(points[indexC * 3], points[indexC * 3 + 1], points[indexC * 3 + 2]);
-
-                    indexD = indexMat.at<uint16_t>(i + m + 1, j + n + 1);
-                    countD = countMat.at<uint8_t>(i + m + 1, j + n + 1);
-                    vd = Eigen::Vector3f(points[indexD * 3], points[indexD * 3 + 1], points[indexD * 3 + 2]);
-
-                    totalCount = (countA != 0) + (countA != 0) + (countA != 0) + (countA != 0);
-
-                    if (countA != 0 && indexA != 0)
-                        centroid += va;
-                    if (countB != 0 && indexB != 0)
-                        centroid += vb;
-                    if (countC != 0 && indexC != 0)
-                        centroid += vc;
-                    if (countD != 0 && indexD != 0)
-                        centroid += vd;
-                    if (totalCount > 0)
-                        centroid = centroid / (float) totalCount;
-
-                    if (countA != 0 && countB != 0 && countC != 0 && indexA != 0 && indexB != 0 && indexC != 0)
-                    {
-                        Eigen::Vector3f nmlA = ((vb));
-                        normal += nmlA;
-//                        printf("A:normal:(%.2lf,%.2lf,%.2lf)\n", nmlA.x(), nmlA.y(), nmlA.z());
-                        normalCount++;
-                    }
-                    if (countD != 0 && countB != 0 && countC != 0 && indexA != 0 && indexB != 0 && indexC != 0)
-                    {
-                        Eigen::Vector3f nmlB = ((vc));
-                        normal += nmlB;
-//                        printf("B:normal:(%.2lf,%.2lf,%.2lf)\n", nmlB.x(), nmlB.y(), nmlB.z());
-                        normalCount++;
-                    }
-                    if (countA != 0 && countD != 0 && countC != 0 && indexA != 0 && indexB != 0 && indexC != 0)
-                    {
-                        Eigen::Vector3f nmlC = ((vd));
-                        normal += nmlC;
-//                        printf("C:normal:(%.2lf,%.2lf,%.2lf)\n", nmlC.x(), nmlC.y(), nmlC.z());
-                        normalCount++;
-                    }
-                    if (countA != 0 && countB != 0 && countD != 0 && indexA != 0 && indexB != 0 && indexC != 0)
-                    {
-                        Eigen::Vector3f nmlD = ((va));
-                        normal += nmlD;
-//                        printf("D:normal:(%.2lf,%.2lf,%.2lf)\n", nmlD.x(), nmlD.y(), nmlD.z());
-                        normalCount++;
-                    }
-
-                    normal = normal.normalized();
-
-                    //               std::cout << va << std::endl << vb << std::endl << vc << std::endl << vd << std::endl;
-
-//                    printf(
-//                            "Total: %d, i:%d, j:%d, ia:%d, ib:%d, ic:%d, id:%d, ncount:%d, cA:%d, cB:%d, cC:%d, cD:%d, normal:(%.2lf,%.2lf,%.2lf), centroid:(%.2lf,%.2lf,%.2lf)\n",
-//                            (uint16_t) (points.size() / 3), i, j, indexA, indexB, indexC, indexD, normalCount, countA, countB, countC, countD, normal.x(), normal.y(),
-//                            normal.z(), centroid.x(), centroid.y(), centroid.z());
-                }
-            }
-
-            output_nx.at<float>(i, j) = normal.x();
-            output_ny.at<float>(i, j) = normal.y();
-            output_nz.at<float>(i, j) = normal.z();
-            output_gx.at<float>(i, j) = centroid.x();
-            output_gy.at<float>(i, j) = centroid.y();
-            output_gz.at<float>(i, j) = centroid.z();
-        }
-    }
-
-    /* Patch Merging */
-    for (int i = 1; i < appState.SUB_H - 1; i++)
-    {
-        for (int j = 1; j < appState.SUB_W - 1; j++)
-        {
-            uint8_t patch = 0;
-            int count = 0;
-
-            Eigen::Vector3f n_a(output_nx.at<float>(i, j), output_ny.at<float>(i, j), output_nz.at<float>(i, j));
-            Eigen::Vector3f g_a(output_gx.at<float>(i, j), output_gy.at<float>(i, j), output_gz.at<float>(i, j));
-
-            for (int k = -1; k <= 1; k += 1)
-            {
-                for (int l = -1; l <= 1; l += 1)
-                {
-                    if (!(k == 0 && l == 0))
-                    {
-                        Eigen::Vector3f n_b(output_nx.at<float>(i+k, j+l), output_ny.at<float>(i+k, j+l), output_nz.at<float>(i+k, j+l));
-                        Eigen::Vector3f g_b(output_gx.at<float>(i+k, j+l), output_gy.at<float>(i+k, j+l), output_gz.at<float>(i+k, j+l));
-
-                        if(GeomTools::CheckPatchConnection(g_a, n_a, g_b, n_b, 0.1, 0.7))
-                        {
-                            patch = (1 << count) | patch;
-                        }
-                        count++;
-                    }
-                }
-            }
-            output_graph.at<uint8_t>(i,j) = patch;
-        }
-    }
+//    /* Patch Merging */
+//    for (int i = 1; i < appState.SUB_H - 1; i++)
+//    {
+//        for (int j = 1; j < appState.SUB_W - 1; j++)
+//        {
+//            uint8_t patch = 0;
+//            int count = 0;
+//
+//            Eigen::Vector3f n_a(output_nx.at<float>(i, j), output_ny.at<float>(i, j), output_nz.at<float>(i, j));
+//            Eigen::Vector3f g_a(output_gx.at<float>(i, j), output_gy.at<float>(i, j), output_gz.at<float>(i, j));
+//
+//            for (int k = -1; k <= 1; k += 1)
+//            {
+//                for (int l = -1; l <= 1; l += 1)
+//                {
+//                    if (!(k == 0 && l == 0))
+//                    {
+//                        Eigen::Vector3f n_b(output_nx.at<float>(i+k, j+l), output_ny.at<float>(i+k, j+l), output_nz.at<float>(i+k, j+l));
+//                        Eigen::Vector3f g_b(output_gx.at<float>(i+k, j+l), output_gy.at<float>(i+k, j+l), output_gz.at<float>(i+k, j+l));
+//
+//                        if(GeomTools::CheckPatchConnection(g_a, n_a, g_b, n_b, 0.1, 0.7))
+//                        {
+//                            patch = (1 << count) | patch;
+//                        }
+//                        count++;
+//                    }
+//                }
+//            }
+//            output_graph.at<uint8_t>(i,j) = patch;
+//        }
+//    }
 
 //    AppUtils::PrintMatR8(output_graph, 0, false, 0, 0);
 
