@@ -102,9 +102,21 @@ namespace Clay
 
       if(_regionCalculator->RenderEnabled())
       {
+         auto start_point = std::chrono::steady_clock::now();
+
          _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
+
+         auto end_point = std::chrono::steady_clock::now();
+
          _regionCalculator->Render();
          mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+
+         long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
+         long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();
+
+         float duration = (end - start) * 0.001f;
+
+         CLAY_LOG_INFO("Total Time PR: {} ms", duration);
       }
    }
 

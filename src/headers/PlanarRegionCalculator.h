@@ -34,13 +34,7 @@ class PlanarRegionCalculator
 
       bool GeneratePatchGraphFromDepth(ApplicationState& appState);
 
-      bool generatePatchGraphFromStereo(ApplicationState& appState);
-
-//      void initOpenCL();
-
       void generateRegionsFromDepth(ApplicationState& appState, cv::Mat& depth, double inputTimestamp);
-
-      void generateRegionsFromStereo(ApplicationState& appState);
 
       map_sense::RawGPUPlanarRegionList publishRegions();
 
@@ -53,6 +47,8 @@ class PlanarRegionCalculator
       uint8_t CreateParameterBuffer(const ApplicationState& app);
 
       void GeneratePatchGraphFromPointCloud(ApplicationState& appState, std::vector<float>& points, double inputTimestamp);
+
+      void GenerateRegionFromPointcloudOnCPU();
 
 
    public:

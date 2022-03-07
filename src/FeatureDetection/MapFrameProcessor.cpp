@@ -5,19 +5,19 @@ MapFrameProcessor::MapFrameProcessor(ApplicationState& app) : app(app) {}
 void MapFrameProcessor::init(ApplicationState& app)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_INFO("Initializing MapFrameProcessor");
+   ROS_DEBUG("Initializing MapFrameProcessor");
    this->app = app;
    this->debug = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
    this->visited = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
    this->boundary = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
    this->region = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
-   ROS_INFO("MapFrameProcessor Initialized.");
+   ROS_DEBUG("MapFrameProcessor Initialized.");
 }
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_INFO("Starting DFS for Segmentation\n");
+   ROS_DEBUG("Starting DFS for Segmentation\n");
    this->app = app;
 
    printf("%d, %d, %d, %d, %d, %d", app.SUB_W, app.SUB_H, app.INPUT_HEIGHT, app.INPUT_WIDTH, app.PATCH_HEIGHT, app.PATCH_WIDTH);
@@ -53,7 +53,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
       }
    }
 
-   ROS_INFO("DFS Generated %d Regions\n", components);
+   ROS_DEBUG("DFS Generated %d Regions\n", components);
 
    /* Extract Region Boundary Indices. */
    visited.setZero();
@@ -62,7 +62,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
    /* Grow Region Boundary. */
    growRegionBoundary(planarRegionList);
-   ROS_INFO("Regions Grown Manually");
+   ROS_DEBUG("Regions Grown Manually");
 
 }
 
