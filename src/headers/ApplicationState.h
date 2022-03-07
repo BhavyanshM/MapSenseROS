@@ -5,22 +5,22 @@
 #ifndef SRC_APPLICATIONSTATE_H
 #define SRC_APPLICATIONSTATE_H
 
-#include "MapsenseHeaders.h"
-
-using namespace std;
+#include "ros/package.h"
+#include <sstream>
+#include <fstream>
 
 class ApplicationState
 {
    public:
       ApplicationState();
 
-      const string& getDepthFile() const;
+      const std::string& getDepthFile() const;
 
-      void setDepthFile(const string& depthFile);
+      void setDepthFile(const std::string& depthFile);
 
-      const string& getColorFile() const;
+      const std::string& getColorFile() const;
 
-      void setColorFile(const string& colorFile);
+      void setColorFile(const std::string& colorFile);
 
       void update();
 
@@ -34,6 +34,8 @@ class ApplicationState
 
       int REGION_MIN_PATCHES = 20;
       int REGION_BOUNDARY_DIFF = 20;
+
+      int HASH_THREAD_NUM = 2;
 
       /*
        * NOTE: The following parameters should meet these requirements.
@@ -92,7 +94,7 @@ class ApplicationState
       bool SLAM_ENABLED = false;
       bool DATASET_ENABLED = false;
 
-      string TOPIC_CAMERA_NAME = "chest_l515";
+      std::string TOPIC_CAMERA_NAME = "chest_l515";
 
       int GAUSSIAN_SIZE = 4;
       int  GAUSSIAN_SIGMA = 20;
@@ -120,22 +122,22 @@ class ApplicationState
       int STEREO_SPECKLE_WINDOW_SIZE = 0;
       int STEREO_DISP_12_MAX_DIFF = -1;
 
-      string OUSTER_POINTS = "/os_cloud_node/points";
-      string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
-      string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
+      std::string OUSTER_POINTS = "/os_cloud_node/points";
+      std::string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
+      std::string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
 
-      string KITTI_LEFT_IMG_RECT = "/kitti/left/image_rect/compressed";
-      string KITTI_RIGHT_IMG_RECT = "/kitti/right/image_rect/compressed";
-      string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
+      std::string KITTI_LEFT_IMG_RECT = "/kitti/left/image_rect/compressed";
+      std::string KITTI_RIGHT_IMG_RECT = "/kitti/right/image_rect/compressed";
+      std::string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
 
-      string L515_COLOR = "/camera/color/image_raw/compressed";
-      string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
-      string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
+      std::string L515_COLOR = "/camera/color/image_raw/compressed";
+      std::string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
+      std::string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
 
-      string L515_ALIGNED_DEPTH = "/camera/aligned_depth_to_color/image_raw";
-      string L515_ALIGNED_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";
+      std::string L515_ALIGNED_DEPTH = "/camera/aligned_depth_to_color/image_raw";
+      std::string L515_ALIGNED_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";
 
-      string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
+      std::string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
 
 
 };

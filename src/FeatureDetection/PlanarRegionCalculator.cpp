@@ -1,7 +1,7 @@
 #include <map_sense/RawGPUPlanarRegionList.h>
 #include <AppUtils.h>
 #include "PlanarRegionCalculator.h"
-#include "imgui.h"
+#include "ImGuiTools.h"
 
 PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, ApplicationState& app) : app(app)
 {
@@ -14,11 +14,13 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, Applicatio
    origin[0] = 0;
    origin[0] = 0;
    origin[0] = 0;
+
+   AppUtils::getFileNames(ros::package::getPath("map_sense") + "/Extras/Clouds/", cloudFiles);
 }
 
 void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
 {
-   if (ImGui::BeginTabItem("Planar Regions"))
+   if (ImGui::BeginTabItem("Regions"))
    {
       /* Display 2D */
       ImGui::Text("Input:%d,%d Patch:%d,%d Level:%d", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT, appState.PATCH_WIDTH,
@@ -26,27 +28,33 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
       ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
       ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
       ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
-      ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 8);
-      ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
-      ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
-      ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
       ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
       ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
-      ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
-      if (ImGui::Button("Hide Display"))
-      {
-         cv::destroyAllWindows();
-      }
-      ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
-      ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
       ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
-      ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
       ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
-      ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
-      ImGui::SliderFloat("Magnum Patch Scale", &appState.MAGNUM_PATCH_SCALE, 0.001f, 0.04f);
-
       ImGui::Checkbox("Render 3D", &_render);
 
+      ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 8);
+      ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
+      ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01f, 1.0f);
+      ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.01f, 1.0f);
+      ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
+      ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
+      ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
+      ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
+
+      if (ImGui::Button("Hide Display")){ cv::destroyAllWindows(); }
+
+      ImGui::NewLine();
+      ImGuiTools::GetDropDownSelection("File", cloudFiles, depthFileSelected);
+      if(ImGui::Button("Load Cloud"))
+      {
+//         _regionCalculator->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames, fileSelected);
+      }
+      if(ImGui::Button("Load Depth"))
+      {
+         //         _regionCalculator->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames, fileSelected);
+      }
       ImGui::EndTabItem();
    }
 }
@@ -220,16 +228,19 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
 {
     MAPSENSE_PROFILE_FUNCTION();
 
-    int ROWS = 64;
-    int COLS = 1024;
+//    int ROWS = 64;
+//    int COLS = 1024;
+//
+//    appState.KERNEL_SLIDER_LEVEL = 2;
+//    appState.INPUT_WIDTH = COLS;
+//    appState.INPUT_HEIGHT = ROWS;
+//    appState.PATCH_HEIGHT = appState.KERNEL_SLIDER_LEVEL;
+//    appState.PATCH_WIDTH = appState.KERNEL_SLIDER_LEVEL;
+//    appState.SUB_H = ROWS / appState.PATCH_HEIGHT;
+//    appState.SUB_W = COLS / appState.PATCH_WIDTH;
 
-    appState.KERNEL_SLIDER_LEVEL = 2;
-    appState.INPUT_WIDTH = COLS;
-    appState.INPUT_HEIGHT = ROWS;
-    appState.PATCH_HEIGHT = appState.KERNEL_SLIDER_LEVEL;
-    appState.PATCH_WIDTH = appState.KERNEL_SLIDER_LEVEL;
-    appState.SUB_H = ROWS / appState.PATCH_HEIGHT;
-    appState.SUB_W = COLS / appState.PATCH_WIDTH;
+   printf("Region Params: {IH:%d, IW:%d, PH:%d, PW:%d, SUB_H:%d, SUB_W:%d}\n", appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.PATCH_HEIGHT,
+          appState.PATCH_WIDTH, appState.SUB_H, appState.SUB_W);
 
    /* Setup size for reading patch-wise kernel maps from GPU */
    cl::size_t<3> regionOutputSize;
@@ -271,6 +282,7 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->SetArgument("hashKernel", 1, indexBuffer, true);
    _openCL->SetArgument("hashKernel", 2, paramsBuffer);
    _openCL->SetArgumentInt("hashKernel", 3, points.size());
+   _openCL->SetArgumentInt("hashKernel", 4, appState.HASH_THREAD_NUM);
 
    std::vector<uint8_t> argsImgPack = {indexBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
    for (uint8_t i = 0; i < argsImgPack.size(); i++)
@@ -306,7 +318,7 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
     * ------------------------------------------------------------------------------------------------------
     * */
 
-    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange, cl::NDRange(appState.INPUT_HEIGHT, appState.INPUT_WIDTH),
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange, cl::NDRange(appState.INPUT_HEIGHT, appState.INPUT_WIDTH, appState.HASH_THREAD_NUM),
                                                cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
@@ -316,7 +328,9 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
     * ---------------------------------------    OpenCL Read Buffers ---------------------------------------
     * ------------------------------------------------------------------------------------------------------
     * */
-//   _openCL->ReadImage(indexBuffer, size, indexMat.data);
+
+   auto start_point = std::chrono::steady_clock::now();
+   //   _openCL->ReadImage(indexBuffer, size, indexMat.data);
    _openCL->ReadImage(clBuffer_nx, regionOutputSize, output_nx.data);
    _openCL->ReadImage(clBuffer_ny, regionOutputSize, output_ny.data);
    _openCL->ReadImage(clBuffer_nz, regionOutputSize, output_nz.data);
@@ -326,20 +340,28 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
 
    _openCL->commandQueue.finish();
+   auto end_point = std::chrono::steady_clock::now();
 
-//   AppUtils::PrintMatR16(output_gx);
+   //   AppUtils::PrintMatR16(output_gx);
 
-    /* Combine the CPU buffers into single image with multiple channels */
-    cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
-    vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
-    merge(channels, regionOutput);
-    output.setRegionOutput(regionOutput);
-    output.setPatchData(output_graph);
+   /* Combine the CPU buffers into single image with multiple channels */
+   cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
+   vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
+   merge(channels, regionOutput);
+   output.setRegionOutput(regionOutput);
+   output.setPatchData(output_graph);
 
-    _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
-    PlanarRegion::SetZeroId(planarRegionList);
+   _mapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   PlanarRegion::SetZeroId(planarRegionList);
 
    _openCL->Reset();
+
+   long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
+   long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();
+
+   float duration = (end - start) * 0.001f;
+
+   printf("Total Time PR: %.3lf ms\n", duration);
 
     printf("Total Regions Found: %d\n", planarRegionList.size());
 

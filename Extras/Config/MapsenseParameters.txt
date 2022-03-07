@@ -4,7 +4,9 @@ REGION_BOUNDARY_DIFF:           20
 REGION_MODE:                    0
 INPUT_HEIGHT:                   64
 INPUT_WIDTH:                    1024
-KERNEL_SLIDER_LEVEL:            2
+PATCH_HEIGHT:                   2
+PATCH_WIDTH:                    4
+KERNEL_SLIDER_LEVEL:            4
 FILTER_KERNEL_SIZE:             4
 DIVISION_FACTOR:                1
 NUM_SKIP_EDGES:                 8
@@ -22,6 +24,7 @@ STEREO_UNIQUENESS_RATIO:        15
 STEREO_SPECKLE_RANGE:           0
 STEREO_SPECKLE_WINDOW_SIZE:     0
 STEREO_DISP_12_MAX_DIFF:        -1
+HASH_THREAD_NUM:                1
 
 # floats
 DEPTH_FX:                       0

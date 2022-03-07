@@ -8,15 +8,15 @@
 
 ApplicationState::ApplicationState()
 {
-   string path = ros::package::getPath("map_sense") + "/Extras/Config/MapsenseParameters.txt";
+   std::string path = ros::package::getPath("map_sense") + "/Extras/Config/MapsenseParameters.txt";
 
-   ifstream infile{ path };
+   std::ifstream infile{ path };
 
-   string str, name, value;
+   std::string str, name, value;
    for (int i = 0; i<100; i++)
    {
       getline(infile, str);
-      vector<string> strs;
+      std::vector<std::string> strs;
       boost::split(strs,str,boost::is_any_of(":"));
       name = strs[0];
       if(strs.size() > 1)
@@ -45,6 +45,9 @@ ApplicationState::ApplicationState()
       if(name == "STEREO_NUM_DISPARITIES") {STEREO_NUM_DISPARITIES = stoi(value);}
       if(name == "STEREO_BLOCK_SIZE") {STEREO_BLOCK_SIZE = stoi(value);}
       if(name == "STEREO_PRE_FILTER_SIZE") {STEREO_PRE_FILTER_SIZE = stoi(value);}
+      if(name == "HASH_THREAD_NUM") {HASH_THREAD_NUM = stoi(value);}
+      if(name == "PATCH_HEIGHT") {PATCH_HEIGHT = stoi(value);}
+      if(name == "PATCH_WIDTH") {PATCH_WIDTH = stoi(value);}
 
       if(name == "FILTER_DISPARITY_THRESHOLD") {FILTER_DISPARITY_THRESHOLD = stof(value);}
       if(name == "DEPTH_BRIGHTNESS") {DEPTH_BRIGHTNESS = stof(value);}
@@ -83,24 +86,27 @@ ApplicationState::ApplicationState()
       if(name == "EXPORT_REGIONS") {EXPORT_REGIONS = (value == "true");}
       if(name == "GENERATE_REGIONS") {GENERATE_REGIONS = (value == "true");}
    }
+
+   SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
+   SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
 }
 
 void ApplicationState::update()
 {
-   if (this->INPUT_HEIGHT > 0 && this->INPUT_WIDTH > 0)
-   {
-      if ((this->INPUT_HEIGHT % this->KERNEL_SLIDER_LEVEL == 0) && (this->INPUT_WIDTH % this->KERNEL_SLIDER_LEVEL == 0))
-      {
-         this->PATCH_HEIGHT = this->KERNEL_SLIDER_LEVEL;
-         this->PATCH_WIDTH = this->KERNEL_SLIDER_LEVEL;
-         this->SUB_H = (int) this->INPUT_HEIGHT / this->PATCH_HEIGHT;
-         this->SUB_W = (int) this->INPUT_WIDTH / this->PATCH_WIDTH;
-      }
-      if ((this->INPUT_HEIGHT % this->FILTER_KERNEL_SIZE == 0) && (this->INPUT_WIDTH % this->FILTER_KERNEL_SIZE == 0))
-      {
-         this->FILTER_SUB_H = (int) this->INPUT_HEIGHT / this->FILTER_KERNEL_SIZE;
-         this->FILTER_SUB_W = (int) this->INPUT_WIDTH / this->FILTER_KERNEL_SIZE;
-      }
-   }
+//   if (INPUT_HEIGHT > 0 && INPUT_WIDTH > 0)
+//   {
+//      if ((INPUT_HEIGHT % KERNEL_SLIDER_LEVEL == 0) && (INPUT_WIDTH % KERNEL_SLIDER_LEVEL == 0))
+//      {
+//         PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
+//         PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
+//         SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
+//         SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
+//      }
+//      if ((INPUT_HEIGHT % FILTER_KERNEL_SIZE == 0) && (INPUT_WIDTH % FILTER_KERNEL_SIZE == 0))
+//      {
+//         FILTER_SUB_H = (int) INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+//         FILTER_SUB_W = (int) INPUT_WIDTH / FILTER_KERNEL_SIZE;
+//      }
+//   }
 }
 

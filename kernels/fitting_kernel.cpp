@@ -474,41 +474,46 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
  * Point hashing kernel to convert unordered point list into structured hash map.
  * */
 
-void kernel hashKernel(global float* cloud, read_write image2d_t indices, global float* params, int size)
+void kernel hashKernel(global float* cloud, read_write image2d_t indices, global float* params, int size, int threads)
 {
    int r = get_global_id(0);
    int c = get_global_id(1);
+   int t = get_global_id(2);
 
-//   printf("HashKernel:(%d,%d)\n", r, c);
+   int totalPoints = (size/3)/threads;
+   int start = t * totalPoints;
+   int end = start + totalPoints;
 
    write_imageui(indices, (int2)(c,r), (uint4)(0,0,0,0));
 
    int count = 0;
    float pitchUnit = M_PI / (2 * params[INPUT_HEIGHT]);
    float yawUnit = 2 * M_PI / (params[INPUT_WIDTH]);
-   for(int i = 0; i<size/3; i++)
+   float x, y, z, radius, pitch, yaw;
+   int pitchCount, yawCount;
+
+   int pitchOffset = params[INPUT_HEIGHT]/2;
+   int yawOffset = params[INPUT_WIDTH]/2;
+   for(int i = start; i<end; i++)
    {
+      x = cloud[i * 3];
+      y = cloud[i * 3 + 1];
+      z = cloud[i * 3 + 2];
 
-      float x = cloud[i * 3];
-      float y = cloud[i * 3 + 1];
-      float z = cloud[i * 3 + 2];
+      radius = sqrt(x * x + y * y);
 
-      float radius = sqrt(x * x + y * y);
+      pitch = atan2(z, radius);
+      pitchCount = (pitchOffset) + (int) (pitch / pitchUnit);
 
-      float pitch = atan2(z, radius);
-      int pitchCount = (int)(params[INPUT_HEIGHT]/2) + (int) (pitch / pitchUnit);
+      yaw = atan2(-y, x);
+      yawCount = (yawOffset) + (int) (yaw / yawUnit);
 
-      float yaw = atan2(-y, x);
-      int yawCount = (int)(params[INPUT_WIDTH]/2) + (int) (yaw / yawUnit);
-
-//      if(r==0&&c==0)printf("r:%d, c:%d, i:%d\n", pitchCount, yawCount, i);
       if (pitchCount >= 0 && pitchCount < params[INPUT_HEIGHT] && yawCount >= 0 && yawCount < params[INPUT_WIDTH])
       {
          if(r == pitchCount && c == yawCount)
          {
             write_imageui(indices, (int2)(c,r), (uint4)(i,0,0,0));
          }
-//         if(r==pitchCount&&c==yawCount)printf("x:%d, y:%d, r:%d, c:%d, img:%d, i:%d\n", r,c, pitchCount, yawCount, (int)read_imageui(indices, (int2)(c,r)).x, i);
       }
    }
 

@@ -74,6 +74,10 @@ class PlanarRegionCalculator
       vector<shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
+      std::vector<std::string> depthFiles, cloudFiles;
+      int depthFileSelected = 0;
+      int cloudFileSelected = 0;
+
       int frameId = 0;
       int depthReceiverId = -1;
       bool _render = true;
