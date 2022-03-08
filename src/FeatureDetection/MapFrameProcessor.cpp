@@ -6,21 +6,42 @@ void MapFrameProcessor::init(ApplicationState& app)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_DEBUG("Initializing MapFrameProcessor");
+
+
+   if(app.REGION_MODE == 0)
+   {
+      ROS_INFO("Init MapFrameProcessor: Depth Mode");
+      SUB_H = app.SUB_H;
+      SUB_W = app.SUB_W;
+      INPUT_HEIGHT = app.DEPTH_INPUT_HEIGHT;
+      INPUT_WIDTH = app.DEPTH_INPUT_WIDTH;
+      PATCH_HEIGHT = app.DEPTH_PATCH_HEIGHT;
+      PATCH_WIDTH = app.DEPTH_PATCH_WIDTH;
+   }
+   else
+   {
+      ROS_INFO("Init MapFrameProcessor: Hash Mode");
+      SUB_H = app.HASH_SUB_H;
+      SUB_W = app.HASH_SUB_W;
+      INPUT_HEIGHT = app.HASH_INPUT_HEIGHT;
+      INPUT_WIDTH = app.HASH_INPUT_WIDTH;
+      PATCH_HEIGHT = app.HASH_PATCH_HEIGHT;
+      PATCH_WIDTH = app.HASH_PATCH_WIDTH;
+   }
+
    this->app = app;
-   this->debug = cv::Mat(app.INPUT_HEIGHT, app.INPUT_WIDTH, CV_8UC3);
-   this->visited = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
-   this->boundary = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
-   this->region = Eigen::MatrixXi(app.SUB_H, app.SUB_W).setZero();
+   this->debug = cv::Mat(INPUT_HEIGHT, INPUT_WIDTH, CV_8UC3);
+   this->visited = Eigen::MatrixXi(SUB_H, SUB_W).setZero();
+   this->boundary = Eigen::MatrixXi(SUB_H, SUB_W).setZero();
+   this->region = Eigen::MatrixXi(SUB_H, SUB_W).setZero();
+
    ROS_DEBUG("MapFrameProcessor Initialized.");
 }
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   ROS_DEBUG("Starting DFS for Segmentation\n");
-   this->app = app;
-
-   printf("%d, %d, %d, %d, %d, %d", app.SUB_W, app.SUB_H, app.INPUT_HEIGHT, app.INPUT_WIDTH, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+   ROS_INFO("GenerateSegmentation: SW:%d, SH:%d, IH:%d, IW:%d, PH:%d, PW:%d", SUB_W, SUB_H, INPUT_HEIGHT, INPUT_WIDTH, PATCH_HEIGHT, PATCH_WIDTH);
 
    this->frame = inputFrame;
 
@@ -33,9 +54,9 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
       region.setZero();
       boundary.setZero();
       debug = cv::Scalar(0);
-      for (uint16_t i = 0; i < app.SUB_H; i++)
+      for (uint16_t i = 0; i < SUB_H; i++)
       {
-         for (uint16_t j = 0; j < app.SUB_W; j++)
+         for (uint16_t j = 0; j < SUB_W; j++)
          {
             uint8_t patch = inputFrame.patchData.at<uint8_t>(i, j);
             if (!visited(i, j) && patch == 255)
@@ -176,10 +197,10 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
 
 void MapFrameProcessor::printPatchGraph()
 {
-   printf("DEBUGGER:(%d,%d), AppState:(%d,%d)\n", app.SUB_H, app.SUB_W, app.SUB_H, app.SUB_W);
-   for (int i = 0; i < app.SUB_H; i++)
+   printf("DEBUGGER:(%d,%d), AppState:(%d,%d)\n", SUB_H, SUB_W, SUB_H, SUB_W);
+   for (int i = 0; i < SUB_H; i++)
    {
-      for (int j = 0; j < app.SUB_W; j++)
+      for (int j = 0; j < SUB_W; j++)
       {
          uint8_t current = this->frame.patchData.at<uint8_t>(i, j);
          if (current == 255)
@@ -218,11 +239,11 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, 
    visited(x, y) = 1;
    regionRing->insertBoundaryIndex(Eigen::Vector2i(x,y));
    if (app.SHOW_BOUNDARIES)
-      circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
+      circle(debug, cv::Point((y) * PATCH_HEIGHT, (x) * PATCH_WIDTH), 2,
              cv::Scalar((component + 1) * 130 % 255, (component + 1) * 227 % 255, (component + 1) * 332 % 255), -1);
    for (int i = 0; i < 8; i++)
    {
-      if (x + adx[i] < app.SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < app.SUB_W - 1 && y + ady[i] > 1)
+      if (x + adx[i] < SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < SUB_W - 1 && y + ady[i] > 1)
       {
          if (boundary(x + adx[i], y + ady[i]) == 1 && regionId == region(x + adx[i], y + ady[i]))
          {
@@ -245,13 +266,13 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
    cv::Vec6f patch = this->frame.getRegionOutput().at<cv::Vec6f>(x, y);
    planarRegion->AddPatch(Eigen::Vector3f(patch[0], patch[1], patch[2]), Eigen::Vector3f(patch[3], patch[4], patch[5]));
    if (app.SHOW_PATCHES)
-      circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2,
+      circle(debug, cv::Point((y) * PATCH_HEIGHT, (x) * PATCH_WIDTH), 2,
              cv::Scalar((component + 1) * 231 % 255, (component + 1) * 123 % 255, (component + 1) * 312 % 255), -1);
 
    int count = 0;
    for (int i = 0; i < 8; i++)
    {
-      if (x + adx[i] < app.SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < app.SUB_W - 1 && y + ady[i] > 1)
+      if (x + adx[i] < SUB_H - 1 && x + adx[i] > 1 && y + ady[i] < SUB_W - 1 && y + ady[i] > 1)
       {
          uint8_t newPatch = this->frame.patchData.at<uint8_t>((x + adx[i]), (y + ady[i]));
          if (newPatch == 255)
@@ -266,7 +287,7 @@ void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num,
       boundary(x, y) = 1;
       planarRegion->insertLeafPatch(Eigen::Vector2i(x, y));
       if (app.SHOW_BOUNDARIES)
-         circle(debug, cv::Point((y) * app.PATCH_HEIGHT, (x) * app.PATCH_WIDTH), 2, cv::Scalar(255, 255, 255), -1);
+         circle(debug, cv::Point((y) * PATCH_HEIGHT, (x) * PATCH_WIDTH), 2, cv::Scalar(255, 255, 255), -1);
    }
    if (app.VISUAL_DEBUG)
       displayDebugger(app.VISUAL_DEBUG_DELAY);

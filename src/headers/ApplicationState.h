@@ -25,8 +25,10 @@ class ApplicationState
       void update();
 
    public:
-      float MERGE_DISTANCE_THRESHOLD = 0.1; // 0.016
-      float MERGE_ANGULAR_THRESHOLD = 0.7; // 0.82
+      float MERGE_DISTANCE_THRESHOLD = 0.016;
+      float MERGE_ANGULAR_THRESHOLD =  0.82;
+      float HASH_MERGE_DISTANCE_THRESHOLD = 0.1;
+      float HASH_MERGE_ANGULAR_THRESHOLD = 0.7;
 
       bool FILTER_SELECTED = false;
       float FILTER_DISPARITY_THRESHOLD = 2000;
@@ -43,17 +45,25 @@ class ApplicationState
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
       int REGION_MODE = 0; // 0 for depth, 1 for point-cloud
-      int INPUT_HEIGHT = 64;
-      int INPUT_WIDTH = 1024;
+      int HASH_INPUT_HEIGHT = 64;
+      int HASH_INPUT_WIDTH = 1024;
+      int DEPTH_INPUT_HEIGHT = 480;
+      int DEPTH_INPUT_WIDTH = 640;
+
       int KERNEL_SLIDER_LEVEL = 2;
-      int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
-      int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
-      int SUB_H = INPUT_HEIGHT / PATCH_HEIGHT;
-      int SUB_W = INPUT_WIDTH / PATCH_WIDTH;
+      int HASH_PATCH_HEIGHT =  2;
+      int HASH_PATCH_WIDTH =   4;
+      int DEPTH_PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
+      int DEPTH_PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
+      int SUB_H = DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;
+      int SUB_W = DEPTH_INPUT_WIDTH / DEPTH_PATCH_WIDTH;
+
+      int HASH_SUB_H = HASH_INPUT_HEIGHT / HASH_PATCH_HEIGHT;
+      int HASH_SUB_W = HASH_INPUT_WIDTH / HASH_PATCH_WIDTH;
 
       int FILTER_KERNEL_SIZE = 4;
-      int FILTER_SUB_H = INPUT_HEIGHT / FILTER_KERNEL_SIZE;
-      int FILTER_SUB_W = INPUT_WIDTH / FILTER_KERNEL_SIZE;
+      int FILTER_SUB_H = DEPTH_INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+      int FILTER_SUB_W = DEPTH_INPUT_WIDTH / FILTER_KERNEL_SIZE;
 
       //    float DEPTH_FX = 459.97;
       //    float DEPTH_FY = 459.80;

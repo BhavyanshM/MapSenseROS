@@ -133,8 +133,8 @@ void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& times
    {
       //      CLAY_LOG_INFO("Copying Depth Info Message: {}", _cameraInfoMessage->distortion_model);
       _cameraInfoSet = true;
-      app.INPUT_WIDTH = _cameraInfoMessage->width / app.DIVISION_FACTOR;
-      app.INPUT_HEIGHT = _cameraInfoMessage->height / app.DIVISION_FACTOR;
+      app.DEPTH_INPUT_WIDTH = _cameraInfoMessage->width / app.DIVISION_FACTOR;
+      app.DEPTH_INPUT_HEIGHT = _cameraInfoMessage->height / app.DIVISION_FACTOR;
       app.DEPTH_FX = _cameraInfoMessage->K[0] / app.DIVISION_FACTOR;
       app.DEPTH_FY = _cameraInfoMessage->K[4] / app.DIVISION_FACTOR;
       app.DEPTH_CX = _cameraInfoMessage->K[2] / app.DIVISION_FACTOR;

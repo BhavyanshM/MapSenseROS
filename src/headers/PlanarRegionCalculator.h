@@ -69,7 +69,8 @@ class PlanarRegionCalculator
       cv::Mat inputStereoLeft, inputStereoRight;
 
       MapFrame output;
-      MapFrameProcessor* _mapFrameProcessor;
+      MapFrameProcessor* _depthMapFrameProcessor;
+      MapFrameProcessor* _hashMapFrameProcessor;
       OpenCLManager* _openCL;
       vector<shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;

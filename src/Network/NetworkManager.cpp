@@ -288,24 +288,24 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
       if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
-         app.INPUT_WIDTH = depthCameraInfo->width / app.DIVISION_FACTOR;
-         app.INPUT_HEIGHT = depthCameraInfo->height / app.DIVISION_FACTOR;
+         app.DEPTH_INPUT_WIDTH = depthCameraInfo->width / app.DIVISION_FACTOR;
+         app.DEPTH_INPUT_HEIGHT = depthCameraInfo->height / app.DIVISION_FACTOR;
          app.DEPTH_FX = depthCameraInfo->K[0] / app.DIVISION_FACTOR;
          app.DEPTH_FY = depthCameraInfo->K[4] / app.DIVISION_FACTOR;
          app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
-         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH,
-                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH,
+                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
       }
-      //        app.PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
-      //        app.PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
-      //        app.SUB_H = (int) app.INPUT_HEIGHT / app.PATCH_HEIGHT;
-      //        app.SUB_W = (int) app.INPUT_WIDTH / app.PATCH_WIDTH;
+      //        app.DEPTH_PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
+      //        app.DEPTH_PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
+      //        app.SUB_H = (int) app.DEPTH_INPUT_HEIGHT / app.DEPTH_PATCH_HEIGHT;
+      //        app.SUB_W = (int) app.DEPTH_INPUT_WIDTH / app.DEPTH_PATCH_WIDTH;
 
 
-      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.SUB_W, app.SUB_H,
-                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.SUB_W, app.SUB_H,
+                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
    }
    ROS_DEBUG("Data Frame Loaded");
 }

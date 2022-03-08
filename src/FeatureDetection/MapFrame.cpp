@@ -28,11 +28,11 @@ void MapFrame::drawGraph(cv::Mat& img, ApplicationState app)
       {
          if (patchData.at<uint8_t>(j, i) == 255)
          {
-            line(img, cv::Point(i * app.PATCH_HEIGHT + app.PATCH_HEIGHT / 2, j * app.PATCH_WIDTH + app.PATCH_WIDTH / 2),
-                 cv::Point((i + 1) * app.PATCH_HEIGHT + app.PATCH_HEIGHT / 2, j * app.PATCH_WIDTH + app.PATCH_WIDTH / 2), cv::Scalar(0, 150, 0), 1);
-            line(img, cv::Point(i * app.PATCH_HEIGHT + app.PATCH_HEIGHT / 2, j * app.PATCH_WIDTH + app.PATCH_WIDTH / 2),
-                 cv::Point(i * app.PATCH_HEIGHT + app.PATCH_HEIGHT / 2, (j + 1) * app.PATCH_WIDTH + app.PATCH_WIDTH / 2), cv::Scalar(0, 150, 0), 1);
-            circle(img, cv::Point(i * app.PATCH_HEIGHT + app.PATCH_HEIGHT / 2, j * app.PATCH_WIDTH + app.PATCH_WIDTH / 2), 2, cv::Scalar(0, 200, 0), -1);
+            line(img, cv::Point(i * app.DEPTH_PATCH_HEIGHT + app.DEPTH_PATCH_HEIGHT / 2, j * app.DEPTH_PATCH_WIDTH + app.DEPTH_PATCH_WIDTH / 2),
+                 cv::Point((i + 1) * app.DEPTH_PATCH_HEIGHT + app.DEPTH_PATCH_HEIGHT / 2, j * app.DEPTH_PATCH_WIDTH + app.DEPTH_PATCH_WIDTH / 2), cv::Scalar(0, 150, 0), 1);
+            line(img, cv::Point(i * app.DEPTH_PATCH_HEIGHT + app.DEPTH_PATCH_HEIGHT / 2, j * app.DEPTH_PATCH_WIDTH + app.DEPTH_PATCH_WIDTH / 2),
+                 cv::Point(i * app.DEPTH_PATCH_HEIGHT + app.DEPTH_PATCH_HEIGHT / 2, (j + 1) * app.DEPTH_PATCH_WIDTH + app.DEPTH_PATCH_WIDTH / 2), cv::Scalar(0, 150, 0), 1);
+            circle(img, cv::Point(i * app.DEPTH_PATCH_HEIGHT + app.DEPTH_PATCH_HEIGHT / 2, j * app.DEPTH_PATCH_WIDTH + app.DEPTH_PATCH_WIDTH / 2), 2, cv::Scalar(0, 200, 0), -1);
          }
       }
    }

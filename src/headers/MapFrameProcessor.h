@@ -43,6 +43,12 @@ class MapFrameProcessor
       ApplicationState& app;
       Eigen::Vector2i connect[8] = {Eigen::Vector2i(-1,-1), Eigen::Vector2i(1,0),Eigen::Vector2i(2,0),Eigen::Vector2i(0,1),Eigen::Vector2i(2,1),Eigen::Vector2i(0,2),Eigen::Vector2i(1,2), Eigen::Vector2i(2,2)};
 
+      int SUB_H = 0;
+      int SUB_W = 0;
+      int PATCH_HEIGHT = 0;
+      int PATCH_WIDTH = 0;
+      int INPUT_HEIGHT = 0;
+      int INPUT_WIDTH = 0;
 
 };
 

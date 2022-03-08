@@ -13,7 +13,7 @@ ApplicationState::ApplicationState()
    std::ifstream infile{ path };
 
    std::string str, name, value;
-   for (int i = 0; i<100; i++)
+   for (int i = 0; i<200; i++)
    {
       getline(infile, str);
       std::vector<std::string> strs;
@@ -33,8 +33,10 @@ ApplicationState::ApplicationState()
       if(name == "REGION_MIN_PATCHES") {REGION_MIN_PATCHES = stoi(value);}
       if(name == "REGION_BOUNDARY_DIFF") {REGION_BOUNDARY_DIFF = stoi(value);}
       if(name == "REGION_MODE") {REGION_MODE = stoi(value);}
-      if(name == "INPUT_HEIGHT") {INPUT_HEIGHT = stoi(value);}
-      if(name == "INPUT_WIDTH") {INPUT_WIDTH = stoi(value);}
+      if(name == "DEPTH_INPUT_HEIGHT") { DEPTH_INPUT_HEIGHT = stoi(value);}
+      if(name == "DEPTH_INPUT_WIDTH") { DEPTH_INPUT_WIDTH = stoi(value);}
+      if(name == "HASH_INPUT_HEIGHT") { HASH_INPUT_HEIGHT = stoi(value);}
+      if(name == "HASH_INPUT_WIDTH") { HASH_INPUT_WIDTH = stoi(value);}
       if(name == "KERNEL_SLIDER_LEVEL") {KERNEL_SLIDER_LEVEL = stoi(value);}
       if(name == "FILTER_KERNEL_SIZE") {FILTER_KERNEL_SIZE = stoi(value);}
       if(name == "DIVISION_FACTOR") {DIVISION_FACTOR = stoi(value);}
@@ -46,8 +48,10 @@ ApplicationState::ApplicationState()
       if(name == "STEREO_BLOCK_SIZE") {STEREO_BLOCK_SIZE = stoi(value);}
       if(name == "STEREO_PRE_FILTER_SIZE") {STEREO_PRE_FILTER_SIZE = stoi(value);}
       if(name == "HASH_THREAD_NUM") {HASH_THREAD_NUM = stoi(value);}
-      if(name == "PATCH_HEIGHT") {PATCH_HEIGHT = stoi(value);}
-      if(name == "PATCH_WIDTH") {PATCH_WIDTH = stoi(value);}
+      if(name == "DEPTH_PATCH_HEIGHT") { DEPTH_PATCH_HEIGHT = stoi(value);}
+      if(name == "DEPTH_PATCH_WIDTH") { DEPTH_PATCH_WIDTH = stoi(value);}
+      if(name == "HASH_PATCH_HEIGHT") { HASH_PATCH_HEIGHT = stoi(value);}
+      if(name == "HASH_PATCH_WIDTH") { HASH_PATCH_WIDTH = stoi(value);}
 
       if(name == "FILTER_DISPARITY_THRESHOLD") {FILTER_DISPARITY_THRESHOLD = stof(value);}
       if(name == "DEPTH_BRIGHTNESS") {DEPTH_BRIGHTNESS = stof(value);}
@@ -58,7 +62,8 @@ ApplicationState::ApplicationState()
       if(name == "DEPTH_CY") {DEPTH_CY = stof(value);}
       if(name == "MERGE_DISTANCE_THRESHOLD") {MERGE_DISTANCE_THRESHOLD = stof(value);}
       if(name == "MERGE_ANGULAR_THRESHOLD") {MERGE_ANGULAR_THRESHOLD = stof(value);}
-      if(name == "MAGNUM_PATCH_SCALE") {MAGNUM_PATCH_SCALE = stof(value);}
+      if(name == "HASH_MERGE_DISTANCE_THRESHOLD") {HASH_MERGE_DISTANCE_THRESHOLD = stof(value);}
+      if(name == "HASH_MERGE_ANGULAR_THRESHOLD") {HASH_MERGE_ANGULAR_THRESHOLD = stof(value);}
       if(name == "DISPLAY_WINDOW_SIZE") {DISPLAY_WINDOW_SIZE = stof(value);}
       if(name == "REGION_GROWTH_FACTOR") {REGION_GROWTH_FACTOR = stof(value);}
 
@@ -87,26 +92,45 @@ ApplicationState::ApplicationState()
       if(name == "GENERATE_REGIONS") {GENERATE_REGIONS = (value == "true");}
    }
 
-   SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
-   SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
+   SUB_H = (int) DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;
+   SUB_W = (int) DEPTH_INPUT_WIDTH / DEPTH_PATCH_WIDTH;
+
+   HASH_SUB_H = (int) HASH_INPUT_HEIGHT / HASH_PATCH_HEIGHT;
+   HASH_SUB_W = (int) HASH_INPUT_WIDTH / HASH_PATCH_WIDTH;
 }
 
 void ApplicationState::update()
 {
-//   if (INPUT_HEIGHT > 0 && INPUT_WIDTH > 0)
-//   {
-//      if ((INPUT_HEIGHT % KERNEL_SLIDER_LEVEL == 0) && (INPUT_WIDTH % KERNEL_SLIDER_LEVEL == 0))
-//      {
-//         PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
-//         PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
-//         SUB_H = (int) INPUT_HEIGHT / PATCH_HEIGHT;
-//         SUB_W = (int) INPUT_WIDTH / PATCH_WIDTH;
-//      }
-//      if ((INPUT_HEIGHT % FILTER_KERNEL_SIZE == 0) && (INPUT_WIDTH % FILTER_KERNEL_SIZE == 0))
-//      {
-//         FILTER_SUB_H = (int) INPUT_HEIGHT / FILTER_KERNEL_SIZE;
-//         FILTER_SUB_W = (int) INPUT_WIDTH / FILTER_KERNEL_SIZE;
-//      }
-//   }
+   if (DEPTH_INPUT_HEIGHT > 0 && DEPTH_INPUT_WIDTH > 0)
+   {
+      if ((DEPTH_INPUT_HEIGHT % KERNEL_SLIDER_LEVEL == 0) && (DEPTH_INPUT_WIDTH % KERNEL_SLIDER_LEVEL == 0))
+      {
+         DEPTH_PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
+         DEPTH_PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
+         SUB_H = (int) DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;
+         SUB_W = (int) DEPTH_INPUT_WIDTH / DEPTH_PATCH_WIDTH;
+      }
+      if ((DEPTH_INPUT_HEIGHT % FILTER_KERNEL_SIZE == 0) && (DEPTH_INPUT_WIDTH % FILTER_KERNEL_SIZE == 0))
+      {
+         FILTER_SUB_H = (int) DEPTH_INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+         FILTER_SUB_W = (int) DEPTH_INPUT_WIDTH / FILTER_KERNEL_SIZE;
+      }
+   }
+
+   if (HASH_INPUT_HEIGHT > 0 && HASH_INPUT_WIDTH > 0)
+   {
+      if ((HASH_INPUT_HEIGHT % KERNEL_SLIDER_LEVEL == 0) && (DEPTH_INPUT_WIDTH % KERNEL_SLIDER_LEVEL == 0))
+      {
+         DEPTH_PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
+         DEPTH_PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
+         HASH_SUB_H = (int) HASH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;
+         HASH_SUB_W = (int) DEPTH_INPUT_WIDTH / DEPTH_PATCH_WIDTH;
+      }
+      if ((HASH_INPUT_HEIGHT % FILTER_KERNEL_SIZE == 0) && (DEPTH_INPUT_WIDTH % FILTER_KERNEL_SIZE == 0))
+      {
+         FILTER_SUB_H = (int) HASH_INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+         FILTER_SUB_W = (int) DEPTH_INPUT_WIDTH / FILTER_KERNEL_SIZE;
+      }
+   }
 }
 
