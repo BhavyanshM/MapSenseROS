@@ -144,8 +144,8 @@ set(HEADERS
         src/headers/ImageTools.h
         src/headers/ImageReceiver.h
         src/headers/ROS1TopicReceiver.h
-#        src/headers/PointCloudReceiver.h
-#        src/Network/PointCloudReceiver.cpp
+        src/headers/PointCloudReceiver.h
+        src/Network/PointCloudReceiver.cpp
         src/headers/DataManager.h
         src/headers/OpenCLManager.h
         src/headers/Log.h

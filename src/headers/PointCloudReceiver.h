@@ -26,7 +26,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
 
       void ImGuiUpdate() override;
 
-//      void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloudMsg);
+      void PointCloud2Callback(const sensor_msgs::PointCloud2ConstPtr& cloudMsg);
 
 //      void cloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloudMsg);
 
@@ -38,7 +38,8 @@ class PointCloudReceiver : public ROS1TopicReceiver
       void ColorPointsByImage(Clay::Ref<Clay::PointCloud> cloud, cv::Mat image, float ousterPitch = 30);
       Clay::Ref<Clay::PointCloud> GetNextCloud()
       {
-         if(_clouds.size() > 2)
+         CLAY_LOG_INFO("Cloud Size: {}", _clouds.size());
+         if(_clouds.size() >= 2)
          {
             Clay::Ref<Clay::PointCloud> cloudToReturn = _clouds[_clouds.size()-1];
             _clouds.erase(_clouds.begin());
@@ -53,7 +54,8 @@ class PointCloudReceiver : public ROS1TopicReceiver
 //      sensor_msgs::PointCloud2ConstPtr _cloudMessage;
       bool _available = false;
       bool _renderEnabled = true;
-      pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
+//      pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
+      sensor_msgs::PointCloud2::ConstPtr _msg;
       Subscriber *_cloudSubscriber;
       Clay::Ref<Clay::PointCloud> _cloudToRender;
 

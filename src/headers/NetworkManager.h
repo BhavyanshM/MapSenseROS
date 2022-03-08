@@ -15,7 +15,7 @@
 #include "map_sense/MapsenseConfiguration.h"
 #include "ImageReceiver.h"
 #include "Scene/Mesh/PointCloud.h"
-//#include "PointCloudReceiver.h"
+#include "PointCloudReceiver.h"
 
 
 #include "MapsenseHeaders.h"

@@ -81,8 +81,8 @@ int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
    if (data.datatype == "sensor_msgs/CompressedImage")
       receiver = new ImageReceiver(rosNode, data.name, info.name, true);
-//   if (data.datatype == "sensor_msgs/PointCloud2")
-//      receiver = new PointCloudReceiver(rosNode, data.name, false);
+   if (data.datatype == "sensor_msgs/PointCloud2")
+      receiver = new PointCloudReceiver(rosNode, data.name, false);
 
    if (receiver != nullptr)
    {

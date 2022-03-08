@@ -25,15 +25,14 @@ namespace Clay
       _mapper->SetRegionCalculator(_regionCalculator);
 
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootModel);
-      //      _visualOdometry->Initialize(firstCloud);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
 
       std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(90);
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
-      cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
-      cloud->Load(filename, false);
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
+//      cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+//      cloud->Load(filename, false);
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
 
 //      _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
 
@@ -108,6 +107,12 @@ namespace Clay
 
 
       }
+      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+      Clay::Ref<Clay::PointCloud> pcl = pclReceiver->GetNextCloud();
+      if(pcl != nullptr)_models.push_back(std::dynamic_pointer_cast<Clay::Model>(pcl));
+      else
+         CLAY_LOG_INFO("PointCloud is Null");
+
    }
 
    void NetworkedTerrainSLAMLayer::ImGuiUpdate(ApplicationState& appState)
@@ -116,7 +121,6 @@ namespace Clay
       _regionCalculator->ImGuiUpdate(appState);
       _slamModule->ImGuiUpdate();
       _mapper->ImGuiUpdate();
-
 
    }
 }
