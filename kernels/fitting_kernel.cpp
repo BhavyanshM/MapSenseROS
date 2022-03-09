@@ -495,7 +495,7 @@ void kernel hashKernel(global float* cloud, read_write image2d_t indices, global
    int pitchOffset = params[INPUT_HEIGHT]/2;
    int yawOffset = params[INPUT_WIDTH]/2;
 
-//   printf("r:%d, c:%d, t:%d, total:%d, start:%d, end:%d, pitchUnit:%.2lf, yawUnit:%.2lf, pitchOffset:%d, yawOffset:%d\n", r, c, t, totalPoints, start, end,
+//   printf("r:%d, c:%d, t:%d, total:%d, start:%d, end:%d, pitchUnit:%.4lf, yawUnit:%.4lf, pitchOffset:%d, yawOffset:%d\n", r, c, t, totalPoints, start, end,
 //          pitchUnit, yawUnit, pitchOffset, yawOffset);
 
    for(int i = start; i<end; i++)

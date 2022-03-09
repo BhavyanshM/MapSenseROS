@@ -35,20 +35,38 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
       ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
       ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
       ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
-      ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
+
       ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
       ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
       ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
       ImGui::Checkbox("Render 3D", &_render);
-
-      ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 8);
-      ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
-      ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01f, 1.0f);
-      ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.01f, 1.0f);
-      ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
-      ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
       ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
       ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
+      ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
+      ImGui::SliderInt("Gaussian Size", &appState.GAUSSIAN_SIZE, 1, 8);
+      ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
+
+      if(ImGui::BeginTabBar("Mode"))
+      {
+         if(ImGui::BeginTabItem("Depth"))
+         {
+            ImGui::Checkbox("Components", &appState.SHOW_DEPTH_REGION_COMPONENTS);
+            ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01f, 1.0f);
+            ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.01f, 1.0f);
+            ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
+            ImGui::EndTabItem();
+         }
+
+         if(ImGui::BeginTabItem("Hash"))
+         {
+            ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
+            ImGui::SliderFloat("Distance Threshold", &appState.HASH_MERGE_DISTANCE_THRESHOLD, 0.01f, 1.0f);
+            ImGui::SliderFloat("Angular Threshold", &appState.HASH_MERGE_ANGULAR_THRESHOLD, 0.01f, 1.0f);
+            ImGui::EndTabItem();
+         }
+
+         ImGui::EndTabBar();
+      }
 
       if (ImGui::Button("Hide Display")){ cv::destroyAllWindows(); }
 
@@ -68,12 +86,13 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
 
 void PlanarRegionCalculator::Render()
 {
-   if (this->app.SHOW_REGION_COMPONENTS)
+   if (this->app.SHOW_DEPTH_REGION_COMPONENTS)
    {
-      ROS_DEBUG("Appending Region Components");
-//      AppUtils::DisplayImage(_depthMapFrameProcessor->debug, app);
-      AppUtils::DisplayImage(_hashMapFrameProcessor->debug, app);
-      //      appUtils.appendToDebugOutput(this->_hashMapFrameProcessor.debug);
+      AppUtils::DisplayImage(_depthMapFrameProcessor->debug, app, "Depth Components");
+   }
+   if (this->app.SHOW_HASH_REGION_COMPONENTS)
+   {
+      AppUtils::DisplayImage(_hashMapFrameProcessor->debug, app, "Hash Components");
    }
 }
 
@@ -382,6 +401,9 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    PlanarRegion::SetZeroId(planarRegionList);
 
    _openCL->Reset();
+
+   for (int k = 0; k < planarRegionList.size(); k++)
+      planarRegionList[k]->RetainConvexHull();
 
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
    long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();

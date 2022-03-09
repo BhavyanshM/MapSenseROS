@@ -50,7 +50,7 @@ class AppUtils
 
       void clearDebug();
 
-      static void DisplayImage(cv::Mat disp, const ApplicationState& app);
+      static void DisplayImage(cv::Mat disp, const ApplicationState& app, const std::string& title = "DisplayWindow");
 
       static void PrintMatR8(cv::Mat& mat, int value = -1, bool invert = false, bool constant = false, int rowLimit = 0, int colLimit = 0);
 

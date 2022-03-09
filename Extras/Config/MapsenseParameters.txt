@@ -53,7 +53,8 @@ VISUAL_DEBUG:                   false
 SHOW_INPUT_COLOR:               false
 SHOW_INPUT_DEPTH:               false
 SHOW_FILTERED_DEPTH:            false
-SHOW_REGION_COMPONENTS:         false
+SHOW_DEPTH_REGION_COMPONENTS:   false
+SHOW_HASH_REGION_COMPONENTS:    false
 SHOW_STEREO_LEFT:               false
 SHOW_STEREO_RIGHT:              false
 SHOW_GRAPH:                     true

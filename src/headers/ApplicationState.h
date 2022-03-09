@@ -86,7 +86,8 @@ class ApplicationState
       bool SHOW_INPUT_COLOR = false;
       bool SHOW_INPUT_DEPTH = false;
       bool SHOW_FILTERED_DEPTH = false;
-      bool SHOW_REGION_COMPONENTS = false;
+      bool SHOW_HASH_REGION_COMPONENTS = false;
+      bool SHOW_DEPTH_REGION_COMPONENTS = false;
       bool SHOW_STEREO_LEFT = false;
       bool SHOW_STEREO_RIGHT = false;
 

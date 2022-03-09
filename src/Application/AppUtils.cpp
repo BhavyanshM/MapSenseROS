@@ -166,13 +166,13 @@ void AppUtils::checkMemoryLimits()
    }
 }
 
-void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app)
+void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app, const std::string& title)
 {
    if (disp.cols > 0 && disp.rows > 0 && !disp.empty())
    {
-      cv::namedWindow("DisplayImage", cv::WINDOW_NORMAL);
-      cv::resizeWindow("DisplayImage", (int) (disp.cols * app.DISPLAY_WINDOW_SIZE), (int) (disp.rows * app.DISPLAY_WINDOW_SIZE));
-      cv::imshow("DisplayImage", disp);
+      cv::namedWindow(title, cv::WINDOW_NORMAL);
+      cv::resizeWindow(title, (int) (disp.cols * app.DISPLAY_WINDOW_SIZE), (int) (disp.rows * app.DISPLAY_WINDOW_SIZE));
+      cv::imshow(title, disp);
       cv::waitKey(1);
    }
 }

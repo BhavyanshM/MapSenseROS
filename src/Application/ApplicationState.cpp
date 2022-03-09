@@ -74,7 +74,6 @@ ApplicationState::ApplicationState()
       if(name == "SHOW_INPUT_COLOR") {SHOW_INPUT_COLOR = (value == "true");}
       if(name == "SHOW_INPUT_DEPTH") {SHOW_INPUT_DEPTH = (value == "true");}
       if(name == "SHOW_FILTERED_DEPTH") {SHOW_FILTERED_DEPTH = (value == "true");}
-      if(name == "SHOW_REGION_COMPONENTS") {SHOW_REGION_COMPONENTS = (value == "true");}
       if(name == "SHOW_STEREO_LEFT") {SHOW_STEREO_LEFT = (value == "true");}
       if(name == "SHOW_STEREO_RIGHT") {SHOW_STEREO_RIGHT = (value == "true");}
       if(name == "SHOW_GRAPH") {SHOW_GRAPH = (value == "true");}
@@ -90,6 +89,8 @@ ApplicationState::ApplicationState()
       if(name == "DATASET_ENABLED") {DATASET_ENABLED = (value == "true");}
       if(name == "EXPORT_REGIONS") {EXPORT_REGIONS = (value == "true");}
       if(name == "GENERATE_REGIONS") {GENERATE_REGIONS = (value == "true");}
+      if(name == "SHOW_DEPTH_REGION_COMPONENTS") {SHOW_DEPTH_REGION_COMPONENTS = (value == "true");}
+      if(name == "SHOW_HASH_REGION_COMPONENTS") {SHOW_HASH_REGION_COMPONENTS = (value == "true");}
    }
 
    SUB_H = (int) DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;

@@ -158,7 +158,8 @@ void SLAMModule::slamUpdate()
 //      _mapper->regions = _mapper->_latestRegionsZUp;
 //      poseAvailable = false;
 //
-//      ROS_DEBUG("SLAM Update Complete.\n");
+//      ROS_DEBUG("SLAM Updafor (int k = 0; k < _mapper->mapRegions.size(); k++)
+//      _mapper->mapRegions[k]->RetainConvexHull();te Complete.\n");
 //   }
 }
 
