@@ -30,6 +30,10 @@ namespace Clay
       std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(90);
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
+      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+      _cloud = pclReceiver->GetRenderable();
+      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
+
 //      cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
 //      cloud->Load(filename, false);
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
@@ -41,6 +45,9 @@ namespace Clay
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()
    {
       //      ROS_DEBUG("TickEvent: %d", count++);
+
+      if(_models.size() >=2) CLAY_LOG_INFO("Models: {} {} {}", _models.size(), _models[0]->GetSize(), _models[1]->GetSize());
+
       if (appState.ROS_ENABLED)
       {
          ROS_DEBUG("ROS Update: {}", appState.ROS_ENABLED);
@@ -99,19 +106,14 @@ namespace Clay
 
       if(_regionCalculator->RenderEnabled())
       {
-
-//         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
+//         _cloud = ((PointCloudReceiver*)_networkManager->receivers[appState.OUSTER_POINTS])->GetNextCloud();
+         if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
          mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
-
          _regionCalculator->Render();
-
-
       }
-      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
-      Clay::Ref<Clay::PointCloud> pcl = pclReceiver->GetNextCloud();
-      if(pcl != nullptr)_models.push_back(std::dynamic_pointer_cast<Clay::Model>(pcl));
-      else
-         CLAY_LOG_INFO("PointCloud is Null");
+
+      _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);
+
 
    }
 

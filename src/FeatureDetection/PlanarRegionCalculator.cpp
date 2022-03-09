@@ -71,7 +71,8 @@ void PlanarRegionCalculator::Render()
    if (this->app.SHOW_REGION_COMPONENTS)
    {
       ROS_DEBUG("Appending Region Components");
-      AppUtils::DisplayImage(_depthMapFrameProcessor->debug, app);
+//      AppUtils::DisplayImage(_depthMapFrameProcessor->debug, app);
+      AppUtils::DisplayImage(_hashMapFrameProcessor->debug, app);
       //      appUtils.appendToDebugOutput(this->_hashMapFrameProcessor.debug);
    }
 }

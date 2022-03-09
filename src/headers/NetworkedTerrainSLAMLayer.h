@@ -30,7 +30,7 @@ namespace Clay {
          Ref<PointCloud> firstCloud;
          std::vector<std::shared_ptr<PlanarRegion>> _regions;
 
-          Ref<PointCloud> cloud;
+          Ref<PointCloud> _cloud;
 
     };
 
