@@ -39,7 +39,7 @@ class VisualOdometry
       void Initialize(Clay::Ref<Clay::PointCloud>& cloud);
       bool Update(ApplicationState& appState, Clay::Ref<Clay::TriangleMesh> axes, Clay::Ref<Clay::PointCloud> cloud);
 
-      void ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1);
+      void ExtractKeypoints_FAST(cv::Mat img_1, std::vector<cv::Point2f>& points1);
       void ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc);
       void TrackKeypoints(cv::Mat prev, cv::Mat cur, std::vector<cv::Point2f>& prev_pts, std::vector<cv::Point2f>& cur_pts);
       void MatchKeypoints(cv::Mat& desc1, cv::Mat& desc2, std::vector<cv::DMatch>& matches);

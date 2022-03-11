@@ -9,8 +9,6 @@
 #include <ApplicationState.h>
 #include "AppUtils.h"
 
-using namespace std;
-
 class ImGuiLayout
 {
    public:

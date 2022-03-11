@@ -6,8 +6,6 @@
 #include "ApplicationState.h"
 #include "MapsenseHeaders.h"
 
-using namespace std;
-
 class MapFrame
 {
    public:

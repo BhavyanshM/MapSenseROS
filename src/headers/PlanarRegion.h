@@ -89,25 +89,25 @@ class PlanarRegion
 
       void SetCenter(const Eigen::Vector3f& center);
 
-      void WriteToFile(ofstream& file);
+      void WriteToFile(std::ofstream& file);
 
-      std::vector<shared_ptr<RegionRing>> rings;
+      std::vector<std::shared_ptr<RegionRing>> rings;
 
       void transform(RigidBodyTransform transform);
 
       void transform(Eigen::Vector3d translation, Eigen::Matrix3d rotation);
 
-      void CopyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform);
+      void CopyAndTransform(std::shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform);
 
-      string toString();
+      const std::string& toString();
 
       void ProjectToPlane(Eigen::Vector4f plane);
 
       void SetToUnitSquare();
 
-      static void PrintRegionList(const std::vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name);
+      static void PrintRegionList(const std::vector<std::shared_ptr<PlanarRegion>>& regionList, const std::string& name);
 
-      static void SetZeroId( std::vector<shared_ptr<PlanarRegion>>& regionList);
+      static void SetZeroId( std::vector<std::shared_ptr<PlanarRegion>>& regionList);
 
       const std::vector<Eigen::Vector2f>& GetPlanarPatchCentroids() const {return planarPatchCentroids;}
 

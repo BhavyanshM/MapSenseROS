@@ -57,12 +57,12 @@ Eigen::Vector3f PlanarRegion::getMeanCenter()
    return this->center / (float) this->numPatches;
 }
 
-vector<Eigen::Vector3f> PlanarRegion::getVertices()
+std::vector<Eigen::Vector3f> PlanarRegion::getVertices()
 {
    return boundaryVertices;
 }
 
-vector<Eigen::Vector2i> PlanarRegion::getLeafPatches()
+std::vector<Eigen::Vector2i> PlanarRegion::getLeafPatches()
 {
    return leafPatches;
 }
@@ -87,7 +87,7 @@ void PlanarRegion::insertBoundaryVertex(Eigen::Vector3f vertex)
    this->boundaryVertices.push_back(vertex);
 }
 
-vector<Eigen::Vector3f> PlanarRegion::getBoundaryVertices()
+std::vector<Eigen::Vector3f> PlanarRegion::getBoundaryVertices()
 {
    return boundaryVertices;
 }
@@ -140,7 +140,7 @@ void PlanarRegion::SortOrderClockwise()
    ROS_INFO("Ordered Clockwise\n");
 }
 
-void PlanarRegion::GetClockWise2D(vector<Eigen::Vector2f>& points)
+void PlanarRegion::GetClockWise2D(std::vector<Eigen::Vector2f>& points)
 {
    printf("Getting ClockWise 2D\n");
    Eigen::Vector3f center = this->getMeanCenter();
@@ -196,12 +196,12 @@ void PlanarRegion::SetCenter(const Eigen::Vector3f& center)
    centroidCalculated = true;
 }
 
-void PlanarRegion::WriteToFile(ofstream& file)
+void PlanarRegion::WriteToFile(std::ofstream& file)
 {
-   file << "RegionID:" << this->id << endl;
+   file << "RegionID:" << this->id << std::endl;
    file << boost::format("Center:%.3f,%.3f,%.3f\n") % center.x() % center.y() % center.z();
    file << boost::format("Normal:%.3f,%.3f,%.3f\n") % normal.x() % normal.y() % normal.z();
-   file << "NumPatches:" << this->GetNumOfBoundaryVertices() << endl;
+   file << "NumPatches:" << this->GetNumOfBoundaryVertices() << std::endl;
    for (int i = 0; i < boundaryVertices.size(); i++)
    {
       file << boost::format("%.3lf, %.3lf, %.3lf\n") % boundaryVertices[i].x() % boundaryVertices[i].y() % boundaryVertices[i].z();
@@ -223,7 +223,7 @@ void PlanarRegion::transform(Eigen::Vector3d translation, Eigen::Matrix3d rotati
    }
 }
 
-void PlanarRegion::CopyAndTransform(shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform)
+void PlanarRegion::CopyAndTransform(std::shared_ptr<PlanarRegion>& planarRegionToPack, RigidBodyTransform transform)
 {
    planarRegionToPack->SetNormal(this->GetNormal());
    planarRegionToPack->SetCenter(this->GetCenter());
@@ -250,7 +250,7 @@ void PlanarRegion::ProjectToPlane(Eigen::Vector4f plane)
    }
 }
 
-string PlanarRegion::toString()
+const std::string& PlanarRegion::toString()
 {
    boost::format formatter("Id(%d) PoseId(%d) Center(%.3f,%.3f,%.3f) Plane(%.3f,%.3f,%.3f,%.3f) NumPoints(%d) Measured(%d)");
    formatter % this->id % this->GetPoseId() % this->GetCenter().x() % this->GetCenter().y() % this->GetCenter().z() % this->GetNormal().x() %
@@ -296,9 +296,9 @@ void PlanarRegion::ComputeBoundaryVerticesPlanar()
    }
 }
 
-void PlanarRegion::ComputeBoundaryVertices3D(vector<Eigen::Vector2f> points2D)
+void PlanarRegion::ComputeBoundaryVertices3D(std::vector<Eigen::Vector2f> points2D)
 {
-   vector<Eigen::Vector3f> points3D;
+   std::vector<Eigen::Vector3f> points3D;
    for (int i = 0; i < points2D.size(); i++)
    {
       points3D.emplace_back(transformToWorldFrame.transformVector(Eigen::Vector3d((double) points2D[i].x(), (double) points2D[i].y(), 0)).cast<float>());
@@ -310,20 +310,20 @@ void PlanarRegion::ComputeBoundaryVertices3D(vector<Eigen::Vector2f> points2D)
 void PlanarRegion::RetainConvexHull()
 {
    ComputeBoundaryVerticesPlanar();
-   vector<Eigen::Vector2f> convexHull = GeomTools::GrahamScanConvexHull(this->planarPatchCentroids);
+   std::vector<Eigen::Vector2f> convexHull = GeomTools::GrahamScanConvexHull(this->planarPatchCentroids);
    ComputeBoundaryVertices3D(convexHull);
 }
 
 void PlanarRegion::RetainLinearApproximation()
 {
    ComputeBoundaryVerticesPlanar();
-   vector<Eigen::Vector2f> concaveHull = GeomTools::CanvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
+   std::vector<Eigen::Vector2f> concaveHull = GeomTools::CanvasApproximateConcaveHull(this->planarPatchCentroids, 640, 480);
    Eigen::MatrixXf parametricCurve(2, 14);
 
    GeomTools::GetParametricCurve(concaveHull, 13, parametricCurve);
    ComputeBoundaryVertices3D(concaveHull);
 
-   cout << "Parameters:" << endl << parametricCurve << endl;
+   std::cout << "Parameters:" << std::endl << parametricCurve << std::endl;
 }
 
 void PlanarRegion::SetToUnitSquare()
@@ -336,7 +336,7 @@ void PlanarRegion::SetToUnitSquare()
    insertBoundaryVertex(Eigen::Vector3f(1, -1, 1));
 }
 
-void PlanarRegion::PrintRegionList(const vector<shared_ptr<PlanarRegion>>& regionList, const std::string& name)
+void PlanarRegion::PrintRegionList(const std::vector<std::shared_ptr<PlanarRegion>>& regionList, const std::string& name)
 {
    printf("%s: (%d)[", name.c_str(), regionList.size());
    for (auto region: regionList)
@@ -346,7 +346,7 @@ void PlanarRegion::PrintRegionList(const vector<shared_ptr<PlanarRegion>>& regio
    printf("]\n");
 }
 
-void PlanarRegion::SetZeroId(vector<shared_ptr<PlanarRegion>>& regionList)
+void PlanarRegion::SetZeroId(std::vector<std::shared_ptr<PlanarRegion>>& regionList)
 {
    for (auto region: regionList)
       region->setId(-1);
@@ -373,8 +373,8 @@ void PlanarRegion::ComputeSegmentIndices(float distThreshold)
 
 void PlanarRegion::CompressRegionSegmentsLinear(float compressDistThreshold, float compressCosineThreshold)
 {
-   vector<Eigen::Vector2f> reducedBoundary;
-   vector<int> reducedSegments;
+   std::vector<Eigen::Vector2f> reducedBoundary;
+   std::vector<int> reducedSegments;
 
    uint16_t start = 0;
    uint16_t end = 1;

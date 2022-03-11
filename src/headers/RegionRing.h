@@ -8,13 +8,12 @@
 #include <Eigen/Dense>
 #include "MapsenseHeaders.h"
 
-using namespace std;
 
 class RegionRing
 {
    public:
-      vector<Eigen::Vector3f> boundaryVertices;
-      vector<Eigen::Vector2i> boundaryIndices;
+      std::vector<Eigen::Vector3f> boundaryVertices;
+      std::vector<Eigen::Vector2i> boundaryIndices;
       int id;
 
       RegionRing(int id);

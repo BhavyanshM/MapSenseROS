@@ -1,6 +1,6 @@
 #include "MeshGenerator.h"
 
-void MeshGenerator::GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
+void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
 {
 //   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
    for (int i = 0; i < planarRegion->GetNumOfBoundaryVertices(); i++)
@@ -57,12 +57,12 @@ void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)
    }
 }
 
-//void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
+//void MeshGenerator::generateRegionLineMesh(vector<std::shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
 //{
 //   if(erase) clearMesh(edges);
 //   for (int i = 0; i < planarRegionList.size(); i+=1)
 //   {
-//      shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
+//      std::shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
 //      vector<Vector3f> vertices = planarRegion->getVertices();
 //      for (int j = SKIP_EDGES; j < vertices.size() + SKIP_EDGES; j += SKIP_EDGES)
 //      {
@@ -95,7 +95,7 @@ void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)
 //}
 //
 //void
-//MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions,
+//MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<std::shared_ptr<PlanarRegion>> regions, vector<std::shared_ptr<PlanarRegion>> latestRegions,
 //                                     vector<Object3D *>& edges, Object3D *parent)
 //{
 //   clearMesh(edges);

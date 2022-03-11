@@ -5,24 +5,21 @@
 #ifndef SLAMMODULE_H
 #define SLAMMODULE_H
 
-#include "PlanarRegionMapHandler.h"
 #include "MapsenseHeaders.h"
-
-using namespace chrono;
+#include "PlanarRegion.h"
 
 class SLAMModule
 {
    private:
 
-      PlanarRegionMapHandler* _mapper;
-      vector<shared_ptr<PlanarRegion>> fileRegions;
+      std::vector<std::shared_ptr<PlanarRegion>> fileRegions;
 
-      vector<int> matchCountVec;
+      std::vector<int> matchCountVec;
 //      Subscriber *sensorPoseSub;
 //      geometry_msgs::PoseStampedConstPtr _sensorPoseMessage;
       int _frameId = 0;
 
-      RigidBodyTransform _transformZUp;
+
       bool render = true;
 
    public:
@@ -38,15 +35,13 @@ class SLAMModule
    public:
       SLAMModule(int argc, char **argv);
 
-      void SetMapHandler(PlanarRegionMapHandler* mapHandler) { _mapper = mapHandler;}
+      void Update(const std::vector <std::shared_ptr<PlanarRegion>>& regions);
 
-      void slamUpdate();
-
-      void setLatestRegionsToZUp(const vector<shared_ptr<PlanarRegion>>& regions);
+      void setLatestRegionsToZUp(const std::vector<std::shared_ptr<PlanarRegion>>& regions);
 
 //      void init(gtsam::Pose3 initialPose);
 
-      void extractArgs(int argc, char** argv);
+//      void extractArgs(int argc, char** argv);
 
       void ImGuiUpdate();
 

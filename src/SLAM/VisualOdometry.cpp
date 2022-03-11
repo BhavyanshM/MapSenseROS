@@ -76,13 +76,13 @@ void VisualOdometry::DrawLandmarks(cv::Mat& img, std::vector<PointLandmark>& lan
    }
 }
 
-void VisualOdometry::ExtractKeypoints_FAST(cv::Mat img_1, vector<cv::Point2f>& points1)
+void VisualOdometry::ExtractKeypoints_FAST(cv::Mat img_1, std::vector<cv::Point2f>& points1)
 {
-   vector<cv::KeyPoint> keypoints_1;
+   std::vector<cv::KeyPoint> keypoints_1;
    int fast_threshold = 20;
    bool nonmaxSuppression = true;
    cv::FAST(img_1, keypoints_1, fast_threshold, nonmaxSuppression);
-   cv::KeyPoint::convert(keypoints_1, points1, vector<int>());
+   cv::KeyPoint::convert(keypoints_1, points1, std::vector<int>());
 }
 
 void VisualOdometry::ExtractKeypoints(cv::Mat img, cv::Ptr<cv::ORB> orb, std::vector<cv::KeyPoint>& points, cv::Mat& desc)

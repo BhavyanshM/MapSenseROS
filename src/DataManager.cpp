@@ -16,7 +16,7 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
         if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
         if(poseFile != "")
         {
-            ifstream in_file;
+            std::ifstream in_file;
             in_file.open(poseFile);
             _poses = xt::load_csv<double>(in_file, ' ');
 

@@ -8,6 +8,7 @@
 
 #include "ApplicationLayer.h"
 #include "PlanarRegionCalculator.h"
+#include "MapHandler.h"
 #include "VisualOdometry.h"
 #include "DataManager.h"
 #include "SLAMModule.h"
@@ -21,7 +22,7 @@ namespace Clay {
         void ImGuiUpdate(ApplicationState& appState) override;
 
     private:
-          PlanarRegionMapHandler* _mapper;
+          MapHandler* _mapper;
          PlanarRegionCalculator *_regionCalculator;
          VisualOdometry* _visualOdometry;
          SLAMModule *_slamModule;

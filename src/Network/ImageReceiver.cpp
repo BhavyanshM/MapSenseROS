@@ -10,13 +10,13 @@ ImageReceiver::ImageReceiver() : ROS1TopicReceiver()
 {
 }
 
-ImageReceiver::ImageReceiver(NodeHandle *nh, std::string imageTopic, std::string cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
+ImageReceiver::ImageReceiver(ros::NodeHandle *nh, std::string imageTopic, std::string cameraInfoTopic, bool compressed) : ROS1TopicReceiver()
 {
    this->topicName = imageTopic;
    this->_compressed = compressed;
 
-   this->_imageSubscriber = new Subscriber();
-   this->_cameraInfoSubscriber = new Subscriber();
+   this->_imageSubscriber = new ros::Subscriber();
+   this->_cameraInfoSubscriber = new ros::Subscriber();
 
    if (!compressed)
    {
@@ -100,7 +100,7 @@ void ImageReceiver::processMessage(ApplicationState& app)
                this->_imageEncoding = sensor_msgs::image_encodings::MONO8;
             else if(_imageMessage->encoding == "16UC1")
                this->_imageEncoding = sensor_msgs::image_encodings::TYPE_16UC1;
-            else if(_imageMessage->encoding.find("rgb8") != string::npos)
+            else if(_imageMessage->encoding.find("rgb8") != std::string::npos)
                this->_imageEncoding = sensor_msgs::image_encodings::TYPE_16UC3;
             img_ptr = cv_bridge::toCvCopy(*_imageMessage, _imageEncoding);
 

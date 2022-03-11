@@ -4,24 +4,26 @@
 #include "PlanarRegionCalculator.h"
 #include <PlanarRegion.h>
 #include "GeomTools.h"
-//#include "FactorGraphHandler.h"
+#include "SLAMModule.h"
 
-using namespace std;
-
-class PlanarRegionMapHandler
+class MapHandler
 {
    public:
-      PlanarRegionMapHandler();
+      MapHandler();
+
+      void Update(std::vector <std::shared_ptr<PlanarRegion>>& regions);
 
       void SetRegionCalculator(PlanarRegionCalculator* regionCalculator){ _regionCalculator = regionCalculator;}
 
-      void setDirectory(const string& directory);
+      void SetSLAMModule(SLAMModule* slamModule){ _slam = slamModule;}
 
-      void InsertMapRegions(const std::vector<shared_ptr<PlanarRegion>>& regions);
+      void setDirectory(const std::string& directory);
+
+      void InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion>>& regions);
 
       void MatchPlanarRegionsToMap();
 
-      void getFileNames(string dirName);
+      void getFileNames(std::string dirName);
 
       void RegisterRegionsPointToPlane(uint8_t iterations);
 
@@ -43,7 +45,7 @@ class PlanarRegionMapHandler
 
       void PrintRefCounts();
 
-      void TransformAndCopyRegions(const vector<shared_ptr<PlanarRegion>>& srcRegions, vector<shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
+      void TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
 
       void ImGuiUpdate();
 
@@ -63,15 +65,18 @@ class PlanarRegionMapHandler
       bool ISAM2 = true;
       uint8_t ISAM2_NUM_STEPS = 4;
 
+      int _frameIndex = 0;
+
 //      FactorGraphHandler* fgSLAM;
-      vector<string> files;
+      std::vector<std::string> files;
 
-      vector<shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;
+      std::vector<std::shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, _mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;
 
-      vector<pair<int, int>> matches;
-      vector<RigidBodyTransform> poses, atlasPoses;
+      std::vector<std::pair<int, int>> _matches;
+      std::vector<RigidBodyTransform> poses, atlasPoses;
+      RigidBodyTransform _transformZUp;
 
-      string directory;
+      std::string directory;
       Eigen::Vector3d translationToReference, eulerAnglesToReference;
 
       RigidBodyTransform _sensorToMapTransform;
@@ -80,6 +85,7 @@ class PlanarRegionMapHandler
       RigidBodyTransform _atlasPreviousSensorPose;
 
       PlanarRegionCalculator* _regionCalculator;
+      SLAMModule* _slam;
 
       int regionSelected = 0;
       int fileSelected = 0;

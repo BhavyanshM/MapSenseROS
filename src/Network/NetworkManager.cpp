@@ -29,14 +29,14 @@ NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
 void NetworkManager::spin_ros_node()
 {
    ROS_DEBUG("SpinOnce");
-   spinOnce();
+   ros::spinOnce();
 }
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
    CLAY_LOG_INFO("Starting ROS Node");
-   init(argc, argv, "PlanarRegionPublisher");
-   rosNode = new NodeHandle();
+   ros::init(argc, argv, "PlanarRegionPublisher");
+   rosNode = new ros::NodeHandle();
 
    // ROSTopic Publishers
    planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/mapsense/planar_regions", 3);
@@ -44,11 +44,11 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
    // ROSTopic Subscribers
-   string depthTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH : app.L515_DEPTH;
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH_INFO : app.L515_DEPTH_INFO;
-   string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
+   std::string depthTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH : app.L515_DEPTH;
+   std::string depthInfoTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH_INFO : app.L515_DEPTH_INFO;
+   std::string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
 
-   string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
+   std::string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
    app.L515_DEPTH = depthTopicName;
    app.L515_DEPTH_INFO = depthInfoTopicName;
@@ -100,7 +100,7 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 {
    if (ImGui::BeginTabItem("Network"))
    {
-      vector<TopicInfo> topics = getROSTopicList();
+      std::vector<TopicInfo> topics = getROSTopicList();
       getTopicSelection(topics, currentDataTopic);
       if (ImGui::Button("Add Receiver"))
          addReceiver(currentDataTopic);
@@ -132,11 +132,11 @@ void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
    }
 }
 
-vector<TopicInfo> NetworkManager::getROSTopicList()
+std::vector<TopicInfo> NetworkManager::getROSTopicList()
 {
    ros::master::V_TopicInfo topic_infos;
    ros::master::getTopics(topic_infos);
-   vector<TopicInfo> names;
+   std::vector<TopicInfo> names;
    for (int i = 0; i < topic_infos.size(); i++)
    {
       names.emplace_back(topic_infos[i]);
@@ -144,7 +144,7 @@ vector<TopicInfo> NetworkManager::getROSTopicList()
    return names;
 }
 
-void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic)
+void NetworkManager::getTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic)
 {
    if (ImGui::BeginCombo("ROS Topics", currentTopic.name.c_str()))
    {

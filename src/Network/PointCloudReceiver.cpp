@@ -12,11 +12,11 @@
 //#include <xtensor/xdynamic_view.hpp>
 //#include <xtensor-blas/xlinalg.hpp>
 
-PointCloudReceiver::PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, bool compressed)
+PointCloudReceiver::PointCloudReceiver(ros::NodeHandle *nh, std::string cloudTopic, bool compressed)
 {
    CLAY_LOG_INFO("PointCloudReceiver Created!");
    topicName = cloudTopic;
-   _cloudSubscriber = new Subscriber();
+   _cloudSubscriber = new ros::Subscriber();
    _cloudToRender = std::make_shared<Clay::PointCloud>(glm::vec4(0.8f, 0.3f, 0.3f, 1.0f), nullptr);
 
    //   *(this->_cloudSubscriber) = nh->subscribe(cloudTopic, 2, &PointCloudReceiver::cloudCallback, this);

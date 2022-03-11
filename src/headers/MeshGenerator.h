@@ -9,8 +9,6 @@
 #include "Scene/Mesh/TriangleMesh.h"
 #include "Core/Clay.h"
 
-using namespace cv;
-using namespace std;
 
    class MeshGenerator
    {
@@ -20,7 +18,7 @@ using namespace std;
 
          void GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent);
 
-         void GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model);
+         void GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model);
 
          void InsertModel(Clay::Ref<Clay::TriangleMesh> model);
 
@@ -28,7 +26,7 @@ using namespace std;
 
          void GeneratePatchMesh(cv::Mat& patches);
 
-         //      void generateMatchLineMesh(vector<pair<int,int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
+         //      void generateMatchLineMesh(vector<pair<int,int>> matches, vector<std::shared_ptr<PlanarRegion>> regions, vector<std::shared_ptr<PlanarRegion>> latestRegions, vector<Object3D *>& edges, Object3D* parent);
          //
          //      void generatePoseMesh(vector<RigidBodyTransform> poses, vector<Object3D*>& edges, Object3D* parent, int color, float scale = 1.0,  float interp = 1.0);
          //

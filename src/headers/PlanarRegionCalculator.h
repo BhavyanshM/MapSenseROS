@@ -17,10 +17,6 @@
 #include "OpenCLManager.h"
 #include "AppUtils.h"
 
-using namespace ros;
-using namespace std;
-using namespace chrono;
-
 class PlanarRegionCalculator
 {
    public:
@@ -72,7 +68,7 @@ class PlanarRegionCalculator
       MapFrameProcessor* _depthMapFrameProcessor;
       MapFrameProcessor* _hashMapFrameProcessor;
       OpenCLManager* _openCL;
-      vector<shared_ptr<PlanarRegion>> planarRegionList;
+      std::vector<std::shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
       std::vector<std::string> depthFiles, cloudFiles;

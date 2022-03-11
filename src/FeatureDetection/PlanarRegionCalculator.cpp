@@ -253,7 +253,7 @@ bool PlanarRegionCalculator::GeneratePatchGraphFromDepth(ApplicationState& appSt
    cv::Mat regionOutput(appState.SUB_H, appState.SUB_W, CV_32FC(6));
    {
       MAPSENSE_PROFILE_SCOPE("GeneratePatchGraph::OpenCV::Merge");
-      vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
+      std::vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
       merge(channels, regionOutput);
       output.setRegionOutput(regionOutput);
       output.setPatchData(output_graph);
@@ -392,7 +392,7 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
 
    /* Combine the CPU buffers into single image with multiple channels */
    cv::Mat regionOutput(appState.HASH_SUB_H, appState.HASH_SUB_W, CV_32FC(6));
-   vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
+   std::vector<cv::Mat> channels = {output_nx, output_ny, output_nz, output_gx, output_gy, output_gz};
    merge(channels, regionOutput);
    output.setRegionOutput(regionOutput);
    output.setPatchData(output_graph);
@@ -443,7 +443,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
         if (frameId % 10 == 0)
         {
             GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-                                                     string(4 - to_string(frameId).length(), '0').append(to_string(frameId)) + ".txt");
+                                                     std::string(4 - std::to_string(frameId).length(), '0').append(std::to_string(frameId)) + ".txt");
         }
         frameId++;
     }
@@ -462,7 +462,7 @@ void PlanarRegionCalculator::onMouse(int event, int x, int y, int flags, void *u
    }
 }
 
-void logPlanarRegions(vector<shared_ptr<PlanarRegion>> planarRegionList)
+void logPlanarRegions(std::vector<std::shared_ptr<PlanarRegion>> planarRegionList)
 {
    for (int i = 0; i < planarRegionList.size(); i++)
    {

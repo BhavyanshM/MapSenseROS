@@ -101,12 +101,12 @@ set(PLANAR_REGION_LIB
         src/FeatureDetection/PlanarRegionProcessor.h)
 
 set(SLAM_LIB
-        src/SLAM/PlanarRegionMapHandler.cpp
+        src/SLAM/MapHandler.cpp
         src/SLAM/SLAMModule.cpp
         src/headers/SLAMModule.h
         src/headers/FactorGraphHandler.h
 #        src/SLAM/FactorGraphHandler.cpp
-#        src/headers/PlanarRegionMapHandler.h
+#        src/headers/MapHandler.h
         )
 
 set(VISUAL_ODOMETRY_LIB

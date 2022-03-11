@@ -4,7 +4,7 @@
 
 #include "AppUtils.h"
 
-void AppUtils::getFileNames(string dirName, vector<string>& files, bool printList)
+void AppUtils::getFileNames(std::string dirName, std::vector<std::string>& files, bool printList)
 {
    if (auto dir = opendir(dirName.c_str()))
    {
@@ -22,7 +22,7 @@ void AppUtils::getFileNames(string dirName, vector<string>& files, bool printLis
    if (printList)
    {
       printf("[");
-      for (string file : files)
+      for (std::string file : files)
       {
          printf("%s, ", file.c_str());
       }
@@ -31,7 +31,7 @@ void AppUtils::getFileNames(string dirName, vector<string>& files, bool printLis
 }
 
 void AppUtils::capture_data(std::string projectPath, std::string filename, cv::Mat depth, cv::Mat color, cv::Mat filteredDepth, cv::Mat components, ApplicationState appState,
-                            vector<shared_ptr<PlanarRegion>> regions)
+                            std::vector<std::shared_ptr<PlanarRegion>> regions)
 {
    cv::Mat finalDepth, finalFilteredDepth;
    depth.convertTo(finalDepth, -1, appState.DEPTH_BRIGHTNESS, appState.DEPTH_DISPLAY_OFFSET);
@@ -40,7 +40,7 @@ void AppUtils::capture_data(std::string projectPath, std::string filename, cv::M
    imwrite(projectPath + filename + "_Color.png", color);
    imwrite(projectPath + filename + "_FilteredDepth.png", finalFilteredDepth);
    imwrite(projectPath + filename + "_Components.png", components);
-   GeomTools::SaveRegions(regions, projectPath + "/Extras/Regions/" + string(4 - to_string(0).length(), '0').append(to_string(0)) + ".txt");
+   GeomTools::SaveRegions(regions, projectPath + "/Extras/Regions/" + std::string(4 - std::to_string(0).length(), '0').append(std::to_string(0)) + ".txt");
 }
 
 void AppUtils::appendToDebugOutput(cv::Mat disp)
@@ -104,7 +104,7 @@ void AppUtils::canvasToMat(BoolDynamicMatrix canvas, Eigen::Vector2i windowPos, 
    }
 }
 
-void AppUtils::displayPointSet2D(vector<Eigen::Vector2f> points, Eigen::Vector2f offset, int scale)
+void AppUtils::displayPointSet2D(std::vector<Eigen::Vector2f> points, Eigen::Vector2f offset, int scale)
 {
    displayOutput.setTo(0);
    for (int i = 0; i < points.size(); i++)

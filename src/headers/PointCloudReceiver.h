@@ -17,7 +17,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
    public:
 
       PointCloudReceiver() = default;
-      PointCloudReceiver(NodeHandle *nh, std::string cloudTopic, bool compressed = false);
+      PointCloudReceiver(ros::NodeHandle *nh, std::string cloudTopic, bool compressed = false);
 
       void processMessage(ApplicationState& app) override;
 
@@ -57,7 +57,7 @@ class PointCloudReceiver : public ROS1TopicReceiver
       bool _renderEnabled = true;
 //      pcl::PointCloud<pcl::PointXYZ>::ConstPtr _cloudMessage;
       sensor_msgs::PointCloud2::ConstPtr _msg;
-      Subscriber *_cloudSubscriber;
+      ros::Subscriber *_cloudSubscriber;
       Clay::Ref<Clay::PointCloud> _cloudToRender;
 
       uint32_t _scanCount = 0;

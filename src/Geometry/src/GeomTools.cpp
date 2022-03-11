@@ -51,7 +51,7 @@ float GeomTools::GetCosineSimilarity2D(const Eigen::Vector2f& a, const Eigen::Ve
    return a.dot(b) / (a.norm() * b.norm());
 }
 
-int nextToTop(stack<int> S)
+int nextToTop(std::stack<int> S)
 {
    int top = S.top();
    S.pop();
@@ -80,20 +80,20 @@ void swap(Eigen::Vector2f& a, Eigen::Vector2f& b)
    b = temp;
 }
 
-void printHull(stack<int> convexHull, vector<Eigen::Vector2f> points)
+void printHull(std::stack<int> convexHull, std::vector<Eigen::Vector2f> points)
 {
    while (!convexHull.empty())
    {
       Eigen::Vector2f p = points[convexHull.top()];
-      cout << "(" << p.x() << ", " << p.y() << ")";
+      std::cout << "(" << p.x() << ", " << p.y() << ")";
       convexHull.pop();
    }
-   cout << endl;
+   std::cout << std::endl;
 }
 
-vector<Eigen::Vector2f> GetConvexHullPoints(stack<int> indices, vector<Eigen::Vector2f> points)
+std::vector<Eigen::Vector2f> GetConvexHullPoints(std::stack<int> indices, std::vector<Eigen::Vector2f> points)
 {
-   vector<Eigen::Vector2f> convexHull;
+   std::vector<Eigen::Vector2f> convexHull;
    while (!indices.empty())
    {
       convexHull.emplace_back(points[indices.top()]);
@@ -102,7 +102,7 @@ vector<Eigen::Vector2f> GetConvexHullPoints(stack<int> indices, vector<Eigen::Ve
    return convexHull;
 }
 
-vector<Eigen::Vector2f> GeomTools::GrahamScanConvexHull(vector<Eigen::Vector2f> points)
+std::vector<Eigen::Vector2f> GeomTools::GrahamScanConvexHull(std::vector<Eigen::Vector2f> points)
 {
    Eigen::Vector2f minY(10000, 10000);
    int minYIndex = 0;
@@ -120,12 +120,12 @@ vector<Eigen::Vector2f> GeomTools::GrahamScanConvexHull(vector<Eigen::Vector2f> 
       return atan2(a.x() - minY.x(), a.y() - minY.y()) > atan2(b.x() - minY.x(), b.y() - minY.y());
    });
 
-   stack<int> convexHull;
+   std::stack<int> convexHull;
    convexHull.push(0);
    convexHull.push(1);
    convexHull.push(2);
 
-   vector<int> popels;
+   std::vector<int> popels;
    for (int i = 3; i < points.size(); i++)
    {
       while (convexHull.size() > 1 && orientation(points[nextToTop(convexHull)], points[convexHull.top()], points[i]) != 1)
@@ -181,7 +181,7 @@ bool loopComplete(Eigen::Vector2f current, Eigen::Vector2f start, int concaveHul
    return (current - start).norm() < 0.1 && concaveHullSize > 10;
 }
 
-float CheckConcavity(vector<Eigen::Vector2f> concaveHull, Eigen::Vector2f node)
+float CheckConcavity(std::vector<Eigen::Vector2f> concaveHull, Eigen::Vector2f node)
 {
    Eigen::Vector2f candidate(node.x(), node.y());
    Eigen::Vector2f current = concaveHull.rbegin()[0];
@@ -189,7 +189,7 @@ float CheckConcavity(vector<Eigen::Vector2f> concaveHull, Eigen::Vector2f node)
    return ((current - previous).normalized()).dot((candidate - current).normalized());
 }
 
-void GeomTools::CanvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start,
+void GeomTools::CanvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, std::vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start,
                                   AppUtils& appUtils, float scale)
 {
    if (visited(x, y) || loopComplete(concaveHull.rbegin()[0], Eigen::Vector2f((start.x() - canvas.rows()/2) / scale, (start.y() - canvas.cols()/2) / scale), concaveHull.size()))
@@ -225,7 +225,7 @@ void GeomTools::CanvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& can
 
 /* Novel algorithm for approximating concave hull by drawing a list of 2D points
  * on a canvas, and traversing the hull with a moving window. */
-vector<Eigen::Vector2f> GeomTools::CanvasApproximateConcaveHull(vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth)
+std::vector<Eigen::Vector2f> GeomTools::CanvasApproximateConcaveHull(std::vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth)
 {
    int r = 120;
    int c = 120;
@@ -244,7 +244,7 @@ vector<Eigen::Vector2f> GeomTools::CanvasApproximateConcaveHull(vector<Eigen::Ve
       canvas((int) (r / 2 + points[i].x() * scale), (int) (c / 2 + points[i].y() * scale)) = 1;
    }
 
-   vector<Eigen::Vector2f> concaveHull;
+   std::vector<Eigen::Vector2f> concaveHull;
    concaveHull.emplace_back(Eigen::Vector2f(points[0].x(), points[0].y()));
 
    /* Traverse through the boundary and extract lower vertex-count ordered concave hull. */
@@ -254,7 +254,7 @@ vector<Eigen::Vector2f> GeomTools::CanvasApproximateConcaveHull(vector<Eigen::Ve
 //   appUtils.displayPointSet2D(concaveHull, Eigen::Vector2f(r/2, c/2), scale);
 
 
-   vector<Eigen::Vector2f> finalConcaveHull;
+   std::vector<Eigen::Vector2f> finalConcaveHull;
    for(int i = 0; i<concaveHull.size(); i++)
       if(i % 2 == 0)
          finalConcaveHull.emplace_back(concaveHull[i]);
@@ -266,7 +266,7 @@ vector<Eigen::Vector2f> GeomTools::CanvasApproximateConcaveHull(vector<Eigen::Ve
    return finalConcaveHull;
 }
 
-void GeomTools::GetParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params)
+void GeomTools::GetParametricCurve(std::vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params)
 {
    Eigen::MatrixXf A(points.size(), m + 1);
    for(int i = 0; i<points.size(); i++)
@@ -295,16 +295,16 @@ void GeomTools::GetParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Ei
    Eigen::VectorXf params_y(m);
    params_y = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
 
-   /* Collect params into a vector to be returned. */
+   /* Collect params into a std::vector to be returned. */
    params.row(0) = params_x;
    params.row(1) = params_y;
 }
 
-Eigen::Vector3f GetVec3f(string csv)
+Eigen::Vector3f GetVec3f(std::string csv)
 {
-   vector<string> CSVSubStrings;
-   stringstream csvStream(csv);
-   string csvStr;
+   std::vector<std::string> CSVSubStrings;
+   std::stringstream csvStream(csv);
+   std::string csvStr;
    while (getline(csvStream, csvStr, ','))
    {
       CSVSubStrings.push_back(csvStr);
@@ -312,45 +312,45 @@ Eigen::Vector3f GetVec3f(string csv)
    return Eigen::Vector3f(stof(CSVSubStrings[0]), stof(CSVSubStrings[1]), stof(CSVSubStrings[2]));
 }
 
-void GetNextLineSplit(ifstream& regionFile, vector<string>& subStrings, char delimiter = ',')
+void GetNextLineSplit(std::ifstream& regionFile, std::vector<std::string>& subStrings, char delimiter = ',')
 {
    subStrings.clear();
-   string regionText;
+   std::string regionText;
    getline(regionFile, regionText);
-   stringstream ss(regionText);
-   string str;
+   std::stringstream ss(regionText);
+   std::string str;
    while (getline(ss, str, delimiter))
    {
       subStrings.push_back(str);
    }
 }
 
-void GeomTools::SaveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName)
+void GeomTools::SaveRegions(std::vector<std::shared_ptr<PlanarRegion>> regions, std::string fileName)
 {
-   ofstream file;
-   file.open(fileName, fstream::in | fstream::out | fstream::app);
-   file << "NumRegions:" << regions.size() << endl;
-   for (shared_ptr<PlanarRegion> region : regions)
+   std::ofstream file;
+   file.open(fileName, std::fstream::in | std::fstream::out | std::fstream::app);
+   file << "NumRegions:" << regions.size() << std::endl;
+   for (std::shared_ptr<PlanarRegion> region : regions)
    {
       region->WriteToFile(file);
    }
    file.close();
-   //   cout << "Writing Regions to:" << fileName << endl;
+   //   std::cout << "Writing Regions to:" << fileName << std::endl;
 }
 
 
-void GeomTools::LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files)
+void GeomTools::LoadRegions(int frameId, std::vector<std::shared_ptr<PlanarRegion>>& regions, std::string directory, std::vector<std::string> files)
 {
    /* Generate planar region objects from the sorted list of files. */
 //   if(regions.size() > 0) regions.clear();
-   ifstream regionFile(directory + files[frameId]);
-   cout << "Loading Regions From: " << directory + files[frameId] << " FrameID:" << frameId << endl;
-   vector<string> subStrings;
+   std::ifstream regionFile(directory + files[frameId]);
+   std::cout << "Loading Regions From: " << directory + files[frameId] << " FrameID:" << frameId << std::endl;
+   std::vector<std::string> subStrings;
    GetNextLineSplit(regionFile, subStrings, ':'); // Get number of regions
    int numRegions = stoi(subStrings[1]);
    for (int r = 0; r < numRegions; r++) // For each region
    {
-      shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
+      std::shared_ptr<PlanarRegion> region = std::make_shared<PlanarRegion>(0);
       GetNextLineSplit(regionFile, subStrings, ':'); // Get regionId
       region->setId(-1);
       //      region->setId(stoi(subStrings[1]));
@@ -362,10 +362,10 @@ void GeomTools::LoadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regio
       int length = stoi(subStrings[1]);
       for (int i = 0; i < length; i++)
       {
-//         cout << i << " : ";
+//         std::cout << i << " : ";
          GetNextLineSplit(regionFile, subStrings, ',');
          Eigen::Vector3f point = Eigen::Vector3f(stof(subStrings[0]), stof(subStrings[1]), stof(subStrings[2]));
-//         cout << point << endl;
+//         std::cout << point << std::endl;
          region->insertBoundaryVertex(point);
       }
       //      GeomTools::CompressRegionSegmentsLinear(region);
@@ -391,9 +391,9 @@ float GeomTools::ComputeWindingNumber(const std::vector<Eigen::Vector2f>& hull, 
    return totalAngle;
 }
 
-void GeomTools::LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)
+void GeomTools::LoadPoseStamped(std::ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation)
 {
-   vector<string> subStrings;
+   std::vector<std::string> subStrings;
    GetNextLineSplit(poseFile, subStrings);
 
 
@@ -406,13 +406,13 @@ void GeomTools::LoadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, E
    orientation.z() = stof(subStrings[6]);
    orientation.w() = stof(subStrings[7]);
 
-   cout << "Loading Pose: " << subStrings[0] << endl;
-   cout << position << endl;
-   cout << orientation.matrix() << endl;
+   std::cout << "Loading Pose: " << subStrings[0] << std::endl;
+   std::cout << position << std::endl;
+   std::cout << orientation.matrix() << std::endl;
 
 }
 
-void GeomTools::TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform)
+void GeomTools::TransformRegions(std::vector<std::shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform)
 {
    for (int i = 0; i < regions.size(); i++)
    {
@@ -420,7 +420,7 @@ void GeomTools::TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, Rigi
    }
 }
 
-void GeomTools::TransformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation)
+void GeomTools::TransformRegions(std::vector<std::shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation)
 {
    for (int i = 0; i < regions.size(); i++)
    {

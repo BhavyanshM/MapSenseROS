@@ -38,7 +38,7 @@ void MapFrameProcessor::init(ApplicationState& app)
    ROS_DEBUG("MapFrameProcessor Initialized.");
 }
 
-void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_ptr<PlanarRegion>>& planarRegionList)
+void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, std::vector<std::shared_ptr<PlanarRegion>>& planarRegionList)
 {
    MAPSENSE_PROFILE_FUNCTION();
    ROS_INFO("GenerateSegmentation: SW:%d, SH:%d, IH:%d, IW:%d, PH:%d, PW:%d", SUB_W, SUB_H, INPUT_HEIGHT, INPUT_WIDTH, PATCH_HEIGHT, PATCH_WIDTH);
@@ -62,7 +62,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
             if (!visited(i, j) && patch == 255)
             {
                int num = 0;
-               shared_ptr <PlanarRegion> planarRegion = make_shared<PlanarRegion>(components);
+               std::shared_ptr <PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(components);
                dfs(i, j, components, num, debug, planarRegion);
                if (num > app.REGION_MIN_PATCHES && num - planarRegion->GetNumOfBoundaryVertices() > app.REGION_BOUNDARY_DIFF)
                {
@@ -87,7 +87,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, vector<shared_
 
 }
 
-void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& planarRegionList)
+void MapFrameProcessor::findBoundaryAndHoles(std::vector<std::shared_ptr<PlanarRegion>>& planarRegionList)
 {
    MAPSENSE_PROFILE_FUNCTION();
    tbb::parallel_for(tbb::blocked_range<int>(0, planarRegionList.size()), [&](const tbb::blocked_range<int>& r)
@@ -95,11 +95,11 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
       for (int i = r.begin(); i < r.end(); i++)
       {
          int components = 0;
-         vector<Eigen::Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
+         std::vector<Eigen::Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
          for (int j = 0; j < leafPatches.size(); j++)
          {
             int num = 0;
-            shared_ptr<RegionRing> regionRing = make_shared<RegionRing>(components);
+            std::shared_ptr<RegionRing> regionRing = std::make_shared<RegionRing>(components);
             boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), planarRegionList[i]->getId(), components, num, debug, regionRing);
             if (num > 3)
             {
@@ -107,12 +107,12 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
                components++;
             }
          }
-         auto comp = [](const shared_ptr<RegionRing> a, const shared_ptr<RegionRing> b)
+         auto comp = [](const std::shared_ptr<RegionRing> a, const std::shared_ptr<RegionRing> b)
          {
             return a->getNumOfVertices() > b->getNumOfVertices();
          };
          sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
-         //      vector<Eigen::Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
+         //      std::vector<Eigen::Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
          //      for (int j = 0; j < ring.size(); j++)
          //      {
          //         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
@@ -124,11 +124,11 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
 //   for (int i = 0; i < planarRegionList.size(); i++)
 //   {
 //      int components = 0;
-//      vector<Eigen::Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
+//      std::vector<Eigen::Vector2i> leafPatches = planarRegionList[i]->getLeafPatches();
 //      for (int j = 0; j < leafPatches.size(); j++)
 //      {
 //         int num = 0;
-//         shared_ptr<RegionRing> regionRing = make_shared<RegionRing>(components);
+//         std::shared_ptr<RegionRing> regionRing = std::make_shared<RegionRing>(components);
 //         boundary_dfs(leafPatches[j].x(), leafPatches[j].y(), planarRegionList[i]->getId(), components, num, debug, regionRing);
 //         if (num > 3)
 //         {
@@ -136,12 +136,12 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
 //            components++;
 //         }
 //      }
-//      auto comp = [](const shared_ptr<RegionRing> a, const shared_ptr<RegionRing> b)
+//      auto comp = [](const std::shared_ptr<RegionRing> a, const std::shared_ptr<RegionRing> b)
 //      {
 //         return a->getNumOfVertices() > b->getNumOfVertices();
 //      };
 //      sort(planarRegionList[i]->rings.begin(), planarRegionList[i]->rings.end(), comp);
-////      vector<Eigen::Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
+////      std::vector<Eigen::Vector2i> ring = planarRegionList[i]->rings[0]->boundaryIndices;
 ////      for (int j = 0; j < ring.size(); j++)
 ////      {
 ////         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
@@ -152,7 +152,7 @@ void MapFrameProcessor::findBoundaryAndHoles(vector<shared_ptr<PlanarRegion>>& p
 
 
 
-void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& regions)
+void MapFrameProcessor::growRegionBoundary(std::vector<std::shared_ptr<PlanarRegion>>& regions)
 {
    MAPSENSE_PROFILE_FUNCTION();
    tbb::parallel_for(tbb::blocked_range<int>(0, regions.size()), [&](const tbb::blocked_range<int>& r){
@@ -165,7 +165,7 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
          }
 
          Eigen::Vector3f center = regions[i]->GetCenter();
-         vector<Eigen::Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+         std::vector<Eigen::Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
          for (int j = 0; j < ring.size(); j++)
          {
             cv::Vec6f patch = this->frame.getRegionOutput().at<cv::Vec6f>(ring[j].x(), ring[j].y());
@@ -184,7 +184,7 @@ void MapFrameProcessor::growRegionBoundary(vector<shared_ptr<PlanarRegion>>& reg
    //      }
    //
    //      Eigen::Vector3f center = regions[i]->GetCenter();
-   //      vector<Eigen::Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
+   //      std::vector<Eigen::Vector2i> ring = regions[i]->rings[0]->boundaryIndices;
    //      for (int j = 0; j < ring.size(); j++)
    //      {
    //         Vec6f patch = this->frame.getRegionOutput().at<Vec6f>(ring[j].x(), ring[j].y());
@@ -230,7 +230,7 @@ void MapFrameProcessor::displayDebugger(int delay)
 /* ----------------- RECURSIVE FUNCTIONS BELOW THIS POINT -------*/
 ///////////////////////////////////////////////////////////////////
 
-void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, int& num, cv::Mat& debug, shared_ptr<RegionRing> regionRing)
+void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, int& num, cv::Mat& debug, std::shared_ptr<RegionRing> regionRing)
 {
    if (visited(x, y))
       return;
@@ -255,7 +255,7 @@ void MapFrameProcessor::boundary_dfs(int x, int y, int regionId, int component, 
       displayDebugger(app.VISUAL_DEBUG_DELAY);
 }
 
-void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num, cv::Mat& debug, shared_ptr<PlanarRegion> planarRegion)
+void MapFrameProcessor::dfs(uint16_t x, uint16_t y, uint8_t component, int& num, cv::Mat& debug, std::shared_ptr<PlanarRegion> planarRegion)
 {
    if (visited(x, y))
       return;

@@ -22,9 +22,6 @@
 #include "Core.h"
 #include <ApplicationState.h>
 
-using namespace ros;
-using namespace std;
-using namespace chrono;
 
 typedef ros::master::TopicInfo TopicInfo;
 
@@ -40,15 +37,15 @@ class NetworkManager
       CompressedImageConstPtr colorCompressedMessage;
       map_sense::MapsenseConfiguration paramsMessage;
       ImageConstPtr depthMessage;
-      NodeHandle *rosNode;
+      ros::NodeHandle *rosNode;
       cv::VideoCapture *camLeft;
       cv::VideoCapture *camRight;
 
-      unordered_map<std::string, ROS1TopicReceiver*> receivers;
-      Subscriber subMapSenseParams;
-      Publisher planarRegionPub;
-      Publisher slamPosePub;
-      Publisher coloredCloudPub;
+      std::unordered_map<std::string, ROS1TopicReceiver*> receivers;
+      ros::Subscriber subMapSenseParams;
+      ros::Publisher planarRegionPub;
+      ros::Publisher slamPosePub;
+      ros::Publisher coloredCloudPub;
 
       bool depthCamInfoSet = false;
       bool paramsAvailable = false;
@@ -57,11 +54,11 @@ class NetworkManager
 
       NetworkManager(ApplicationState app, AppUtils* appUtils);
 
-      vector<TopicInfo> getROSTopicList();
+      std::vector<TopicInfo> getROSTopicList();
 
       void publishSamplePose(int count);
 
-      void getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic);
+      void getTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic);
 
       void ImGuiUpdate(ApplicationState& appState);
 

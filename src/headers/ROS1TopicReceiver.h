@@ -13,9 +13,6 @@
 #include "imgui.h"
 #include "MapsenseHeaders.h"
 
-using namespace ros;
-using namespace std;
-
 
 class ROS1TopicReceiver
 {

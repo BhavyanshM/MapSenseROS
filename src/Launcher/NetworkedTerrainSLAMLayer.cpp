@@ -21,8 +21,10 @@ namespace Clay
 
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
-      _mapper = new PlanarRegionMapHandler();
+      _mapper = new MapHandler();
       _mapper->SetRegionCalculator(_regionCalculator);
+      _mapper->SetSLAMModule(_slamModule);
+      _slamModule = new SLAMModule(argc, argv);
 
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootModel);
       _models.emplace_back(std::dynamic_pointer_cast<Model>(firstCloud));
@@ -46,7 +48,7 @@ namespace Clay
    {
       //      ROS_DEBUG("TickEvent: %d", count++);
 
-      if(_models.size() >=2) CLAY_LOG_INFO("Models: {} {} {}", _models.size(), _models[0]->GetSize(), _models[1]->GetSize());
+//      if(_models.size() >=2) CLAY_LOG_INFO("Models: {} {} {}", _models.size(), _models[0]->GetSize(), _models[1]->GetSize());
 
       if (appState.ROS_ENABLED)
       {
@@ -87,9 +89,9 @@ namespace Clay
 
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _mapper->SLAM_ENABLED)
          {
-            PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
-            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
-            _slamModule->slamUpdate();
+//            PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
+//            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
+//            _slamModule->Update();
 
             /* TODO: Publish the latest optimized pose from Factor Graph SLAM. */
 
@@ -104,13 +106,12 @@ namespace Clay
          ROS_DEBUG("ROS Update Completed");
       }
 
-      if(_regionCalculator->RenderEnabled())
-      {
-//         _cloud = ((PointCloudReceiver*)_networkManager->receivers[appState.OUSTER_POINTS])->GetNextCloud();
-         if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
-         _regionCalculator->Render();
-      }
+//      if(_regionCalculator->RenderEnabled())
+//      {
+//         if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+//         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+//         _regionCalculator->Render();
+//      }
 
       _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);
 
