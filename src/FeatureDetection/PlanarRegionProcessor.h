@@ -11,13 +11,13 @@ class PlanarRegionProcessor
 {
    private:
 
-      vector<int> planes;
+      std::vector<int> planes;
 
    public:
 
-      void extractRealPlanes(vector<shared_ptr<PlanarRegion>> planarRegionList);
+      void extractRealPlanes(std::vector<std::shared_ptr<PlanarRegion>> planarRegionList);
 
-      void filterPlanarRegions(vector<shared_ptr<PlanarRegion>>& planarRegionList);
+      void filterPlanarRegions(std::vector<std::shared_ptr<PlanarRegion>>& planarRegionList);
 };
 
 #endif //PLANARREGIONPROCESSOR_H

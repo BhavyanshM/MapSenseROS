@@ -24,7 +24,7 @@
 #include <Magnum/MeshTools/Interleave.h>
 #include <Magnum/GL/Renderer.h>
 
-#include <PlanarRegionMapHandler.h>
+#include <MapHandler.h>
 #include "MeshGenerator.h"
 
 using namespace Magnum::Math::Literals;

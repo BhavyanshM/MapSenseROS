@@ -11,16 +11,11 @@
 #include <CL/cl.hpp>
 #include <map_sense/RawGPUPlanarRegionList.h>
 
-#include "MapsenseHeaders.h"
 #include "MapFrame.h"
 #include "MapFrameProcessor.h"
 #include "PlanarRegion.h"
 #include "OpenCLManager.h"
 #include "AppUtils.h"
-
-using namespace ros;
-using namespace std;
-using namespace chrono;
 
 class PlanarRegionCalculator
 {
@@ -29,19 +24,13 @@ class PlanarRegionCalculator
 
       void Render();
 
-      void LoadRegions(std::string path);
+      void LoadRegions(std::string path, std::vector<std::string>& fileNames, int index);
 
       void ImGuiUpdate(ApplicationState& appState);
 
-      bool generatePatchGraph(ApplicationState& appState);
-
-      bool generatePatchGraphFromStereo(ApplicationState& appState);
-
-//      void initOpenCL();
+      bool GeneratePatchGraphFromDepth(ApplicationState& appState);
 
       void generateRegionsFromDepth(ApplicationState& appState, cv::Mat& depth, double inputTimestamp);
-
-      void generateRegionsFromStereo(ApplicationState& appState);
 
       map_sense::RawGPUPlanarRegionList publishRegions();
 
@@ -51,7 +40,11 @@ class PlanarRegionCalculator
 
       void setOpenCLManager(OpenCLManager* ocl) {_openCL = ocl;}
 
-      uint8_t loadParameters(const ApplicationState& app);
+      uint8_t CreateParameterBuffer(const ApplicationState& app);
+
+      void GeneratePatchGraphFromPointCloud(ApplicationState& appState, std::vector<float>& points, double inputTimestamp);
+
+      void GenerateRegionFromPointcloudOnCPU();
 
 
    public:
@@ -72,13 +65,21 @@ class PlanarRegionCalculator
       cv::Mat inputStereoLeft, inputStereoRight;
 
       MapFrame output;
-      MapFrameProcessor* _mapFrameProcessor;
+      MapFrameProcessor* _depthMapFrameProcessor;
+      MapFrameProcessor* _hashMapFrameProcessor;
       OpenCLManager* _openCL;
-      vector<shared_ptr<PlanarRegion>> planarRegionList;
+      std::vector<std::shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
+
+      std::vector<std::string> depthFiles, cloudFiles;
+      int depthFileSelected = 0;
+      int cloudFileSelected = 0;
 
       int frameId = 0;
       int depthReceiverId = -1;
+      bool _render = true;
+
+      bool RenderEnabled();
 };
 
 #endif //PLANARREGIONCALCULATOR_H

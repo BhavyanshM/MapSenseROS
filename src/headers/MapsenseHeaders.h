@@ -38,9 +38,9 @@
 #include <boost/format.hpp>
 
 #include "sensor_msgs/PointCloud2.h"
-#include "pcl_conversions/pcl_conversions.h"
-#include "pcl/point_types.h"
+//#include "pcl_conversions/pcl_conversions.h"
+//#include "pcl/point_types.h"
+//#include "pcl_ros/point_cloud.h"
 #include "boost/foreach.hpp"
-#include "pcl_ros/point_cloud.h"
 
 #endif //MAPSENSEHEADERS_H

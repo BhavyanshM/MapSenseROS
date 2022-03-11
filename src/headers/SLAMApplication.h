@@ -14,8 +14,6 @@
 #include "StructureFromMotion.h"
 #include "MapsenseHeaders.h"
 
-using namespace std;
-using namespace chrono;
 
 class SLAMApplication : public MagnumApplication
 {

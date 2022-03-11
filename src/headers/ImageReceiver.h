@@ -24,8 +24,8 @@ class ImageReceiver : public ROS1TopicReceiver
       ImageConstPtr _imageMessage;
       CameraInfoConstPtr _cameraInfoMessage;
       CompressedImageConstPtr _compressedImageMessage;
-      Subscriber *_imageSubscriber;
-      Subscriber *_cameraInfoSubscriber;
+      ros::Subscriber *_imageSubscriber;
+      ros::Subscriber *_cameraInfoSubscriber;
       float _imageBrightness = 40;
       float _imageOffset = 100;
 
@@ -37,7 +37,7 @@ class ImageReceiver : public ROS1TopicReceiver
       cv::Mat _image;
 
    public:
-      ImageReceiver(NodeHandle *nh, std::string imageTopic, std::string cameraInfoTopic, bool compressed = false);
+      ImageReceiver(ros::NodeHandle *nh, std::string imageTopic, std::string cameraInfoTopic, bool compressed = false);
 
       void processMessage(ApplicationState& app) override;
 

@@ -1,7 +1,7 @@
 #ifndef PLANARREGIONMAPTESTER_H
 #define PLANARREGIONMAPTESTER_H
 
-#include <PlanarRegionMapHandler.h>
+#include <MapHandler.h>
 #include "../Geometry/include/KDTree.h"
 #include "gtest/gtest.h"
 

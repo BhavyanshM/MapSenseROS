@@ -17,29 +17,37 @@ class AppUtils;
 class GeomTools
 {
    public:
-      static void canvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start, AppUtils& appUtils, float scale);
+      static void CanvasBoundaryDFS(uint16_t x, uint16_t y, BoolDynamicMatrix& canvas, BoolDynamicMatrix& visited, std::vector<Eigen::Vector2f>& concaveHull, Eigen::Vector2f start, AppUtils& appUtils, float scale);
 
-      static vector<Eigen::Vector2f> canvasApproximateConcaveHull(vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
+      static std::vector<Eigen::Vector2f> CanvasApproximateConcaveHull(std::vector<Eigen::Vector2f> points, uint16_t windowHeight, uint16_t windowWidth);
 
-      static Eigen::Matrix3f getRotationFromAngleApproximations(Eigen::Vector3f eulerAngles);
+      static Eigen::Matrix3f GetRotationFromAngleApproximations(Eigen::Vector3f eulerAngles);
 
-      static Eigen::Vector3f getProjectedPoint(Eigen::Vector4f plane, Eigen::Vector3f point);
+      static Eigen::Vector3f GetProjectedPoint(Eigen::Vector4f plane, Eigen::Vector3f point);
 
-      static vector<Eigen::Vector2f> grahamScanConvexHull(vector<Eigen::Vector2f> points);
+      static std::vector<Eigen::Vector2f> GrahamScanConvexHull(std::vector<Eigen::Vector2f> points);
 
-      static void getParametricCurve(vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params);
+      static void GetParametricCurve(std::vector<Eigen::Vector2f> points, uint8_t m, Eigen::MatrixXf& params);
 
-      static void compressPointSetLinear(shared_ptr<PlanarRegion> region);
+      static void LoadRegions(int frameId, std::vector<std::shared_ptr<PlanarRegion>>& regions, std::string directory, std::vector<std::string> files);
 
-      static void loadRegions(int frameId, vector<shared_ptr<PlanarRegion>>& regions, string directory, vector<string> files);
+      static void SaveRegions(std::vector<std::shared_ptr<PlanarRegion>> regions, std::string fileName);
 
-      static void saveRegions(vector<shared_ptr<PlanarRegion>> regions, string fileName);
+      static void TransformRegions(std::vector<std::shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform);
 
-      static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, RigidBodyTransform transform);
+      static void TransformRegions(std::vector<std::shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation);
 
-      static void transformRegions(vector<shared_ptr<PlanarRegion>>& regions, Eigen::Vector3d translation, Eigen::Matrix3d rotation);
+      static void LoadPoseStamped(std::ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
 
-      static void loadPoseStamped(ifstream& poseFile, Eigen::Vector3d& position, Eigen::Quaterniond& orientation);
+      static Eigen::Vector3f GetLineFromTwoPoints2D(const Eigen::Vector2f& start, const Eigen::Vector2f& end);
+
+      static float GetDistanceFromLine2D(const Eigen::Vector3f& line, const Eigen::Vector2f& point);
+
+      static float GetCosineSimilarity2D(const Eigen::Vector2f& a, const Eigen::Vector2f& b);
+
+      static float ComputeWindingNumber(const std::vector<Eigen::Vector2f>& concaveHull, const Eigen::Vector2f& point);
+
+      static bool CheckPatchConnection(const Eigen::Vector3f& ag, const Eigen::Vector3f& an, const Eigen::Vector3f& bg, const Eigen::Vector3f& bn, float distanceThreshold, float angularThreshold);
 
 };
 

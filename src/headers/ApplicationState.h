@@ -5,26 +5,30 @@
 #ifndef SRC_APPLICATIONSTATE_H
 #define SRC_APPLICATIONSTATE_H
 
-#include "MapsenseHeaders.h"
-
-using namespace std;
+#include "ros/package.h"
+#include <sstream>
+#include <fstream>
 
 class ApplicationState
 {
    public:
-      const string& getDepthFile() const;
+      ApplicationState();
 
-      void setDepthFile(const string& depthFile);
+      const std::string& getDepthFile() const;
 
-      const string& getColorFile() const;
+      void setDepthFile(const std::string& depthFile);
 
-      void setColorFile(const string& colorFile);
+      const std::string& getColorFile() const;
+
+      void setColorFile(const std::string& colorFile);
 
       void update();
 
    public:
       float MERGE_DISTANCE_THRESHOLD = 0.016;
-      float MERGE_ANGULAR_THRESHOLD = 0.82;
+      float MERGE_ANGULAR_THRESHOLD =  0.82;
+      float HASH_MERGE_DISTANCE_THRESHOLD = 0.1;
+      float HASH_MERGE_ANGULAR_THRESHOLD = 0.7;
 
       bool FILTER_SELECTED = false;
       float FILTER_DISPARITY_THRESHOLD = 2000;
@@ -33,23 +37,33 @@ class ApplicationState
       int REGION_MIN_PATCHES = 20;
       int REGION_BOUNDARY_DIFF = 20;
 
+      int HASH_THREAD_NUM = 2;
+
       /*
        * NOTE: The following parameters should meet these requirements.
        * a) InputHeight should be divisible by (KernelResLevel * AspectRatioHeight)
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
+      int REGION_MODE = 0; // 0 for depth, 1 for point-cloud
+      int HASH_INPUT_HEIGHT = 64;
+      int HASH_INPUT_WIDTH = 1024;
+      int DEPTH_INPUT_HEIGHT = 480;
+      int DEPTH_INPUT_WIDTH = 640;
 
-      int INPUT_HEIGHT = 0;
-      int INPUT_WIDTH = 0;
       int KERNEL_SLIDER_LEVEL = 2;
-      int PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
-      int PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
-      int SUB_H = INPUT_HEIGHT / PATCH_HEIGHT;
-      int SUB_W = INPUT_WIDTH / PATCH_WIDTH;
+      int HASH_PATCH_HEIGHT =  2;
+      int HASH_PATCH_WIDTH =   4;
+      int DEPTH_PATCH_HEIGHT = KERNEL_SLIDER_LEVEL;
+      int DEPTH_PATCH_WIDTH = KERNEL_SLIDER_LEVEL;
+      int SUB_H = DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;
+      int SUB_W = DEPTH_INPUT_WIDTH / DEPTH_PATCH_WIDTH;
+
+      int HASH_SUB_H = HASH_INPUT_HEIGHT / HASH_PATCH_HEIGHT;
+      int HASH_SUB_W = HASH_INPUT_WIDTH / HASH_PATCH_WIDTH;
 
       int FILTER_KERNEL_SIZE = 4;
-      int FILTER_SUB_H = INPUT_HEIGHT / FILTER_KERNEL_SIZE;
-      int FILTER_SUB_W = INPUT_WIDTH / FILTER_KERNEL_SIZE;
+      int FILTER_SUB_H = DEPTH_INPUT_HEIGHT / FILTER_KERNEL_SIZE;
+      int FILTER_SUB_W = DEPTH_INPUT_WIDTH / FILTER_KERNEL_SIZE;
 
       //    float DEPTH_FX = 459.97;
       //    float DEPTH_FY = 459.80;
@@ -72,7 +86,8 @@ class ApplicationState
       bool SHOW_INPUT_COLOR = false;
       bool SHOW_INPUT_DEPTH = false;
       bool SHOW_FILTERED_DEPTH = false;
-      bool SHOW_REGION_COMPONENTS = false;
+      bool SHOW_HASH_REGION_COMPONENTS = false;
+      bool SHOW_DEPTH_REGION_COMPONENTS = false;
       bool SHOW_STEREO_LEFT = false;
       bool SHOW_STEREO_RIGHT = false;
 
@@ -90,7 +105,7 @@ class ApplicationState
       bool SLAM_ENABLED = false;
       bool DATASET_ENABLED = false;
 
-      string TOPIC_CAMERA_NAME = "chest_l515";
+      std::string TOPIC_CAMERA_NAME = "chest_l515";
 
       int GAUSSIAN_SIZE = 4;
       int  GAUSSIAN_SIGMA = 20;
@@ -118,22 +133,22 @@ class ApplicationState
       int STEREO_SPECKLE_WINDOW_SIZE = 0;
       int STEREO_DISP_12_MAX_DIFF = -1;
 
-      string OUSTER_POINTS = "/os_cloud_node/points";
-      string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
-      string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
+      std::string OUSTER_POINTS = "/os_cloud_node/points";
+      std::string ZED_LEFT_IMAGE_RAW = "/zed/color/left/image_raw";
+      std::string ZED_RIGHT_IMAGE_RAW = "/zed/color/right/image_raw";
 
-      string KITTI_LEFT_IMG_RECT = "/kitti/left/image_rect/compressed";
-      string KITTI_RIGHT_IMG_RECT = "/kitti/right/image_rect/compressed";
-      string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
+      std::string KITTI_LEFT_IMG_RECT = "/kitti/left/image_rect/compressed";
+      std::string KITTI_RIGHT_IMG_RECT = "/kitti/right/image_rect/compressed";
+      std::string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
 
-      string L515_COLOR = "/camera/color/image_raw/compressed";
-      string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
-      string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
+      std::string L515_COLOR = "/camera/color/image_raw/compressed";
+      std::string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
+      std::string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
 
-      string L515_ALIGNED_DEPTH = "/camera/aligned_depth_to_color/image_raw";
-      string L515_ALIGNED_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";
+      std::string L515_ALIGNED_DEPTH = "/camera/aligned_depth_to_color/image_raw";
+      std::string L515_ALIGNED_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";
 
-      string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
+      std::string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
 
 
 };

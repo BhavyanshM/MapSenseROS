@@ -1,51 +1,68 @@
 #include "MeshGenerator.h"
 
-namespace Clay
+void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
 {
-   void MeshGenerator::GenerateRegionLineMesh(shared_ptr<PlanarRegion>& planarRegion, Ref<TriangleMesh>& model)
+//   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
+   for (int i = 0; i < planarRegion->GetNumOfBoundaryVertices(); i++)
    {
-      CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
-      for(int i = 0; i< planarRegion->GetNumOfBoundaryVertices(); i++)
-      {
-         Eigen::Vector3f point = 2 * (planarRegion->getBoundaryVertices()[i]);
-         model->InsertVertex(point.x(), point.y(), point.z());
-      }
-      uint32_t offset = 0;
-      for(uint16_t i = 0; i< (planarRegion->GetNumOfBoundaryVertices() - 2) * 3; i+=3)
-      {
-         model->InsertIndex(0);
-         model->InsertIndex(offset + 1);
-         model->InsertIndex(offset + 2);
-         offset++;
-      }
+      Eigen::Vector3f point = (planarRegion->getBoundaryVertices()[i]);
+      model->InsertVertex(point.x(), point.y(), point.z());
    }
-
-   void MeshGenerator::GenerateMeshForRegions(std::vector<Ref<PlanarRegion>>& planarRegions, Ref<Model> parent)
+   uint32_t offset = 0;
+   for (uint16_t i = 0; i < (planarRegion->GetNumOfBoundaryVertices() - 2) * 3; i += 3)
    {
-      for (int i = 0; i< planarRegions.size(); i++)
-      {
-         Ref<TriangleMesh> regionMesh = std::make_shared<TriangleMesh>(glm::vec4((float)((i+1)*123 % 255) / 255.0f,
-                                                                                 (float)((i+1)*326 % 255) / 255.0f,
-                                                                                 (float)((i+1)*231 % 255) / 255.0f, 1.0f), parent);
-         Ref<PlanarRegion> region = planarRegions[i];
-
-         GenerateRegionLineMesh(region, regionMesh);
-         InsertModel(regionMesh);
-      }
+      model->InsertIndex(0);
+      model->InsertIndex(offset + 1);
+      model->InsertIndex(offset + 2);
+      offset++;
    }
-
-   void MeshGenerator::InsertModel(Ref<TriangleMesh> model)
-   {
-      meshes.emplace_back(std::dynamic_pointer_cast<Model>(model));
-   }
-
 }
-//void MeshGenerator::generateRegionLineMesh(vector<shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
+
+void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
+{
+   meshes.clear();
+   for (int i = 0; i < planarRegions.size(); i++)
+   {
+      Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(
+            glm::vec4((float) ((i + 1) * 123 % 255) / 255.0f, (float) ((i + 1) * 326 % 255) / 255.0f, (float) ((i + 1) * 231 % 255) / 255.0f, 1.0f), parent);
+      Clay::Ref<PlanarRegion> region = planarRegions[i];
+
+      GenerateRegionLineMesh(region, regionMesh);
+      InsertModel(regionMesh);
+   }
+}
+
+void MeshGenerator::InsertModel(Clay::Ref<Clay::TriangleMesh> model)
+{
+   meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
+}
+
+void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)
+{
+   for(int i = 0; i<patches.rows; i++)
+   {
+      for(int j = 0; j<patches.cols; j++)
+      {
+         Eigen::Vector3f normal(patches.at<float>(i,j,0), patches.at<float>(i,j,1), patches.at<float>(i,j,2));
+         Eigen::Vector3f centroid(patches.at<float>(i,j,3), patches.at<float>(i,j,4), patches.at<float>(i,j,5));
+
+         Eigen::Vector3f up(0, 0, 1);
+         Eigen::Vector3f axis = normal.cross(up).normalized();
+         float angle = acos(up.dot(normal) / (up.norm() * normal.norm()));
+
+         Eigen::AngleAxisf angleAxis(angle, axis);
+         Eigen::Quaternionf quat(angleAxis);
+         Eigen::Vector3f meshVec = quat._transformVector(normal);
+      }
+   }
+}
+
+//void MeshGenerator::generateRegionLineMesh(vector<std::shared_ptr<PlanarRegion>> planarRegionList, vector<Object3D *>& edges, int color, Object3D *parent, bool erase)
 //{
 //   if(erase) clearMesh(edges);
 //   for (int i = 0; i < planarRegionList.size(); i+=1)
 //   {
-//      shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
+//      std::shared_ptr<PlanarRegion> planarRegion = planarRegionList[i];
 //      vector<Vector3f> vertices = planarRegion->getVertices();
 //      for (int j = SKIP_EDGES; j < vertices.size() + SKIP_EDGES; j += SKIP_EDGES)
 //      {
@@ -78,7 +95,7 @@ namespace Clay
 //}
 //
 //void
-//MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<shared_ptr<PlanarRegion>> regions, vector<shared_ptr<PlanarRegion>> latestRegions,
+//MeshGenerator::generateMatchLineMesh(vector<pair<int, int>> matches, vector<std::shared_ptr<PlanarRegion>> regions, vector<std::shared_ptr<PlanarRegion>> latestRegions,
 //                                     vector<Object3D *>& edges, Object3D *parent)
 //{
 //   clearMesh(edges);

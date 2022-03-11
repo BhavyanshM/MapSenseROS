@@ -29,14 +29,14 @@ NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
 void NetworkManager::spin_ros_node()
 {
    ROS_DEBUG("SpinOnce");
-   spinOnce();
+   ros::spinOnce();
 }
 
 void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
 {
    CLAY_LOG_INFO("Starting ROS Node");
-   init(argc, argv, "PlanarRegionPublisher");
-   rosNode = new NodeHandle();
+   ros::init(argc, argv, "PlanarRegionPublisher");
+   rosNode = new ros::NodeHandle();
 
    // ROSTopic Publishers
    planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/mapsense/planar_regions", 3);
@@ -44,11 +44,11 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
    // ROSTopic Subscribers
-   string depthTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH : app.L515_DEPTH;
-   string depthInfoTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH_INFO : app.L515_DEPTH_INFO;
-   string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
+   std::string depthTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH : app.L515_DEPTH;
+   std::string depthInfoTopicName = app.DEPTH_ALIGNED ? app.L515_ALIGNED_DEPTH_INFO : app.L515_DEPTH_INFO;
+   std::string colorTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/image_raw";
 
-   string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
+   std::string colorInfoTopicName = "/" + app.TOPIC_CAMERA_NAME + "/color/camera_info";
 
    app.L515_DEPTH = depthTopicName;
    app.L515_DEPTH_INFO = depthInfoTopicName;
@@ -100,7 +100,7 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 {
    if (ImGui::BeginTabItem("Network"))
    {
-      vector<TopicInfo> topics = getROSTopicList();
+      std::vector<TopicInfo> topics = getROSTopicList();
       getTopicSelection(topics, currentDataTopic);
       if (ImGui::Button("Add Receiver"))
          addReceiver(currentDataTopic);
@@ -132,11 +132,11 @@ void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
    }
 }
 
-vector<TopicInfo> NetworkManager::getROSTopicList()
+std::vector<TopicInfo> NetworkManager::getROSTopicList()
 {
    ros::master::V_TopicInfo topic_infos;
    ros::master::getTopics(topic_infos);
-   vector<TopicInfo> names;
+   std::vector<TopicInfo> names;
    for (int i = 0; i < topic_infos.size(); i++)
    {
       names.emplace_back(topic_infos[i]);
@@ -144,7 +144,7 @@ vector<TopicInfo> NetworkManager::getROSTopicList()
    return names;
 }
 
-void NetworkManager::getTopicSelection(vector<TopicInfo> topics, TopicInfo& currentTopic)
+void NetworkManager::getTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic)
 {
    if (ImGui::BeginCombo("ROS Topics", currentTopic.name.c_str()))
    {
@@ -184,45 +184,45 @@ void NetworkManager::publishSamplePose(int count)
    this->slamPosePub.publish(pose);
 }
 
-void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
-{
-
-   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
-   pcl_cloud.width = cloud->GetSize();
-   pcl_cloud.height = 1;
-
-
-
-   for(int i = 0; i<cloud->GetSize(); i++)
-   {
-      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
-      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
-      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
-      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
-
-//      uint8_t r = 255;
-//      uint8_t g = 0;
-//      uint8_t b = 0;
-//      int32_t rgb = (r << 16) | (g << 8) | b;
-
-      pcl_cloud.points.push_back(p);
-   }
-
-
-   sensor_msgs::PointCloud2 msg;
-//   msg.data = nullptr;
-//   msg.fields = nullptr;
-//   msg.header = nullptr;
-//   msg.height = nullptr;
-//   msg.width = nullptr;
-//   msg.point_step = nullptr;
-//   msg.row_step = nullptr;
-
-
-   pcl::toROSMsg(pcl_cloud, msg);
-   msg.header.frame_id = "ouster_frame";
-   coloredCloudPub.publish(msg);
-}
+//void NetworkManager::PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud)
+//{
+//
+//   pcl::PointCloud<pcl::PointXYZRGB> pcl_cloud;
+//   pcl_cloud.width = cloud->GetSize();
+//   pcl_cloud.height = 1;
+//
+//
+//
+//   for(int i = 0; i<cloud->GetSize(); i++)
+//   {
+//      pcl::PointXYZRGB p(cloud->GetColors()[i].r, cloud->GetColors()[i].g, cloud->GetColors()[i].b);
+//      p.x = cloud->GetMesh()->_vertices[i*3 + 0];
+//      p.y = cloud->GetMesh()->_vertices[i*3 + 1];
+//      p.z = cloud->GetMesh()->_vertices[i*3 + 2];
+//
+////      uint8_t r = 255;
+////      uint8_t g = 0;
+////      uint8_t b = 0;
+////      int32_t rgb = (r << 16) | (g << 8) | b;
+//
+//      pcl_cloud.points.push_back(p);
+//   }
+//
+//
+//   sensor_msgs::PointCloud2 msg;
+////   msg.data = nullptr;
+////   msg.fields = nullptr;
+////   msg.header = nullptr;
+////   msg.height = nullptr;
+////   msg.width = nullptr;
+////   msg.point_step = nullptr;
+////   msg.row_step = nullptr;
+//
+//
+//   pcl::toROSMsg(pcl_cloud, msg);
+//   msg.header.frame_id = "ouster_frame";
+//   coloredCloudPub.publish(msg);
+//}
 
 void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app)
 {
@@ -288,24 +288,24 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
       if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
-         app.INPUT_WIDTH = depthCameraInfo->width / app.DIVISION_FACTOR;
-         app.INPUT_HEIGHT = depthCameraInfo->height / app.DIVISION_FACTOR;
+         app.DEPTH_INPUT_WIDTH = depthCameraInfo->width / app.DIVISION_FACTOR;
+         app.DEPTH_INPUT_HEIGHT = depthCameraInfo->height / app.DIVISION_FACTOR;
          app.DEPTH_FX = depthCameraInfo->K[0] / app.DIVISION_FACTOR;
          app.DEPTH_FY = depthCameraInfo->K[4] / app.DIVISION_FACTOR;
          app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
-         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH,
-                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH,
+                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
       }
-      //        app.PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
-      //        app.PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
-      //        app.SUB_H = (int) app.INPUT_HEIGHT / app.PATCH_HEIGHT;
-      //        app.SUB_W = (int) app.INPUT_WIDTH / app.PATCH_WIDTH;
+      //        app.DEPTH_PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
+      //        app.DEPTH_PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
+      //        app.SUB_H = (int) app.DEPTH_INPUT_HEIGHT / app.DEPTH_PATCH_HEIGHT;
+      //        app.SUB_W = (int) app.DEPTH_INPUT_WIDTH / app.DEPTH_PATCH_WIDTH;
 
 
-      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.INPUT_HEIGHT, app.INPUT_WIDTH, app.SUB_W, app.SUB_H,
-                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.PATCH_HEIGHT, app.PATCH_WIDTH);
+      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.SUB_W, app.SUB_H,
+                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
    }
    ROS_DEBUG("Data Frame Loaded");
 }

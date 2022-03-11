@@ -506,7 +506,7 @@ namespace Clay
       ImGui::SliderInt("Gaussian Sigma", &appState.GAUSSIAN_SIGMA, 1, 20);
       ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.0f, 0.1f);
       ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.0f, 1.0f);
-      ImGui::Checkbox("Components", &appState.SHOW_REGION_COMPONENTS);
+      ImGui::Checkbox("Components", &appState.SHOW_DEPTH_REGION_COMPONENTS);
       ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
       ImGui::Checkbox("Internal", &appState.SHOW_PATCHES);
       if (ImGui::Button("Hide Display"))

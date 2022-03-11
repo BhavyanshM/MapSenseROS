@@ -10,3 +10,6 @@
 [submodule "Vendor/xtensor-blas"]
 	path = Vendor/xtensor-blas
 	url = https://github.com/xtensor-stack/xtensor-blas.git
+[submodule "Vendor/implot"]
+	path = Vendor/implot
+	url = https://github.com/epezent/implot.git

@@ -7,7 +7,6 @@
 
 #include <PlanarRegion.h>
 
-using namespace std;
 
 class PlanarRegionSimulator
 {

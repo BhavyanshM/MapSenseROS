@@ -7,7 +7,7 @@
 
 #include "Core/Application.h"
 #include "Core/Clay.h"
-#include "VisualTerrainSLAMLayer.h"
+#include "NetworkedTerrainSLAMLayer.h"
 
 class VisualTerrainSLAMApp : public Clay::Application
 {

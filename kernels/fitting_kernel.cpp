@@ -23,7 +23,7 @@ float4 back_project(int2 pos, float Z, global float* params){
     return X;
 }
 
- float3 estimate_normal(read_only image2d_t in, int x, int y, global float* params){
+ float3 estimate_normal_depth(read_only image2d_t in, int x, int y, global float* params){
     float residual = 0;
     float Z = 0;
     int m = 1;
@@ -65,28 +65,115 @@ float4 back_project(int2 pos, float Z, global float* params){
     return (1/(float)(count)) * normal.xyz;
 }
 
- float3 estimate_centroid(read_only image2d_t in, int x, int y, global float* params){
-     float Z = 0;
-     int count = 0;
-     float3 centroid = (float3)(0,0,0);
-    if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
-        for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
-            for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
-                count++;
-                int gx = x*(int)params[PATCH_HEIGHT] + i;
-                int gy = y*(int)params[PATCH_WIDTH] + j;
-                int2 pos = (int2)(gx,gy);
-                Z = ((float)read_imageui(in, pos).x)/(float)1000;
-                if(Z > 0.1f){
-                    float4 P = back_project(pos, Z, params);
-                    centroid += P.xyz;
-                }
-
+float3 estimate_centroid_depth(read_only image2d_t in, int x, int y, global float* params){
+   float Z = 0;
+   int count = 0;
+   float3 centroid = (float3)(0,0,0);
+   if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
+      for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
+         for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
+            count++;
+            int gx = x*(int)params[PATCH_HEIGHT] + i;
+            int gy = y*(int)params[PATCH_WIDTH] + j;
+            int2 pos = (int2)(gx,gy);
+            Z = ((float)read_imageui(in, pos).x)/(float)1000;
+            if(Z > 0.1f){
+               float4 P = back_project(pos, Z, params);
+               centroid += P.xyz;
             }
-        }
-    }
-    return (1/(float)(count)) * centroid;
- }
+
+         }
+      }
+   }
+   return (1/(float)(count)) * centroid;
+}
+
+float3 estimate_normal_hash(read_only image2d_t in, int c, int r, global float* cloud, global float* params){
+//   printf("(%d,%d): Estimating Normal Hash\n", r,c);
+   float residual = 0;
+   uint indexA = 0;
+   uint indexB = 0;
+   uint indexC = 0;
+   uint indexD = 0;
+   int m = 1;
+   int count = 0;
+   float4 normal = (float4)(0,0,0,0);
+   if(r >= 0 && r < (int)params[SUB_H] && c >= 0 && c < (int)params[SUB_W]){
+
+      for(int i = 0; i<(int)params[PATCH_HEIGHT]-m; i++){
+         for(int j = 0; j<(int)params[PATCH_WIDTH]-m; j++){
+            int gc = c*(int)params[PATCH_WIDTH] + i;
+            int gr = r*(int)params[PATCH_HEIGHT] + j;
+            int2 pos = (int2)(gc,gr);
+
+
+            pos = (int2)(gc,gr);
+            indexA = ((uint)read_imageui(in, pos).x);
+            float4 va = (float4)(cloud[indexA*3], cloud[indexA*3+1], cloud[indexA*3+2], 0);
+
+            pos = (int2)(gc + m, gr);
+            indexB = ((uint)read_imageui(in, pos).x);
+            float4 vb = (float4)(cloud[indexB*3], cloud[indexB*3+1], cloud[indexB*3+2], 0);
+
+            pos = (int2)(gc + m, gr + m);
+            indexC = ((uint)read_imageui(in, pos).x);
+            float4 vc = (float4)(cloud[indexC*3], cloud[indexC*3+1], cloud[indexC*3+2], 0);
+
+            pos = (int2)(gc,gr + m);
+            indexD = ((uint)read_imageui(in, pos).x);
+            float4 vd = (float4)(cloud[indexD*3], cloud[indexD*3+1], cloud[indexD*3+2], 0);
+
+//            printf("{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf}\n",
+//                   normalize(va-vb).x, normalize(va-vb).y, normalize(va-vb).z, vb.x, vb.y, vb.z, va.x, va.y, va.z, vd.x, vd.y, vd.z);
+
+            if(indexA != 0 && indexB != 0 && indexC != 0)
+            {
+               normal += cross((vc-vb),(vb-va)); count++;
+            }
+            if(indexD != 0 && indexB != 0 && indexC != 0)
+            {
+               normal += cross((vd-vc),(vc-vb)); count++;
+            }
+            if(indexA != 0 && indexD != 0 && indexC != 0)
+            {
+               normal += cross((va-vd),(vd-vc)); count++;
+            }
+            if(indexA != 0 && indexB != 0 && indexD != 0)
+            {
+               normal += cross((vb-va),(va-vd)); count++;
+            }
+
+            normal = normalize(normal);
+
+//            if(indexA != 0 && indexB != 0 && indexC != 0 && indexD != 0)printf("(%d,%d), (%d,%d,%d,%d) (%d): PackKernel Normal -> {%.2lf, %.2lf, %.2lf}\n", gr,gc, indexA, indexB, indexC, indexD, count, normal.x, normal.y, normal.z);
+         }
+      }
+   }
+   return normal.xyz;
+}
+
+float3 estimate_centroid_hash(read_only image2d_t in, int c, int r, global float* cloud, global float* params){
+   uint index = 0;
+   int count = 0;
+   float3 centroid = (float3)(0,0,0);
+   if(r >= 0 && r < (int)params[SUB_H] && c >= 0 && c < (int)params[SUB_W]){
+      for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
+         for(int j = 0; j<(int)params[PATCH_WIDTH]; j++){
+            int gc = c*(int)params[PATCH_WIDTH] + i;
+            int gr = r*(int)params[PATCH_HEIGHT] + j;
+            int2 pos = (int2)(gc,gr);
+            index = ((float)read_imageui(in, pos).x);
+            if(index != 0){
+               count++;
+               float4 P = (float4)(cloud[index*3], cloud[index*3+1], cloud[index*3+2], 0);
+               centroid += P.xyz;
+            }
+
+         }
+      }
+   }
+   return (1/(float)(max(count,1))) * centroid;
+}
 
 bool isConnected(float3 ag, float3 an, float3 bg, float3 bn, global float* params){
     float3 vec = ag - bg;
@@ -259,15 +346,15 @@ float3 calculateNormal(float3 p1, float3 p2, float3 p3)
 void kernel packKernel(  read_only image2d_t in,
 	                        write_only image2d_t out0, write_only image2d_t out1, write_only image2d_t out2, /* float3 maps for normal*/
                             write_only image2d_t out3, write_only image2d_t out4, write_only image2d_t out5, /* float3 maps for centroids */
-                            global float* params
+                            global float* params, global float* cloud, int mode
                             // write_only image2d_t debug
 
  )
 {
-	int y = get_global_id(0);
-    int x = get_global_id(1);
+	int r = get_global_id(0);
+    int c = get_global_id(1);
 
-//    if(x==0 && y==0) printf("PackKernel:(%d,%d,%d,%d,%d,%.2lf,%.2lf)\n",
+//    if(c==0 && r==0) printf("PackKernel:(%d,%d,%d,%d,%d,%.2lf,%.2lf)\n",
 //                            (int)params[SUB_H],
 //                            (int)params[SUB_W],
 //                            (int)params[PATCH_HEIGHT],
@@ -276,18 +363,34 @@ void kernel packKernel(  read_only image2d_t in,
 //                            params[MERGE_ANGULAR_THRESHOLD],
 //                            params[MERGE_DISTANCE_THRESHOLD]);
 
-    if(y >= 0 && y < (int)params[SUB_H] && x >= 0 && x < (int)params[SUB_W]){
-        float3 normal = estimate_normal(in, x, y, params);
-        float3 centroid = estimate_centroid(in, x, y, params);
+    if(r >= 0 && r < (int)params[SUB_H] && c >= 0 && c < (int)params[SUB_W]){
 
-//        if(x==24 && y==50) printf("PackKernel Normal:(%.4lf, %.4lf, %.4lf)\n", normal.x, normal.y, normal.z);
+        float3 normal = (float3)(0,0,0);
+        float3 centroid = (float3)(0,0,0);
 
-        write_imagef(out0, (int2)(x,y), (float4)(normal.x,0,0,0));
-        write_imagef(out1, (int2)(x,y), (float4)(normal.y,0,0,0));
-        write_imagef(out2, (int2)(x,y), (float4)(normal.z,0,0,0));
-        write_imagef(out3, (int2)(x,y), (float4)(centroid.x,0,0,0));
-        write_imagef(out4, (int2)(x,y), (float4)(centroid.y,0,0,0));
-        write_imagef(out5, (int2)(x,y), (float4)(centroid.z,0,0,0));
+//        printf("(%d,%d): Calculating Centroid and Normal\n", r, c);
+
+        if(mode == 0)
+        {
+            normal = estimate_normal_depth(in, c, r, params);
+            centroid = estimate_centroid_depth(in, c, r, params);
+        }
+        else
+        {
+            normal = estimate_normal_hash(in, c, r, cloud, params);
+//            printf("(%d,%d): PackKernel Normal -> {%.2lf, %.2lf, %.2lf}\n", r,c, normal.x, normal.y, normal.z);
+            centroid = estimate_centroid_hash(in, c, r, cloud, params);
+//            printf("(%d,%d): PackKernel Centroid -> {%.2lf, %.2lf, %.2lf}\n", r,c, centroid.x, centroid.y, centroid.z);
+        }
+
+
+
+        write_imagef(out0, (int2)(c,r), (float4)(normal.x,0,0,0));
+        write_imagef(out1, (int2)(c,r), (float4)(normal.y,0,0,0));
+        write_imagef(out2, (int2)(c,r), (float4)(normal.z,0,0,0));
+        write_imagef(out3, (int2)(c,r), (float4)(centroid.x,0,0,0));
+        write_imagef(out4, (int2)(c,r), (float4)(centroid.y,0,0,0));
+        write_imagef(out5, (int2)(c,r), (float4)(centroid.z,0,0,0));
     }
 }
 
@@ -363,9 +466,67 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  ICP Kernels Here
+ *  PointCloud Kernels Here
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * */
+
+/*
+ * Point hashing kernel to convert unordered point list into structured hash map.
+ * */
+
+void kernel hashKernel(global float* cloud, read_write image2d_t indices, global float* params, int size, int threads)
+{
+   int r = get_global_id(0);
+   int c = get_global_id(1);
+   int t = get_global_id(2);
+
+   int totalPoints = (size/3)/threads;
+   int start = t * totalPoints;
+   int end = start + totalPoints;
+
+   write_imageui(indices, (int2)(c,r), (uint4)(0,0,0,0));
+
+   int count = 0;
+   float pitchUnit = M_PI / (2 * params[INPUT_HEIGHT]);
+   float yawUnit = 2 * M_PI / (params[INPUT_WIDTH]);
+   float x, y, z, radius, pitch, yaw;
+   int pitchCount, yawCount;
+
+   int pitchOffset = params[INPUT_HEIGHT]/2;
+   int yawOffset = params[INPUT_WIDTH]/2;
+
+//   printf("r:%d, c:%d, t:%d, total:%d, start:%d, end:%d, pitchUnit:%.4lf, yawUnit:%.4lf, pitchOffset:%d, yawOffset:%d\n", r, c, t, totalPoints, start, end,
+//          pitchUnit, yawUnit, pitchOffset, yawOffset);
+
+   for(int i = start; i<end; i++)
+   {
+      x = cloud[i * 3];
+      y = cloud[i * 3 + 1];
+      z = cloud[i * 3 + 2];
+
+      radius = sqrt(x * x + y * y);
+
+      pitch = atan2(z, radius);
+      pitchCount = (pitchOffset) + (int) (pitch / pitchUnit);
+
+      yaw = atan2(-y, x);
+      yawCount = (yawOffset) + (int) (yaw / yawUnit);
+
+      if (pitchCount >= 0 && pitchCount < params[INPUT_HEIGHT] && yawCount >= 0 && yawCount < params[INPUT_WIDTH])
+      {
+         if(r == pitchCount && c == yawCount)
+         {
+            write_imageui(indices, (int2)(c,r), (uint4)(i,0,0,0));
+         }
+      }
+   }
+
+//    if(r==0 && c==0)
+//   {
+//       printf("Params: {%.2lf,%.2lf,%.2lf,%.2lf,%.2lf}\n", params[SUB_H], params[SUB_W], params[PATCH_WIDTH], params[MERGE_DISTANCE_THRESHOLD], params[MERGE_ANGULAR_THRESHOLD]);
+//       printf("GID:(%d,%d), Count:%d, Size:%d\n", r, c, count, size);
+//   }
+}
 
 /*
  * Correspondence Kernel for Iterative Closest Point

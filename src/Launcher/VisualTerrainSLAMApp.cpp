@@ -7,7 +7,7 @@
 VisualTerrainSLAMApp::VisualTerrainSLAMApp(int argc, char** argv)
 {
    //   PushLayer(new ExampleLayer());
-   Clay::VisualTerrainSLAMLayer* app = new Clay::VisualTerrainSLAMLayer(argc, argv);
+   Clay::NetworkedTerrainSLAMLayer* app = new Clay::NetworkedTerrainSLAMLayer(argc, argv);
    PushLayer(app);
 }
 
