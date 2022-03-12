@@ -1,5 +1,6 @@
 #include "MapHandler.h"
 #include "ImGuiTools.h"
+#include "ClayTools.h"
 
 MapHandler::MapHandler()
 {
@@ -90,8 +91,6 @@ void MapHandler::ImGuiUpdate()
       }
       ImGui::EndTabItem();
    }
-
-
 }
 
 void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions)
@@ -110,6 +109,8 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions)
 
    if (_matches.size() > 0)
       RegisterRegionsPointToPlane(1);
+
+
 
    int currentPoseId = 1;
 }

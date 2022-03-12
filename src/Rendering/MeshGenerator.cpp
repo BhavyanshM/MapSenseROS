@@ -1,4 +1,14 @@
 #include "MeshGenerator.h"
+#include "ClayTools.h"
+#include "Scene/Mesh/MeshTools.h"
+
+void MeshGenerator::GeneratePoseMesh(const Eigen::Matrix4f& transform, Clay::Ref<Clay::Model> parent)
+{
+   glm::mat4 glmTransform = ClayTools::EigenToClay(transform);
+   Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<Clay::TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), parent);
+   Clay::MeshTools::CoordinateAxes(pose);
+   _poses.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(pose)));
+}
 
 void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
 {
@@ -20,7 +30,7 @@ void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planar
 
 void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
 {
-   meshes.clear();
+   _meshes.clear();
    for (int i = 0; i < planarRegions.size(); i++)
    {
       Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(
@@ -34,7 +44,7 @@ void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>&
 
 void MeshGenerator::InsertModel(Clay::Ref<Clay::TriangleMesh> model)
 {
-   meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
+   _meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
 }
 
 void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)

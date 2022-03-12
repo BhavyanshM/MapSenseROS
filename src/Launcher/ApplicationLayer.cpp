@@ -76,10 +76,6 @@ namespace Clay
       Ref<Model> cameraModel = std::make_shared<Model>(cameraParent);
       _cameraController = CameraController(1000.0f / 1000.0f, cameraModel);
 
-      Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootModel);
-      MeshTools::CoordinateAxes(pose);
-      _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
-
       printf("Here\n");
    }
 
@@ -121,10 +117,10 @@ namespace Clay
 
       for (int i = 0; i < _models.size(); i++)
          Renderer::Submit(_models[i]);
-      for (int i = 0; i < _poses.size(); i++)
-         Renderer::Submit(_poses[i]);
       for (int i = 0; i < mesher.GetModels().size(); i++)
          Renderer::Submit(mesher.GetModels()[i]);
+      for (int i = 0; i < mesher.GetPoses().size(); i++)
+         Renderer::Submit(mesher.GetPoses()[i]);
 
       Renderer::EndScene();
       _frameBuffer->Unbind();

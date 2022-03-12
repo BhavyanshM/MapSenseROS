@@ -135,7 +135,7 @@ set(SOURCE
         src/UI/ImGuiLayout.cpp
         src/UI/ImGuiTools.cpp
         src/Rendering/MeshGenerator.cpp
-        )
+        src/Rendering/ClayTools.cpp)
 
 set(HEADERS
         src/headers/NetworkManager.h
@@ -154,6 +154,7 @@ set(HEADERS
         src/headers/Core.h
         src/headers/ImGuiLayout.h
         src/headers/ImGuiTools.h
+        src/headers/ClayTools.h
         src/headers/MapsenseHeaders.h
         src/headers/ApplicationLayer.h
         src/Launcher/ApplicationLayer.cpp

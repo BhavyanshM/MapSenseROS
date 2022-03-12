@@ -37,6 +37,8 @@ namespace Clay
       _cloud = pclReceiver->GetRenderable();
       _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
 
+      mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), _rootModel);
+
 //      cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
 //      cloud->Load(filename, false);
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
@@ -82,7 +84,7 @@ namespace Clay
             ROS_DEBUG("Stereo Odom Update");
             Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootModel);
             MeshTools::CoordinateAxes(pose);
-            _poses.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
+            _models.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
             bool result = _visualOdometry->Update(appState, pose, firstCloud);
              _visualOdometry->Show();

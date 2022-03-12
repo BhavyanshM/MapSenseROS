@@ -16,13 +16,17 @@
 
          MeshGenerator() {};
 
+         void GeneratePoseMesh(const Eigen::Matrix4f& pose, Clay::Ref<Clay::Model> parent);
+
          void GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent);
 
          void GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model);
 
          void InsertModel(Clay::Ref<Clay::TriangleMesh> model);
 
-         const std::vector<Clay::Ref<Clay::Model>>& GetModels() const {return meshes;}
+         const std::vector<Clay::Ref<Clay::Model>>& GetModels() const {return _meshes;}
+
+         const std::vector<Clay::Ref<Clay::Model>>& GetPoses() const {return _poses;}
 
          void GeneratePatchMesh(cv::Mat& patches);
 
@@ -36,12 +40,12 @@
 
          //      void generatePatchMesh(Object3D* parent, MapFrame& output,  vector<Object3D*> objects, const ApplicationState& appState);
 
-
       private:
 
          int SKIP_EDGES = 5;
 
-         std::vector<Clay::Ref<Clay::Model>> meshes;
+         std::vector<Clay::Ref<Clay::Model>> _meshes;
+         std::vector<Clay::Ref<Clay::Model>> _poses;
 
    };
 

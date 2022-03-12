@@ -74,7 +74,6 @@ namespace Clay
         OpenCLManager *_openCLManager;
 
         std::vector<Ref<Model>> _models;
-        std::vector<Ref<Model>> _poses;
 
         MeshGenerator mesher;
 
