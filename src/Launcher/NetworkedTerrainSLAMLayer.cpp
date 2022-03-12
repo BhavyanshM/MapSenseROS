@@ -24,6 +24,7 @@ namespace Clay
       _mapper = new MapHandler();
       _mapper->SetRegionCalculator(_regionCalculator);
       _mapper->SetSLAMModule(_slamModule);
+      _mapper->SetMeshGenerator(&mesher);
       _slamModule = new SLAMModule(argc, argv);
 
       firstCloud = std::make_shared<PointCloud>(glm::vec4(0.7f, 0.4f, 0.5f, 1.0f), _rootModel);

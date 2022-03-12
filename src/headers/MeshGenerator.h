@@ -39,7 +39,7 @@
 
       private:
 
-         const int SKIP_EDGES = 5;
+         int SKIP_EDGES = 5;
 
          std::vector<Clay::Ref<Clay::Model>> meshes;
 

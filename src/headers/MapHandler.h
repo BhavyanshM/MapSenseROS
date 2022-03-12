@@ -5,6 +5,7 @@
 #include <PlanarRegion.h>
 #include "GeomTools.h"
 #include "SLAMModule.h"
+#include "MeshGenerator.h"
 
 class MapHandler
 {
@@ -49,6 +50,8 @@ class MapHandler
 
       void ImGuiUpdate();
 
+      void SetMeshGenerator(MeshGenerator* mesher) {_mesher = mesher;}
+
    public:
 
       bool SLAM_ENABLED = false;
@@ -76,7 +79,7 @@ class MapHandler
       std::vector<RigidBodyTransform> poses, atlasPoses;
       RigidBodyTransform _transformZUp;
 
-      std::string directory;
+      std::string _directory;
       Eigen::Vector3d translationToReference, eulerAnglesToReference;
 
       RigidBodyTransform _sensorToMapTransform;
@@ -86,6 +89,7 @@ class MapHandler
 
       PlanarRegionCalculator* _regionCalculator;
       SLAMModule* _slam;
+      MeshGenerator* _mesher;
 
       int regionSelected = 0;
       int fileSelected = 0;

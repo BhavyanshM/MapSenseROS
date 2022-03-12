@@ -4,7 +4,9 @@
 MapHandler::MapHandler()
 {
 //   this->fgSLAM = new FactorGraphHandler();
-   AppUtils::getFileNames("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames);
+
+   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_05_RotZ/";
+   AppUtils::getFileNames(_directory, fileNames);
 
    _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
    _transformZUp.rotateY(90.0f / 180.0f * M_PI);
@@ -22,7 +24,7 @@ void MapHandler::ImGuiUpdate()
             ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);
             if(ImGui::Button("Load Regions"))
             {
-               _regionCalculator->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames, fileSelected);
+               _regionCalculator->LoadRegions(_directory, fileNames, fileSelected);
             }
             std::vector<std::shared_ptr<PlanarRegion>> regions = _regionCalculator->planarRegionList;
             ImGui::Text("Total Planar Regions: %d", _regions.size());
@@ -73,12 +75,12 @@ void MapHandler::ImGuiUpdate()
             ImGui::Text("Last Translation: %.3lf, %.3lf, %.3lf", eulerAnglesToReference.x(), eulerAnglesToReference.y(), eulerAnglesToReference.z());
             ImGui::Text("Last Rotation Euler Angles: %.3lf, %.3lf, %.3lf", translationToReference.x(), translationToReference.y(), translationToReference.z());
             ImGui::Text("Next File: %s", fileNames[_frameIndex].c_str());
+            ImGui::NewLine();
 
-            if(ImGui::Button("Load Next Set")){
-               _regionCalculator->LoadRegions("/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/", fileNames, _frameIndex );
-            }
-            if(ImGui::Button("Register"))
+            if(ImGui::Button("Register Next Set"))
             {
+               _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
+               _mesher->GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
                Update(_regionCalculator->planarRegionList);
                _frameIndex++;
             }
@@ -300,7 +302,7 @@ void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion
 
 void MapHandler::setDirectory(const std::string& directory)
 {
-   this->directory = directory;
+   this->_directory = directory;
 }
 
 void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform)
