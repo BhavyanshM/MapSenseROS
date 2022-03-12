@@ -81,7 +81,11 @@ void MapHandler::ImGuiUpdate()
             if(ImGui::Button("Register Next Set"))
             {
                _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
-               _mesher->GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+//               _mesher->GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+
+               std::cout << _sensorToMapTransform.getMatrix().cast<float>() << std::endl;
+
+               _mesher->GeneratePoseMesh(_sensorToMapTransform.getMatrix().cast<float>(), nullptr);
                Update(_regionCalculator->planarRegionList);
                _frameIndex++;
             }

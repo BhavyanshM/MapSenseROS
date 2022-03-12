@@ -7,6 +7,7 @@ void MeshGenerator::GeneratePoseMesh(const Eigen::Matrix4f& transform, Clay::Ref
    glm::mat4 glmTransform = ClayTools::EigenToClay(transform);
    Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<Clay::TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), parent);
    Clay::MeshTools::CoordinateAxes(pose);
+   pose->ApplyTransform(glmTransform);
    _poses.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(pose)));
 }
 

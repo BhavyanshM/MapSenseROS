@@ -4,7 +4,6 @@
 #include "opencv2/core/core.hpp"
 #include <opencv2/imgproc.hpp>
 #include "ApplicationState.h"
-#include "MapsenseHeaders.h"
 
 class MapFrame
 {
