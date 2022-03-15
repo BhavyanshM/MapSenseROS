@@ -109,6 +109,8 @@ namespace Clay
       _frameBuffer->Bind();
 
       RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
+      RenderCommand::SetLineWidth(_lineWidth);
+      RenderCommand::SetPointSize(_pointSize);
       RenderCommand::Clear();
 
       Renderer::BeginScene(_cameraController.GetCamera());
@@ -121,6 +123,8 @@ namespace Clay
          Renderer::Submit(mesher.GetModels()[i]);
       for (int i = 0; i < mesher.GetPoses().size(); i++)
          Renderer::Submit(mesher.GetPoses()[i]);
+      for (int i = 0; i < mesher.GetLines().size(); i++)
+         Renderer::Submit(mesher.GetLines()[i]);
 
       Renderer::EndScene();
       _frameBuffer->Unbind();

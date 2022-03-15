@@ -1,6 +1,6 @@
 #include "MeshGenerator.h"
 #include "ClayTools.h"
-#include "Scene/Mesh/MeshTools.h"
+
 
 void MeshGenerator::GeneratePoseMesh(const Eigen::Matrix4f& transform, Clay::Ref<Clay::Model> parent)
 {
@@ -13,7 +13,7 @@ void MeshGenerator::GeneratePoseMesh(const Eigen::Matrix4f& transform, Clay::Ref
 
 void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
 {
-//   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
+   //   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
    for (int i = 0; i < planarRegion->GetNumOfBoundaryVertices(); i++)
    {
       Eigen::Vector3f point = (planarRegion->getBoundaryVertices()[i]);
@@ -43,19 +43,43 @@ void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>&
    }
 }
 
+void MeshGenerator::AppendMatchLine(Clay::Ref<Clay::LineMesh>& mesh, const Eigen::Vector3f& previous, const Eigen::Vector3f& current, const Clay::Ref<Clay::Model>& parent)
+{
+   mesh->InsertVertex(previous.x(), previous.y(), previous.z());
+   mesh->InsertVertex(current.x(), current.y(), current.z());
+
+}
+
+void MeshGenerator::GenerateMeshForMatches(const std::vector<Clay::Ref<PlanarRegion>>& current, const std::vector<Clay::Ref<PlanarRegion>>& previous,
+                                      const std::vector<std::pair<int, int>>& matches, const Clay::Ref<Clay::Model>& parent)
+{
+   Clay::Ref<Clay::LineMesh> matchMesh = std::make_shared<Clay::LineMesh>(
+         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), parent);
+   for(auto match : matches)
+   {
+      AppendMatchLine(matchMesh, previous[match.first]->GetCenter(), current[match.second]->GetCenter(), parent);
+   }
+   InsertLineMesh(matchMesh);
+}
+
 void MeshGenerator::InsertModel(Clay::Ref<Clay::TriangleMesh> model)
 {
    _meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
 }
 
+void MeshGenerator::InsertLineMesh(Clay::Ref<Clay::LineMesh> lines)
+{
+   _lines.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(lines)));
+}
+
 void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)
 {
-   for(int i = 0; i<patches.rows; i++)
+   for (int i = 0; i < patches.rows; i++)
    {
-      for(int j = 0; j<patches.cols; j++)
+      for (int j = 0; j < patches.cols; j++)
       {
-         Eigen::Vector3f normal(patches.at<float>(i,j,0), patches.at<float>(i,j,1), patches.at<float>(i,j,2));
-         Eigen::Vector3f centroid(patches.at<float>(i,j,3), patches.at<float>(i,j,4), patches.at<float>(i,j,5));
+         Eigen::Vector3f normal(patches.at<float>(i, j, 0), patches.at<float>(i, j, 1), patches.at<float>(i, j, 2));
+         Eigen::Vector3f centroid(patches.at<float>(i, j, 3), patches.at<float>(i, j, 4), patches.at<float>(i, j, 5));
 
          Eigen::Vector3f up(0, 0, 1);
          Eigen::Vector3f axis = normal.cross(up).normalized();

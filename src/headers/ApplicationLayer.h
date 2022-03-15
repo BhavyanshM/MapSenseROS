@@ -68,6 +68,9 @@ namespace Clay
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;
 
+         int _pointSize = 2;
+         int _lineWidth = 2;
+
    protected:
         AppUtils appUtils;
         NetworkManager *_networkManager;

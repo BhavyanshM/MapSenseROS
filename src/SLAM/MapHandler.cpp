@@ -6,7 +6,7 @@ MapHandler::MapHandler()
 {
 //   this->fgSLAM = new FactorGraphHandler();
 
-   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_05_RotZ/";
+   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/";
    AppUtils::getFileNames(_directory, fileNames);
 
    _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
@@ -81,12 +81,17 @@ void MapHandler::ImGuiUpdate()
             if(ImGui::Button("Register Next Set"))
             {
                _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
-//               _mesher->GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+
+               Update(_regionCalculator->planarRegionList);
+               _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
+               _mesher->GenerateMeshForRegions(_regions, nullptr);
+               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _regions, _matches, nullptr);
+
+               _regions = _latestRegionsZUp;
+
 
                std::cout << _sensorToMapTransform.getMatrix().cast<float>() << std::endl;
-
                _mesher->GeneratePoseMesh(_sensorToMapTransform.getMatrix().cast<float>(), nullptr);
-               Update(_regionCalculator->planarRegionList);
                _frameIndex++;
             }
             ImGui::EndTabItem();
@@ -99,13 +104,13 @@ void MapHandler::ImGuiUpdate()
 
 void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions)
 {
+   latestRegions = regions;
 
    if(_regions.size() == 0)
    {
       TransformAndCopyRegions(latestRegions, _regions, _transformZUp);
    }
 
-   latestRegions = regions;
    TransformAndCopyRegions(latestRegions, _latestRegionsZUp, _transformZUp);
 
    MatchPlanarRegionsToMap();
