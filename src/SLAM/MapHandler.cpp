@@ -6,7 +6,7 @@ MapHandler::MapHandler(ApplicationState& app) : _app(app)
 {
 //   this->fgSLAM = new FactorGraphHandler();
 
-   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_Ouster_Convex_01/";
+   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/";
    AppUtils::getFileNames(_directory, fileNames);
 
    _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
@@ -91,7 +91,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                _mesher->GenerateMeshForMatches(_latestRegionsZUp, _regions, _matches, nullptr);
 
-               _mesher->GenerateMeshForRegions(_regions, nullptr);
+               _mesher->GenerateLineMeshForRegions(_regions, nullptr);
 
                _regions = _latestRegionsZUp;
 

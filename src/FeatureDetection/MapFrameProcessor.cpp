@@ -46,7 +46,7 @@ void MapFrameProcessor::init(ApplicationState& app)
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, std::vector<std::shared_ptr<PlanarRegion>>& planarRegionList)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   CLAY_LOG_INFO("GenerateSegmentation: SW:%d, SH:%d, IH:%d, IW:%d, PH:%d, PW:%d", SUB_W, SUB_H, INPUT_HEIGHT, INPUT_WIDTH, PATCH_HEIGHT, PATCH_WIDTH);
+   CLAY_LOG_INFO("GenerateSegmentation: SW:{}, SH:{}, IH:{}, IW:{}, PH:{}, PW:{}", SUB_W, SUB_H, INPUT_HEIGHT, INPUT_WIDTH, PATCH_HEIGHT, PATCH_WIDTH);
 
    this->frame = inputFrame;
 
@@ -79,7 +79,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, std::vector<st
       }
    }
 
-   CLAY_LOG_INFO("DFS Generated %d Regions\n", components);
+   CLAY_LOG_INFO("DFS Generated {} Regions\n", components);
 
    /* Extract Region Boundary Indices. */
    visited.setZero();
@@ -202,7 +202,7 @@ void MapFrameProcessor::growRegionBoundary(std::vector<std::shared_ptr<PlanarReg
 
 void MapFrameProcessor::printPatchGraph()
 {
-   printf("DEBUGGER:(%d,%d), AppState:(%d,%d)\n", SUB_H, SUB_W, SUB_H, SUB_W);
+   CLAY_LOG_INFO("DEBUGGER:({},{}), AppState:({},{})\n", SUB_H, SUB_W, SUB_H, SUB_W);
    for (int i = 0; i < SUB_H; i++)
    {
       for (int j = 0; j < SUB_W; j++)
