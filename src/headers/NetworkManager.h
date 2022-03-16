@@ -18,7 +18,6 @@
 #include "PointCloudReceiver.h"
 
 
-#include "MapsenseHeaders.h"
 #include "Core.h"
 #include <ApplicationState.h>
 

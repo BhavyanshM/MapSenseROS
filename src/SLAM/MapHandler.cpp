@@ -2,22 +2,23 @@
 #include "ImGuiTools.h"
 #include "ClayTools.h"
 
-MapHandler::MapHandler()
+MapHandler::MapHandler(ApplicationState& app) : _app(app)
 {
 //   this->fgSLAM = new FactorGraphHandler();
 
-   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/";
+   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_Ouster_Convex_01/";
    AppUtils::getFileNames(_directory, fileNames);
 
    _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
    _transformZUp.rotateY(90.0f / 180.0f * M_PI);
 }
 
-void MapHandler::ImGuiUpdate()
+void MapHandler::ImGuiUpdate(ApplicationState& app)
 {
+   _app = app;
+
    if(ImGui::BeginTabItem("Mapper"))
    {
-
       if(ImGui::BeginTabBar("Mapper Tabs"))
       {
          if(ImGui::BeginTabItem("Plotter"))
@@ -38,16 +39,16 @@ void MapHandler::ImGuiUpdate()
             }
 
 
-            ImGui::SliderFloat("Segment Dist Threshold", &SEGMENT_DIST_THRESHOLD, 0.01f, 0.5f);
-            ImGui::SliderFloat("Compress Dist Threshold", &COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
-            ImGui::SliderFloat("Compress Cosine Threshold", &COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
+            ImGui::SliderFloat("Segment Dist Threshold", &app.SEGMENT_DIST_THRESHOLD, 0.01f, 0.5f);
+            ImGui::SliderFloat("Compress Dist Threshold", &app.COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
+            ImGui::SliderFloat("Compress Cosine Threshold", &app.COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
             if(plotter2D && _regions.size() > 0)
             {
 
                regions[regionSelected]->ComputeBoundaryVerticesPlanar();
-               regions[regionSelected]->ComputeSegmentIndices(SEGMENT_DIST_THRESHOLD);
-               regions[regionSelected]->CompressRegionSegmentsLinear(COMPRESS_DIST_THRESHOLD, COMPRESS_COSINE_THRESHOLD);
+               regions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
+               regions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
 
                ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, _regions.size());
                const std::vector<Eigen::Vector2f>& points = regions[regionSelected]->GetPlanarPatchCentroids();
@@ -78,14 +79,19 @@ void MapHandler::ImGuiUpdate()
             ImGui::Text("Next File: %s", fileNames[_frameIndex].c_str());
             ImGui::NewLine();
 
+            ImGui::SliderFloat("Match Angular Threshold", &app.MATCH_ANGULAR_THRESHOLD, 0.1f, 1.0f);
+            ImGui::SliderFloat("Match Distance Threshold", &app.MATCH_DIST_THRESHOLD, 0.01f, 1.0f);
+
             if(ImGui::Button("Register Next Set"))
             {
                _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
 
                Update(_regionCalculator->planarRegionList);
-               _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
-               _mesher->GenerateMeshForRegions(_regions, nullptr);
+               // _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
+
                _mesher->GenerateMeshForMatches(_latestRegionsZUp, _regions, _matches, nullptr);
+
+               _mesher->GenerateMeshForRegions(_regions, nullptr);
 
                _regions = _latestRegionsZUp;
 
@@ -147,8 +153,8 @@ void MapHandler::MatchPlanarRegionsToMap()
                int countDiff = abs(_regions[i]->GetNumOfBoundaryVertices() - _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
                int maxCount = std::max(_regions[i]->GetNumOfBoundaryVertices(), _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
 
-               if (dist < MATCH_DIST_THRESHOLD && angularDiff > MATCH_ANGULAR_THRESHOLD &&
-                   ((float) countDiff / ((float) maxCount)) * 100.0f < MATCH_PERCENT_VERTEX_THRESHOLD)
+               if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD &&
+                   ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD)
                {
                   _matches.emplace_back(i, j);
                   _latestRegionsZUp[j]->setId(_regions[i]->getId());

@@ -29,7 +29,7 @@ ApplicationState::ApplicationState()
       printf("NAME: %s, VALUE: %s\n", name.c_str(), value.c_str());
       if(str == "# end") break;
 
-
+      // Ints
       if(name == "REGION_MIN_PATCHES") {REGION_MIN_PATCHES = stoi(value);}
       if(name == "REGION_BOUNDARY_DIFF") {REGION_BOUNDARY_DIFF = stoi(value);}
       if(name == "REGION_MODE") {REGION_MODE = stoi(value);}
@@ -52,7 +52,9 @@ ApplicationState::ApplicationState()
       if(name == "DEPTH_PATCH_WIDTH") { DEPTH_PATCH_WIDTH = stoi(value);}
       if(name == "HASH_PATCH_HEIGHT") { HASH_PATCH_HEIGHT = stoi(value);}
       if(name == "HASH_PATCH_WIDTH") { HASH_PATCH_WIDTH = stoi(value);}
+      if(name == "MATCH_PERCENT_VERTEX_THRESHOLD") {MATCH_PERCENT_VERTEX_THRESHOLD = stoi(value);}
 
+      // Floats
       if(name == "FILTER_DISPARITY_THRESHOLD") {FILTER_DISPARITY_THRESHOLD = stof(value);}
       if(name == "DEPTH_BRIGHTNESS") {DEPTH_BRIGHTNESS = stof(value);}
       if(name == "DEPTH_DISPLAY_OFFSET") {DEPTH_DISPLAY_OFFSET = stof(value);}
@@ -66,7 +68,14 @@ ApplicationState::ApplicationState()
       if(name == "HASH_MERGE_ANGULAR_THRESHOLD") {HASH_MERGE_ANGULAR_THRESHOLD = stof(value);}
       if(name == "DISPLAY_WINDOW_SIZE") {DISPLAY_WINDOW_SIZE = stof(value);}
       if(name == "REGION_GROWTH_FACTOR") {REGION_GROWTH_FACTOR = stof(value);}
+      if(name == "COMPRESS_COSINE_THRESHOLD") {COMPRESS_COSINE_THRESHOLD = stof(value);}
+      if(name == "COMPRESS_DIST_THRESHOLD") {COMPRESS_DIST_THRESHOLD = stof(value);}
+      if(name == "SEGMENT_DIST_THRESHOLD") {SEGMENT_DIST_THRESHOLD = stof(value);}
+      if(name == "MATCH_DIST_THRESHOLD") {MATCH_DIST_THRESHOLD = stof(value);}
+      if(name == "MATCH_ANGULAR_THRESHOLD") {MATCH_ANGULAR_THRESHOLD = stof(value);}
 
+
+      // Bools
       if(name == "FILTER_SELECTED") {FILTER_SELECTED = (value == "true");}
       if(name == "SHOW_BOUNDARIES") {SHOW_BOUNDARIES = (value == "true");}
       if(name == "SHOW_PATCHES") {SHOW_PATCHES = (value == "true");}
@@ -91,6 +100,7 @@ ApplicationState::ApplicationState()
       if(name == "GENERATE_REGIONS") {GENERATE_REGIONS = (value == "true");}
       if(name == "SHOW_DEPTH_REGION_COMPONENTS") {SHOW_DEPTH_REGION_COMPONENTS = (value == "true");}
       if(name == "SHOW_HASH_REGION_COMPONENTS") {SHOW_HASH_REGION_COMPONENTS = (value == "true");}
+
    }
 
    SUB_H = (int) DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;

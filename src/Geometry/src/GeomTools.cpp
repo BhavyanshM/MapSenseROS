@@ -4,6 +4,8 @@
 
 #include "GeomTools.h"
 #include "AppUtils.h"
+#include <stack>
+#include <iostream>
 
 Eigen::Matrix3f GeomTools::GetRotationFromAngleApproximations(Eigen::Vector3f eulerAngles)
 {

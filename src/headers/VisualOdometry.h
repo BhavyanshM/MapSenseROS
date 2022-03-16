@@ -5,7 +5,6 @@
 #ifndef VISUAL_ODOMETRY_H
 #define VISUAL_ODOMETRY_H
 
-#include "MapsenseHeaders.h"
 #include "opencv2/opencv.hpp"
 #include "NetworkManager.h"
 #include "ApplicationState.h"

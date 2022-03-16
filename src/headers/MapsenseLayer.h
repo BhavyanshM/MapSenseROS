@@ -7,7 +7,6 @@
 
 #include "Core/Application.h"
 #include "DataManager.h"
-#include "MapsenseHeaders.h"
 #include "SLAMModule.h"
 #include "PlanarRegionCalculator.h"
 #include "ApplicationState.h"

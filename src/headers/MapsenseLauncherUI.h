@@ -26,7 +26,6 @@
 #include <Magnum/GL/Renderer.h>
 
 #include "Core.h"
-#include "MapsenseHeaders.h"
 #include "MeshGenerator.h"
 #include "SLAMModule.h"
 #include "PlanarRegionCalculator.h"

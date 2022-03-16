@@ -89,7 +89,7 @@ Eigen::Vector3d RigidBodyTransform::transformVector(const Eigen::Vector3d& vecto
 
 void RigidBodyTransform::print()
 {
-   std::cout << this->matrix << std::endl;
+//   std::cout << this->matrix << std::endl;
 }
 
 Eigen::Vector3d RigidBodyTransform::getTranslation()

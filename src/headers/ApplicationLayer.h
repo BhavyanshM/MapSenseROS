@@ -6,7 +6,6 @@
 #define MAP_SENSE_MAPSENSELAYER_H
 
 #include "Core/Application.h"
-#include "MapsenseHeaders.h"
 #include "ApplicationState.h"
 #include "ImGuiLayout.h"
 #include "AppUtils.h"

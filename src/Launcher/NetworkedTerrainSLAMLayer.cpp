@@ -12,8 +12,8 @@ namespace Clay
    NetworkedTerrainSLAMLayer::NetworkedTerrainSLAMLayer(int argc, char **argv) : ApplicationLayer(argc, argv)
    {
       _data = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
-                               "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
-                               "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
+                              "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
+                              "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
 
       /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
       /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */
@@ -21,7 +21,7 @@ namespace Clay
 
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
-      _mapper = new MapHandler();
+      _mapper = new MapHandler(appState);
       _mapper->SetRegionCalculator(_regionCalculator);
       _mapper->SetSLAMModule(_slamModule);
       _mapper->SetMeshGenerator(&mesher);
@@ -33,25 +33,22 @@ namespace Clay
       std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(90);
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
-      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
-      _cloud = pclReceiver->GetRenderable();
-      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
+      //      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+      //      _cloud = pclReceiver->GetRenderable();
+      //      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
 
       mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), _rootModel);
 
-//      cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
-//      cloud->Load(filename, false);
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(cloud));
-
-//      _regionCalculator->GeneratePatchGraphFromPointCloud(appState, cloud->GetMesh()->_vertices, 0.0);
-
+      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+      _cloud->Load(filename, false);
+      _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
    }
 
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()
    {
       //      ROS_DEBUG("TickEvent: %d", count++);
 
-//      if(_models.size() >=2) CLAY_LOG_INFO("Models: {} {} {}", _models.size(), _models[0]->GetSize(), _models[1]->GetSize());
+      //      if(_models.size() >=2) CLAY_LOG_INFO("Models: {} {} {}", _models.size(), _models[0]->GetSize(), _models[1]->GetSize());
 
       if (appState.ROS_ENABLED)
       {
@@ -87,14 +84,14 @@ namespace Clay
             _models.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
             bool result = _visualOdometry->Update(appState, pose, firstCloud);
-             _visualOdometry->Show();
+            _visualOdometry->Show();
          }
 
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _mapper->SLAM_ENABLED)
          {
-//            PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
-//            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
-//            _slamModule->Update();
+            //            PlanarRegion::PrintRegionList(_regionCalculator->planarRegionList, "Initial Planar Regions");
+            //            _slamModule->setLatestRegionsToZUp(_regionCalculator->planarRegionList);
+            //            _slamModule->Update();
 
             /* TODO: Publish the latest optimized pose from Factor Graph SLAM. */
 
@@ -109,16 +106,19 @@ namespace Clay
          ROS_DEBUG("ROS Update Completed");
       }
 
-//      if(_regionCalculator->RenderEnabled())
-//      {
-//         if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-//         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
-//         _regionCalculator->Render();
-//      }
+      if (_regionCalculator->RenderEnabled())
+      {
+         /* ROS Regions */
+         //         if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+         //         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+         //         _regionCalculator->Render();
+
+         /* Static Regions */
+         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+      }
 
       _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);
-
-
    }
 
    void NetworkedTerrainSLAMLayer::ImGuiUpdate(ApplicationState& appState)
@@ -126,8 +126,7 @@ namespace Clay
       _networkManager->ImGuiUpdate(appState);
       _regionCalculator->ImGuiUpdate(appState);
       _slamModule->ImGuiUpdate();
-      _mapper->ImGuiUpdate();
-
+      _mapper->ImGuiUpdate(appState);
    }
 }
 

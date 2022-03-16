@@ -3,6 +3,7 @@
 //
 
 #include "AppUtils.h"
+#include <dirent.h>
 
 void AppUtils::getFileNames(std::string dirName, std::vector<std::string>& files, bool printList)
 {
@@ -47,7 +48,7 @@ void AppUtils::appendToDebugOutput(cv::Mat disp)
 {
    if (disp.rows <= 0 || disp.cols <= 0)
    {
-      ROS_WARN("Image to be displayed has size 0!");
+      printf("Image to be displayed has size 0!");
       return;
    }
    if (disp.type() == CV_8UC1)
@@ -59,12 +60,12 @@ void AppUtils::appendToDebugOutput(cv::Mat disp)
    }
    cv::resize(disp, disp, cv::Size(640 * 480 / disp.rows, 480));
    images.emplace_back(disp);
-   ROS_DEBUG("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d, Images: %d\n", disp.type(), disp.rows, disp.cols, images.size());
+   printf("Appending To Debug Display: Type: %d, Rows: %d, Cols: %d, Images: %d\n", disp.type(), disp.rows, disp.cols, images.size());
 }
 
 void AppUtils::displayDebugOutput(ApplicationState appState)
 {
-   ROS_DEBUG("Displaying Debug Output: %d", images.size());
+   printf("Displaying Debug Output: %d", images.size());
    hconcat(images, debugOutput);
    if (debugOutput.cols > 0 && debugOutput.rows > 0 && !debugOutput.empty())
    {
@@ -132,39 +133,39 @@ void AppUtils::display(uint16_t delay)
    }
 }
 
-void AppUtils::checkMemoryLimits()
-{
-   struct rlimit old_lim, lim, new_lim;
-
-   // Get old limits
-   if (getrlimit(RLIMIT_NOFILE, &old_lim) == 0)
-   {
-      printf("Old limits -> soft limit= %ld \t"
-             " hard limit= %ld \n", old_lim.rlim_cur, old_lim.rlim_max);
-   } else
-   {
-      fprintf(stderr, "%s\n", strerror(errno));
-   }
-
-   // Set new value
-   lim.rlim_cur = 1024 * 1024 * 1024;
-   lim.rlim_max = 1024 * 1024 * 1024;
-
-   // Set limits
-   if (setrlimit(RLIMIT_NOFILE, &lim) == -1)
-   {
-      fprintf(stderr, "%s\n", strerror(errno));
-   }
-   // Get new limits
-   if (getrlimit(RLIMIT_NOFILE, &new_lim) == 0)
-   {
-      printf("New limits -> soft limit= %ld "
-             "\t hard limit= %ld \n", new_lim.rlim_cur, new_lim.rlim_max);
-   } else
-   {
-      fprintf(stderr, "%s\n", strerror(errno));
-   }
-}
+//void AppUtils::checkMemoryLimits()
+//{
+//   struct rlimit old_lim, lim, new_lim;
+//
+//   // Get old limits
+//   if (getrlimit(RLIMIT_NOFILE, &old_lim) == 0)
+//   {
+//      printf("Old limits -> soft limit= %ld \t"
+//             " hard limit= %ld \n", old_lim.rlim_cur, old_lim.rlim_max);
+//   } else
+//   {
+//      fprintf(stderr, "%s\n", strerror(errno));
+//   }
+//
+//   // Set new value
+//   lim.rlim_cur = 1024 * 1024 * 1024;
+//   lim.rlim_max = 1024 * 1024 * 1024;
+//
+//   // Set limits
+//   if (setrlimit(RLIMIT_NOFILE, &lim) == -1)
+//   {
+//      fprintf(stderr, "%s\n", strerror(errno));
+//   }
+//   // Get new limits
+//   if (getrlimit(RLIMIT_NOFILE, &new_lim) == 0)
+//   {
+//      printf("New limits -> soft limit= %ld "
+//             "\t hard limit= %ld \n", new_lim.rlim_cur, new_lim.rlim_max);
+//   } else
+//   {
+//      fprintf(stderr, "%s\n", strerror(errno));
+//   }
+//}
 
 void AppUtils::DisplayImage(cv::Mat disp, const ApplicationState& app, const std::string& title)
 {

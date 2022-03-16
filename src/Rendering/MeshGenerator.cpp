@@ -40,6 +40,7 @@ void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>&
 
       GenerateRegionLineMesh(region, regionMesh);
       InsertModel(regionMesh);
+      CLAY_LOG_INFO("Mesh Generated Region: {} {}", region->getId(), regionMesh->GetSize());
    }
 }
 

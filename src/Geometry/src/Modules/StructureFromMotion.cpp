@@ -17,7 +17,6 @@ StructureFromMotion::StructureFromMotion(String directory)
       if(code == 1113939) t++;
       if(code == 1113937) t--;
       t %= images.size();
-      cout << code << endl;
 
    }
 }
