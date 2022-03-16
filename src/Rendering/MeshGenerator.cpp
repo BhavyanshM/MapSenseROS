@@ -1,8 +1,19 @@
 #include "MeshGenerator.h"
+#include "ClayTools.h"
+
+
+void MeshGenerator::GeneratePoseMesh(const Eigen::Matrix4f& transform, Clay::Ref<Clay::Model> parent)
+{
+   glm::mat4 glmTransform = ClayTools::EigenToClay(transform);
+   Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<Clay::TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), parent);
+   Clay::MeshTools::CoordinateAxes(pose);
+   pose->ApplyTransform(glmTransform);
+   _poses.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(pose)));
+}
 
 void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
 {
-//   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
+   //   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
    for (int i = 0; i < planarRegion->GetNumOfBoundaryVertices(); i++)
    {
       Eigen::Vector3f point = (planarRegion->getBoundaryVertices()[i]);
@@ -20,7 +31,7 @@ void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planar
 
 void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
 {
-   meshes.clear();
+   _meshes.clear();
    for (int i = 0; i < planarRegions.size(); i++)
    {
       Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(
@@ -29,22 +40,47 @@ void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>&
 
       GenerateRegionLineMesh(region, regionMesh);
       InsertModel(regionMesh);
+      CLAY_LOG_INFO("Mesh Generated Region: {} {}", region->getId(), regionMesh->GetSize());
    }
+}
+
+void MeshGenerator::AppendMatchLine(Clay::Ref<Clay::LineMesh>& mesh, const Eigen::Vector3f& previous, const Eigen::Vector3f& current, const Clay::Ref<Clay::Model>& parent)
+{
+   mesh->InsertVertex(previous.x(), previous.y(), previous.z());
+   mesh->InsertVertex(current.x(), current.y(), current.z());
+
+}
+
+void MeshGenerator::GenerateMeshForMatches(const std::vector<Clay::Ref<PlanarRegion>>& current, const std::vector<Clay::Ref<PlanarRegion>>& previous,
+                                      const std::vector<std::pair<int, int>>& matches, const Clay::Ref<Clay::Model>& parent)
+{
+   Clay::Ref<Clay::LineMesh> matchMesh = std::make_shared<Clay::LineMesh>(
+         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), parent);
+   for(auto match : matches)
+   {
+      AppendMatchLine(matchMesh, previous[match.first]->GetCenter(), current[match.second]->GetCenter(), parent);
+   }
+   InsertLineMesh(matchMesh);
 }
 
 void MeshGenerator::InsertModel(Clay::Ref<Clay::TriangleMesh> model)
 {
-   meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
+   _meshes.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(model)));
+}
+
+void MeshGenerator::InsertLineMesh(Clay::Ref<Clay::LineMesh> lines)
+{
+   _lines.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(lines)));
 }
 
 void MeshGenerator::GeneratePatchMesh(cv::Mat& patches)
 {
-   for(int i = 0; i<patches.rows; i++)
+   for (int i = 0; i < patches.rows; i++)
    {
-      for(int j = 0; j<patches.cols; j++)
+      for (int j = 0; j < patches.cols; j++)
       {
-         Eigen::Vector3f normal(patches.at<float>(i,j,0), patches.at<float>(i,j,1), patches.at<float>(i,j,2));
-         Eigen::Vector3f centroid(patches.at<float>(i,j,3), patches.at<float>(i,j,4), patches.at<float>(i,j,5));
+         Eigen::Vector3f normal(patches.at<float>(i, j, 0), patches.at<float>(i, j, 1), patches.at<float>(i, j, 2));
+         Eigen::Vector3f centroid(patches.at<float>(i, j, 3), patches.at<float>(i, j, 4), patches.at<float>(i, j, 5));
 
          Eigen::Vector3f up(0, 0, 1);
          Eigen::Vector3f axis = normal.cross(up).normalized();

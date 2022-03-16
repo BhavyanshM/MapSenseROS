@@ -5,11 +5,12 @@
 #include <PlanarRegion.h>
 #include "GeomTools.h"
 #include "SLAMModule.h"
+#include "MeshGenerator.h"
 
 class MapHandler
 {
    public:
-      MapHandler();
+      MapHandler(ApplicationState& app);
 
       void Update(std::vector <std::shared_ptr<PlanarRegion>>& regions);
 
@@ -47,7 +48,9 @@ class MapHandler
 
       void TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
 
-      void ImGuiUpdate();
+      void ImGuiUpdate(ApplicationState& appState);
+
+      void SetMeshGenerator(MeshGenerator* mesher) {_mesher = mesher;}
 
    public:
 
@@ -55,12 +58,7 @@ class MapHandler
 
       bool plotter2D = false;
 
-      float COMPRESS_COSINE_THRESHOLD = 0.619f;
-      float COMPRESS_DIST_THRESHOLD = 0.011f;
-      float SEGMENT_DIST_THRESHOLD = 0.233f;
-      float MATCH_DIST_THRESHOLD = 0.1f;
-      float MATCH_ANGULAR_THRESHOLD = 0.9f;
-      int MATCH_PERCENT_VERTEX_THRESHOLD = 20;
+
       bool FACTOR_GRAPH = true;
       bool ISAM2 = true;
       uint8_t ISAM2_NUM_STEPS = 4;
@@ -70,13 +68,13 @@ class MapHandler
 //      FactorGraphHandler* fgSLAM;
       std::vector<std::string> files;
 
-      std::vector<std::shared_ptr<PlanarRegion>> regions, latestRegions, measuredRegions, _mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;
+      std::vector<std::shared_ptr<PlanarRegion>> _regions, latestRegions, measuredRegions, _mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;
 
       std::vector<std::pair<int, int>> _matches;
       std::vector<RigidBodyTransform> poses, atlasPoses;
       RigidBodyTransform _transformZUp;
 
-      std::string directory;
+      std::string _directory;
       Eigen::Vector3d translationToReference, eulerAnglesToReference;
 
       RigidBodyTransform _sensorToMapTransform;
@@ -86,11 +84,15 @@ class MapHandler
 
       PlanarRegionCalculator* _regionCalculator;
       SLAMModule* _slam;
+      MeshGenerator* _mesher;
 
       int regionSelected = 0;
       int fileSelected = 0;
       int segmentSelected = 0;
       std::vector<std::string> fileNames;
+
+   private:
+      ApplicationState& _app;
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

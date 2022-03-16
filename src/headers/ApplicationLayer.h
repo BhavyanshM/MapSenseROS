@@ -6,7 +6,6 @@
 #define MAP_SENSE_MAPSENSELAYER_H
 
 #include "Core/Application.h"
-#include "MapsenseHeaders.h"
 #include "ApplicationState.h"
 #include "ImGuiLayout.h"
 #include "AppUtils.h"
@@ -68,13 +67,15 @@ namespace Clay
          ImGuiDockNodeFlags dockspace_flags;
          ImGuiWindowFlags window_flags;
 
+         int _pointSize = 2;
+         int _lineWidth = 2;
+
    protected:
         AppUtils appUtils;
         NetworkManager *_networkManager;
         OpenCLManager *_openCLManager;
 
         std::vector<Ref<Model>> _models;
-        std::vector<Ref<Model>> _poses;
 
         MeshGenerator mesher;
 

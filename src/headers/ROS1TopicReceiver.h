@@ -5,13 +5,14 @@
 #ifndef SENSORSTREAMRECEIVER_H
 #define SENSORSTREAMRECEIVER_H
 
+#include <ros/ros.h>
+#include "ros/package.h"
 #include <ApplicationState.h>
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
 
 #include "AppUtils.h"
 #include "imgui.h"
-#include "MapsenseHeaders.h"
 
 
 class ROS1TopicReceiver

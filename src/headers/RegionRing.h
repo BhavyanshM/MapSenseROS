@@ -6,8 +6,7 @@
 #define REGIONHOLE_H
 
 #include <Eigen/Dense>
-#include "MapsenseHeaders.h"
-
+#include "vector"
 
 class RegionRing
 {

@@ -3,7 +3,6 @@
 //
 
 #include "OpenCLManager.h"
-#include <iostream>
 #include "chrono"
 
 OpenCLManager::OpenCLManager(const std::string& packagePath)
@@ -34,7 +33,7 @@ OpenCLManager::OpenCLManager(const std::string& packagePath)
    if (!fp)
    {
       printf("Failed to load kernel\n");
-      std::cout << packagePath << "/kernels/fitting_kernel.cpp" << std::endl;
+      printf("%s", (packagePath + "/kernels/fitting_kernel.cpp").c_str());
       return;
    }
 
@@ -51,7 +50,7 @@ OpenCLManager::OpenCLManager(const std::string& packagePath)
    cl::Program program(context, sources);
    if (program.build({default_device}) != CL_SUCCESS)
    {
-      std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << std::endl;
+      printf(" Error building: ", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device).c_str());
       exit(1);
    }
    commandQueue = cl::CommandQueue(context, default_device);

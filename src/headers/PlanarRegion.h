@@ -5,7 +5,7 @@
 #include "RegionRing.h"
 #include "RigidBodyTransform.h"
 #include "KDTree.h"
-#include "MapsenseHeaders.h"
+#include <memory>
 
 class PlanarRegion
 {

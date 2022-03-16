@@ -1,4 +1,3 @@
-#include <iostream>
 #include "IterativeClosestPoint.h"
 #include "chrono"
 

@@ -12,7 +12,6 @@
 #include "MeshGenerator.h"
 #include "AppUtils.h"
 #include "StructureFromMotion.h"
-#include "MapsenseHeaders.h"
 
 
 class SLAMApplication : public MagnumApplication

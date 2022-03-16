@@ -5,7 +5,6 @@
 #ifndef SLAMMODULE_H
 #define SLAMMODULE_H
 
-#include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 
 class SLAMModule

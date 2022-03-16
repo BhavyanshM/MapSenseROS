@@ -6,7 +6,6 @@
 #define MAP_SENSE_POINTCLOUDRECEIVER_H
 
 #include "ROS1TopicReceiver.h"
-#include "MapsenseHeaders.h"
 #include "sensor_msgs/point_cloud2_iterator.h"
 #include "Scene/Mesh/PointCloud.h"
 #include "DataManager.h"

@@ -1,5 +1,8 @@
 #include "GeomTools.h"
 #include "PlanarRegion.h"
+#include <cmath>
+#include <fstream>
+#include <boost/format.hpp>
 
 PlanarRegion::PlanarRegion(int id)
 {
@@ -114,7 +117,7 @@ void PlanarRegion::setId(int id)
 
 void PlanarRegion::SubSampleBoundary(int skip)
 {
-   ROS_INFO("Before Boundary Size: %d", boundaryVertices.size());
+//   ROS_INFO("Before Boundary Size: %d", boundaryVertices.size());
    for (int i = boundaryVertices.size() - 1; i >= 0; i--)
    {
 
@@ -123,12 +126,12 @@ void PlanarRegion::SubSampleBoundary(int skip)
          boundaryVertices.erase(boundaryVertices.begin() + i);
       }
    }
-   ROS_INFO("After Boundary Size: %d", boundaryVertices.size());
+//   ROS_INFO("After Boundary Size: %d", boundaryVertices.size());
 }
 
 void PlanarRegion::SortOrderClockwise()
 {
-   ROS_INFO("Order Clockwise: %d", boundaryVertices.size());
+//   ROS_INFO("Order Clockwise: %d", boundaryVertices.size());
    Eigen::Vector3f center = this->getMeanCenter();
    Eigen::Vector3f normal = this->GetMeanNormal();
 
@@ -137,7 +140,7 @@ void PlanarRegion::SortOrderClockwise()
    {
       return acos(a.dot(first) / (a.norm() * first.norm())) < acos(b.dot(first) / (b.norm() * first.norm()));
    });
-   ROS_INFO("Ordered Clockwise\n");
+//   ROS_INFO("Ordered Clockwise\n");
 }
 
 void PlanarRegion::GetClockWise2D(std::vector<Eigen::Vector2f>& points)
@@ -154,7 +157,7 @@ void PlanarRegion::GetClockWise2D(std::vector<Eigen::Vector2f>& points)
       Eigen::Vector3f axis = dir.cross(up).normalized();
       float angle = acos(up.dot(dir) / (up.norm() * dir.norm()));
 
-      if (!isnan(axis.x()) && !isnan(axis.y()) && !isnan(axis.z()))
+      if (!std::isnan(axis.x()) && !std::isnan(axis.y()) && !std::isnan(axis.z()))
       {
 
          Eigen::AngleAxisf angleAxis(angle, axis);
@@ -323,7 +326,6 @@ void PlanarRegion::RetainLinearApproximation()
    GeomTools::GetParametricCurve(concaveHull, 13, parametricCurve);
    ComputeBoundaryVertices3D(concaveHull);
 
-   std::cout << "Parameters:" << std::endl << parametricCurve << std::endl;
 }
 
 void PlanarRegion::SetToUnitSquare()

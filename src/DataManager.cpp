@@ -2,6 +2,7 @@
 #include "AppUtils.h"
 #include "filesystem"
 #include "boost/filesystem.hpp"
+#include <random>
 
 DataManager::DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
     : _directory(directory), _secondDirectory(secondDirectory)

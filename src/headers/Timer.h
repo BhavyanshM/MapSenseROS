@@ -5,7 +5,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include "MapsenseHeaders.h"
+#include "chrono"
 
 namespace Mapsense
 {

@@ -9,7 +9,6 @@
 #include "opencv2/core/core.hpp"
 #include <xtensor/xarray.hpp>
 #include <xtensor/xcsv.hpp>
-#include "MapsenseHeaders.h"
 #include "Core/Log.h"
 #include "ApplicationState.h"
 #include "CameraParams.h"

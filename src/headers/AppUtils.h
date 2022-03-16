@@ -11,7 +11,6 @@
 #include <opencv2/imgproc.hpp>
 
 #include "GeomTools.h"
-#include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 
 typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> BoolDynamicMatrix;

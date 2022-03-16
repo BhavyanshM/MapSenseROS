@@ -135,7 +135,7 @@ set(SOURCE
         src/UI/ImGuiLayout.cpp
         src/UI/ImGuiTools.cpp
         src/Rendering/MeshGenerator.cpp
-        )
+        src/Rendering/ClayTools.cpp)
 
 set(HEADERS
         src/headers/NetworkManager.h
@@ -154,7 +154,8 @@ set(HEADERS
         src/headers/Core.h
         src/headers/ImGuiLayout.h
         src/headers/ImGuiTools.h
-        src/headers/MapsenseHeaders.h
+        src/headers/ClayTools.h
+#        src/headers/MapsenseHeaders.h
         src/headers/ApplicationLayer.h
         src/Launcher/ApplicationLayer.cpp
         src/headers/MeshGenerator.h
@@ -302,7 +303,7 @@ if (VISUAL_TERRAIN_SLAM)
             glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
     target_include_directories(VisualTerrainSLAM PUBLIC ${MAPSENSE_INCLUDE_DIRS})
     add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
-    target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)
+#    target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)
     target_compile_definitions(VisualTerrainSLAM PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
 endif ()
 

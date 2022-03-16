@@ -6,7 +6,6 @@
 #include "PlanarRegion.h"
 #include <opencv2/highgui.hpp>
 #include "ApplicationState.h"
-#include "MapsenseHeaders.h"
 
 class MapFrameProcessor
 {

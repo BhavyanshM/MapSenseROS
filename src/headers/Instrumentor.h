@@ -5,11 +5,11 @@
 #ifndef INSTRUMENTOR_H
 #define INSTRUMENTOR_H
 
-#include "MapsenseHeaders.h"
 #include <iomanip>
 #include "chrono"
 #include <thread>
 #include <mutex>
+#include "fstream"
 
 namespace Mapsense
 {

@@ -7,7 +7,6 @@
 
 #include "Eigen/Dense"
 
-#include "MapsenseHeaders.h"
 #include "PlanarRegion.h"
 
 typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> BoolDynamicMatrix;
