@@ -39,7 +39,7 @@ class OpenCLManager
    public:
       cl::CommandQueue commandQueue;
       cl::Kernel filterKernel, packKernel, mergeKernel, correspondenceKernel, correlationKernel,
-                  centroidKernel, cylinderKernel, planesKernel, normalsKernel, hashKernel;
+                  centroidKernel, cylinderKernel, planesKernel, normalsKernel, hashKernel, indexKernel;
 
    private:
       std::vector<cl::Image2D> images;

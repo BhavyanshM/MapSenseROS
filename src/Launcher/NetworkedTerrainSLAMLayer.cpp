@@ -33,15 +33,18 @@ namespace Clay
       std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(90);
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
-      //      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
-      //      _cloud = pclReceiver->GetRenderable();
-      //      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
 
       mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), _rootModel);
 
-      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
-      _cloud->Load(filename, false);
-      _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
+      /* ROS PointCloud*/
+      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+      _cloud = pclReceiver->GetRenderable();
+      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
+
+      /* Static PointCloud from File. */
+//      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+//      _cloud->Load(filename, false);
+//      _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
    }
 
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()
@@ -109,13 +112,13 @@ namespace Clay
       if (_regionCalculator->RenderEnabled())
       {
          /* ROS Regions */
-         //         if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-         //         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
-         //         _regionCalculator->Render();
+                  if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+                  mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+                  _regionCalculator->Render();
 
          /* Static Regions */
-         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+//         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+//         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
       }
 
       _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);
