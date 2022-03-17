@@ -50,7 +50,7 @@ OpenCLManager::OpenCLManager(const std::string& packagePath)
    cl::Program program(context, sources);
    if (program.build({default_device}) != CL_SUCCESS)
    {
-      printf(" Error building: ", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device).c_str());
+      printf(" Error building: %s", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device).c_str());
       exit(1);
    }
    commandQueue = cl::CommandQueue(context, default_device);
@@ -64,6 +64,7 @@ OpenCLManager::OpenCLManager(const std::string& packagePath)
    planesKernel = cl::Kernel(program, "planesKernel");
    normalsKernel = cl::Kernel(program, "normalsKernel");
    hashKernel = cl::Kernel(program, "hashKernel");
+   indexKernel = cl::Kernel(program, "indexKernel");
 
    printf("OpenCL Initialized Successfully\n");
 
@@ -117,6 +118,7 @@ uint8_t OpenCLManager::CreateReadWriteImage2D_R8(uint32_t width, uint32_t height
 
 uint8_t OpenCLManager::CreateReadWriteImage2D_R16(uint32_t width, uint32_t height)
 {
+   printf("Creating RW Buffer R16: %d %d\n", width, height);
    images.emplace_back(cl::Image2D(context, CL_MEM_READ_WRITE, cl::ImageFormat(CL_R, CL_UNSIGNED_INT16), width, height));
    return images.size() - 1;
 }
@@ -166,6 +168,7 @@ void OpenCLManager::SetArgument(const std::string& kernel, uint8_t argId, uint8_
    else if(kernel == "planesKernel") (image) ? planesKernel.setArg(argId, images[bufferId]) : planesKernel.setArg(argId, buffers[bufferId]);
    else if(kernel == "normalsKernel") (image) ? normalsKernel.setArg(argId, images[bufferId]) : normalsKernel.setArg(argId, buffers[bufferId]);
    else if(kernel == "hashKernel") (image) ? hashKernel.setArg(argId, images[bufferId]) : hashKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "indexKernel") (image) ? indexKernel.setArg(argId, images[bufferId]) : indexKernel.setArg(argId, buffers[bufferId]);
 }
 
 void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value)
@@ -180,6 +183,7 @@ void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uin
       else if(kernel == "planesKernel") planesKernel.setArg(argId, sizeof(cl_int), &value);
       else if(kernel == "normalsKernel") normalsKernel.setArg(argId, sizeof(cl_int), &value);
       else if(kernel == "hashKernel") hashKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "indexKernel") indexKernel.setArg(argId, sizeof(cl_int), &value);
 }
 
 void OpenCLManager::Finish()

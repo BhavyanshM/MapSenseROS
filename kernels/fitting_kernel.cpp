@@ -471,60 +471,77 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
  * */
 
 /*
- * Point hashing kernel to convert unordered point list into structured hash map.
+ * Point index calculation kernel.
  * */
 
-void kernel hashKernel(global float* cloud, read_write image2d_t indices, global float* params, int size, int threads)
+void kernel indexKernel(global float* cloud, global int* indices, global float* params, int size)
 {
-   int r = get_global_id(0);
-   int c = get_global_id(1);
-   int t = get_global_id(2);
+   int id = get_global_id(0);
 
-   int totalPoints = (size/3)/threads;
-   int start = t * totalPoints;
-   int end = start + totalPoints;
-
-   write_imageui(indices, (int2)(c,r), (uint4)(0,0,0,0));
+   indices[id * 2] = 0;
+   indices[id * 2 + 1] = 0;
 
    int count = 0;
    float pitchUnit = M_PI / (2 * params[INPUT_HEIGHT]);
    float yawUnit = 2 * M_PI / (params[INPUT_WIDTH]);
-   float x, y, z, radius, pitch, yaw;
-   int pitchCount, yawCount;
 
    int pitchOffset = params[INPUT_HEIGHT]/2;
    int yawOffset = params[INPUT_WIDTH]/2;
 
-//   printf("r:%d, c:%d, t:%d, total:%d, start:%d, end:%d, pitchUnit:%.4lf, yawUnit:%.4lf, pitchOffset:%d, yawOffset:%d\n", r, c, t, totalPoints, start, end,
-//          pitchUnit, yawUnit, pitchOffset, yawOffset);
+   float x = cloud[id * 3];
+   float y = cloud[id * 3 + 1];
+   float z = cloud[id * 3 + 2];
+
+   float radius = sqrt(x * x + y * y);
+
+   float pitch = atan2(z, radius);
+   int pitchCount = (pitchOffset) + (int) (pitch / pitchUnit);
+
+   float yaw = atan2(-y, x);
+   int yawCount = (yawOffset) + (int) (yaw / yawUnit);
+
+   if (pitchCount >= 0 && pitchCount < params[INPUT_HEIGHT] && yawCount >= 0 && yawCount < params[INPUT_WIDTH])
+   {
+      indices[id * 2] = pitchCount;
+      indices[id * 2 + 1] = yawCount;
+   }
+
+//   printf("Index: %d -> %d, %d\n", id, indices[id*2], indices[id*2+1]);
+
+
+
+}
+
+/*
+ * Point hashing kernel to convert unordered point list into structured hash map.
+ * */
+
+void kernel hashKernel(global float* cloud, global int* indices, read_write image2d_t hashMap, global float* params, int size)
+{
+   int r = get_global_id(0);
+   int c = get_global_id(1);
+
+   int totalPoints = (size/3);
+   int start = 0;
+   int end = totalPoints;
+
+//   printf("Start: %d, End: %d\n", start, end);
+
+   write_imageui(hashMap, (int2)(c,r), (uint4)(0,0,0,0));
 
    for(int i = start; i<end; i++)
    {
-      x = cloud[i * 3];
-      y = cloud[i * 3 + 1];
-      z = cloud[i * 3 + 2];
-
-      radius = sqrt(x * x + y * y);
-
-      pitch = atan2(z, radius);
-      pitchCount = (pitchOffset) + (int) (pitch / pitchUnit);
-
-      yaw = atan2(-y, x);
-      yawCount = (yawOffset) + (int) (yaw / yawUnit);
-
-      if (pitchCount >= 0 && pitchCount < params[INPUT_HEIGHT] && yawCount >= 0 && yawCount < params[INPUT_WIDTH])
+//      if (indices[i*2] >= 0 && indices[i*2] < params[INPUT_HEIGHT] && indices[i*2+1] >= 0 && indices[i*2+1] < params[INPUT_WIDTH])
+      if(r == indices[i*2] && c == indices[i*2+1])
       {
-         if(r == pitchCount && c == yawCount)
-         {
-            write_imageui(indices, (int2)(c,r), (uint4)(i,0,0,0));
-         }
+         write_imageui(hashMap, (int2)(c,r), (uint4)(i,0,0,0));
       }
    }
 
 //    if(r==0 && c==0)
 //   {
 //       printf("Params: {%.2lf,%.2lf,%.2lf,%.2lf,%.2lf}\n", params[SUB_H], params[SUB_W], params[PATCH_WIDTH], params[MERGE_DISTANCE_THRESHOLD], params[MERGE_ANGULAR_THRESHOLD]);
-//       printf("GID:(%d,%d), Count:%d, Size:%d\n", r, c, count, size);
+//       printf("GID:(%d,%d), Size:%d\n", r, c, size);
 //   }
 }
 

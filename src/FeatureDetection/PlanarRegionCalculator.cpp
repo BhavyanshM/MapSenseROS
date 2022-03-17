@@ -313,7 +313,8 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    uint8_t pointsBuffer = _openCL->CreateLoadBufferFloat(points.data(), points.size());
 
    /* Intermediate GPU OpenCL Buffers */
-   uint8_t indexBuffer = _openCL->CreateReadWriteImage2D_R16(appState.HASH_INPUT_WIDTH, appState.HASH_INPUT_HEIGHT);
+   uint8_t indexBuffer = _openCL->CreateBufferInt((int)(points.size() / 3) * 2);
+   uint8_t hashBuffer = _openCL->CreateReadWriteImage2D_R16(appState.HASH_INPUT_WIDTH, appState.HASH_INPUT_HEIGHT);
 
    /*Output Data GPU OpenCL Buffers */
    uint8_t clBuffer_nx = _openCL->CreateReadWriteImage2D_RFloat(appState.HASH_SUB_W, appState.HASH_SUB_H);
@@ -326,13 +327,18 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
 
    CLAY_LOG_INFO("Created All Input Images.");
 
-   _openCL->SetArgument("hashKernel", 0, pointsBuffer);
-   _openCL->SetArgument("hashKernel", 1, indexBuffer, true);
-   _openCL->SetArgument("hashKernel", 2, paramsBuffer);
-   _openCL->SetArgumentInt("hashKernel", 3, points.size());
-   _openCL->SetArgumentInt("hashKernel", 4, appState.HASH_THREAD_NUM);
+   _openCL->SetArgument("indexKernel", 0, pointsBuffer, false);
+   _openCL->SetArgument("indexKernel", 1, indexBuffer, false);
+   _openCL->SetArgument("indexKernel", 2, paramsBuffer, false);
+   _openCL->SetArgumentInt("indexKernel", 3, points.size());
 
-   std::vector<uint8_t> argsImgPack = {indexBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
+   _openCL->SetArgument("hashKernel", 0, pointsBuffer, false);
+   _openCL->SetArgument("hashKernel", 1, indexBuffer, false);
+   _openCL->SetArgument("hashKernel", 2, hashBuffer, true);
+   _openCL->SetArgument("hashKernel", 3, paramsBuffer, false);
+   _openCL->SetArgumentInt("hashKernel", 4, points.size());
+
+   std::vector<uint8_t> argsImgPack = {hashBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
    for (uint8_t i = 0; i < argsImgPack.size(); i++)
       _openCL->SetArgument("packKernel", i, argsImgPack[i], true);
    _openCL->SetArgument("packKernel", argsImgPack.size(), paramsBuffer);
@@ -349,7 +355,7 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
     * ------------------------------------------------------------------------------------------------------
     * */
    /* Input Data CPU OpenCV Buffers */
-//   cv::Mat indexMat(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH, CV_16UC1, cv::Scalar(0));
+   cv::Mat indexMat(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH, CV_16UC1, cv::Scalar(0));
 
    /* Intermediate GPU OpenCV Buffers */
    cv::Mat output_nx(appState.HASH_SUB_H, appState.HASH_SUB_W, CV_32FC1);
@@ -365,9 +371,9 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
     * ---------------------------------------    OpenCL Kernel Calls ---------------------------------------
     * ------------------------------------------------------------------------------------------------------
     * */
-
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->indexKernel, cl::NullRange, cl::NDRange(points.size() / 3), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange,
-                                              cl::NDRange(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH, appState.HASH_THREAD_NUM), cl::NullRange);
+                                              cl::NDRange(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
 
@@ -386,12 +392,12 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_gz.data);
    _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
 
-//   _openCL->ReadImage(indexBuffer, size, indexMat.data);
+//   _openCL->ReadImage(hashBuffer, size, indexMat.data);
 
    _openCL->commandQueue.finish();
    auto end_point = std::chrono::steady_clock::now();
 
-   //   AppUtils::PrintMatR16(indexMat);
+//      AppUtils::PrintMatR16(indexMat);
 
    /* Combine the CPU buffers into single image with multiple channels */
    cv::Mat regionOutput(appState.HASH_SUB_H, appState.HASH_SUB_W, CV_32FC(6));
