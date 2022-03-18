@@ -33,6 +33,8 @@ namespace Clay {
 
           Ref<PointCloud> _cloud;
 
+          Ref<Texture> _texture;
+
     };
 
 

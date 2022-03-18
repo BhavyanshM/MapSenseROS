@@ -45,6 +45,15 @@ namespace Clay
 //      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
 //      _cloud->Load(filename, false);
 //      _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
+
+//      _texture = Texture2D::Create(std::string(ASSETS_PATH) + std::string("Textures/Checkerboard.png"));
+      _texture = Texture2D::Create();
+      cv::Mat image = cv::imread("/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/003975.png");
+
+      cv::flip(image, image, 0);
+      cv::flip(image, image, 1);
+
+      _texture->LoadImage(image.data, image.cols, image.rows, image.channels());
    }
 
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()
@@ -130,6 +139,21 @@ namespace Clay
       _regionCalculator->ImGuiUpdate(appState);
       _slamModule->ImGuiUpdate();
       _mapper->ImGuiUpdate(appState);
+
+
+      ImGui::Begin("Image");
+      uint32_t cbTextureId = _texture->GetRendererId();
+      ImVec2 region = ImGui::GetContentRegionAvail();
+      ImGui::Image((void *) cbTextureId, region, ImVec2{0, 1}, ImVec2(1, 0));
+
+      if (ImGui::IsItemHovered())
+      {
+         ImVec2 windowPos = ImGui::GetCursorScreenPos();
+         ImVec2 pos = ImGui::GetMousePos();
+         ImGui::SetTooltip("Tooltip: %d, %d", (int) (pos.x - windowPos.x), (int)region.y + (int)(pos.y - windowPos.y));
+      }
+      ImGui::End();
+
    }
 }
 
