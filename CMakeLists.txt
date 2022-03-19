@@ -27,6 +27,7 @@ find_package(BLAS REQUIRED)
 
 add_subdirectory(Vendor/xtensor)
 add_subdirectory(Vendor/xtensor-blas)
+add_subdirectory(Vendor/Geometry/)
 
 #include_directories(${GTSAM_INCLUDE_DIR})
 
@@ -86,18 +87,14 @@ set(PLANAR_REGION_LIB
         src/FeatureDetection/PlanarRegionCalculator.cpp
         src/FeatureDetection/MapFrame.cpp
         src/FeatureDetection/MapFrameProcessor.cpp
-        src/Geometry/src/Elements/RegionRing.cpp
         src/FeatureDetection/PlanarRegionProcessor.cpp
         src/OpenCL/OpenCLManager.cpp
         src/Application/AppUtils.cpp
-
         src/headers/AppUtils.h
         src/headers/OpenCLManager.h
         src/headers/PlanarRegionCalculator.h
         src/headers/MapFrameProcessor.h
         src/headers/MapFrame.h
-
-        src/headers/RegionRing.h
         src/FeatureDetection/PlanarRegionProcessor.h)
 
 set(SLAM_LIB
@@ -175,35 +172,7 @@ set(TERRAIN_SLAM_SOURCES
         src/Launcher/NetworkedTerrainSLAMLayer.cpp
         )
 
-set(GEOMTOOLS_SRC
-        src/Geometry/include/CameraParams.h
-        src/Geometry/include/NonLinearOptimizer.h
-        src/Geometry/include/GeomTools.h
-        src/Geometry/include/KDTree.h
-        src/Geometry/include/KDNode.h
-        src/Geometry/include/RigidBodyTransform.h
-        src/Geometry/include/LieAlgebra.h
-        src/Geometry/include/Rotation.h
-        src/Geometry/include/Line3D.h
-        src/Geometry/include/Plane3D.h
-        src/Geometry/include/Point3D.h
-        src/Geometry/include/StructureFromMotion.h
-        src/Geometry/include/PointLandmark.h
-        src/Geometry/src/Elements/CameraParams.cpp
-        src/Geometry/src/Optimizers/NonLinearOptimizer.cpp
-        src/Geometry/src/GeomTools.cpp
-        src/Geometry/src/Structures/KDTree.cpp
-        src/Geometry/src/Structures/KDNode.cpp
-        src/Geometry/src/Elements/RigidBodyTransform.cpp
-        src/Geometry/src/Elements/Rotation.cpp
-        src/Geometry/src/Elements/LieAlgebra.cpp
-        src/Geometry/src/Elements/Point3D.cpp
-        src/Geometry/src/Elements/Line3D.cpp
-        src/Geometry/src/Elements/Plane3D.cpp
-        src/Geometry/src/Modules/StructureFromMotion.cpp
-        src/Geometry/src/Elements/PointLandmark.cpp
-        src/Geometry/src/Elements/PlanarRegion.cpp
-        src/headers/PlanarRegion.h)
+
 
 set(MAPSENSE_INCLUDE_DIRS
         "/usr/local/include/ClayEngine"
@@ -216,10 +185,11 @@ set(MAPSENSE_INCLUDE_DIRS
         "/usr/local/include/ClayEngine/Vendor/spdlog/include"
         "/usr/local/include/ClayEngine/Vendor/stb_image/")
 
+message(STATUS "Geometry:${Geometry_INCLUDE_DIR}")
+
 include_directories(
         include
         src/headers
-        src/Geometry/include
         ${catkin_INCLUDE_DIRS}
         /usr/include/CL/
         Vendor/spdlog/include
@@ -227,6 +197,7 @@ include_directories(
         Vendor/xtensor-blas/include
         /usr/local/include/ClayEngine/Vendor/
         Vendor/implot/
+        ${Geometry_INCLUDE_DIR}
         ${MAPSENSE_INCLUDE_DIRS}
 )
 
@@ -235,10 +206,7 @@ include_directories(
 #[[
 	Develop all libraries here.
 ]]
-add_library(geom-tools STATIC ${GEOMTOOLS_SRC})
-target_link_libraries(geom-tools
-        Eigen3::Eigen
-        ${OpenCV_LIBS})
+
 
 add_library(planar-regions STATIC ${PLANAR_REGION_LIB})
 target_link_libraries(planar-regions

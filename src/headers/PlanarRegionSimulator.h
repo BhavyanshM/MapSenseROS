@@ -5,7 +5,7 @@
 #ifndef PLANARREGIONSIMULATOR_H
 #define PLANARREGIONSIMULATOR_H
 
-#include <PlanarRegion.h>
+#include "PlanarRegion.h"
 
 
 class PlanarRegionSimulator

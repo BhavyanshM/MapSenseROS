@@ -2,7 +2,7 @@
 #define PLANARREGIONMAPHANDLER_H
 
 #include "PlanarRegionCalculator.h"
-#include <PlanarRegion.h>
+#include "PlanarRegion.h"
 #include "GeomTools.h"
 #include "SLAMModule.h"
 #include "MeshGenerator.h"

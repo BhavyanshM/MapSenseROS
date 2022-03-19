@@ -89,6 +89,8 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                Update(_regionCalculator->planarRegionList);
                // _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
 
+               GeomTools::AppendMatchesToFile(_matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
+
                _mesher->GenerateMeshForMatches(_latestRegionsZUp, _regions, _matches, nullptr);
 
                _mesher->GenerateLineMeshForRegions(_regions, nullptr);
