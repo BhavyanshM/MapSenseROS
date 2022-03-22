@@ -21,7 +21,7 @@ namespace Clay
 
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
-      _mapper = new MapHandler(appState);
+      _mapper = new MapHandler(_networkManager, appState);
       _mapper->SetRegionCalculator(_regionCalculator);
       _mapper->SetSLAMModule(_slamModule);
       _mapper->SetMeshGenerator(&mesher);
@@ -66,9 +66,9 @@ namespace Clay
       if (appState.ROS_ENABLED)
       {
          ROS_DEBUG("ROS Update: {}", appState.ROS_ENABLED);
-         _networkManager->spin_ros_node();
-         _networkManager->acceptMapsenseConfiguration(appState);
-         _networkManager->receiverUpdate(appState);
+         _networkManager->SpinNode();
+         _networkManager->AcceptMapsenseConfiguration(appState);
+         _networkManager->ReceiverUpdate(appState);
          if (_networkManager->paramsAvailable)
          {
             _networkManager->paramsAvailable = false;
@@ -111,7 +111,7 @@ namespace Clay
             //         vector<RigidBodyTransform> sensorTransforms = _slamModule->_mapper.poses;
             //         if (sensorTransforms.size() > 0 && _slamModule->enabled)
             //         {
-            //            _networkManager->publishSLAMPose(sensorTransforms.rbegin()[0]);
+            //            _networkManager->PublishPoseStamped(sensorTransforms.rbegin()[0]);
             //            printf("After SLAM Publisher.\n");
             //         }
          }
@@ -141,6 +141,19 @@ namespace Clay
       _slamModule->ImGuiUpdate();
       _mapper->ImGuiUpdate(appState);
 
+      if(ImGui::BeginTabItem("Publisher"))
+      {
+         if(ImGui::Button("Publish Pose"))
+         {
+            RigidBodyTransform transform;
+            _networkManager->PublishPoseStamped(transform);
+         }
+         if(ImGui::Button("Publish Planes"))
+         {
+            _networkManager->PublishPlanes(_regionCalculator->planarRegionList);
+         }
+         ImGui::EndTabItem();
+      }
 
       /* TODO: Do not delete! Refactor these image viewer lines into methods and classes.*/
 //      ImGui::Begin("Image");

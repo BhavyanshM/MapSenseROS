@@ -66,7 +66,7 @@ namespace Clay
       /* TODO: Instantiate the Information Processors */
       _openCLManager = new OpenCLManager(ros::package::getPath("map_sense"));
       _networkManager = new NetworkManager(appState, &appUtils);
-      _networkManager->init_ros_node(argc, argv, appState);
+      _networkManager->InitNode(argc, argv, appState);
 
       _squareColor = glm::vec4(0.3, 0.9, 0.3, 1.0);
 

@@ -13,3 +13,6 @@
 [submodule "Vendor/implot"]
 	path = Vendor/implot
 	url = https://github.com/epezent/implot.git
+[submodule "Vendor/Geometry"]
+	path = Vendor/Geometry
+	url = https://github.com/BhavyanshM/Geometry.git

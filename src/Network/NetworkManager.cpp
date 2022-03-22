@@ -26,13 +26,13 @@ NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
    }
 }
 
-void NetworkManager::spin_ros_node()
+void NetworkManager::SpinNode()
 {
    ROS_DEBUG("SpinOnce");
    ros::spinOnce();
 }
 
-void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
+void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
 {
    CLAY_LOG_INFO("Starting ROS Node");
    ros::init(argc, argv, "PlanarRegionPublisher");
@@ -41,6 +41,7 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    // ROSTopic Publishers
    planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/mapsense/planar_regions", 3);
    slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
+   rawPlanesPub = rosNode->advertise<sensor_msgs::PointCloud2>("/slam/input/planes", 3);
    coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
    // ROSTopic Subscribers
@@ -56,24 +57,24 @@ void NetworkManager::init_ros_node(int argc, char **argv, ApplicationState& app)
    CLAY_LOG_INFO("L515 Depth Topic: {}", depthTopicName);
    CLAY_LOG_INFO("L515 Depth Info Topic: {}", depthInfoTopicName);
 
-   addReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
-   addReceiver(TopicInfo(app.L515_COLOR, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
-   addReceiver(TopicInfo(app.BLACKFLY_RIGHT_RAW, "sensor_msgs/Image"));
+   AddReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
+   AddReceiver(TopicInfo(app.L515_COLOR, "sensor_msgs/CompressedImage"));
+   AddReceiver(TopicInfo(app.OUSTER_POINTS, "sensor_msgs/PointCloud2"));
+   AddReceiver(TopicInfo(app.BLACKFLY_RIGHT_RAW, "sensor_msgs/Image"));
 
-   addReceiver( TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
-   addReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
+   AddReceiver(TopicInfo(app.ZED_LEFT_IMAGE_RAW, "sensor_msgs/Image"));
+   AddReceiver(TopicInfo(app.ZED_RIGHT_IMAGE_RAW, "sensor_msgs/Image"));
 
-   addReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
-   addReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
+   AddReceiver(TopicInfo(app.KITTI_LEFT_IMG_RECT, "sensor_msgs/CompressedImage"));
+   AddReceiver(TopicInfo(app.KITTI_RIGHT_IMG_RECT, "sensor_msgs/CompressedImage"));
+   AddReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
 
-   subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::mapSenseParamsCallback, this);
+   subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::MapsenseParamsCallback, this);
 
    CLAY_LOG_INFO("Started ROS Node");
 }
 
-int NetworkManager::addReceiver(TopicInfo data, TopicInfo info)
+int NetworkManager::AddReceiver(TopicInfo data, TopicInfo info)
 {
    CLAY_LOG_INFO("Adding Receiver: Topic:{}, Info:{}, Type:{}", data.name.c_str(), info.name.c_str(), data.datatype);
    ROS1TopicReceiver *receiver = nullptr;
@@ -101,9 +102,9 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
    if (ImGui::BeginTabItem("Network"))
    {
       std::vector<TopicInfo> topics = getROSTopicList();
-      getTopicSelection(topics, currentDataTopic);
+      GetTopicSelection(topics, currentDataTopic);
       if (ImGui::Button("Add Receiver"))
-         addReceiver(currentDataTopic);
+         AddReceiver(currentDataTopic);
       for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
          receiver.second->ImGuiUpdate();
 
@@ -112,14 +113,14 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 
 }
 
-void NetworkManager::mapSenseParamsCallback(const map_sense::MapsenseConfiguration msg)
+void NetworkManager::MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg)
 {
-   paramsMessage = msg;
+   paramsMessage = compressedMsg;
    paramsAvailable = true;
    ROS_DEBUG("PARAMS CALLBACK");
 }
 
-void NetworkManager::acceptMapsenseConfiguration(ApplicationState& appState)
+void NetworkManager::AcceptMapsenseConfiguration(ApplicationState& appState)
 {
    if (paramsAvailable)
    {
@@ -144,7 +145,7 @@ std::vector<TopicInfo> NetworkManager::getROSTopicList()
    return names;
 }
 
-void NetworkManager::getTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic)
+void NetworkManager::GetTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic)
 {
    if (ImGui::BeginCombo("ROS Topics", currentTopic.name.c_str()))
    {
@@ -160,7 +161,7 @@ void NetworkManager::getTopicSelection(std::vector<TopicInfo> topics, TopicInfo&
    }
 }
 
-void NetworkManager::receiverUpdate(ApplicationState& app)
+void NetworkManager::ReceiverUpdate(ApplicationState& app)
 {
    for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
    {
@@ -310,10 +311,30 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    ROS_DEBUG("Data Frame Loaded");
 }
 
-void NetworkManager::publishSLAMPose(RigidBodyTransform worldToSensorTransform)
+void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions)
 {
-   Eigen::Quaterniond quaternion = worldToSensorTransform.getQuaternion();
-   Eigen::Vector3d position = worldToSensorTransform.getTranslation();
+   sensor_msgs::PointCloud2 cloud;
+   cloud.width = 2;
+   cloud.height = 1;
+   cloud.row_step = 2;
+   cloud.point_step = 32;
+
+   std::vector<float> points = {0.1, 0.2, 3, 0.5, 2.0, 2.4, 3.4, 4.2};
+
+   std::vector<unsigned char> data(points.size() * sizeof(float));
+   memcpy(data.data(), points.data(), data.size());
+
+   cloud.data = data;
+
+   CLAY_LOG_INFO("Data: {} Points:{}", data.size(), points.size());
+
+   rawPlanesPub.publish(cloud);
+}
+
+void NetworkManager::PublishPoseStamped(RigidBodyTransform worldToSensorTransform)
+{
+   Eigen::Quaterniond quaternion = worldToSensorTransform.GetQuaternion();
+   Eigen::Vector3d position = worldToSensorTransform.GetTranslation();
 
    geometry_msgs::PoseStamped pose;
    pose.pose.position = geometry_msgs::Point();

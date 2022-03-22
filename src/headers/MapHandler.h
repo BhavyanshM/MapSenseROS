@@ -6,11 +6,12 @@
 #include "GeomTools.h"
 #include "SLAMModule.h"
 #include "MeshGenerator.h"
+#include "NetworkManager.h"
 
 class MapHandler
 {
    public:
-      MapHandler(ApplicationState& app);
+      MapHandler(NetworkManager* network, ApplicationState& app);
 
       void Update(std::vector <std::shared_ptr<PlanarRegion>>& regions);
 
@@ -85,6 +86,7 @@ class MapHandler
       PlanarRegionCalculator* _regionCalculator;
       SLAMModule* _slam;
       MeshGenerator* _mesher;
+      NetworkManager* _network;
 
       int regionSelected = 0;
       int fileSelected = 0;

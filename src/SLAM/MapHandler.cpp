@@ -2,8 +2,9 @@
 #include "ImGuiTools.h"
 #include "ClayTools.h"
 
-MapHandler::MapHandler(ApplicationState& app) : _app(app)
+MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app)
 {
+   _network = network;
 //   this->fgSLAM = new FactorGraphHandler();
 
    _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/";
@@ -87,9 +88,12 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
 
                Update(_regionCalculator->planarRegionList);
+
+
+
                // _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
 
-               GeomTools::AppendMatchesToFile(_matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
+//               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
 
                _mesher->GenerateMeshForMatches(_latestRegionsZUp, _regions, _matches, nullptr);
 
@@ -98,8 +102,8 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                _regions = _latestRegionsZUp;
 
 
-               std::cout << _sensorToMapTransform.getMatrix().cast<float>() << std::endl;
-               _mesher->GeneratePoseMesh(_sensorToMapTransform.getMatrix().cast<float>(), nullptr);
+               std::cout << _sensorToMapTransform.GetMatrix().cast<float>() << std::endl;
+               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetMatrix().cast<float>(), nullptr);
                _frameIndex++;
             }
             ImGui::EndTabItem();
@@ -125,7 +129,12 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions)
    ROS_INFO("Regions Matched: (%d).\n", _matches.size());
 
    if (_matches.size() > 0)
+   {
       RegisterRegionsPointToPlane(1);
+      _network->PublishPoseStamped(_sensorPoseRelative.GetInverse());
+      _network->PublishPlanes(_latestRegionsZUp);
+   }
+
 
 
 
@@ -212,8 +221,8 @@ void MapHandler::RegisterRegionsPointToPlane(uint8_t iterations)
           eulerAnglesToReference.z(), translationToReference.x(), translationToReference.y(), translationToReference.z());
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
-   _sensorPoseRelative.setRotationAndTranslation(eulerAnglesToReference, translationToReference);
-   _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
+   _sensorPoseRelative.SetAnglesAndTranslation(eulerAnglesToReference, translationToReference);
+   _sensorToMapTransform.MultiplyRight(_sensorPoseRelative);
 }
 
 void MapHandler::RegisterRegionsPointToPoint()
@@ -254,7 +263,7 @@ void MapHandler::RegisterRegionsPointToPoint()
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
    _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
-   _sensorToMapTransform.multiplyRight(_sensorPoseRelative);
+   _sensorToMapTransform.MultiplyRight(_sensorPoseRelative);
 }
 
 void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion>>& regions)

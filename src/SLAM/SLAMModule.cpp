@@ -125,7 +125,7 @@ void SLAMModule::ImGuiUpdate()
 //      {
 //         ROS_DEBUG("Distance From Last Transform: (%.4lf)\n", diff);
 //
-//         this->_mapper->_atlasSensorPose.setRotationAndTranslation(
+//         this->_mapper->_atlasSensorPose.SetAnglesAndTranslation(
 //               Eigen::Quaterniond(this->_sensorPoseMessage->pose.orientation.w, this->_sensorPoseMessage->pose.orientation.x,
 //                                  this->_sensorPoseMessage->pose.orientation.y, this->_sensorPoseMessage->pose.orientation.z),
 //               Eigen::Eigen::Vector3d(this->_sensorPoseMessage->pose.position.x, this->_sensorPoseMessage->pose.position.y,

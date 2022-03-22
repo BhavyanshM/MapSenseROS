@@ -44,6 +44,7 @@ class NetworkManager
       ros::Subscriber subMapSenseParams;
       ros::Publisher planarRegionPub;
       ros::Publisher slamPosePub;
+      ros::Publisher rawPlanesPub;
       ros::Publisher coloredCloudPub;
 
       bool depthCamInfoSet = false;
@@ -57,13 +58,15 @@ class NetworkManager
 
       void publishSamplePose(int count);
 
-      void getTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic);
+      void PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions);
+
+      void GetTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic);
 
       void ImGuiUpdate(ApplicationState& appState);
 
-      int addReceiver(TopicInfo data, TopicInfo info = TopicInfo());
+      int AddReceiver(TopicInfo data, TopicInfo info = TopicInfo());
 
-      void receiverUpdate(ApplicationState& app);
+      void ReceiverUpdate(ApplicationState& app);
 
       void load_next_frame(cv::Mat& depth, cv::Mat& color, double& timestamp, ApplicationState& app);
 
@@ -77,17 +80,17 @@ class NetworkManager
 
       void colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& colorMsg);
 
-      void mapSenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
+      void MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
 
-      void init_ros_node(int argc, char **argv, ApplicationState& app);
+      void InitNode(int argc, char **argv, ApplicationState& app);
 
-      void spin_ros_node();
+      void SpinNode();
 
       void load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app);
 
-      void publishSLAMPose(RigidBodyTransform pose);
+      void PublishPoseStamped(RigidBodyTransform worldToSensorTransform);
 
-      void acceptMapsenseConfiguration(ApplicationState& appState);
+      void AcceptMapsenseConfiguration(ApplicationState& appState);
 
 //      void PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud);
 };
