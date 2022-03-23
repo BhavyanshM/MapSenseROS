@@ -87,7 +87,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             {
                _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
 
-               Update(_regionCalculator->planarRegionList);
+               Update(_regionCalculator->planarRegionList, _frameIndex + 1);
 
 
 
@@ -114,7 +114,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
    }
 }
 
-void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions)
+void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, int index)
 {
    latestRegions = regions;
 
@@ -131,8 +131,8 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions)
    if (_matches.size() > 0)
    {
       RegisterRegionsPointToPlane(1);
-      _network->PublishPoseStamped(_sensorPoseRelative.GetInverse());
-      _network->PublishPlanes(_latestRegionsZUp);
+      _network->PublishPoseStamped(_sensorPoseRelative.GetInverse(), index);
+      _network->PublishPlanes(_latestRegionsZUp, index);
    }
 
 
@@ -168,7 +168,17 @@ void MapHandler::MatchPlanarRegionsToMap()
                    ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD)
                {
                   _matches.emplace_back(i, j);
-                  _latestRegionsZUp[j]->setId(_regions[i]->getId());
+                  if(_regions[i]->getId() == -1 && _latestRegionsZUp[j]->getId() == -1)
+                  {
+                     _latestRegionsZUp[j]->setId(uniqueLandmarkCounter);
+                     _regions[j]->setId(uniqueLandmarkCounter);
+                     uniqueLandmarkCounter++;
+                  }
+                  else
+                  {
+                     _latestRegionsZUp[j]->setId(_regions[i]->getId());
+                  }
+                  CLAY_LOG_INFO("Copying Region ID: {}", _regions[i]->getId());
                   _regions[i]->SetNumOfMeasurements(_regions[i]->GetNumOfMeasurements() + 1);
                   _latestRegionsZUp[j]->SetNumOfMeasurements(_latestRegionsZUp[j]->GetNumOfMeasurements() + 1);
                   break;

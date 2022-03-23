@@ -58,7 +58,7 @@ class NetworkManager
 
       void publishSamplePose(int count);
 
-      void PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions);
+      void PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions, int poseId);
 
       void GetTopicSelection(std::vector<TopicInfo> topics, TopicInfo& currentTopic);
 
@@ -88,7 +88,7 @@ class NetworkManager
 
       void load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app);
 
-      void PublishPoseStamped(RigidBodyTransform worldToSensorTransform);
+      void PublishPoseStamped(RigidBodyTransform worldToSensorTransform, int id);
 
       void AcceptMapsenseConfiguration(ApplicationState& appState);
 

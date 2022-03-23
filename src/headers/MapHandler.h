@@ -13,7 +13,7 @@ class MapHandler
    public:
       MapHandler(NetworkManager* network, ApplicationState& app);
 
-      void Update(std::vector <std::shared_ptr<PlanarRegion>>& regions);
+      void Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, int index);
 
       void SetRegionCalculator(PlanarRegionCalculator* regionCalculator){ _regionCalculator = regionCalculator;}
 
@@ -91,10 +91,13 @@ class MapHandler
       int regionSelected = 0;
       int fileSelected = 0;
       int segmentSelected = 0;
+      int uniqueLandmarkCounter = 1;
+
       std::vector<std::string> fileNames;
 
    private:
       ApplicationState& _app;
+
 };
 
 #endif //PLANARREGIONMAPHANDLER_H

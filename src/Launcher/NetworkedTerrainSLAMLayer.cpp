@@ -146,11 +146,11 @@ namespace Clay
          if(ImGui::Button("Publish Pose"))
          {
             RigidBodyTransform transform;
-            _networkManager->PublishPoseStamped(transform);
+            _networkManager->PublishPoseStamped(transform, 0);
          }
          if(ImGui::Button("Publish Planes"))
          {
-            _networkManager->PublishPlanes(_regionCalculator->planarRegionList);
+            _networkManager->PublishPlanes(_regionCalculator->planarRegionList, 0);
          }
          ImGui::EndTabItem();
       }

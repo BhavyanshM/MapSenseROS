@@ -105,12 +105,11 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
       GetTopicSelection(topics, currentDataTopic);
       if (ImGui::Button("Add Receiver"))
          AddReceiver(currentDataTopic);
-      for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
+      for (std::pair<std::string, ROS1TopicReceiver *> receiver: receivers)
          receiver.second->ImGuiUpdate();
 
       ImGui::EndTabItem();
    }
-
 }
 
 void NetworkManager::MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg)
@@ -163,7 +162,7 @@ void NetworkManager::GetTopicSelection(std::vector<TopicInfo> topics, TopicInfo&
 
 void NetworkManager::ReceiverUpdate(ApplicationState& app)
 {
-   for (std::pair<std::string, ROS1TopicReceiver*> receiver : receivers)
+   for (std::pair<std::string, ROS1TopicReceiver *> receiver: receivers)
    {
       ROS_DEBUG("RenderUpdate: {}", receiver.first.c_str());
       receiver.second->processMessage(app);
@@ -296,8 +295,9 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
          app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
-         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH,
-                   app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
+         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT,
+                   app.DEPTH_INPUT_WIDTH, app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W,
+                   app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
       }
       //        app.DEPTH_PATCH_HEIGHT = app.KERNEL_SLIDER_LEVEL;
       //        app.DEPTH_PATCH_WIDTH = app.KERNEL_SLIDER_LEVEL;
@@ -305,33 +305,47 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
       //        app.SUB_W = (int) app.DEPTH_INPUT_WIDTH / app.DEPTH_PATCH_WIDTH;
 
 
-      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.SUB_W, app.SUB_H,
-                app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
+      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.SUB_W,
+                app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
    }
    ROS_DEBUG("Data Frame Loaded");
 }
 
-void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions)
+void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions, int poseId)
 {
-   sensor_msgs::PointCloud2 cloud;
-   cloud.width = 2;
-   cloud.height = 1;
-   cloud.row_step = 2;
-   cloud.point_step = 32;
+   sensor_msgs::PointCloud2 planeSet;
+   planeSet.header.seq = poseId;
+   planeSet.width = regions.size();
+   planeSet.height = 1;
+   planeSet.row_step = 2;
+   planeSet.point_step = 4 * 8;
 
-   std::vector<float> points = {0.1, 0.2, 3, 0.5, 2.0, 2.4, 3.4, 4.2};
+   std::vector<float> points;
+
+   for (auto region: regions)
+   {
+//      points.push_back((float)poseId);
+      points.push_back(region->GetCenter().x());
+      points.push_back(region->GetCenter().y());
+      points.push_back(region->GetCenter().z());
+      points.push_back(region->GetNormal().x());
+      points.push_back(region->GetNormal().y());
+      points.push_back(region->GetNormal().z());
+      points.push_back((float)region->getId());
+      CLAY_LOG_INFO("PlaneID: {}", region->getId());
+   }
 
    std::vector<unsigned char> data(points.size() * sizeof(float));
    memcpy(data.data(), points.data(), data.size());
 
-   cloud.data = data;
+   planeSet.data = data;
 
    CLAY_LOG_INFO("Data: {} Points:{}", data.size(), points.size());
 
-   rawPlanesPub.publish(cloud);
+   rawPlanesPub.publish(planeSet);
 }
 
-void NetworkManager::PublishPoseStamped(RigidBodyTransform worldToSensorTransform)
+void NetworkManager::PublishPoseStamped(RigidBodyTransform worldToSensorTransform, int id)
 {
    Eigen::Quaterniond quaternion = worldToSensorTransform.GetQuaternion();
    Eigen::Vector3d position = worldToSensorTransform.GetTranslation();
@@ -347,6 +361,10 @@ void NetworkManager::PublishPoseStamped(RigidBodyTransform worldToSensorTransfor
    pose.pose.orientation.y = quaternion.y();
    pose.pose.orientation.z = quaternion.z();
    pose.pose.orientation.w = quaternion.w();
+
+   pose.header.seq = (uint32_t) id;
+
+   printf("PoseID Published: %d\n", id);
 
    this->slamPosePub.publish(pose);
 }
