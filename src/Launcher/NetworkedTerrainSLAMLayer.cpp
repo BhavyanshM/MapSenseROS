@@ -48,13 +48,14 @@ namespace Clay
 
       /* TODO: Do not delete! Refactor these image viewer lines into methods and classes.*/
 //      _texture = Texture2D::Create(std::string(ASSETS_PATH) + std::string("Textures/Checkerboard.png"));
-//      _texture = Texture2D::Create();
-//      cv::Mat image = cv::imread("/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/003975.png");
+      _texture = Texture2D::Create();
+//      _image = cv::imread("/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/003975.png");
+      _image = cv::imread("/home/quantum/Pictures/OusterRegionComponents.png");
 
-//      cv::flip(image, image, 0);
-//      cv::flip(image, image, 1);
+      cv::flip(_image, _image, 0);
+      cv::flip(_image, _image, 1);
 
-//      _texture->LoadImage(image.data, image.cols, image.rows, image.channels());
+      _texture->LoadImage(_image.data, _image.cols, _image.rows, _image.channels());
    }
 
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()
@@ -165,7 +166,9 @@ namespace Clay
 //      {
 //         ImVec2 windowPos = ImGui::GetCursorScreenPos();
 //         ImVec2 pos = ImGui::GetMousePos();
-//         ImGui::SetTooltip("Tooltip: %d, %d", (int) (pos.x - windowPos.x), (int)region.y + (int)(pos.y - windowPos.y));
+//         int x = (int) (pos.x - windowPos.x);
+//         int y = (int)region.y + (int)(pos.y - windowPos.y);
+//         ImGui::SetTooltip("N_X: %u\nN_Y: %u\nN_Z:%u", _image.at<cv::Vec3b>(y, x)[0], _image.at<cv::Vec3b>(y, x)[1], _image.at<cv::Vec3b>(y, x)[2]);
 //      }
 //      ImGui::End();
 

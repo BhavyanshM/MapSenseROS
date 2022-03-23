@@ -34,6 +34,7 @@ namespace Clay {
           Ref<PointCloud> _cloud;
 
           Ref<Texture> _texture;
+          cv::Mat _image;
 
     };
 

@@ -9,7 +9,7 @@ DEPTH_PATCH_WIDTH:              4
 HASH_INPUT_HEIGHT:              64
 HASH_INPUT_WIDTH:               1024
 HASH_PATCH_HEIGHT:              2
-HASH_PATCH_WIDTH:               8
+HASH_PATCH_WIDTH:               2
 KERNEL_SLIDER_LEVEL:            4
 FILTER_KERNEL_SIZE:             4
 DIVISION_FACTOR:                1
