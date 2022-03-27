@@ -42,6 +42,7 @@ class NetworkManager
 
       std::unordered_map<std::string, ROS1TopicReceiver*> receivers;
       ros::Subscriber subMapSenseParams;
+      ros::Subscriber subSLAMPose;
       ros::Publisher planarRegionPub;
       ros::Publisher slamPosePub;
       ros::Publisher rawPlanesPub;
@@ -81,6 +82,8 @@ class NetworkManager
       void colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& colorMsg);
 
       void MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
+
+      void SLAMPoseCallback(const geometry_msgs::PoseStamped poseMsg);
 
       void InitNode(int argc, char **argv, ApplicationState& app);
 

@@ -70,6 +70,7 @@ void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
    AddReceiver(TopicInfo(app.KITTI_LIDAR_POINTS, "sensor_msgs/PointCloud2"));
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::MapsenseParamsCallback, this);
+   subSLAMPose = rosNode->subscribe("/slam/output/pose", 2, &NetworkManager::SLAMPoseCallback, this);
 
    CLAY_LOG_INFO("Started ROS Node");
 }
@@ -110,6 +111,11 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 
       ImGui::EndTabItem();
    }
+}
+
+void NetworkManager::SLAMPoseCallback(const geometry_msgs::PoseStamped poseMsg)
+{
+
 }
 
 void NetworkManager::MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg)
