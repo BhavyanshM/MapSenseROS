@@ -49,8 +49,7 @@ class MeshGenerator
       void GenerateMeshForMatches(const std::vector<Clay::Ref<PlanarRegion>>& current, const std::vector<Clay::Ref<PlanarRegion>>& previous,
                                   const std::vector<std::pair<int, int>>& matches, const Clay::Ref<Clay::Model>& parent);
 
-      void
-      AppendMatchLine(Clay::Ref<Clay::LineMesh>& mesh, const Eigen::Vector3f& previous, const Eigen::Vector3f& current, const Clay::Ref<Clay::Model>& parent);
+      void AppendEdge(Clay::Ref<Clay::LineMesh>& mesh, const Eigen::Vector3f& previous, const Eigen::Vector3f& current);
 
       void InsertLineMesh(Clay::Ref<Clay::LineMesh> lines);
 

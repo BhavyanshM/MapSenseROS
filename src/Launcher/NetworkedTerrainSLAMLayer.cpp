@@ -123,9 +123,9 @@ namespace Clay
       if (_regionCalculator->RenderEnabled())
       {
          /* ROS Regions */
-                  if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-                  mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
-                  _regionCalculator->Render();
+//                  if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+//                  mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+//                  _regionCalculator->Render();
 
          /* Static Regions */
 //         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);

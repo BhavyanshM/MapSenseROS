@@ -11,19 +11,6 @@ void MeshGenerator::GeneratePoseMesh(const Eigen::Matrix4f& transform, Clay::Ref
    _poses.push_back(std::move(std::dynamic_pointer_cast<Clay::Model>(pose)));
 }
 
-void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::LineMesh>& model)
-{
-   for(int i = 0; i<planarRegion->GetNumOfBoundaryVertices() - 1; i++)
-   {
-      Eigen::Vector3f pointPrev = (planarRegion->getBoundaryVertices()[i]);
-      Eigen::Vector3f pointCur = (planarRegion->getBoundaryVertices()[i+1]);
-      model->InsertVertex(pointPrev.x(), pointPrev.y(), pointPrev.z());
-      model->InsertVertex(pointCur.x(), pointCur.y(), pointCur.z());
-   }
-   Eigen::Vector3f point = planarRegion->getBoundaryVertices()[0];
-   model->InsertVertex(point.x(), point.y(), point.z());
-}
-
 void MeshGenerator::GenerateRegionMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::TriangleMesh>& model)
 {
    //   CLAY_LOG_INFO("Generating Region Mesh: Vertices: {}", planarRegion->GetNumOfBoundaryVertices());
@@ -42,6 +29,38 @@ void MeshGenerator::GenerateRegionMesh(std::shared_ptr<PlanarRegion>& planarRegi
    }
 }
 
+void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
+{
+   _meshes.clear();
+   for (int i = 0; i < planarRegions.size(); i++)
+   {
+      Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(
+            glm::vec4((float) ((i + 1) * 123 % 255) / 255.0f, (float) ((i + 1) * 326 % 255) / 255.0f, (float) ((i + 1) * 231 % 255) / 255.0f, 1.0f), parent);
+      Clay::Ref<PlanarRegion> region = planarRegions[i];
+
+      GenerateRegionMesh(region, regionMesh);
+      InsertModel(regionMesh);
+      //      CLAY_LOG_INFO("Mesh Generated Region: {} {}", region->getId(), regionMesh->GetSize());
+   }
+}
+
+void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planarRegion, Clay::Ref<Clay::LineMesh>& model)
+{
+   for(int i = 0; i<planarRegion->GetNumOfBoundaryVertices() - 1; i++)
+   {
+      Eigen::Vector3f pointPrev = (planarRegion->getBoundaryVertices()[i]);
+      Eigen::Vector3f pointCur = (planarRegion->getBoundaryVertices()[i+1]);
+      AppendEdge(model, pointPrev, pointCur);
+//      model->InsertVertex(pointPrev.x(), pointPrev.y(), pointPrev.z());
+//      model->InsertVertex(pointCur.x(), pointCur.y(), pointCur.z());
+   }
+   Eigen::Vector3f pointLast = planarRegion->getBoundaryVertices()[planarRegion->GetNumOfBoundaryVertices() - 1];
+   Eigen::Vector3f point = planarRegion->getBoundaryVertices()[0];
+   AppendEdge(model, pointLast, point);
+//   model->InsertVertex(pointLast.x(), pointLast.y(), pointLast.z());
+//   model->InsertVertex(point.x(), point.y(), point.z());
+}
+
 void MeshGenerator::GenerateLineMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
 {
    for (int i = 0; i < planarRegions.size(); i++)
@@ -56,22 +75,7 @@ void MeshGenerator::GenerateLineMeshForRegions(std::vector<Clay::Ref<PlanarRegio
    }
 }
 
-void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
-{
-   _meshes.clear();
-   for (int i = 0; i < planarRegions.size(); i++)
-   {
-      Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(
-            glm::vec4((float) ((i + 1) * 123 % 255) / 255.0f, (float) ((i + 1) * 326 % 255) / 255.0f, (float) ((i + 1) * 231 % 255) / 255.0f, 1.0f), parent);
-      Clay::Ref<PlanarRegion> region = planarRegions[i];
-
-      GenerateRegionMesh(region, regionMesh);
-      InsertModel(regionMesh);
-//      CLAY_LOG_INFO("Mesh Generated Region: {} {}", region->getId(), regionMesh->GetSize());
-   }
-}
-
-void MeshGenerator::AppendMatchLine(Clay::Ref<Clay::LineMesh>& mesh, const Eigen::Vector3f& previous, const Eigen::Vector3f& current, const Clay::Ref<Clay::Model>& parent)
+void MeshGenerator::AppendEdge(Clay::Ref<Clay::LineMesh>& mesh, const Eigen::Vector3f& previous, const Eigen::Vector3f& current)
 {
    mesh->InsertVertex(previous.x(), previous.y(), previous.z());
    mesh->InsertVertex(current.x(), current.y(), current.z());
@@ -85,7 +89,7 @@ void MeshGenerator::GenerateMeshForMatches(const std::vector<Clay::Ref<PlanarReg
          glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), parent);
    for(auto match : matches)
    {
-      AppendMatchLine(matchMesh, previous[match.first]->GetCenter(), current[match.second]->GetCenter(), parent);
+      AppendEdge(matchMesh, previous[match.first]->GetCenter(), current[match.second]->GetCenter());
    }
    InsertLineMesh(matchMesh);
 }

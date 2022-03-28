@@ -71,6 +71,7 @@ void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
 
    subMapSenseParams = rosNode->subscribe("/map/config", 8, &NetworkManager::MapsenseParamsCallback, this);
    subSLAMPose = rosNode->subscribe("/slam/output/pose", 2, &NetworkManager::SLAMPoseCallback, this);
+   subSLAMPlanes = rosNode->subscribe("/slam/output/planes", 2, &NetworkManager::SLAMPlanesCallback, this);
 
    CLAY_LOG_INFO("Started ROS Node");
 }
@@ -113,9 +114,25 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
    }
 }
 
-void NetworkManager::SLAMPoseCallback(const geometry_msgs::PoseStamped poseMsg)
+void NetworkManager::SLAMPoseCallback(const sensor_msgs::PointCloud2ConstPtr& poseMsg)
 {
+   CLAY_LOG_INFO("Pose Received: {}", poseMsg->width, poseMsg->height);
+   int totalBytes = poseMsg->width * poseMsg->height * poseMsg->point_step;
+   std::vector<float> points(totalBytes / sizeof(float));
+   memcpy(points.data(), poseMsg->data.data(), totalBytes);
 
+
+   planeSet.SetID((int)poseMsg->header.seq + 1);
+   for(int i = 0; i<poseMsg->width * poseMsg->height; i++)
+   {
+      planeSet.InsertPlane(Plane3D(points[i*7 ] , points[i*7 + 1], points[i*7 + 2], points[i*7 + 3],
+                                   points[i*7 + 4], points[i*7 + 5], (int) points[i*7 + 6]), (int) points[i*7 + 6]);
+   }
+}
+
+void NetworkManager::SLAMPlanesCallback(const sensor_msgs::PointCloud2ConstPtr& planeCloudMsg)
+{
+   CLAY_LOG_INFO("Planes Received: {} {} {}", planeCloudMsg->width, planeCloudMsg->height, planeCloudMsg->header.seq);
 }
 
 void NetworkManager::MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg)

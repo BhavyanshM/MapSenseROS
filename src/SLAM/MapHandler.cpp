@@ -30,9 +30,9 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                _regionCalculator->LoadRegions(_directory, fileNames, fileSelected);
             }
             std::vector<std::shared_ptr<PlanarRegion>> regions = _regionCalculator->planarRegionList;
-            ImGui::Text("Total Planar Regions: %d", _regions.size());
+            ImGui::Text("Total Planar Regions: %d", _previousRegionsZUp.size());
 
-            ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, _regions.size());
+            ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, _previousRegionsZUp.size());
             //      ImGui::SameLine(ImGui::GetWindowWidth() - 30);
             if(ImGui::Button("Plot"))
             {
@@ -44,14 +44,14 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::SliderFloat("Compress Dist Threshold", &app.COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
             ImGui::SliderFloat("Compress Cosine Threshold", &app.COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
-            if(plotter2D && _regions.size() > 0)
+            if(plotter2D && _previousRegionsZUp.size() > 0)
             {
 
                regions[regionSelected]->ComputeBoundaryVerticesPlanar();
                regions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
                regions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
 
-               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, _regions.size());
+               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, _previousRegionsZUp.size());
                const std::vector<Eigen::Vector2f>& points = regions[regionSelected]->GetPlanarPatchCentroids();
                const std::vector<int>& segmentIndices = regions[regionSelected]->GetSegmentIndices();
                Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
@@ -89,17 +89,17 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                Update(_regionCalculator->planarRegionList, _frameIndex + 1);
 
-
+               TransformAndCopyRegions(_latestRegionsZUp, _mapRegions, _sensorToMapTransform);
 
                // _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
 
 //               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
 
-               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _regions, _matches, nullptr);
+//               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
 
-               _mesher->GenerateLineMeshForRegions(_regions, nullptr);
+               _mesher->GenerateLineMeshForRegions(_mapRegions, nullptr);
 
-               _regions = _latestRegionsZUp;
+               _previousRegionsZUp = _latestRegionsZUp;
 
 
                std::cout << _sensorToMapTransform.GetMatrix().cast<float>() << std::endl;
@@ -118,9 +118,9 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
 {
    latestRegions = regions;
 
-   if(_regions.size() == 0)
+   if(_previousRegionsZUp.size() == 0)
    {
-      TransformAndCopyRegions(latestRegions, _regions, _transformZUp);
+      TransformAndCopyRegions(latestRegions, _previousRegionsZUp, _transformZUp);
    }
 
    TransformAndCopyRegions(latestRegions, _latestRegionsZUp, _transformZUp);
@@ -144,42 +144,42 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
 void MapHandler::MatchPlanarRegionsToMap()
 {
    _matches.clear();
-   for (int i = 0; i < _regions.size(); i++)
+   for (int i = 0; i < _previousRegionsZUp.size(); i++)
    {
-      if (_regions[i]->GetNumOfBoundaryVertices() > 8)
+      if (_previousRegionsZUp[i]->GetNumOfBoundaryVertices() > 8)
       {
          for (int j = 0; j < _latestRegionsZUp.size(); j++)
          {
             if (_latestRegionsZUp[j]->GetNumOfBoundaryVertices() > 8)
             {
-               Eigen::Vector3f prevNormal = _regions[i]->GetNormal();
+               Eigen::Vector3f prevNormal = _previousRegionsZUp[i]->GetNormal();
                Eigen::Vector3f curNormal = _latestRegionsZUp[j]->GetNormal();
                float angularDiff = fabs(prevNormal.dot(curNormal));
 
-               Eigen::Vector3f prevCenter = _regions[i]->GetCenter();
+               Eigen::Vector3f prevCenter = _previousRegionsZUp[i]->GetCenter();
                Eigen::Vector3f curCenter = _latestRegionsZUp[j]->GetCenter();
                float dist = (curCenter - prevCenter).norm();
                //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 
-               int countDiff = abs(_regions[i]->GetNumOfBoundaryVertices() - _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
-               int maxCount = std::max(_regions[i]->GetNumOfBoundaryVertices(), _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
+               int countDiff = abs(_previousRegionsZUp[i]->GetNumOfBoundaryVertices() - _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
+               int maxCount = std::max(_previousRegionsZUp[i]->GetNumOfBoundaryVertices(), _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
 
                if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD &&
                    ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD)
                {
                   _matches.emplace_back(i, j);
-                  if(_regions[i]->getId() == -1 && _latestRegionsZUp[j]->getId() == -1)
+                  if(_previousRegionsZUp[i]->getId() == -1 && _latestRegionsZUp[j]->getId() == -1)
                   {
                      _latestRegionsZUp[j]->setId(uniqueLandmarkCounter);
-                     _regions[j]->setId(uniqueLandmarkCounter);
+                     _previousRegionsZUp[j]->setId(uniqueLandmarkCounter);
                      uniqueLandmarkCounter++;
                   }
                   else
                   {
-                     _latestRegionsZUp[j]->setId(_regions[i]->getId());
+                     _latestRegionsZUp[j]->setId(_previousRegionsZUp[i]->getId());
                   }
-                  CLAY_LOG_INFO("Copying Region ID: {}", _regions[i]->getId());
-                  _regions[i]->SetNumOfMeasurements(_regions[i]->GetNumOfMeasurements() + 1);
+                  CLAY_LOG_INFO("Copying Region ID: {}", _previousRegionsZUp[i]->getId());
+                  _previousRegionsZUp[i]->SetNumOfMeasurements(_previousRegionsZUp[i]->GetNumOfMeasurements() + 1);
                   _latestRegionsZUp[j]->SetNumOfMeasurements(_latestRegionsZUp[j]->GetNumOfMeasurements() + 1);
                   break;
                }
@@ -206,8 +206,8 @@ void MapHandler::RegisterRegionsPointToPlane(uint8_t iterations)
       for (int n = 0; n < _latestRegionsZUp[_matches[m].second]->GetNumOfBoundaryVertices(); n++)
       {
          Eigen::Vector3f latestPoint = _latestRegionsZUp[_matches[m].second]->getVertices()[n];
-         Eigen::Vector3f correspondingMapCentroid = _regions[_matches[m].first]->GetCenter();
-         Eigen::Vector3f correspondingMapNormal = _regions[_matches[m].first]->GetNormal();
+         Eigen::Vector3f correspondingMapCentroid = _previousRegionsZUp[_matches[m].first]->GetCenter();
+         Eigen::Vector3f correspondingMapNormal = _previousRegionsZUp[_matches[m].first]->GetNormal();
          Eigen::Vector3f cross = latestPoint.cross(correspondingMapNormal);
          A(i, 0) = cross(0);
          A(i, 1) = cross(1);
@@ -253,8 +253,8 @@ void MapHandler::RegisterRegionsPointToPoint()
       {
          Eigen::Vector3f latestPoint = _latestRegionsZUp[_matches[m].second]->getVertices()[n];
          //         printf("(%d,%d,%d):(%.2lf,%.2lf,%.2lf)\n", m,n, i, latestPoint.x(), latestPoint.y(), latestPoint.z());
-         Eigen::Vector3f correspondingMapCentroid = _regions[_matches[m].first]->GetCenter();
-         Eigen::Vector3f correspondingMapNormal = _regions[_matches[m].first]->GetNormal();
+         Eigen::Vector3f correspondingMapCentroid = _previousRegionsZUp[_matches[m].first]->GetCenter();
+         Eigen::Vector3f correspondingMapNormal = _previousRegionsZUp[_matches[m].first]->GetNormal();
          Eigen::Vector3f cross = latestPoint.cross(correspondingMapNormal);
          A(i, 0) = cross(0);
          A(i, 1) = cross(1);
@@ -272,7 +272,7 @@ void MapHandler::RegisterRegionsPointToPoint()
    translationToReference = Eigen::Vector3d((double) solution(3), (double) solution(4), (double) solution(5));
 
    /* Update relative and total transform from current sensor pose to map frame. Required for initial value for landmarks observed in current pose. */
-   _sensorPoseRelative = RigidBodyTransform(eulerAnglesToReference, translationToReference);
+   _sensorPoseRelative.SetAnglesAndTranslation(eulerAnglesToReference, translationToReference);
    _sensorToMapTransform.MultiplyRight(_sensorPoseRelative);
 }
 
@@ -332,10 +332,6 @@ void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion
 //   }
 //}
 //
-//void MapHandler::Optimize()
-//{
-//   this->ISAM2 ? this->fgSLAM->optimizeISAM2(this->ISAM2_NUM_STEPS) : this->fgSLAM->optimize();
-//}
 
 void MapHandler::setDirectory(const std::string& directory)
 {
@@ -357,7 +353,7 @@ void MapHandler::PrintRefCounts()
 {
    printf("---------- REF Counts ----------\n");
    printf("Regions(");
-   for (auto region : this->_regions)
+   for (auto region : this->_previousRegionsZUp)
       printf("%d, ", region.use_count());
    printf(")\n");
    printf("LatestRegions(");
@@ -369,8 +365,6 @@ void MapHandler::PrintRefCounts()
       printf("%d, ", region.use_count());
    printf(")\n");
    printf("RegionsInMapFrame(");
-   for (auto region : this->regionsInMapFrame)
-      printf("%d, ", region.use_count());
    printf(")\n");
    printf("---------- REF Counts End ----------\n\n");
 }

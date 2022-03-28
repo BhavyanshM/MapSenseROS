@@ -18,6 +18,8 @@
 #include "PointCloudReceiver.h"
 
 
+#include "Plane3D.h"
+
 #include "Core.h"
 #include <ApplicationState.h>
 
@@ -28,6 +30,8 @@ class NetworkManager
 {
    private:
       TopicInfo currentDataTopic, currentInfoTopic;
+
+      PlaneSet3D planeSet;
 
    public:
       AppUtils* appUtils;
@@ -43,6 +47,7 @@ class NetworkManager
       std::unordered_map<std::string, ROS1TopicReceiver*> receivers;
       ros::Subscriber subMapSenseParams;
       ros::Subscriber subSLAMPose;
+      ros::Subscriber subSLAMPlanes;
       ros::Publisher planarRegionPub;
       ros::Publisher slamPosePub;
       ros::Publisher rawPlanesPub;
@@ -83,7 +88,9 @@ class NetworkManager
 
       void MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg);
 
-      void SLAMPoseCallback(const geometry_msgs::PoseStamped poseMsg);
+      void SLAMPoseCallback(const sensor_msgs::PointCloud2ConstPtr& poseMsg);
+
+      void SLAMPlanesCallback(const sensor_msgs::PointCloud2ConstPtr& planeCloudMsg);
 
       void InitNode(int argc, char **argv, ApplicationState& app);
 

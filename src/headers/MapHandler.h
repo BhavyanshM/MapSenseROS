@@ -69,7 +69,7 @@ class MapHandler
 //      FactorGraphHandler* fgSLAM;
       std::vector<std::string> files;
 
-      std::vector<std::shared_ptr<PlanarRegion>> _regions, latestRegions, measuredRegions, _mapRegions, regionsInMapFrame, _latestRegionsZUp, _testLatestRegions;
+      std::vector<std::shared_ptr<PlanarRegion>> _previousRegionsZUp, latestRegions, _mapRegions, _latestRegionsZUp;
 
       std::vector<std::pair<int, int>> _matches;
       std::vector<RigidBodyTransform> poses, atlasPoses;
