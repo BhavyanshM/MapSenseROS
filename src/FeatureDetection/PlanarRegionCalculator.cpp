@@ -414,12 +414,12 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    for (int k = 0; k < planarRegionList.size(); k++)
       planarRegionList[k]->RetainConvexHull();
 
-//   if (planarRegionList.size() > 0)
-//   {
-//      GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
-//                                               std::string(4 - std::to_string(frameId).length(), '0').append(std::to_string(frameId)) + ".txt");
-//      frameId++;
-//   }
+   if (planarRegionList.size() > 0 && appState.EXPORT_REGIONS)
+   {
+      GeomTools::SaveRegions(planarRegionList, ros::package::getPath("map_sense") + "/Extras/Regions/" +
+                                               std::string(4 - std::to_string(frameId).length(), '0').append(std::to_string(frameId)) + ".txt");
+      frameId++;
+   }
 
 
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();

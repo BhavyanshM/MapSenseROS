@@ -164,8 +164,9 @@ void MapHandler::MatchPlanarRegionsToMap()
                int countDiff = abs(_previousRegionsZUp[i]->GetNumOfBoundaryVertices() - _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
                int maxCount = std::max(_previousRegionsZUp[i]->GetNumOfBoundaryVertices(), _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
 
-               if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD &&
-                   ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD)
+               if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD
+//                     && ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD
+               )
                {
                   _matches.emplace_back(i, j);
                   if(_previousRegionsZUp[i]->getId() == -1 && _latestRegionsZUp[j]->getId() == -1)
