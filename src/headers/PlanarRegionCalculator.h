@@ -71,6 +71,9 @@ class PlanarRegionCalculator
       std::vector<std::shared_ptr<PlanarRegion>> planarRegionList;
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
+      RigidBodyTransform headToL515Transform;
+      RigidBodyTransform headToOusterTransform;
+
       std::vector<std::string> depthFiles, cloudFiles;
       int depthFileSelected = 0;
       int cloudFileSelected = 0;

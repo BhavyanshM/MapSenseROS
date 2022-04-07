@@ -71,7 +71,8 @@ DEPTH_ALIGNED:                  false
 EARLY_GAUSSIAN_BLUR:            true
 ICP_ODOMETRY_ENABLED:           false
 STEREO_ODOMETRY_ENABLED:        false
-PLANAR_REGIONS_ENABLED:         false
+DEPTH_PLANAR_REGIONS_ENABLED:   false
+HASH_PLANAR_REGIONS_ENABLED:    false
 SLAM_ENABLED:                   false
 DATASET_ENABLED:                false
 EXPORT_REGIONS:                 false

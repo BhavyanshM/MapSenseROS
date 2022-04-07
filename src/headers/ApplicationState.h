@@ -101,7 +101,8 @@ class ApplicationState
 
       bool ICP_ODOMETRY_ENABLED = false;
       bool STEREO_ODOMETRY_ENABLED = false;
-      bool PLANAR_REGIONS_ENABLED = false;
+      bool DEPTH_PLANAR_REGIONS_ENABLED = false;
+      bool HASH_PLANAR_REGIONS_ENABLED = false;
       bool SLAM_ENABLED = false;
       bool DATASET_ENABLED = false;
 

@@ -38,8 +38,9 @@ namespace Clay
 
       /* ROS PointCloud*/
       PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+      pclReceiver->SetRenderEnabled(false);
       _cloud = pclReceiver->GetRenderable();
-      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
+      _models.emplace_back(std::dynamic_po  inter_cast<Clay::Model>(_cloud));
 
       /* Static PointCloud from File. */
 //      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
@@ -77,15 +78,20 @@ namespace Clay
             appState.MERGE_ANGULAR_THRESHOLD = _networkManager->paramsMessage.mergeAngularThreshold;
          }
 
-         if (appState.PLANAR_REGIONS_ENABLED)
+         if (appState.DEPTH_PLANAR_REGIONS_ENABLED)
          {
             cv::Mat depth;
             double inputTimestamp;
             ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.L515_DEPTH]);
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
-            mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
-            _regionCalculator->Render();
+            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+
+            /* ROS Regions */
+//            if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+//            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+//            _regionCalculator->Render();
+
             //
             //              // TODO: Fix this and publish planarregions msg
             //              _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
@@ -123,11 +129,6 @@ namespace Clay
 
       if (_regionCalculator->RenderEnabled())
       {
-         /* ROS Regions */
-                  if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-                  mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
-                  _regionCalculator->Render();
-
          /* Static Regions */
 //         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
 //         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);

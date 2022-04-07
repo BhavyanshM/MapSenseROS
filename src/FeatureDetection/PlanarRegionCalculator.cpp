@@ -24,6 +24,15 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, Applicatio
    origin[0] = 0;
 
    AppUtils::getFileNames(ros::package::getPath("map_sense") + "/Extras/Clouds/", cloudFiles);
+
+
+
+   headToL515Transform.SetAnglesAndTranslation(
+               Eigen::Vector3d(0.010000, 1.151900, 0.045000),
+     Eigen::Vector3d(0.275000, 0.052000, 0.140000) - Eigen::Vector3d(0.265000, -0.0200, 0.720000));
+
+   headToOusterTransform.SetAnglesAndTranslation(Eigen::Vector3d(0.00000, 0.52400, 0.000000), Eigen::Vector3d(0,0,0));
+
 }
 
 void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)

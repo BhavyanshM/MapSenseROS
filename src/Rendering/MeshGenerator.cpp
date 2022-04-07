@@ -61,8 +61,9 @@ void MeshGenerator::GenerateRegionLineMesh(std::shared_ptr<PlanarRegion>& planar
 //   model->InsertVertex(point.x(), point.y(), point.z());
 }
 
-void MeshGenerator::GenerateLineMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
+void MeshGenerator::GenerateLineMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent, bool erase)
 {
+   if(erase) _lines.clear();
    for (int i = 0; i < planarRegions.size(); i++)
    {
       Clay::Ref<Clay::LineMesh> regionMesh = std::make_shared<Clay::LineMesh>(

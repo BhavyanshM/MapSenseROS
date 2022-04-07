@@ -93,7 +93,8 @@ ApplicationState::ApplicationState()
       if(name == "EARLY_GAUSSIAN_BLUR") {EARLY_GAUSSIAN_BLUR = (value == "true");}
       if(name == "ICP_ODOMETRY_ENABLED") {ICP_ODOMETRY_ENABLED = (value == "true");}
       if(name == "STEREO_ODOMETRY_ENABLED") {STEREO_ODOMETRY_ENABLED = (value == "true");}
-      if(name == "PLANAR_REGIONS_ENABLED") {PLANAR_REGIONS_ENABLED = (value == "true");}
+      if(name == "DEPTH_PLANAR_REGIONS_ENABLED") { DEPTH_PLANAR_REGIONS_ENABLED = (value == "true");}
+      if(name == "HASH_PLANAR_REGIONS_ENABLED") { HASH_PLANAR_REGIONS_ENABLED = (value == "true");}
       if(name == "SLAM_ENABLED") {SLAM_ENABLED = (value == "true");}
       if(name == "DATASET_ENABLED") {DATASET_ENABLED = (value == "true");}
       if(name == "EXPORT_REGIONS") {EXPORT_REGIONS = (value == "true");}
