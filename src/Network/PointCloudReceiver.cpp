@@ -46,7 +46,8 @@ void PointCloudReceiver::PointCloud2Callback(const sensor_msgs::PointCloud2Const
       Eigen::Vector3f pt(it[0], it[1], it[2]);
       if (!(pt.x() == 0 && pt.y() == 0 && pt.z() == 0))
       {
-         cloud->InsertVertex(pt.x(), pt.y(), pt.z());
+//         cloud->InsertVertex(pt.x(), pt.y(), pt.z());
+         cloud->InsertVertex(-pt.y(), -pt.z(), pt.x());
          _cloudToRender->InsertVertex(pt.x(), pt.y(), pt.z());
       }
    }

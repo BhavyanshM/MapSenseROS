@@ -71,12 +71,17 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
          {
             ImGui::Text("Frame Index: %d", _frameIndex);
             ImGui::Text("Regions Loaded: %d", _regionCalculator->planarRegionList.size());
-            ImGui::Text("Total Map Regions: %d", _mapRegions.size());
+            ImGui::Text("Total Map Regions: %d", _mapRegions.GetRegions().size());
             ImGui::Text("Latest Regions: %d", latestRegions.size());
             ImGui::Text("Latest Regions Z-Up: %d", _latestRegionsZUp.size());
+            ImGui::NewLine();
+
             ImGui::Text("Matches Found: %d", _matches.size());
             ImGui::Text("Last Translation: %.3lf, %.3lf, %.3lf", eulerAnglesToReference.x(), eulerAnglesToReference.y(), eulerAnglesToReference.z());
             ImGui::Text("Last Rotation Euler Angles: %.3lf, %.3lf, %.3lf", translationToReference.x(), translationToReference.y(), translationToReference.z());
+            ImGui::Text("Landmark Planes: %lu", _network->GetSLAMPlanes().GetPlanes().size());
+            ImGui::NewLine();
+
             ImGui::Text("Next File: %s", fileNames[_frameIndex].c_str());
             ImGui::NewLine();
 
@@ -91,21 +96,31 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                TransformAndCopyRegions(_latestRegionsZUp, _mapRegions, _sensorToMapTransform);
 
+
                // _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
 
 //               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
 
 //               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
 
-               _mesher->GenerateLineMeshForRegions(_mapRegions, nullptr);
+               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
 
-               _previousRegionsZUp = _latestRegionsZUp;
+               _previousRegionsZUp = std::move(_latestRegionsZUp);
 
 
-               std::cout << _sensorToMapTransform.GetMatrix().cast<float>() << std::endl;
-               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetMatrix().cast<float>(), nullptr);
+//               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetMatrix().cast<float>(), nullptr);
                _frameIndex++;
             }
+            if(ImGui::Button("Update Map Landmarks"))
+            {
+               UpdateMapLandmarks(_network->GetSLAMPlanes());
+            }
+
+            if(ImGui::Button("Update Map Poses"))
+            {
+               _mesher->GeneratePoseMesh(_network->GetSLAMPoses().begin()->second.GetMatrix().cast<float>(), nullptr);
+            }
+
             ImGui::EndTabItem();
          }
          ImGui::EndTabBar();
@@ -131,7 +146,13 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
    if (_matches.size() > 0)
    {
       RegisterRegionsPointToPlane(1);
-      _network->PublishPoseStamped(_sensorPoseRelative.GetInverse(), index);
+
+      Eigen::Quaterniond quaternion = _sensorToMapTransform.GetQuaternion();
+      Eigen::Vector3d position = _sensorToMapTransform.GetTranslation();
+      CLAY_LOG_INFO("Sensor To Map Pose ({}): {} {} {} {} {} {} {}", index, position.x(),
+                    position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+
+      _network->PublishPoseStamped(_sensorPoseRelative, index);
       _network->PublishPlanes(_latestRegionsZUp, index);
    }
 
@@ -281,7 +302,7 @@ void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion
 {
    for (auto region : regions)
    {
-      _mapRegions.push_back(std::move(region));
+      _mapRegions.InsertRegion(std::move(region), region->getId());
    }
 }
 
@@ -318,21 +339,19 @@ void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion
 //   }
 //}
 //
-//void MapHandler::ExtractFactorGraphLandmarks()
-//{
-//   _mapRegions.clear();
-//   for (shared_ptr<PlanarRegion> region : this->_latestRegionsZUp)
-//   {
-//      RigidBodyTransform mapToSensorTransform(fgSLAM->getResults().at<gtsam::Pose3>(gtsam::Symbol('x', region->GetPoseId())).matrix());
-//
-//      shared_ptr<PlanarRegion> transformedRegion = std::make_shared<PlanarRegion>(region->getId());
-//      region->CopyAndTransform(transformedRegion, mapToSensorTransform);
-//
-//      transformedRegion->ProjectToPlane(fgSLAM->getResults().at<gtsam::OrientedPlane3>(gtsam::Symbol('l', region->getId())).planeCoefficients().cast<float>());
-//      _mapRegions.emplace_back(transformedRegion);
-//   }
-//}
-//
+
+void MapHandler::UpdateMapLandmarks(const PlaneSet3D& planeSet)
+{
+   for (auto plane : planeSet.GetPlanes())
+   {
+      CLAY_LOG_INFO("Exists -> ID: {} Plane: {}", plane.first, plane.second.GetString());
+      if(_mapRegions.Exists(plane.first))
+      {
+         _mapRegions.GetRegions()[plane.first]->ProjectToPlane(plane.second.GetParams().cast<float>());
+      }
+   }
+}
+
 
 void MapHandler::setDirectory(const std::string& directory)
 {
@@ -346,33 +365,20 @@ void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<Plana
    {
       std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(srcRegions[i]->getId());
       srcRegions[i]->CopyAndTransform(planarRegion, transform);
-      dstRegions.emplace_back(planarRegion);
+      dstRegions.emplace_back(std::move(planarRegion));
    }
 }
 
-void MapHandler::PrintRefCounts()
+void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, PlanarRegionSet& dstRegionSet, const RigidBodyTransform& transform)
 {
-   printf("---------- REF Counts ----------\n");
-   printf("Regions(");
-   for (auto region : this->_previousRegionsZUp)
-      printf("%d, ", region.use_count());
-   printf(")\n");
-   printf("LatestRegions(");
-   for (auto region : this->_latestRegionsZUp)
-      printf("%d, ", region.use_count());
-   printf(")\n");
-   printf("MapRegions(");
-   for (auto region : this->_mapRegions)
-      printf("%d, ", region.use_count());
-   printf(")\n");
-   printf("RegionsInMapFrame(");
-   printf(")\n");
-   printf("---------- REF Counts End ----------\n\n");
+   dstRegionSet.GetRegions().clear();
+   for (int i = 0; i < srcRegions.size(); i++)
+   {
+      std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(srcRegions[i]->getId());
+      srcRegions[i]->CopyAndTransform(planarRegion, transform);
+      dstRegionSet.InsertRegion(std::move(planarRegion), planarRegion->getId());
+   }
 }
-
-
-
-
 
 
 

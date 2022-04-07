@@ -40,7 +40,7 @@ void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
 
    // ROSTopic Publishers
    planarRegionPub = rosNode->advertise<map_sense::RawGPUPlanarRegionList>("/mapsense/planar_regions", 3);
-   slamPosePub = rosNode->advertise<geometry_msgs::PoseStamped>("/mapsense/slam/pose", 3);
+   slamPosePub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/slam/pose", 3);
    rawPlanesPub = rosNode->advertise<sensor_msgs::PointCloud2>("/slam/input/planes", 3);
    coloredCloudPub = rosNode->advertise<sensor_msgs::PointCloud2>("/mapsense/color/points", 2);
 
@@ -116,23 +116,38 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 
 void NetworkManager::SLAMPoseCallback(const sensor_msgs::PointCloud2ConstPtr& poseMsg)
 {
-   CLAY_LOG_INFO("Pose Received: {}", poseMsg->width, poseMsg->height);
+   CLAY_LOG_INFO("Poses Received: {}", poseMsg->width, poseMsg->height);
    int totalBytes = poseMsg->width * poseMsg->height * poseMsg->point_step;
    std::vector<float> points(totalBytes / sizeof(float));
    memcpy(points.data(), poseMsg->data.data(), totalBytes);
 
-
-   planeSet.SetID((int)poseMsg->header.seq + 1);
+//   _poses.clear();
    for(int i = 0; i<poseMsg->width * poseMsg->height; i++)
    {
-      planeSet.InsertPlane(Plane3D(points[i*7 ] , points[i*7 + 1], points[i*7 + 2], points[i*7 + 3],
-                                   points[i*7 + 4], points[i*7 + 5], (int) points[i*7 + 6]), (int) points[i*7 + 6]);
+      RigidBodyTransform transform;
+      transform.SetQuaternionAndTranslation(Eigen::Quaterniond(points[i*8+6], points[i*8 + 3], points[i*8 + 4], points[i*8 + 5]),
+                                            Eigen::Vector3d(points[i*8], points[i*8+1], points[i*8+2]));
+      transform.SetID((int) points[i*8+7]);
+      printf("Pose Received (%d): %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf\n", transform.GetID(), points[i*8], points[i*8+1], points[i*8+2],
+             points[i*8+6], points[i*8 + 3], points[i*8 + 4], points[i*8 + 5]);
+      transform.print();
+      _poses.insert({(int) points[i*8+7], std::move(transform)});
    }
 }
 
 void NetworkManager::SLAMPlanesCallback(const sensor_msgs::PointCloud2ConstPtr& planeCloudMsg)
 {
    CLAY_LOG_INFO("Planes Received: {} {} {}", planeCloudMsg->width, planeCloudMsg->height, planeCloudMsg->header.seq);
+   int totalBytes = planeCloudMsg->width * planeCloudMsg->height * planeCloudMsg->point_step;
+   std::vector<float> points(totalBytes / sizeof(float));
+   memcpy(points.data(), planeCloudMsg->data.data(), totalBytes);
+
+   planeSet.SetID((int)planeCloudMsg->header.seq + 1);
+   for(int i = 0; i<planeCloudMsg->width * planeCloudMsg->height; i++)
+   {
+      planeSet.InsertPlane(Plane3D(points[i*5 ], points[i*5 + 1], points[i*5 + 2], points[i*5 + 3]),
+                                   (int) points[i*5 + 4]);
+   }
 }
 
 void NetworkManager::MapsenseParamsCallback(const map_sense::MapsenseConfiguration compressedMsg)
@@ -337,7 +352,6 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
 void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions, int poseId)
 {
    sensor_msgs::PointCloud2 planeSet;
-   planeSet.header.seq = poseId;
    planeSet.width = regions.size();
    planeSet.height = 1;
    planeSet.row_step = 2;
@@ -347,7 +361,7 @@ void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegio
 
    for (auto region: regions)
    {
-//      points.push_back((float)poseId);
+      points.push_back((float)poseId);
       points.push_back(region->GetCenter().x());
       points.push_back(region->GetCenter().y());
       points.push_back(region->GetCenter().z());
@@ -355,7 +369,9 @@ void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegio
       points.push_back(region->GetNormal().y());
       points.push_back(region->GetNormal().z());
       points.push_back((float)region->getId());
-      CLAY_LOG_INFO("PlaneID: {}", region->getId());
+
+      CLAY_LOG_INFO("Publishing Plane ({}): {} {} {} {} {} {}", region->getId(), region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
+                    region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z());
    }
 
    std::vector<unsigned char> data(points.size() * sizeof(float));
@@ -368,28 +384,36 @@ void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegio
    rawPlanesPub.publish(planeSet);
 }
 
-void NetworkManager::PublishPoseStamped(RigidBodyTransform worldToSensorTransform, int id)
+void NetworkManager::PublishPoseStamped(RigidBodyTransform odometry, int poseId)
 {
-   Eigen::Quaterniond quaternion = worldToSensorTransform.GetQuaternion();
-   Eigen::Vector3d position = worldToSensorTransform.GetTranslation();
+   Eigen::Quaterniond quaternion = odometry.GetQuaternion();
+   Eigen::Vector3d position = odometry.GetTranslation();
 
-   geometry_msgs::PoseStamped pose;
-   pose.pose.position = geometry_msgs::Point();
-   pose.pose.position.x = position.x();
-   pose.pose.position.y = position.y();
-   pose.pose.position.z = position.z();
+   sensor_msgs::PointCloud2 poseSet;
+   poseSet.width = 1;
+   poseSet.height = 1;
+   poseSet.row_step = 1;
+   poseSet.point_step = 4 * 8;
 
-   pose.pose.orientation = geometry_msgs::Quaternion();
-   pose.pose.orientation.x = quaternion.x();
-   pose.pose.orientation.y = quaternion.y();
-   pose.pose.orientation.z = quaternion.z();
-   pose.pose.orientation.w = quaternion.w();
+   std::vector<float> buffer;
 
-   pose.header.seq = (uint32_t) id;
+   buffer.push_back(position.x());
+   buffer.push_back(position.y());
+   buffer.push_back(position.z());
+   buffer.push_back(quaternion.x());
+   buffer.push_back(quaternion.y());
+   buffer.push_back(quaternion.z());
+   buffer.push_back(quaternion.w());
+   buffer.push_back(poseId);
 
-   printf("PoseID Published: %d\n", id);
+   CLAY_LOG_INFO("Publishing Pose ({}): {} {} {} {} {} {} {}", poseId, position.x(),
+                 position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
 
-   this->slamPosePub.publish(pose);
+   std::vector<unsigned char> data(buffer.size() * sizeof(float));
+   memcpy(data.data(), buffer.data(), data.size());
+   poseSet.data = data;
+
+   slamPosePub.publish(poseSet);
 }
 
 void NetworkManager::load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app)

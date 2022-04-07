@@ -17,7 +17,7 @@ namespace Clay
 
       /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
       /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */
-      _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _data);
+//      _visualOdometry = new VisualOdometry(argc, argv, _networkManager, appState, _data);
 
       _regionCalculator = new PlanarRegionCalculator(argc, argv, appState);
       _regionCalculator->setOpenCLManager(_openCLManager);
@@ -84,6 +84,7 @@ namespace Clay
             ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.L515_DEPTH]);
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
+            mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
             _regionCalculator->Render();
             //
             //              // TODO: Fix this and publish planarregions msg
@@ -97,8 +98,8 @@ namespace Clay
             MeshTools::CoordinateAxes(pose);
             _models.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
-            bool result = _visualOdometry->Update(appState, pose, firstCloud);
-            _visualOdometry->Show();
+//            bool result = _visualOdometry->Update(appState, pose, firstCloud);
+//            _visualOdometry->Show();
          }
 
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _mapper->SLAM_ENABLED)
@@ -123,9 +124,9 @@ namespace Clay
       if (_regionCalculator->RenderEnabled())
       {
          /* ROS Regions */
-//                  if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-//                  mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
-//                  _regionCalculator->Render();
+                  if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+                  mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+                  _regionCalculator->Render();
 
          /* Static Regions */
 //         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);

@@ -29,9 +29,9 @@ void MeshGenerator::GenerateRegionMesh(std::shared_ptr<PlanarRegion>& planarRegi
    }
 }
 
-void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent)
+void MeshGenerator::GenerateMeshForRegions(std::vector<Clay::Ref<PlanarRegion>>& planarRegions, Clay::Ref<Clay::Model> parent, bool erase)
 {
-   _meshes.clear();
+   if(erase)_meshes.clear();
    for (int i = 0; i < planarRegions.size(); i++)
    {
       Clay::Ref<Clay::TriangleMesh> regionMesh = std::make_shared<Clay::TriangleMesh>(

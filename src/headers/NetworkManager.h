@@ -33,6 +33,8 @@ class NetworkManager
 
       PlaneSet3D planeSet;
 
+      std::unordered_map<int, RigidBodyTransform> _poses;
+
    public:
       AppUtils* appUtils;
       CameraInfoConstPtr depthCameraInfo, colorCameraInfo;
@@ -98,9 +100,13 @@ class NetworkManager
 
       void load_next_stereo_frame(cv::Mat& left, cv::Mat& right, ApplicationState& app);
 
-      void PublishPoseStamped(RigidBodyTransform worldToSensorTransform, int id);
+      void PublishPoseStamped(RigidBodyTransform odometry, int id);
 
       void AcceptMapsenseConfiguration(ApplicationState& appState);
+
+      const PlaneSet3D& GetSLAMPlanes() const {return planeSet;};
+
+      const std::unordered_map<int, RigidBodyTransform>& GetSLAMPoses() const {return _poses;};
 
 //      void PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud);
 };

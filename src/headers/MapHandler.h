@@ -45,13 +45,15 @@ class MapHandler
 //
 //      void Optimize();
 
-      void PrintRefCounts();
+      void TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, PlanarRegionSet& dstRegionSet, const RigidBodyTransform& transform);
 
       void TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
 
       void ImGuiUpdate(ApplicationState& appState);
 
       void SetMeshGenerator(MeshGenerator* mesher) {_mesher = mesher;}
+
+      void UpdateMapLandmarks(const PlaneSet3D& planeSet);
 
    public:
 
@@ -69,7 +71,9 @@ class MapHandler
 //      FactorGraphHandler* fgSLAM;
       std::vector<std::string> files;
 
-      std::vector<std::shared_ptr<PlanarRegion>> _previousRegionsZUp, latestRegions, _mapRegions, _latestRegionsZUp;
+      std::vector<std::shared_ptr<PlanarRegion>> _previousRegionsZUp, latestRegions, _latestRegionsZUp;
+
+      PlanarRegionSet _mapRegions;
 
       std::vector<std::pair<int, int>> _matches;
       std::vector<RigidBodyTransform> poses, atlasPoses;

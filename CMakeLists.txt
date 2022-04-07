@@ -267,7 +267,7 @@ if (VISUAL_TERRAIN_SLAM)
             /usr/lib/x86_64-linux-gnu/libOpenCL.so
             Eigen3::Eigen tbb
             geom-tools planar-regions slam
-            ClayEngine mapsense visual_odometry
+            ClayEngine mapsense
             glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
     target_include_directories(VisualTerrainSLAM PUBLIC ${MAPSENSE_INCLUDE_DIRS})
     add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
