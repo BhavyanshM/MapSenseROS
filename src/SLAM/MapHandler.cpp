@@ -7,7 +7,8 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
    _network = network;
 //   this->fgSLAM = new FactorGraphHandler();
 
-   _directory = "/home/quantum/Workspace/Volume/catkin_ws/src/MapSenseROS/Extras/Regions/Archive/Set_06_Circle/";
+
+   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_06_Circle/";
    AppUtils::getFileNames(_directory, fileNames);
 
    _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
