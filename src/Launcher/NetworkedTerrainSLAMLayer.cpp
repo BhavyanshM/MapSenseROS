@@ -40,7 +40,7 @@ namespace Clay
       PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
       pclReceiver->SetRenderEnabled(false);
       _cloud = pclReceiver->GetRenderable();
-      _models.emplace_back(std::dynamic_po  inter_cast<Clay::Model>(_cloud));
+      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
 
       /* Static PointCloud from File. */
 //      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);

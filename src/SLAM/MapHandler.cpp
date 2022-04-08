@@ -108,7 +108,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                _previousRegionsZUp = std::move(_latestRegionsZUp);
 
 
-//               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetMatrix().cast<float>(), nullptr);
+//               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetInverse().GetMatrix().cast<float>(), nullptr);
                _frameIndex++;
             }
             if(ImGui::Button("Update Map Landmarks"))
@@ -152,8 +152,20 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
       CLAY_LOG_INFO("Sensor To Map Pose ({}): {} {} {} {} {} {} {}", index, position.x(),
                     position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
 
+      std::cout << _sensorToMapTransform.GetMatrix() << std::endl;
+
       _network->PublishPoseStamped(_sensorPoseRelative, index);
       _network->PublishPlanes(_latestRegionsZUp, index);
+
+
+      for(auto region : _latestRegionsZUp)
+      {
+         Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
+                 region->GetNormal().x(), region->GetNormal().x(), region->GetNormal().x(), region->getId());
+         CLAY_LOG_INFO("Plane Original: {}", plane.GetString());
+         Plane3D planeInMapFrame = plane.GetTransformed(_sensorToMapTransform.GetInverse());
+         CLAY_LOG_INFO("Plane Transformed: {}", planeInMapFrame.GetString());
+      }
    }
 
 
