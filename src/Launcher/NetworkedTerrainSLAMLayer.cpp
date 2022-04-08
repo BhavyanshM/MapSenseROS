@@ -86,15 +86,18 @@ namespace Clay
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
             mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
-
-            /* ROS Regions */
-//            if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-//            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
-//            _regionCalculator->Render();
+            _regionCalculator->Render();
 
             //
             //              // TODO: Fix this and publish planarregions msg
             //              _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
+         }
+
+         if(appState.HASH_PLANAR_REGIONS_ENABLED)
+         {
+             /* ROS Regions */
+            if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
          }
 
          if (appState.STEREO_ODOMETRY_ENABLED)
