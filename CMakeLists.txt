@@ -20,6 +20,7 @@ find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenCL REQUIRED)
+find_package(GTSAM REQUIRED)
 find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 #find_package(GTSAM REQUIRED)
 find_package(xtl REQUIRED)
@@ -29,19 +30,7 @@ add_subdirectory(Vendor/xtensor)
 add_subdirectory(Vendor/xtensor-blas)
 add_subdirectory(Vendor/Geometry/)
 
-#include_directories(${GTSAM_INCLUDE_DIR})
-
-#find_package(Corrade REQUIRED Main)
-#find_package(Magnum REQUIRED
-#		MeshTools
-#		GL
-#		Primitives
-#		Shaders
-#		Sdl2Application
-#		SceneGraph)
-#
-#find_package(MagnumIntegration REQUIRED ImGui)
-#find_package(ImGui REQUIRED)
+include_directories(${GTSAM_INCLUDE_DIR})
 
 
 ## Find catkin macros and libraries
@@ -265,7 +254,7 @@ if (VISUAL_TERRAIN_SLAM)
     target_link_libraries(VisualTerrainSLAM
             ${OpenCV_LIBS} ${catkin_LIBRARIES}
             /usr/lib/x86_64-linux-gnu/libOpenCL.so
-            Eigen3::Eigen tbb
+            Eigen3::Eigen tbb gtsam
             geom-tools planar-regions slam
             ClayEngine mapsense
             glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
