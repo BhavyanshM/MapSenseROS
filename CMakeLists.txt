@@ -20,8 +20,8 @@ find_package(VTK 7 REQUIRED)
 find_package(gflags REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenCL REQUIRED)
+find_package(GTSAM REQUIRED)
 find_package(Eigen3 3.4 REQUIRED NO_MODULE)
-#find_package(GTSAM REQUIRED)
 find_package(xtl REQUIRED)
 find_package(BLAS REQUIRED)
 
@@ -29,7 +29,7 @@ add_subdirectory(Vendor/xtensor)
 add_subdirectory(Vendor/xtensor-blas)
 add_subdirectory(Vendor/Geometry/)
 
-#include_directories(${GTSAM_INCLUDE_DIR})
+include_directories(${GTSAM_INCLUDE_DIR})
 
 #find_package(Corrade REQUIRED Main)
 #find_package(Magnum REQUIRED
@@ -261,11 +261,14 @@ endif ()
 ## ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 set(VISUAL_TERRAIN_SLAM 1)
 if (VISUAL_TERRAIN_SLAM)
-    add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES})
+    add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES}
+            src/SLAM/SLAM.cpp src/headers/SLAM.h
+            src/SLAM/FactorGraphHandler.cpp src/headers/FactorGraphHandler.h
+            )
     target_link_libraries(VisualTerrainSLAM
             ${OpenCV_LIBS} ${catkin_LIBRARIES}
             /usr/lib/x86_64-linux-gnu/libOpenCL.so
-            Eigen3::Eigen tbb
+            Eigen3::Eigen tbb gtsam
             geom-tools planar-regions slam
             ClayEngine mapsense
             glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
