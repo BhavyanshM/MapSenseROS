@@ -368,8 +368,6 @@ void kernel packKernel(  read_only image2d_t in,
         float3 normal = (float3)(0,0,0);
         float3 centroid = (float3)(0,0,0);
 
-//        printf("(%d,%d): Calculating Centroid and Normal\n", r, c);
-
         if(mode == 0)
         {
             normal = estimate_normal_depth(in, c, r, params);
@@ -378,12 +376,8 @@ void kernel packKernel(  read_only image2d_t in,
         else
         {
             normal = estimate_normal_hash(in, c, r, cloud, params);
-//            printf("(%d,%d): PackKernel Normal -> {%.2lf, %.2lf, %.2lf}\n", r,c, normal.x, normal.y, normal.z);
             centroid = estimate_centroid_hash(in, c, r, cloud, params);
-//            printf("(%d,%d): PackKernel Centroid -> {%.2lf, %.2lf, %.2lf}\n", r,c, centroid.x, centroid.y, centroid.z);
         }
-
-
 
         write_imagef(out0, (int2)(c,r), (float4)(normal.x,0,0,0));
         write_imagef(out1, (int2)(c,r), (float4)(normal.y,0,0,0));
@@ -543,6 +537,59 @@ void kernel hashKernel(global float* cloud, global int* indices, read_write imag
 //       printf("Params: {%.2lf,%.2lf,%.2lf,%.2lf,%.2lf}\n", params[SUB_H], params[SUB_W], params[PATCH_WIDTH], params[MERGE_DISTANCE_THRESHOLD], params[MERGE_ANGULAR_THRESHOLD]);
 //       printf("GID:(%d,%d), Size:%d\n", r, c, size);
 //   }
+}
+
+/*
+ * Point hash diffuse kernel to propagate fill dead pixels in the hash buffer.
+ * */
+
+void kernel diffuseKernel(read_write image2d_t hashMap, global float* params)
+{
+    int r = get_global_id(0);
+    int c = get_global_id(1);
+
+    int m = 1;
+    int maxIndex = read_imageui(hashMap, (int2)(c * params[PATCH_WIDTH] + m, r * params[PATCH_HEIGHT] + m)).x;
+
+//    printf("DiffuseKernel: (%d, %d) -> %d\n", r, c, maxIndex);
+
+    for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++)
+    {
+        for(int j = 0; j<(int)params[PATCH_WIDTH]; j++)
+        {
+            int gx = r*(int)params[PATCH_HEIGHT] + i;
+            int gy = c*(int)params[PATCH_WIDTH] + j;
+
+            if(gx > 0 && gx < (int)params[INPUT_HEIGHT] && gy > 0 && gy < (int)params[INPUT_WIDTH])
+            {
+                int index = read_imageui(hashMap, (int2)(gy, gx)).x;
+                if(index != 0)
+                {
+                    //                    printf("DiffuseKernel: Gx:%d, Gy:%d, index:%d\n", gx, gy, index);
+                    maxIndex = index;
+                }
+            }
+        }
+    }
+
+    for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++)
+    {
+        for(int j = 0; j<(int)params[PATCH_WIDTH]; j++)
+        {
+            int gx = r*(int)params[PATCH_HEIGHT] + i;
+            int gy = c*(int)params[PATCH_WIDTH] + j;
+
+            if(gx > 0 && gx < (int)params[INPUT_HEIGHT] && gy > 0 && gy < (int)params[INPUT_WIDTH])
+            {
+                int index = read_imageui(hashMap, (int2)(gy, gx)).x;
+                if(index == 0)
+                {
+                    //                    printf("DiffuseKernel: Gx:%d, Gy:%d, index:%d\n", gx, gy, index);
+                    write_imageui(hashMap, (int2)(gy,gx), (uint4)(maxIndex,0,0,0));
+                }
+            }
+        }
+    }
 }
 
 /*

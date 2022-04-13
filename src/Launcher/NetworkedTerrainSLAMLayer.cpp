@@ -40,14 +40,15 @@ namespace Clay
       PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
       pclReceiver->SetRenderEnabled(false);
       _cloud = pclReceiver->GetRenderable();
-      _models.emplace_back(std::dynamic_pointer_cast<Clay::Model>(_cloud));
 
       /* Static PointCloud from File. */
-//      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
-//      _cloud->Load(filename, false);
-//      _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
+      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+      _cloud->Load(filename, false);
 
-      /* TODO: Do not delete! Refactor these image viewer lines into methods and classes.*/
+
+       _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
+
+       /* TODO: Do not delete! Refactor these image viewer lines into methods and classes.*/
 //      _texture = Texture2D::Create(std::string(ASSETS_PATH) + std::string("Textures/Checkerboard.png"));
       _texture = Texture2D::Create();
 //      _image = cv::imread("/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/003975.png");
@@ -97,7 +98,7 @@ namespace Clay
          {
              /* ROS Regions */
             if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, false);
+            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
          }
 
          if (appState.STEREO_ODOMETRY_ENABLED)
