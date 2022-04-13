@@ -44,6 +44,12 @@ class MeshGenerator
          return _lines;
       }
 
+      void ClearPoses() { _poses.clear(); }
+
+      void ClearMeshes() { _meshes.clear(); }
+
+      void ClearLines() { _lines.clear(); }
+
       void GeneratePatchMesh(cv::Mat& patches);
 
       void GenerateMeshForMatches(const std::vector<Clay::Ref<PlanarRegion>>& current, const std::vector<Clay::Ref<PlanarRegion>>& previous,

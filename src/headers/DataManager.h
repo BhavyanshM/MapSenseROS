@@ -9,7 +9,7 @@
 #include "opencv2/core/core.hpp"
 #include <xtensor/xarray.hpp>
 #include <xtensor/xcsv.hpp>
-#include "Core/Log.h"
+#include "Log.h"
 #include "ApplicationState.h"
 #include "CameraParams.h"
 

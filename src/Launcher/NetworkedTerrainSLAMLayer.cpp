@@ -34,7 +34,7 @@ namespace Clay
       CLAY_LOG_INFO("Loading Scan From: {}", filename);
 
 
-      mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), _rootModel);
+      mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), nullptr);
 
       /* ROS PointCloud*/
       PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
@@ -61,13 +61,13 @@ namespace Clay
 
    void NetworkedTerrainSLAMLayer::MapsenseUpdate()
    {
-      //      ROS_DEBUG("TickEvent: %d", count++);
+      //      MS_DEBUG("TickEvent: %d", count++);
 
       //      if(_models.size() >=2) CLAY_LOG_INFO("Models: {} {} {}", _models.size(), _models[0]->GetSize(), _models[1]->GetSize());
 
       if (appState.ROS_ENABLED)
       {
-         ROS_DEBUG("ROS Update: {}", appState.ROS_ENABLED);
+         MS_DEBUG("ROS Update: {}", appState.ROS_ENABLED);
          _networkManager->SpinNode();
          _networkManager->AcceptMapsenseConfiguration(appState);
          _networkManager->ReceiverUpdate(appState);
@@ -102,7 +102,7 @@ namespace Clay
 
          if (appState.STEREO_ODOMETRY_ENABLED)
          {
-            ROS_DEBUG("Stereo Odom Update");
+            MS_DEBUG("Stereo Odom Update");
             Clay::Ref<Clay::TriangleMesh> pose = std::make_shared<TriangleMesh>(glm::vec4(0.6f, 0.3f, 0.5f, 1.0f), _rootModel);
             MeshTools::CoordinateAxes(pose);
             _models.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
@@ -127,7 +127,17 @@ namespace Clay
             //         }
          }
 
-         ROS_DEBUG("ROS Update Completed");
+         if(_networkManager->GetSLAMPoses().size() > 0)
+         {
+            mesher.ClearPoses();
+            for (auto pose : _networkManager->GetSLAMPoses())
+            {
+               _mapper->GetMesher()->GeneratePoseMesh(pose.second.GetMatrix().cast<float>(), nullptr);
+            }
+            _networkManager->ClearPoses();
+         }
+
+         MS_DEBUG("ROS Update Completed");
       }
 
       if (_regionCalculator->RenderEnabled())

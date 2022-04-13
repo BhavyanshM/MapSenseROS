@@ -1,4 +1,5 @@
 #include "NetworkManager.h"
+#include "Log.h"
 
 NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
 {
@@ -28,13 +29,12 @@ NetworkManager::NetworkManager(ApplicationState app, AppUtils *appUtils)
 
 void NetworkManager::SpinNode()
 {
-   ROS_DEBUG("SpinOnce");
    ros::spinOnce();
 }
 
 void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
 {
-   CLAY_LOG_INFO("Starting ROS Node");
+   MS_INFO("Starting ROS Node");
    ros::init(argc, argv, "PlanarRegionPublisher");
    rosNode = new ros::NodeHandle();
 
@@ -54,8 +54,8 @@ void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
    app.L515_DEPTH = depthTopicName;
    app.L515_DEPTH_INFO = depthInfoTopicName;
 
-   CLAY_LOG_INFO("L515 Depth Topic: {}", depthTopicName);
-   CLAY_LOG_INFO("L515 Depth Info Topic: {}", depthInfoTopicName);
+   MS_INFO("L515 Depth Topic: {}", depthTopicName);
+   MS_INFO("L515 Depth Info Topic: {}", depthInfoTopicName);
 
    AddReceiver(TopicInfo(depthTopicName, "sensor_msgs/Image"), TopicInfo(depthInfoTopicName, "sensor_msgs/CameraInfo"));
    AddReceiver(TopicInfo(app.L515_COLOR, "sensor_msgs/CompressedImage"));
@@ -73,12 +73,12 @@ void NetworkManager::InitNode(int argc, char **argv, ApplicationState& app)
    subSLAMPose = rosNode->subscribe("/slam/output/pose", 2, &NetworkManager::SLAMPoseCallback, this);
    subSLAMPlanes = rosNode->subscribe("/slam/output/planes", 2, &NetworkManager::SLAMPlanesCallback, this);
 
-   CLAY_LOG_INFO("Started ROS Node");
+   MS_INFO("Started ROS Node");
 }
 
 int NetworkManager::AddReceiver(TopicInfo data, TopicInfo info)
 {
-   CLAY_LOG_INFO("Adding Receiver: Topic:{}, Info:{}, Type:{}", data.name.c_str(), info.name.c_str(), data.datatype);
+   MS_INFO("Adding Receiver: Topic:{}, Info:{}, Type:{}", data.name.c_str(), info.name.c_str(), data.datatype);
    ROS1TopicReceiver *receiver = nullptr;
    if (data.datatype == "sensor_msgs/Image")
       receiver = new ImageReceiver(rosNode, data.name, info.name, false);
@@ -95,7 +95,7 @@ int NetworkManager::AddReceiver(TopicInfo data, TopicInfo info)
    {
       printf("Request to add receiver: %s\n", data.name.c_str());
    }
-   CLAY_LOG_INFO("Receiver Added Successfully");
+   MS_INFO("Receiver Added Successfully");
    return receivers.size() - 1;
 }
 
@@ -116,7 +116,7 @@ void NetworkManager::ImGuiUpdate(ApplicationState& appState)
 
 void NetworkManager::SLAMPoseCallback(const sensor_msgs::PointCloud2ConstPtr& poseMsg)
 {
-   CLAY_LOG_INFO("Poses Received: {}", poseMsg->width, poseMsg->height);
+   MS_INFO("Poses Received: {}", poseMsg->width, poseMsg->height);
    int totalBytes = poseMsg->width * poseMsg->height * poseMsg->point_step;
    std::vector<float> points(totalBytes / sizeof(float));
    memcpy(points.data(), poseMsg->data.data(), totalBytes);
@@ -137,7 +137,7 @@ void NetworkManager::SLAMPoseCallback(const sensor_msgs::PointCloud2ConstPtr& po
 
 void NetworkManager::SLAMPlanesCallback(const sensor_msgs::PointCloud2ConstPtr& planeCloudMsg)
 {
-   CLAY_LOG_INFO("Planes Received: {} {} {}", planeCloudMsg->width, planeCloudMsg->height, planeCloudMsg->header.seq);
+   MS_INFO("Planes Received: {} {} {}", planeCloudMsg->width, planeCloudMsg->height, planeCloudMsg->header.seq);
    int totalBytes = planeCloudMsg->width * planeCloudMsg->height * planeCloudMsg->point_step;
    std::vector<float> points(totalBytes / sizeof(float));
    memcpy(points.data(), planeCloudMsg->data.data(), totalBytes);
@@ -154,7 +154,6 @@ void NetworkManager::MapsenseParamsCallback(const map_sense::MapsenseConfigurati
 {
    paramsMessage = compressedMsg;
    paramsAvailable = true;
-   ROS_DEBUG("PARAMS CALLBACK");
 }
 
 void NetworkManager::AcceptMapsenseConfiguration(ApplicationState& appState)
@@ -202,10 +201,8 @@ void NetworkManager::ReceiverUpdate(ApplicationState& app)
 {
    for (std::pair<std::string, ROS1TopicReceiver *> receiver: receivers)
    {
-      ROS_DEBUG("RenderUpdate: {}", receiver.first.c_str());
       receiver.second->processMessage(app);
       receiver.second->render(app);
-      ROS_DEBUG("RenderUpdate: Complete");
    }
 }
 
@@ -267,12 +264,12 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    cv_bridge::CvImagePtr img_ptr_depth;
    cv_bridge::CvImagePtr img_ptr_color;
    cv_bridge::CvImagePtr img_ptr_color_compressed;
-   ROS_DEBUG("Process Data Callback");
+   MS_DEBUG("Process Data Callback");
    if (depthMessage != nullptr)
    {
       try
       {
-         ROS_DEBUG("Callback: Depth:%d", depthMessage->header.stamp.sec);
+         MS_DEBUG("Callback: Depth:{}", depthMessage->header.stamp.sec);
          img_ptr_depth = cv_bridge::toCvCopy(*depthMessage, image_encodings::TYPE_16UC1);
          depth = img_ptr_depth->image;
          timestamp = depthMessage.get()->header.stamp.toSec();
@@ -282,7 +279,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
             pyrDown(depth, depth);
          }
 
-         ROS_DEBUG("INPUT_DEPTH:(%d,%d)", depth.rows, depth.cols);
+         MS_DEBUG("INPUT_DEPTH:({},{})", depth.rows, depth.cols);
       } catch (cv_bridge::Exception& e)
       {
          ROS_ERROR("Could not convert to _image! %s", e.what());
@@ -292,7 +289,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    {
       try
       {
-         ROS_DEBUG("Callback: Color:%d", colorMessage->header.stamp.sec);
+         MS_DEBUG("Callback: Color:{}", colorMessage->header.stamp.sec);
          img_ptr_color = cv_bridge::toCvCopy(*colorMessage, image_encodings::MONO8);
          color = img_ptr_color->image;
 
@@ -308,7 +305,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    {
       try
       {
-         ROS_DEBUG("Callback: CompressedColor:%d", colorCompressedMessage->header.stamp.sec);
+         MS_DEBUG("Callback: CompressedColor:{}", colorCompressedMessage->header.stamp.sec);
          //            img_ptr_color = cv_bridge::toCvCopy(*colorCompressedMessage, image_encodings::TYPE_8UC3);
          color = imdecode(cv::Mat(colorCompressedMessage->data), 1);
          for (int i = 0; i < app.DIVISION_FACTOR - 1; i++)
@@ -322,7 +319,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
    }
    if (depthCameraInfo != nullptr)
    {
-      ROS_DEBUG("DEPTH_SET:", depthCamInfoSet);
+      MS_DEBUG("DEPTH_SET: {}", depthCamInfoSet);
       if (!depthCamInfoSet)
       {
          depthCamInfoSet = true;
@@ -333,7 +330,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
          app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
          app.update();
-         ROS_DEBUG("Process Callback: INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT,
+         MS_DEBUG("Process Callback: INPUT:({},{}), INFO:({}, {}, {}, {}, {}, {}) KERNEL:({},{}) PATCH:({},{})", app.DEPTH_INPUT_HEIGHT,
                    app.DEPTH_INPUT_WIDTH, app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W,
                    app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
       }
@@ -343,44 +340,46 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
       //        app.SUB_W = (int) app.DEPTH_INPUT_WIDTH / app.DEPTH_PATCH_WIDTH;
 
 
-      ROS_DEBUG("INPUT:(%d,%d), INFO:(%d, %d, %.2f, %.2f, %.2f, %.2f) KERNEL:(%d,%d) PATCH:(%d,%d)", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.SUB_W,
+      MS_DEBUG("INPUT:({},{}), INFO:({}, {}, {}, {}, {}, {}) KERNEL:({},{}) PATCH:({},{})", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.SUB_W,
                 app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W, app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);
    }
-   ROS_DEBUG("Data Frame Loaded");
+   MS_DEBUG("Data Frame Loaded");
 }
 
 void NetworkManager::PublishPlanes(const std::vector<std::shared_ptr<PlanarRegion>>& regions, int poseId)
 {
-   sensor_msgs::PointCloud2 planeSet;
-   planeSet.width = regions.size();
-   planeSet.height = 1;
-   planeSet.row_step = 2;
-   planeSet.point_step = 4 * 8;
-
    std::vector<float> points;
 
+   int count = 0;
    for (auto region: regions)
    {
-      points.push_back((float)poseId);
-      points.push_back(region->GetCenter().x());
-      points.push_back(region->GetCenter().y());
-      points.push_back(region->GetCenter().z());
-      points.push_back(region->GetNormal().x());
-      points.push_back(region->GetNormal().y());
-      points.push_back(region->GetNormal().z());
-      points.push_back((float)region->getId());
+      if(region->getId() >= 0)
+      {
+         count++;
+         points.push_back((float)poseId);
+         points.push_back(region->GetCenter().x());
+         points.push_back(region->GetCenter().y());
+         points.push_back(region->GetCenter().z());
+         points.push_back(region->GetNormal().x());
+         points.push_back(region->GetNormal().y());
+         points.push_back(region->GetNormal().z());
+         points.push_back((float)region->getId());
 
-      CLAY_LOG_INFO("Publishing Plane ({}): {} {} {} {} {} {}", region->getId(), region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
-                    region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z());
+         MS_INFO("Publishing Plane ({}): {} {} {} {} {} {}", region->getId(), region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
+                       region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z());
+      }
    }
 
    std::vector<unsigned char> data(points.size() * sizeof(float));
    memcpy(data.data(), points.data(), data.size());
+   MS_INFO("Data: {} Points:{}", data.size(), points.size());
 
+   sensor_msgs::PointCloud2 planeSet;
    planeSet.data = data;
-
-   CLAY_LOG_INFO("Data: {} Points:{}", data.size(), points.size());
-
+   planeSet.width = count;
+   planeSet.height = 1;
+   planeSet.row_step = 2;
+   planeSet.point_step = 4 * 8;
    rawPlanesPub.publish(planeSet);
 }
 
@@ -406,7 +405,7 @@ void NetworkManager::PublishPoseStamped(RigidBodyTransform odometry, int poseId)
    buffer.push_back(quaternion.w());
    buffer.push_back(poseId);
 
-   CLAY_LOG_INFO("Publishing Pose ({}): {} {} {} {} {} {} {}", poseId, position.x(),
+   MS_INFO("Publishing Pose ({}): {} {} {} {} {} {} {}", poseId, position.x(),
                  position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
 
    std::vector<unsigned char> data(buffer.size() * sizeof(float));
@@ -424,30 +423,30 @@ void NetworkManager::load_next_stereo_frame(cv::Mat& left, cv::Mat& right, Appli
 
 void NetworkManager::depthCallback(const ImageConstPtr& depthMsg)
 {
-   ROS_DEBUG("Depth Callback", depthMsg->header.seq);
+   MS_DEBUG("Depth Callback: {}", depthMsg->header.seq);
    depthMessage = depthMsg;
 }
 
 void NetworkManager::colorCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
 {
    colorCameraInfo = infoMsg;
-   ROS_DEBUG("COLOR_CAM_INFO CALLBACK");
+   MS_DEBUG("COLOR_CAM_INFO CALLBACK");
 }
 
 void NetworkManager::depthCameraInfoCallback(const sensor_msgs::CameraInfoConstPtr& infoMsg)
 {
    depthCameraInfo = infoMsg;
-   ROS_DEBUG("DEPTH_CAM_INFO CALLBACK");
+   MS_DEBUG("DEPTH_CAM_INFO CALLBACK");
 }
 
 void NetworkManager::colorCompressedCallback(const sensor_msgs::CompressedImageConstPtr& compressedMsg)
 {
    colorCompressedMessage = compressedMsg;
-   ROS_DEBUG("COLOR CALLBACK");
+   MS_DEBUG("COLOR CALLBACK");
 }
 
 void NetworkManager::colorCallback(const sensor_msgs::ImageConstPtr& colorMsg, std::string name)
 {
    colorMessage = colorMsg;
-   ROS_DEBUG("COLOR CALLBACK");
+   MS_DEBUG("COLOR CALLBACK");
 }

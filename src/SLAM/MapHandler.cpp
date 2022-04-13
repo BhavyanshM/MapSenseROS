@@ -11,8 +11,8 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
    _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_06_Circle/";
    AppUtils::getFileNames(_directory, fileNames);
 
-   _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
-   _transformZUp.rotateY(90.0f / 180.0f * M_PI);
+//   _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
+//   _transformZUp.rotateY(90.0f / 180.0f * M_PI);
 }
 
 void MapHandler::ImGuiUpdate(ApplicationState& app)
@@ -158,14 +158,27 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
       _network->PublishPoseStamped(_sensorPoseRelative, index);
       _network->PublishPlanes(_latestRegionsZUp, index);
 
-
       for(auto region : _latestRegionsZUp)
       {
+         Eigen::Vector3f center = region->GetCenter();
+         Eigen::Vector3f normal = region->GetNormal().normalized();
+         CLAY_LOG_INFO("Region Params: {} {} {} {}", normal.x(), normal.y(), normal.z(), -center.dot(normal));
          Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
-                 region->GetNormal().x(), region->GetNormal().x(), region->GetNormal().x(), region->getId());
+                 region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z(), region->getId());
          CLAY_LOG_INFO("Plane Original: {}", plane.GetString());
-         Plane3D planeInMapFrame = plane.GetTransformed(_sensorToMapTransform.GetInverse());
-         CLAY_LOG_INFO("Plane Transformed: {}", planeInMapFrame.GetString());
+         Plane3D planeInMapFrame = plane.GetTransformed(_sensorToMapTransform);
+         CLAY_LOG_INFO("Original Plane Transformed: {}", planeInMapFrame.GetString());
+      }
+
+      TransformAndCopyRegions(_latestRegionsZUp, _regionsInMapFrame, _sensorToMapTransform);
+      for(auto region : _regionsInMapFrame)
+      {
+         Eigen::Vector3f center = region->GetCenter();
+         Eigen::Vector3f normal = region->GetNormal().normalized();
+         CLAY_LOG_INFO("Transformed Region Params: {} {} {} {}", normal.x(), normal.y(), normal.z(), -center.dot(normal));
+         Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
+                       region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z(), region->getId());
+         CLAY_LOG_INFO("Transformed Plane Original: {}", plane.GetString());
       }
    }
 

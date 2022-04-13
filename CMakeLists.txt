@@ -261,7 +261,7 @@ endif ()
 ## ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 set(VISUAL_TERRAIN_SLAM 1)
 if (VISUAL_TERRAIN_SLAM)
-    add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES})
+    add_executable(VisualTerrainSLAM ${TERRAIN_SLAM_SOURCES} src/headers/Log.h)
     target_link_libraries(VisualTerrainSLAM
             ${OpenCV_LIBS} ${catkin_LIBRARIES}
             /usr/lib/x86_64-linux-gnu/libOpenCL.so
@@ -273,6 +273,7 @@ if (VISUAL_TERRAIN_SLAM)
     add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
 #    target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)
     target_compile_definitions(VisualTerrainSLAM PUBLIC -DASSETS_PATH="/usr/local/include/ClayEngine/Assets/")
+
 endif ()
 
 ## //////////////////////////////////////////////////////////////////////////////////////////////////////////////

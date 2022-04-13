@@ -23,7 +23,7 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
 
             _poses.reshape({-1, 12});
 
-            CLAY_LOG_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
+            MS_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
         }
     }
 
@@ -43,13 +43,13 @@ void DataManager::ShowNext()
 
 cv::Mat DataManager::GetNextImage()
 {
-//   CLAY_LOG_INFO("Loading Image: {}", _directory + _fileNames[_counter]);
+//   MS_INFO("Loading Image: {}", _directory + _fileNames[_counter]);
    return cv::imread(_directory + _fileNames[_counter++], cv::IMREAD_COLOR);
 }
 
 cv::Mat DataManager::GetNextSecondImage()
 {
-//   CLAY_LOG_INFO("Loading Image: {}", _secondDirectory + _secondFileNames[_counter]);
+//   MS_INFO("Loading Image: {}", _secondDirectory + _secondFileNames[_counter]);
    return cv::imread(_secondDirectory + _secondFileNames[_secondCounter++], cv::IMREAD_COLOR);
 }
 
@@ -57,7 +57,7 @@ cv::Mat DataManager::GetNextSecondImage()
 //{
 //   std::ofstream file;
 //   std::string filename = ros::package::getPath("map_sense") + "/Extras/Clouds/Scan_" + std::to_string(id);
-//   CLAY_LOG_INFO("Writing Regions to: {}", filename);
+//   MS_INFO("Writing Regions to: {}", filename);
 //   file.open(filename, std::fstream::in | std::fstream::out | std::fstream::app);
 //   file << "DATA ascii" << std::endl;
 //   for (const pcl::PointXYZ& pt : scan->points)

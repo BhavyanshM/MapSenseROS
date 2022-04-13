@@ -5,14 +5,18 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "spdlog/spdlog.h"
+#include "Core/Log.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#define MAPSENSE_LOG_INFO(...) spdlog::info(__VA_ARGS__)
-#define MAPSENSE_LOG_ERROR(...) spdlog::error(__VA_ARGS__)
-#define MAPSENSE_LOG_TRACE(...) spdlog::trace(__VA_ARGS__)
-#define MAPSENSE_LOG_WARN(...) spdlog::warn(__VA_ARGS__)
-#define MAPSENSE_LOG_FATAL(...) spdlog::fatal(__VA_ARGS__)
+#define ENABLE_DEBUG 0
+
+#if ENABLE_DEBUG == 1
+#define MS_DEBUG(...) CLAY_LOG_INFO(__VA_ARGS__)
+#else
+#define MS_DEBUG(...)
+#endif
+
+#define MS_INFO(...) CLAY_LOG_INFO(__VA_ARGS__)
 
 class Log
 {

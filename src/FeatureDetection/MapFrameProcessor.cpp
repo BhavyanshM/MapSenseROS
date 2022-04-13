@@ -1,6 +1,6 @@
 #include "MapFrameProcessor.h"
 
-#include <Core/Log.h>
+#include "Log.h"
 #include "tbb/tbb.h"
 #include "tbb/parallel_for.h"
 #include "tbb/blocked_range.h"
@@ -10,12 +10,12 @@ MapFrameProcessor::MapFrameProcessor(ApplicationState& app) : app(app) {}
 void MapFrameProcessor::init(ApplicationState& app)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   CLAY_LOG_INFO("Initializing MapFrameProcessor");
+   MS_INFO("Initializing MapFrameProcessor");
 
 
    if(app.REGION_MODE == 0)
    {
-      CLAY_LOG_INFO("Init MapFrameProcessor: Depth Mode");
+      MS_INFO("Init MapFrameProcessor: Depth Mode");
       SUB_H = app.SUB_H;
       SUB_W = app.SUB_W;
       INPUT_HEIGHT = app.DEPTH_INPUT_HEIGHT;
@@ -25,7 +25,7 @@ void MapFrameProcessor::init(ApplicationState& app)
    }
    else
    {
-      CLAY_LOG_INFO("Init MapFrameProcessor: Hash Mode");
+      MS_INFO("Init MapFrameProcessor: Hash Mode");
       SUB_H = app.HASH_SUB_H;
       SUB_W = app.HASH_SUB_W;
       INPUT_HEIGHT = app.HASH_INPUT_HEIGHT;
@@ -40,13 +40,13 @@ void MapFrameProcessor::init(ApplicationState& app)
    this->boundary = Eigen::MatrixXi(SUB_H, SUB_W).setZero();
    this->region = Eigen::MatrixXi(SUB_H, SUB_W).setZero();
 
-   CLAY_LOG_INFO("MapFrameProcessor Initialized.");
+   MS_INFO("MapFrameProcessor Initialized.");
 }
 
 void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, std::vector<std::shared_ptr<PlanarRegion>>& planarRegionList)
 {
    MAPSENSE_PROFILE_FUNCTION();
-   CLAY_LOG_INFO("GenerateSegmentation: SW:{}, SH:{}, IH:{}, IW:{}, PH:{}, PW:{}", SUB_W, SUB_H, INPUT_HEIGHT, INPUT_WIDTH, PATCH_HEIGHT, PATCH_WIDTH);
+   MS_INFO("GenerateSegmentation: SW:{}, SH:{}, IH:{}, IW:{}, PH:{}, PW:{}", SUB_W, SUB_H, INPUT_HEIGHT, INPUT_WIDTH, PATCH_HEIGHT, PATCH_WIDTH);
 
    this->frame = inputFrame;
 
@@ -79,7 +79,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, std::vector<st
       }
    }
 
-   CLAY_LOG_INFO("DFS Generated {} Regions\n", components);
+   MS_INFO("DFS Generated {} Regions\n", components);
 
    /* Extract Region Boundary Indices. */
    visited.setZero();
@@ -88,7 +88,7 @@ void MapFrameProcessor::generateSegmentation(MapFrame inputFrame, std::vector<st
 
    /* Grow Region Boundary. */
    growRegionBoundary(planarRegionList);
-   CLAY_LOG_INFO("Regions Grown Manually");
+   MS_INFO("Regions Grown Manually");
 
 }
 
@@ -165,8 +165,8 @@ void MapFrameProcessor::growRegionBoundary(std::vector<std::shared_ptr<PlanarReg
       {
          if(regions[i]->rings.size() <= 0)
          {
-            CLAY_LOG_INFO("Region Boundary Size is Zero!");
-//            CLAY_LOG_INFO(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+            MS_INFO("Region Boundary Size is Zero!");
+//            MS_INFO(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
          }
 
          Eigen::Vector3f center = regions[i]->GetCenter();
@@ -184,8 +184,8 @@ void MapFrameProcessor::growRegionBoundary(std::vector<std::shared_ptr<PlanarReg
    //   {
    //      if(regions[i]->rings.size() <= 0)
    //      {
-   //         CLAY_LOG_INFO("Region Boundary Size is Zero!");
-   //         CLAY_LOG_INFO(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
+   //         MS_INFO("Region Boundary Size is Zero!");
+   //         MS_INFO(regions[i]->rings.size() == 0, "Region Boundary Size is Zero!");
    //      }
    //
    //      Eigen::Vector3f center = regions[i]->GetCenter();
@@ -202,7 +202,7 @@ void MapFrameProcessor::growRegionBoundary(std::vector<std::shared_ptr<PlanarReg
 
 void MapFrameProcessor::printPatchGraph()
 {
-   CLAY_LOG_INFO("DEBUGGER:({},{}), AppState:({},{})\n", SUB_H, SUB_W, SUB_H, SUB_W);
+   MS_INFO("DEBUGGER:({},{}), AppState:({},{})\n", SUB_H, SUB_W, SUB_H, SUB_W);
    for (int i = 0; i < SUB_H; i++)
    {
       for (int j = 0; j < SUB_W; j++)

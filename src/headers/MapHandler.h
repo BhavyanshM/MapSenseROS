@@ -55,6 +55,8 @@ class MapHandler
 
       void UpdateMapLandmarks(const PlaneSet3D& planeSet);
 
+      MeshGenerator* GetMesher() const { return _mesher; }
+
    public:
 
       bool SLAM_ENABLED = false;
@@ -71,7 +73,7 @@ class MapHandler
 //      FactorGraphHandler* fgSLAM;
       std::vector<std::string> files;
 
-      std::vector<std::shared_ptr<PlanarRegion>> _previousRegionsZUp, latestRegions, _latestRegionsZUp;
+      std::vector<std::shared_ptr<PlanarRegion>> _previousRegionsZUp, latestRegions, _latestRegionsZUp, _regionsInMapFrame;
 
       PlanarRegionSet _mapRegions;
 

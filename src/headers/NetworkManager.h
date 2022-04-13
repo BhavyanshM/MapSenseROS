@@ -108,6 +108,8 @@ class NetworkManager
 
       const std::unordered_map<int, RigidBodyTransform>& GetSLAMPoses() const {return _poses;};
 
+      void ClearPoses() {_poses.clear();}
+
 //      void PublishColoredPointCloud(Clay::Ref<Clay::PointCloud> cloud);
 };
 
