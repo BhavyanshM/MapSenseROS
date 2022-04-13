@@ -70,9 +70,13 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
             ImGui::SliderFloat("Y-Angle", &yAngle, -2.0f, 2.0f);
             ImGui::SliderFloat("Z-Angle", &zAngle, -2.0f, 2.0f);
 
+            ImGui::SliderFloat("X-Offset", &xOffset, -2.0f, 2.0f);
+            ImGui::SliderFloat("Y-Offset", &yOffset, -2.0f, 2.0f);
+            ImGui::SliderFloat("Z-Offset", &zOffset, -2.0f, 2.0f);
+
             _headToL515Transform.SetAnglesAndTranslation(
                   Eigen::Vector3d(xAngle, yAngle, zAngle),
-                  Eigen::Vector3d(0,0,0));
+                  Eigen::Vector3d(xOffset,yOffset,zOffset));
 
             _transformZUp.SetToIdentity();
             _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);

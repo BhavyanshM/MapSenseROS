@@ -90,6 +90,9 @@ class PlanarRegionCalculator
       float xAngle = 0;
       float yAngle = 0;
       float zAngle = 0;
+      float xOffset = 0;
+      float yOffset = 0;
+      float zOffset = 0;
 
       bool RenderEnabled();
 };
