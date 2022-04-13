@@ -88,9 +88,11 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
 
          if (ImGui::BeginTabItem("Hash"))
          {
-            ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
-            ImGui::SliderFloat("Distance Threshold", &appState.HASH_MERGE_DISTANCE_THRESHOLD, 0.01f, 1.0f);
-            ImGui::SliderFloat("Angular Threshold", &appState.HASH_MERGE_ANGULAR_THRESHOLD, 0.01f, 1.0f);
+             ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
+             ImGui::Checkbox("Diffusion Enabled", &appState.HASH_DIFFUSION_ENABLED);
+             ImGui::Checkbox("Print Hash Buffer", &appState.HASH_PRINT_MAT);
+             ImGui::SliderFloat("Distance Threshold", &appState.HASH_MERGE_DISTANCE_THRESHOLD, 0.001f, 0.5f);
+             ImGui::SliderFloat("Angular Threshold", &appState.HASH_MERGE_ANGULAR_THRESHOLD, 0.001f, 1.0f);
             ImGui::EndTabItem();
          }
 
@@ -366,6 +368,9 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->SetArgument("hashKernel", 3, paramsBuffer, false);
    _openCL->SetArgumentInt("hashKernel", 4, points.size());
 
+    _openCL->SetArgument("diffuseKernel", 0, hashBuffer, true);
+    _openCL->SetArgument("diffuseKernel", 1, paramsBuffer, false);
+
    std::vector<uint8_t> argsImgPack = {hashBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
    for (uint8_t i = 0; i < argsImgPack.size(); i++)
       _openCL->SetArgument("packKernel", i, argsImgPack[i], true);
@@ -402,6 +407,9 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->indexKernel, cl::NullRange, cl::NDRange(points.size() / 3), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange,
                                               cl::NDRange(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH), cl::NullRange);
+   if(appState.HASH_DIFFUSION_ENABLED)
+       _openCL->commandQueue.enqueueNDRangeKernel(_openCL->diffuseKernel, cl::NullRange,cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
+
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
 
@@ -420,12 +428,13 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_gz.data);
    _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
 
-//   _openCL->ReadImage(hashBuffer, size, indexMat.data);
+    _openCL->commandQueue.finish();
+    auto end_point = std::chrono::steady_clock::now();
 
-   _openCL->commandQueue.finish();
-   auto end_point = std::chrono::steady_clock::now();
-
-//      AppUtils::PrintMatR16(indexMat);
+    if(appState.HASH_PRINT_MAT){
+        _openCL->ReadImage(hashBuffer, size, indexMat.data);
+        AppUtils::PrintMatR16(indexMat);
+    }
 
    /* Combine the CPU buffers into single image with multiple channels */
    cv::Mat regionOutput(appState.HASH_SUB_H, appState.HASH_SUB_W, CV_32FC(6));

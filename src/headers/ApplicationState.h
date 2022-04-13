@@ -44,6 +44,8 @@ class ApplicationState
        * a) InputHeight should be divisible by (KernelResLevel * AspectRatioHeight)
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
+      bool HASH_DIFFUSION_ENABLED = true;
+      bool HASH_PRINT_MAT = false;
       int REGION_MODE = 0; // 0 for depth, 1 for point-cloud
       int HASH_INPUT_HEIGHT = 64;
       int HASH_INPUT_WIDTH = 1024;

@@ -65,6 +65,7 @@ OpenCLManager::OpenCLManager(const std::string& packagePath)
    normalsKernel = cl::Kernel(program, "normalsKernel");
    hashKernel = cl::Kernel(program, "hashKernel");
    indexKernel = cl::Kernel(program, "indexKernel");
+   diffuseKernel = cl::Kernel(program, "diffuseKernel");
 
    printf("OpenCL Initialized Successfully\n");
 
@@ -169,6 +170,7 @@ void OpenCLManager::SetArgument(const std::string& kernel, uint8_t argId, uint8_
    else if(kernel == "normalsKernel") (image) ? normalsKernel.setArg(argId, images[bufferId]) : normalsKernel.setArg(argId, buffers[bufferId]);
    else if(kernel == "hashKernel") (image) ? hashKernel.setArg(argId, images[bufferId]) : hashKernel.setArg(argId, buffers[bufferId]);
    else if(kernel == "indexKernel") (image) ? indexKernel.setArg(argId, images[bufferId]) : indexKernel.setArg(argId, buffers[bufferId]);
+   else if(kernel == "diffuseKernel") (image) ? diffuseKernel.setArg(argId, images[bufferId]) : diffuseKernel.setArg(argId, buffers[bufferId]);
 }
 
 void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uint32_t value)
@@ -184,6 +186,7 @@ void OpenCLManager::SetArgumentInt(const std::string& kernel, uint8_t argId, uin
       else if(kernel == "normalsKernel") normalsKernel.setArg(argId, sizeof(cl_int), &value);
       else if(kernel == "hashKernel") hashKernel.setArg(argId, sizeof(cl_int), &value);
       else if(kernel == "indexKernel") indexKernel.setArg(argId, sizeof(cl_int), &value);
+      else if(kernel == "diffuseKernel") diffuseKernel.setArg(argId, sizeof(cl_int), &value);
 }
 
 void OpenCLManager::Finish()
