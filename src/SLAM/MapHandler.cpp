@@ -11,8 +11,8 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
    _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_06_Circle/";
    AppUtils::getFileNames(_directory, fileNames);
 
-//   _transformZUp.rotateZ(-90.0f / 180.0f * M_PI);
-//   _transformZUp.rotateY(90.0f / 180.0f * M_PI);
+//   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
+//   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
 }
 
 void MapHandler::ImGuiUpdate(ApplicationState& app)

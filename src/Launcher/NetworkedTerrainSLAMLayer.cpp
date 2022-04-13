@@ -85,7 +85,7 @@ namespace Clay
             ImageReceiver *depthReceiver = ((ImageReceiver *) this->_networkManager->receivers[appState.L515_DEPTH]);
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
-            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+            mesher.GenerateLineMeshForRegions(_regionCalculator->_depthRegionsZUp, nullptr, true);
             _regionCalculator->Render();
 
             //
@@ -97,7 +97,7 @@ namespace Clay
          {
              /* ROS Regions */
             if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, false);
          }
 
          if (appState.STEREO_ODOMETRY_ENABLED)
@@ -147,7 +147,7 @@ namespace Clay
 //         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
       }
 
-      _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);
+//      _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);
    }
 
    void NetworkedTerrainSLAMLayer::ImGuiUpdate(ApplicationState& appState)

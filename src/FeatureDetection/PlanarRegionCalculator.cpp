@@ -26,13 +26,14 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, Applicatio
    AppUtils::getFileNames(ros::package::getPath("map_sense") + "/Extras/Clouds/", cloudFiles);
 
 
+   _headToOusterTransform.SetAnglesAndTranslation(Eigen::Vector3d(0.00000, 0.52400, 0.000000), Eigen::Vector3d(0, 0, 0));
+   _headToL515Transform.SetAnglesAndTranslation(
+         Eigen::Vector3d(0.010000, 1.151900, 0.045000),
+         Eigen::Vector3d(0.275000, 0.052000, 0.140000) - Eigen::Vector3d(0.265000, -0.0200, 0.720000));
 
-   headToL515Transform.SetAnglesAndTranslation(
-               Eigen::Vector3d(0.010000, 1.151900, 0.045000),
-     Eigen::Vector3d(0.275000, 0.052000, 0.140000) - Eigen::Vector3d(0.265000, -0.0200, 0.720000));
-
-   headToOusterTransform.SetAnglesAndTranslation(Eigen::Vector3d(0.00000, 0.52400, 0.000000), Eigen::Vector3d(0,0,0));
-
+   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
+   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
+   _transformZUp.MultiplyLeft(_headToL515Transform);
 }
 
 void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
@@ -64,6 +65,20 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
             ImGui::SliderFloat("Distance Threshold", &appState.MERGE_DISTANCE_THRESHOLD, 0.01f, 1.0f);
             ImGui::SliderFloat("Angular Threshold", &appState.MERGE_ANGULAR_THRESHOLD, 0.01f, 1.0f);
             ImGui::SliderFloat("Depth Brightness", &appState.DEPTH_BRIGHTNESS, 1.0, 100.0);
+
+            ImGui::SliderFloat("X-Angle", &xAngle, -2.0f, 2.0f);
+            ImGui::SliderFloat("Y-Angle", &yAngle, -2.0f, 2.0f);
+            ImGui::SliderFloat("Z-Angle", &zAngle, -2.0f, 2.0f);
+
+            _headToL515Transform.SetAnglesAndTranslation(
+                  Eigen::Vector3d(xAngle, yAngle, zAngle),
+                  Eigen::Vector3d(0,0,0));
+
+            _transformZUp.SetToIdentity();
+            _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
+            _transformZUp.RotateY(90.0f / 180.0f * M_PI);
+            _transformZUp.MultiplyLeft(_headToL515Transform);
+
             ImGui::EndTabItem();
          }
 
@@ -420,6 +435,14 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
 
    _openCL->Reset();
 
+//   _hashRegionsZUp.clear();
+//   for (int i = 0; i < planarRegionList.size(); i++)
+//   {
+//      std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(planarRegionList[i]->getId());
+//      planarRegionList[i]->CopyAndTransform(planarRegion, _transformZUp);
+//      _hashRegionsZUp.emplace_back(std::move(planarRegion));
+//   }
+
    for (int k = 0; k < planarRegionList.size(); k++)
       planarRegionList[k]->RetainConvexHull();
 
@@ -461,6 +484,14 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
 
    _depthMapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
    PlanarRegion::SetZeroId(planarRegionList);
+
+   _depthRegionsZUp.clear();
+   for (int i = 0; i < planarRegionList.size(); i++)
+   {
+      std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(planarRegionList[i]->getId());
+      planarRegionList[i]->CopyAndTransform(planarRegion, _transformZUp);
+      _depthRegionsZUp.emplace_back(std::move(planarRegion));
+   }
 
    /* Planar Regions Ready To Be Published Right Here. */
    MS_INFO("Number of Planar Regions: {}", planarRegionList.size());

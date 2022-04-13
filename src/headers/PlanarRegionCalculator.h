@@ -68,11 +68,16 @@ class PlanarRegionCalculator
       MapFrameProcessor* _depthMapFrameProcessor;
       MapFrameProcessor* _hashMapFrameProcessor;
       OpenCLManager* _openCL;
+
       std::vector<std::shared_ptr<PlanarRegion>> planarRegionList;
+      std::vector<std::shared_ptr<PlanarRegion>> _hashRegionsZUp;
+      std::vector<std::shared_ptr<PlanarRegion>> _depthRegionsZUp;
+
       map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
-      RigidBodyTransform headToL515Transform;
-      RigidBodyTransform headToOusterTransform;
+      RigidBodyTransform _headToL515Transform;
+      RigidBodyTransform _headToOusterTransform;
+      RigidBodyTransform _transformZUp;
 
       std::vector<std::string> depthFiles, cloudFiles;
       int depthFileSelected = 0;
@@ -81,6 +86,10 @@ class PlanarRegionCalculator
       int frameId = 0;
       int depthReceiverId = -1;
       bool _render = true;
+
+      float xAngle = 0;
+      float yAngle = 0;
+      float zAngle = 0;
 
       bool RenderEnabled();
 };
