@@ -17,6 +17,8 @@
 #include "OpenCLManager.h"
 #include "AppUtils.h"
 
+#include "Scene/Mesh/PointCloud.h"
+
 class PlanarRegionCalculator
 {
    public:
@@ -42,7 +44,7 @@ class PlanarRegionCalculator
 
       uint8_t CreateParameterBuffer(const ApplicationState& app);
 
-      void GeneratePatchGraphFromPointCloud(ApplicationState& appState, std::vector<float>& points, double inputTimestamp);
+      void GeneratePatchGraphFromPointCloud(ApplicationState& appState, const Clay::Ref<Clay::PointCloud>& cloud, double inputTimestamp);
 
       void GenerateRegionFromPointcloudOnCPU();
 

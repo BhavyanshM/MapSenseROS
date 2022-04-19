@@ -12,10 +12,10 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, Applicatio
    _hashMapFrameProcessor = new MapFrameProcessor(app);
 
    app.REGION_MODE = 0;
-   _depthMapFrameProcessor->init(app);
+   _depthMapFrameProcessor->Init(app);
 
    app.REGION_MODE = 1;
-   _hashMapFrameProcessor->init(app);
+   _hashMapFrameProcessor->Init(app);
 
    inputDepth = cv::Mat(app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, CV_16UC1);
    inputColor = cv::Mat(app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, CV_8UC3);
@@ -25,11 +25,9 @@ PlanarRegionCalculator::PlanarRegionCalculator(int argc, char **argv, Applicatio
 
    AppUtils::getFileNames(ros::package::getPath("map_sense") + "/Extras/Clouds/", cloudFiles);
 
-
    _headToOusterTransform.SetAnglesAndTranslation(Eigen::Vector3d(0.00000, 0.52400, 0.000000), Eigen::Vector3d(0, 0, 0));
-   _headToL515Transform.SetAnglesAndTranslation(
-         Eigen::Vector3d(0.010000, 1.151900, 0.045000),
-         Eigen::Vector3d(0.275000, 0.052000, 0.140000) - Eigen::Vector3d(0.265000, -0.0200, 0.720000));
+   _headToL515Transform.SetAnglesAndTranslation(Eigen::Vector3d(0.010000, 1.151900, 0.045000),
+                                                Eigen::Vector3d(0.275000, 0.052000, 0.140000) - Eigen::Vector3d(0.265000, -0.0200, 0.720000));
 
    _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
    _transformZUp.RotateY(90.0f / 180.0f * M_PI);
@@ -48,7 +46,7 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
       ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
 
       ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
-      ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEBUG);
+      ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEPTH_DEBUG);
       ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
       ImGui::Checkbox("Render 3D", &_render);
       ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
@@ -74,9 +72,7 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
             ImGui::SliderFloat("Y-Offset", &yOffset, -2.0f, 2.0f);
             ImGui::SliderFloat("Z-Offset", &zOffset, -2.0f, 2.0f);
 
-            _headToL515Transform.SetAnglesAndTranslation(
-                  Eigen::Vector3d(xAngle, yAngle, zAngle),
-                  Eigen::Vector3d(xOffset,yOffset,zOffset));
+            _headToL515Transform.SetAnglesAndTranslation(Eigen::Vector3d(xAngle, yAngle, zAngle), Eigen::Vector3d(xOffset, yOffset, zOffset));
 
             _transformZUp.SetToIdentity();
             _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
@@ -88,11 +84,13 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
 
          if (ImGui::BeginTabItem("Hash"))
          {
-             ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
-             ImGui::Checkbox("Diffusion Enabled", &appState.HASH_DIFFUSION_ENABLED);
-             ImGui::Checkbox("Print Hash Buffer", &appState.HASH_PRINT_MAT);
-             ImGui::SliderFloat("Distance Threshold", &appState.HASH_MERGE_DISTANCE_THRESHOLD, 0.001f, 0.5f);
-             ImGui::SliderFloat("Angular Threshold", &appState.HASH_MERGE_ANGULAR_THRESHOLD, 0.001f, 1.0f);
+            ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
+            ImGui::Checkbox("Diffusion Enabled", &appState.HASH_DIFFUSION_ENABLED);
+            ImGui::Checkbox("Print Hash Buffer", &appState.HASH_PRINT_MAT);
+            ImGui::Checkbox("Hash Parts Enabled", &appState.HASH_PARTS_ENABLED);
+            ImGui::SliderInt("Adjacency Skips", &appState.HASH_ADJ_SKIPS, 1, 10);
+            ImGui::SliderFloat("Distance Threshold", &appState.HASH_MERGE_DISTANCE_THRESHOLD, 0.001f, 0.5f);
+            ImGui::SliderFloat("Angular Threshold", &appState.HASH_MERGE_ANGULAR_THRESHOLD, 0.001f, 1.0f);
             ImGui::EndTabItem();
          }
 
@@ -122,11 +120,11 @@ void PlanarRegionCalculator::Render()
 {
    if (this->app.SHOW_DEPTH_REGION_COMPONENTS)
    {
-      AppUtils::DisplayImage(_depthMapFrameProcessor->debug, app, "Depth Components");
+      AppUtils::DisplayImage(_depthMapFrameProcessor->GetDebugMat(), app, "Depth Components");
    }
    if (this->app.SHOW_HASH_REGION_COMPONENTS)
    {
-      AppUtils::DisplayImage(_hashMapFrameProcessor->debug, app, "Hash Components");
+      AppUtils::DisplayImage(_hashMapFrameProcessor->GetDebugMat(), app, "Hash Components");
    }
 }
 
@@ -139,16 +137,16 @@ uint8_t PlanarRegionCalculator::CreateParameterBuffer(const ApplicationState& ap
                         (float) app.FILTER_KERNEL_SIZE, (float) app.FILTER_SUB_H, (float) app.FILTER_SUB_W, (float) app.DEPTH_INPUT_HEIGHT,
                         (float) app.DEPTH_INPUT_WIDTH};
       MS_INFO("Depth ParameterBuffer:({}, {}, {}, {}, {}, {}) Filter:({},{}):{}", app.DEPTH_INPUT_HEIGHT, app.DEPTH_INPUT_WIDTH, app.DEPTH_PATCH_HEIGHT,
-               app.DEPTH_PATCH_WIDTH, app.SUB_H, app.SUB_W, app.FILTER_SUB_H, app.FILTER_SUB_W, app.FILTER_KERNEL_SIZE);
+              app.DEPTH_PATCH_WIDTH, app.SUB_H, app.SUB_W, app.FILTER_SUB_H, app.FILTER_SUB_W, app.FILTER_KERNEL_SIZE);
       return _openCL->CreateLoadBufferFloat(params, sizeof(params) / sizeof(float));
    } else
    {
       float params[] = {(float) app.FILTER_DISPARITY_THRESHOLD, app.HASH_MERGE_ANGULAR_THRESHOLD, app.HASH_MERGE_DISTANCE_THRESHOLD,
                         (float) app.HASH_PATCH_HEIGHT, (float) app.HASH_PATCH_WIDTH, (float) app.HASH_SUB_H, (float) app.HASH_SUB_W, app.DEPTH_FX, app.DEPTH_FY,
                         app.DEPTH_CX, app.DEPTH_CY, (float) app.FILTER_KERNEL_SIZE, (float) app.FILTER_SUB_H, (float) app.FILTER_SUB_W,
-                        (float) app.HASH_INPUT_HEIGHT, (float) app.HASH_INPUT_WIDTH};
+                        (float) app.HASH_INPUT_HEIGHT, (float) app.HASH_INPUT_WIDTH, (float) app.HASH_ADJ_SKIPS};
       MS_INFO("Hash ParameterBuffer:({}, {}, {}, {}, {}, {})", app.HASH_INPUT_HEIGHT, app.HASH_INPUT_WIDTH, app.HASH_PATCH_HEIGHT, app.HASH_PATCH_WIDTH,
-               app.HASH_SUB_H, app.HASH_SUB_W);
+              app.HASH_SUB_H, app.HASH_SUB_W);
       return _openCL->CreateLoadBufferFloat(params, sizeof(params) / sizeof(float));
    }
 }
@@ -167,7 +165,7 @@ bool PlanarRegionCalculator::GeneratePatchGraphFromDepth(ApplicationState& appSt
 {
    MAPSENSE_PROFILE_FUNCTION();
    MS_INFO("Generating Patch Graph on GPU: Color:[{},{}] Depth:[{},{}] Output:[{},{}]", inputColor.cols, inputColor.rows, inputDepth.cols, inputDepth.rows,
-            output.getRegionOutput().cols, output.getRegionOutput().rows);
+           output.getRegionOutput().cols, output.getRegionOutput().rows);
 
    if (inputDepth.rows <= 0 || inputDepth.cols <= 0 || inputDepth.dims <= 0)
    {
@@ -264,7 +262,7 @@ bool PlanarRegionCalculator::GeneratePatchGraphFromDepth(ApplicationState& appSt
       _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.SUB_H, appState.SUB_W), cl::NullRange);
    }
    MS_INFO("Reading Images Now: ({}, {}, {}, {}, {}, {}, {}, {})", clFilterDepth, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz,
-            clBuffer_graph);
+           clBuffer_graph);
 
    /* Read the output data from OpenCL buffers into CPU buffers */
    {
@@ -299,7 +297,7 @@ bool PlanarRegionCalculator::GeneratePatchGraphFromDepth(ApplicationState& appSt
    return true;
 }
 
-void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& appState, std::vector<float>& points, double inputTimestamp)
+void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& appState, const Clay::Ref<Clay::PointCloud>& cloud, double inputTimestamp)
 {
    MAPSENSE_PROFILE_FUNCTION();
 
@@ -314,11 +312,13 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    //    appState.SUB_H = ROWS / appState.DEPTH_PATCH_HEIGHT;
    //    appState.SUB_W = COLS / appState.DEPTH_PATCH_WIDTH;
 
-   MS_INFO("GenerateRegions:({}, {}, {}, {}, {}, {})", app.HASH_INPUT_HEIGHT, app.HASH_INPUT_WIDTH, app.HASH_PATCH_HEIGHT, app.HASH_PATCH_WIDTH,
-            app.HASH_SUB_H, app.HASH_SUB_W);
+   std::vector<float> points = cloud->GetMesh()->_vertices;
+
+   MS_INFO("GenerateRegions:({}, {}, {}, {}, {}, {})", app.HASH_INPUT_HEIGHT, app.HASH_INPUT_WIDTH, app.HASH_PATCH_HEIGHT, app.HASH_PATCH_WIDTH, app.HASH_SUB_H,
+           app.HASH_SUB_W);
 
    appState.REGION_MODE = 1;
-   _hashMapFrameProcessor->init(appState);
+   _hashMapFrameProcessor->Init(appState);
 
    /* Setup size for reading patch-wise kernel maps from GPU */
    cl::size_t<3> regionOutputSize;
@@ -343,7 +343,8 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    uint8_t pointsBuffer = _openCL->CreateLoadBufferFloat(points.data(), points.size());
 
    /* Intermediate GPU OpenCL Buffers */
-   uint8_t indexBuffer = _openCL->CreateBufferInt((int)(points.size() / 3) * 2);
+   uint8_t indexBuffer = _openCL->CreateBufferInt((int) (points.size() / 3) * 2);
+   uint8_t partsBuffer = _openCL->CreateBufferInt((int) (points.size() / 3));
    uint8_t hashBuffer = _openCL->CreateReadWriteImage2D_R16(appState.HASH_INPUT_WIDTH, appState.HASH_INPUT_HEIGHT);
 
    /*Output Data GPU OpenCL Buffers */
@@ -359,8 +360,9 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
 
    _openCL->SetArgument("indexKernel", 0, pointsBuffer, false);
    _openCL->SetArgument("indexKernel", 1, indexBuffer, false);
-   _openCL->SetArgument("indexKernel", 2, paramsBuffer, false);
-   _openCL->SetArgumentInt("indexKernel", 3, points.size());
+   _openCL->SetArgument("indexKernel", 2, partsBuffer, false);
+   _openCL->SetArgument("indexKernel", 3, paramsBuffer, false);
+   _openCL->SetArgumentInt("indexKernel", 4, points.size());
 
    _openCL->SetArgument("hashKernel", 0, pointsBuffer, false);
    _openCL->SetArgument("hashKernel", 1, indexBuffer, false);
@@ -368,8 +370,8 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->SetArgument("hashKernel", 3, paramsBuffer, false);
    _openCL->SetArgumentInt("hashKernel", 4, points.size());
 
-    _openCL->SetArgument("diffuseKernel", 0, hashBuffer, true);
-    _openCL->SetArgument("diffuseKernel", 1, paramsBuffer, false);
+   _openCL->SetArgument("diffuseKernel", 0, hashBuffer, true);
+   _openCL->SetArgument("diffuseKernel", 1, paramsBuffer, false);
 
    std::vector<uint8_t> argsImgPack = {hashBuffer, clBuffer_nx, clBuffer_ny, clBuffer_nz, clBuffer_gx, clBuffer_gy, clBuffer_gz};
    for (uint8_t i = 0; i < argsImgPack.size(); i++)
@@ -405,10 +407,12 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
     * ------------------------------------------------------------------------------------------------------
     * */
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->indexKernel, cl::NullRange, cl::NDRange(points.size() / 3), cl::NullRange);
-   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange,
-                                              cl::NDRange(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH), cl::NullRange);
-   if(appState.HASH_DIFFUSION_ENABLED)
-       _openCL->commandQueue.enqueueNDRangeKernel(_openCL->diffuseKernel, cl::NullRange,cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
+   _openCL->commandQueue.enqueueNDRangeKernel(_openCL->hashKernel, cl::NullRange, cl::NDRange(appState.HASH_INPUT_HEIGHT, appState.HASH_INPUT_WIDTH),
+                                              cl::NullRange);
+   if (appState.HASH_DIFFUSION_ENABLED)
+   {
+      _openCL->commandQueue.enqueueNDRangeKernel(_openCL->diffuseKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
+   }
 
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->packKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
    _openCL->commandQueue.enqueueNDRangeKernel(_openCL->mergeKernel, cl::NullRange, cl::NDRange(appState.HASH_SUB_H, appState.HASH_SUB_W), cl::NullRange);
@@ -428,13 +432,26 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    _openCL->ReadImage(clBuffer_gz, regionOutputSize, output_gz.data);
    _openCL->ReadImage(clBuffer_graph, regionOutputSize, output_graph.data);
 
-    _openCL->commandQueue.finish();
-    auto end_point = std::chrono::steady_clock::now();
+   _openCL->commandQueue.finish();
+   auto end_point = std::chrono::steady_clock::now();
 
-    if(appState.HASH_PRINT_MAT){
-        _openCL->ReadImage(hashBuffer, size, indexMat.data);
-        AppUtils::PrintMatR16(indexMat);
-    }
+   if (appState.HASH_PRINT_MAT)
+   {
+      _openCL->ReadImage(hashBuffer, size, indexMat.data);
+      AppUtils::PrintMatR16(indexMat);
+   }
+
+   if (appState.HASH_PARTS_ENABLED)
+   {
+      std::vector<int> partIds((int) (points.size() / 3), 0);
+      _openCL->ReadBufferInt(partsBuffer, partIds.data(), (int) (points.size() / 3));
+      cloud->SetPartIds(partIds);
+   }
+   else
+   {
+      std::vector<int> partIds;
+      cloud->SetPartIds(partIds);
+   }
 
    /* Combine the CPU buffers into single image with multiple channels */
    cv::Mat regionOutput(appState.HASH_SUB_H, appState.HASH_SUB_W, CV_32FC(6));
@@ -443,18 +460,18 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    output.setRegionOutput(regionOutput);
    output.setPatchData(output_graph);
 
-   _hashMapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   _hashMapFrameProcessor->GenerateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
    PlanarRegion::SetZeroId(planarRegionList);
 
    _openCL->Reset();
 
-//   _hashRegionsZUp.clear();
-//   for (int i = 0; i < planarRegionList.size(); i++)
-//   {
-//      std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(planarRegionList[i]->getId());
-//      planarRegionList[i]->CopyAndTransform(planarRegion, _transformZUp);
-//      _hashRegionsZUp.emplace_back(std::move(planarRegion));
-//   }
+   //   _hashRegionsZUp.clear();
+   //   for (int i = 0; i < planarRegionList.size(); i++)
+   //   {
+   //      std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(planarRegionList[i]->getId());
+   //      planarRegionList[i]->CopyAndTransform(planarRegion, _transformZUp);
+   //      _hashRegionsZUp.emplace_back(std::move(planarRegion));
+   //   }
 
    for (int k = 0; k < planarRegionList.size(); k++)
       planarRegionList[k]->RetainConvexHull();
@@ -465,7 +482,6 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
                                                std::string(4 - std::to_string(frameId).length(), '0').append(std::to_string(frameId)) + ".txt");
       frameId++;
    }
-
 
    long long start = std::chrono::time_point_cast<std::chrono::microseconds>(start_point).time_since_epoch().count();
    long long end = std::chrono::time_point_cast<std::chrono::microseconds>(end_point).time_since_epoch().count();
@@ -482,7 +498,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
    MS_INFO("Generating Regions");
 
    appState.REGION_MODE = 0;
-   _depthMapFrameProcessor->init(appState);
+   _depthMapFrameProcessor->Init(appState);
 
    MS_INFO("Setting Depth");
    inputDepth = depth;
@@ -495,7 +511,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
    if (!patchGraphGenerated)
       return;
 
-   _depthMapFrameProcessor->generateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
+   _depthMapFrameProcessor->GenerateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
    PlanarRegion::SetZeroId(planarRegionList);
 
    _depthRegionsZUp.clear();
@@ -537,8 +553,8 @@ void logPlanarRegions(std::vector<std::shared_ptr<PlanarRegion>> planarRegionLis
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       MS_INFO("ID:({}) Center:(%.2f,%.2f,%.2f) Normal:(%.2f,%.2f,%.2f)", planarRegionList[i]->getId(), planarRegionList[i]->GetCenter().x(),
-               planarRegionList[i]->GetCenter().y(), planarRegionList[i]->GetCenter().z(), planarRegionList[i]->GetNormal().x(),
-               planarRegionList[i]->GetNormal().y(), planarRegionList[i]->GetNormal().z());
+              planarRegionList[i]->GetCenter().y(), planarRegionList[i]->GetCenter().z(), planarRegionList[i]->GetNormal().x(),
+              planarRegionList[i]->GetNormal().y(), planarRegionList[i]->GetNormal().z());
    }
 }
 

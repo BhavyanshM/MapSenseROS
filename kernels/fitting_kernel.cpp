@@ -15,6 +15,7 @@
 #define FILTER_SUB_W 13
 #define INPUT_HEIGHT 14
 #define INPUT_WIDTH 15
+#define ADJ_SKIPS 16
 
 float4 back_project(int2 pos, float Z, global float* params){
     float px = (pos.x - params[DEPTH_CX])/(params[DEPTH_FX]) * Z;
@@ -95,57 +96,63 @@ float3 estimate_normal_hash(read_only image2d_t in, int c, int r, global float* 
    uint indexB = 0;
    uint indexC = 0;
    uint indexD = 0;
-   int m = 1;
+   int m = (int) params[ADJ_SKIPS];
    int count = 0;
    float4 normal = (float4)(0,0,0,0);
    if(r >= 0 && r < (int)params[SUB_H] && c >= 0 && c < (int)params[SUB_W]){
 
-      for(int i = 0; i<(int)params[PATCH_HEIGHT]-m; i++){
-         for(int j = 0; j<(int)params[PATCH_WIDTH]-m; j++){
-            int gc = c*(int)params[PATCH_WIDTH] + i;
-            int gr = r*(int)params[PATCH_HEIGHT] + j;
-            int2 pos = (int2)(gc,gr);
+      for(int i = 0; i<(int)params[PATCH_HEIGHT]; i++){
+         for(int j = 0; j<(int)params[PATCH_WIDTH]; j++)
+         {
+            int gc = c * (int) params[PATCH_WIDTH] + i;
+            int gr = r * (int) params[PATCH_HEIGHT] + j;
 
-
-            pos = (int2)(gc,gr);
-            indexA = ((uint)read_imageui(in, pos).x);
-            float4 va = (float4)(cloud[indexA*3], cloud[indexA*3+1], cloud[indexA*3+2], 0);
-
-            pos = (int2)(gc + m, gr);
-            indexB = ((uint)read_imageui(in, pos).x);
-            float4 vb = (float4)(cloud[indexB*3], cloud[indexB*3+1], cloud[indexB*3+2], 0);
-
-            pos = (int2)(gc + m, gr + m);
-            indexC = ((uint)read_imageui(in, pos).x);
-            float4 vc = (float4)(cloud[indexC*3], cloud[indexC*3+1], cloud[indexC*3+2], 0);
-
-            pos = (int2)(gc,gr + m);
-            indexD = ((uint)read_imageui(in, pos).x);
-            float4 vd = (float4)(cloud[indexD*3], cloud[indexD*3+1], cloud[indexD*3+2], 0);
-
-//            printf("{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf}\n",
-//                   normalize(va-vb).x, normalize(va-vb).y, normalize(va-vb).z, vb.x, vb.y, vb.z, va.x, va.y, va.z, vd.x, vd.y, vd.z);
-
-            if(indexA != 0 && indexB != 0 && indexC != 0)
+            if (gc + m >= 0 && gc + m < (int) params[INPUT_WIDTH] && gr + m >= 0 && gr + m < (int) params[INPUT_HEIGHT])
             {
-               normal += cross((vc-vb),(vb-va)); count++;
-            }
-            if(indexD != 0 && indexB != 0 && indexC != 0)
-            {
-               normal += cross((vd-vc),(vc-vb)); count++;
-            }
-            if(indexA != 0 && indexD != 0 && indexC != 0)
-            {
-               normal += cross((va-vd),(vd-vc)); count++;
-            }
-            if(indexA != 0 && indexB != 0 && indexD != 0)
-            {
-               normal += cross((vb-va),(va-vd)); count++;
-            }
+               int2 pos = (int2)(gc, gr);
+               indexA = ((uint) read_imageui(in, pos).x);
+               float4 va = (float4)(cloud[indexA * 3], cloud[indexA * 3 + 1], cloud[indexA * 3 + 2], 0);
 
-            normal = normalize(normal);
+               pos = (int2)(gc + m, gr);
+               indexB = ((uint) read_imageui(in, pos).x);
+               float4 vb = (float4)(cloud[indexB * 3], cloud[indexB * 3 + 1], cloud[indexB * 3 + 2], 0);
 
-//            if(indexA != 0 && indexB != 0 && indexC != 0 && indexD != 0)printf("(%d,%d), (%d,%d,%d,%d) (%d): PackKernel Normal -> {%.2lf, %.2lf, %.2lf}\n", gr,gc, indexA, indexB, indexC, indexD, count, normal.x, normal.y, normal.z);
+               pos = (int2)(gc + m, gr + m);
+               indexC = ((uint) read_imageui(in, pos).x);
+               float4 vc = (float4)(cloud[indexC * 3], cloud[indexC * 3 + 1], cloud[indexC * 3 + 2], 0);
+
+               pos = (int2)(gc, gr + m);
+               indexD = ((uint) read_imageui(in, pos).x);
+               float4 vd = (float4)(cloud[indexD * 3], cloud[indexD * 3 + 1], cloud[indexD * 3 + 2], 0);
+
+               //            printf("{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf},{%.2lf, %.2lf, %.2lf}\n",
+               //                   normalize(va-vb).x, normalize(va-vb).y, normalize(va-vb).z, vb.x, vb.y, vb.z, va.x, va.y, va.z, vd.x, vd.y, vd.z);
+
+               if (indexA != 0 && indexB != 0 && indexC != 0)
+               {
+                  normal += cross((vc - vb), (vb - va));
+                  count++;
+               }
+               if (indexD != 0 && indexB != 0 && indexC != 0)
+               {
+                  normal += cross((vd - vc), (vc - vb));
+                  count++;
+               }
+               if (indexA != 0 && indexD != 0 && indexC != 0)
+               {
+                  normal += cross((va - vd), (vd - vc));
+                  count++;
+               }
+               if (indexA != 0 && indexB != 0 && indexD != 0)
+               {
+                  normal += cross((vb - va), (va - vd));
+                  count++;
+               }
+
+               normal = normalize(normal);
+
+               //            if(indexA != 0 && indexB != 0 && indexC != 0 && indexD != 0)printf("(%d,%d), (%d,%d,%d,%d) (%d): PackKernel Normal -> {%.2lf, %.2lf, %.2lf}\n", gr,gc, indexA, indexB, indexC, indexD, count, normal.x, normal.y, normal.z);
+            }
          }
       }
    }
@@ -180,7 +187,7 @@ bool isConnected(float3 ag, float3 an, float3 bg, float3 bn, global float* param
     float dist = length(vec);
     float sim = fabs(dot(an, bn));
     float perpDist = fabs(dot(ag-bg, bn)) + fabs(dot(bg-ag, an));
-    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] * dist * 40 && sim > params[MERGE_ANGULAR_THRESHOLD]){
+    if (perpDist < params[MERGE_DISTANCE_THRESHOLD] * dist * 10 && sim > params[MERGE_ANGULAR_THRESHOLD]){
         return true;
     }else {
         return false;
@@ -401,7 +408,7 @@ void kernel mergeKernel( write_only image2d_t out0, write_only image2d_t out1, w
      int y = get_global_id(0);
      int x = get_global_id(1);
 
-     int m = 2;
+     int m = 3;
 
 //     if(x==0 && y==0) printf("MergeKernel:(%d,%d)\n", (int)params[SUB_H], (int)params[SUB_W]);
      if(y >= m && y < (int)params[SUB_H]-m && x >= m && x < (int)params[SUB_W]-m){
@@ -468,12 +475,13 @@ void kernel segmentKernel(read_only image2d_t color, write_only image2d_t filter
  * Point index calculation kernel.
  * */
 
-void kernel indexKernel(global float* cloud, global int* indices, global float* params, int size)
+void kernel indexKernel(global float* cloud, global int* indices, global int* parts, global float* params, int size)
 {
    int id = get_global_id(0);
 
    indices[id * 2] = 0;
    indices[id * 2 + 1] = 0;
+   parts[id] = 1;
 
    int count = 0;
    float pitchUnit = M_PI / (2 * params[INPUT_HEIGHT]);
@@ -496,6 +504,7 @@ void kernel indexKernel(global float* cloud, global int* indices, global float* 
 
    if (pitchCount >= 0 && pitchCount < params[INPUT_HEIGHT] && yawCount >= 0 && yawCount < params[INPUT_WIDTH])
    {
+      if(indices[id*2] == 0 && indices[id*2+1] == 0 && pitchCount != 0 && yawCount != 0) parts[id] = 2;
       indices[id * 2] = pitchCount;
       indices[id * 2 + 1] = yawCount;
    }

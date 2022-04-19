@@ -79,7 +79,7 @@ ApplicationState::ApplicationState()
       if(name == "FILTER_SELECTED") {FILTER_SELECTED = (value == "true");}
       if(name == "SHOW_BOUNDARIES") {SHOW_BOUNDARIES = (value == "true");}
       if(name == "SHOW_PATCHES") {SHOW_PATCHES = (value == "true");}
-      if(name == "VISUAL_DEBUG") {VISUAL_DEBUG = (value == "true");}
+      if(name == "VISUAL_DEPTH_DEBUG") { VISUAL_DEPTH_DEBUG = (value == "true");}
       if(name == "SHOW_INPUT_COLOR") {SHOW_INPUT_COLOR = (value == "true");}
       if(name == "SHOW_INPUT_DEPTH") {SHOW_INPUT_DEPTH = (value == "true");}
       if(name == "SHOW_FILTERED_DEPTH") {SHOW_FILTERED_DEPTH = (value == "true");}

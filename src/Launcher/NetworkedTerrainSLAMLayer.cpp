@@ -37,9 +37,9 @@ namespace Clay
       mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), nullptr);
 
       /* ROS PointCloud*/
-      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
-      pclReceiver->SetRenderEnabled(false);
-      _cloud = pclReceiver->GetRenderable();
+//      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+//      pclReceiver->SetRenderEnabled(false);
+//      _cloud = pclReceiver->GetRenderable();
 
       /* Static PointCloud from File. */
       _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
@@ -87,7 +87,6 @@ namespace Clay
             depthReceiver->getData(depth, appState, inputTimestamp);
             _regionCalculator->generateRegionsFromDepth(appState, depth, inputTimestamp);
             mesher.GenerateLineMeshForRegions(_regionCalculator->_depthRegionsZUp, nullptr, true);
-            _regionCalculator->Render();
 
             //
             //              // TODO: Fix this and publish planarregions msg
@@ -96,8 +95,8 @@ namespace Clay
 
          if(appState.HASH_PLANAR_REGIONS_ENABLED)
          {
-             /* ROS Regions */
-            if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
+            /* ROS Regions */
+            if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud, 0.0);
             mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
          }
 
@@ -108,8 +107,8 @@ namespace Clay
             MeshTools::CoordinateAxes(pose);
             _models.push_back(std::move(std::dynamic_pointer_cast<Model>(pose)));
 
-//            bool result = _visualOdometry->Update(appState, pose, firstCloud);
-//            _visualOdometry->Show();
+            //            bool result = _visualOdometry->Update(appState, pose, firstCloud);
+            //            _visualOdometry->Show();
          }
 
          if (appState.SLAM_ENABLED && _regionCalculator->planarRegionList.size() > 0 && _mapper->SLAM_ENABLED)
@@ -143,9 +142,7 @@ namespace Clay
 
       if (_regionCalculator->RenderEnabled())
       {
-         /* Static Regions */
-//         _regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud->GetMesh()->_vertices, 0.0);
-//         mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr);
+         _regionCalculator->Render();
       }
 
 //      _networkManager->receivers[appState.OUSTER_POINTS]->render(appState);

@@ -44,13 +44,15 @@ class ApplicationState
        * a) InputHeight should be divisible by (KernelResLevel * AspectRatioHeight)
        * b) InputWidth should be divisible by (KernelResLevel * AspectRatioWidth)
        * */
-      bool HASH_DIFFUSION_ENABLED = true;
+      bool HASH_DIFFUSION_ENABLED = false;
       bool HASH_PRINT_MAT = false;
+      bool HASH_PARTS_ENABLED = false;
       int REGION_MODE = 0; // 0 for depth, 1 for point-cloud
       int HASH_INPUT_HEIGHT = 64;
       int HASH_INPUT_WIDTH = 1024;
       int DEPTH_INPUT_HEIGHT = 480;
       int DEPTH_INPUT_WIDTH = 640;
+      int HASH_ADJ_SKIPS = 2;
 
       int KERNEL_SLIDER_LEVEL = 2;
       int HASH_PATCH_HEIGHT =  2;
@@ -84,7 +86,8 @@ class ApplicationState
 
       bool SHOW_BOUNDARIES = false;
       bool SHOW_PATCHES = true;
-      bool VISUAL_DEBUG = false;
+      bool VISUAL_DEPTH_DEBUG = false;
+      bool VISUAL_HASH_DEBUG = false;
       bool SHOW_INPUT_COLOR = false;
       bool SHOW_INPUT_DEPTH = false;
       bool SHOW_FILTERED_DEPTH = false;
