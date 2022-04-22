@@ -96,6 +96,15 @@ class ApplicationState
       bool SHOW_STEREO_LEFT = false;
       bool SHOW_STEREO_RIGHT = false;
 
+      bool SHOW_HASH_NX = false;
+      bool SHOW_HASH_NY = false;
+      bool SHOW_HASH_NZ = false;
+      bool SHOW_HASH_GX = false;
+      bool SHOW_HASH_GY = false;
+      bool SHOW_HASH_GZ = false;
+
+      bool USE_LINE_MESH = false;
+
       bool SHOW_GRAPH = true;
       bool ROS_ENABLED = true;
       bool SHOW_REGION_EDGES = false;

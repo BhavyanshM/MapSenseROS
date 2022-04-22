@@ -37,13 +37,13 @@ namespace Clay
       mesher.GeneratePoseMesh(Eigen::Matrix4f::Identity(), nullptr);
 
       /* ROS PointCloud*/
-//      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
-//      pclReceiver->SetRenderEnabled(false);
-//      _cloud = pclReceiver->GetRenderable();
+      PointCloudReceiver* pclReceiver = (PointCloudReceiver*) _networkManager->receivers[appState.OUSTER_POINTS];
+      pclReceiver->SetRenderEnabled(false);
+      _cloud = pclReceiver->GetRenderable();
 
       /* Static PointCloud from File. */
-      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
-      _cloud->Load(filename, false);
+//      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+//      _cloud->Load(filename, false);
 
 
        _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
@@ -97,7 +97,16 @@ namespace Clay
          {
             /* ROS Regions */
             if(_cloud->GetSize() > 0)_regionCalculator->GeneratePatchGraphFromPointCloud(appState, _cloud, 0.0);
-            mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+            if(appState.USE_LINE_MESH)
+            {
+               mesher.ClearMeshes();
+               mesher.GenerateLineMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+            }
+            else
+            {
+               mesher.ClearLines();
+               mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
+            }
          }
 
          if (appState.STEREO_ODOMETRY_ENABLED)

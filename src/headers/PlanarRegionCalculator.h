@@ -48,34 +48,37 @@ class PlanarRegionCalculator
 
       void GenerateRegionFromPointcloudOnCPU();
 
+      bool RenderEnabled();
 
-   public:
+
+      std::vector<std::shared_ptr<PlanarRegion>> planarRegionList;
+      std::vector<std::shared_ptr<PlanarRegion>> _hashRegionsZUp;
+      std::vector<std::shared_ptr<PlanarRegion>> _depthRegionsZUp;
+      map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
+
+   private:
       //      cl::Kernel filterKernel, packKernel, mergeKernel;
       //      cl::Context context;
       //      cl::CommandQueue commandQueue;
       //      cl::Event event;
 
+      std::unordered_map<std::string, cv::Mat> channelMap;
+
       cl::size_t<3> origin;
-
       ApplicationState& app;
-      AppUtils appUtils;
 
+      AppUtils appUtils;
       cv::Mat inputDepth;
       cv::Mat inputColor;
       double inputTimestamp;
       cv::Mat filteredDepth;
-      cv::Mat inputStereoLeft, inputStereoRight;
 
+      cv::Mat inputStereoLeft, inputStereoRight;
       MapFrame output;
       MapFrameProcessor* _depthMapFrameProcessor;
       MapFrameProcessor* _hashMapFrameProcessor;
+
       OpenCLManager* _openCL;
-
-      std::vector<std::shared_ptr<PlanarRegion>> planarRegionList;
-      std::vector<std::shared_ptr<PlanarRegion>> _hashRegionsZUp;
-      std::vector<std::shared_ptr<PlanarRegion>> _depthRegionsZUp;
-
-      map_sense::RawGPUPlanarRegionList _planarRegionsToPublish;
 
       RigidBodyTransform _headToL515Transform;
       RigidBodyTransform _headToOusterTransform;
@@ -96,7 +99,7 @@ class PlanarRegionCalculator
       float yOffset = 0;
       float zOffset = 0;
 
-      bool RenderEnabled();
+
 };
 
 #endif //PLANARREGIONCALCULATOR_H

@@ -8,7 +8,7 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
 //   this->fgSLAM = new FactorGraphHandler();
 
 
-   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_06_Circle/";
+   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_Ouster_Convex_ISR_01/";
    AppUtils::getFileNames(_directory, fileNames);
 
 //   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
@@ -28,7 +28,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);
             if(ImGui::Button("Load Regions"))
             {
-               _regionCalculator->LoadRegions(_directory, fileNames, fileSelected);
+               _regionCalculator->LoadRegions(_directory, fileNames, fileSelected + 100);
             }
             std::vector<std::shared_ptr<PlanarRegion>> regions = _regionCalculator->planarRegionList;
             ImGui::Text("Total Planar Regions: %d", _previousRegionsZUp.size());

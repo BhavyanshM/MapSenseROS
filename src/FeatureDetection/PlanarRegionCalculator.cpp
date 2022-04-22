@@ -44,11 +44,13 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
       ImGui::Checkbox("Generate Regions", &appState.GENERATE_REGIONS);
       ImGui::Checkbox("Filter", &appState.FILTER_SELECTED);
       ImGui::Checkbox("Early Gaussian", &appState.EARLY_GAUSSIAN_BLUR);
-
+      ImGui::Separator();
+      ImGui::Checkbox("Export Regions", &appState.EXPORT_REGIONS);
       ImGui::Checkbox("Boundary", &appState.SHOW_BOUNDARIES);
       ImGui::Checkbox("Visual Debug", &appState.VISUAL_DEPTH_DEBUG);
       ImGui::Checkbox("Show Edges", &appState.SHOW_REGION_EDGES);
       ImGui::Checkbox("Render 3D", &_render);
+      ImGui::Separator();
       ImGui::SliderInt("Visual Debug Delay", &appState.VISUAL_DEBUG_DELAY, 1, 100);
       ImGui::SliderInt("Skip Edges", &appState.NUM_SKIP_EDGES, 1, 20);
       ImGui::SliderFloat("Display Window Size", &appState.DISPLAY_WINDOW_SIZE, 0.1, 5.0);
@@ -84,13 +86,22 @@ void PlanarRegionCalculator::ImGuiUpdate(ApplicationState& appState)
 
          if (ImGui::BeginTabItem("Hash"))
          {
-            ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
             ImGui::Checkbox("Diffusion Enabled", &appState.HASH_DIFFUSION_ENABLED);
-            ImGui::Checkbox("Print Hash Buffer", &appState.HASH_PRINT_MAT);
-            ImGui::Checkbox("Hash Parts Enabled", &appState.HASH_PARTS_ENABLED);
             ImGui::SliderInt("Adjacency Skips", &appState.HASH_ADJ_SKIPS, 1, 10);
             ImGui::SliderFloat("Distance Threshold", &appState.HASH_MERGE_DISTANCE_THRESHOLD, 0.001f, 0.5f);
             ImGui::SliderFloat("Angular Threshold", &appState.HASH_MERGE_ANGULAR_THRESHOLD, 0.001f, 1.0f);
+            ImGui::Separator();
+            ImGui::Checkbox("Components", &appState.SHOW_HASH_REGION_COMPONENTS);
+            ImGui::Checkbox("Show Hash NX", &appState.SHOW_HASH_NX);
+            ImGui::Checkbox("Show Hash NY", &appState.SHOW_HASH_NY);
+            ImGui::Checkbox("Show Hash NZ", &appState.SHOW_HASH_NZ);
+            ImGui::Checkbox("Show Hash GX", &appState.SHOW_HASH_GX);
+            ImGui::Checkbox("Show Hash GY", &appState.SHOW_HASH_GY);
+            ImGui::Checkbox("Show Hash GZ", &appState.SHOW_HASH_GZ);
+            ImGui::Separator();
+            ImGui::Checkbox("Use Line Mesh", &appState.USE_LINE_MESH);
+            ImGui::Checkbox("Hash Parts Enabled", &appState.HASH_PARTS_ENABLED);
+            ImGui::Checkbox("Print Hash Buffer", &appState.HASH_PRINT_MAT);
             ImGui::EndTabItem();
          }
 
@@ -125,6 +136,27 @@ void PlanarRegionCalculator::Render()
    if (this->app.SHOW_HASH_REGION_COMPONENTS)
    {
       AppUtils::DisplayImage(_hashMapFrameProcessor->GetDebugMat(), app, "Hash Components");
+   }
+   else
+   {
+      cv::Mat buffer;
+      if (app.SHOW_HASH_NX)
+         buffer = channelMap["HashNormalX"];
+      else if (app.SHOW_HASH_NY)
+         buffer = channelMap["HashNormalY"];
+      else if (app.SHOW_HASH_NZ)
+         buffer = channelMap["HashNormalZ"];
+      else if (app.SHOW_HASH_GX)
+         buffer = channelMap["HashCentroidX"];
+      else if (app.SHOW_HASH_GY)
+         buffer = channelMap["HashCentroidY"];
+      else if (app.SHOW_HASH_GZ)
+         buffer = channelMap["HashCentroidZ"];
+
+      cv::Mat display;
+      buffer.convertTo(display, CV_8UC1, 255, 0);
+
+      AppUtils::DisplayImage(display, app, "Hash Components");
    }
 }
 
@@ -446,8 +478,7 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
       std::vector<int> partIds((int) (points.size() / 3), 0);
       _openCL->ReadBufferInt(partsBuffer, partIds.data(), (int) (points.size() / 3));
       cloud->SetPartIds(partIds);
-   }
-   else
+   } else
    {
       std::vector<int> partIds;
       cloud->SetPartIds(partIds);
@@ -462,6 +493,13 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
 
    _hashMapFrameProcessor->GenerateSegmentation(output, planarRegionList); // Perform segmentation using DFS on Patch Graph on CPU to generate Planar Regions
    PlanarRegion::SetZeroId(planarRegionList);
+
+   channelMap["HashNormalX"] = output_nx;
+   channelMap["HashNormalY"] = output_ny;
+   channelMap["HashNormalZ"] = output_nz;
+   channelMap["HashCentroidX"] = output_gx;
+   channelMap["HashCentroidY"] = output_gy;
+   channelMap["HashCentroidZ"] = output_gz;
 
    _openCL->Reset();
 
