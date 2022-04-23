@@ -2,7 +2,6 @@
 #define PLANARREGIONCALCULATOR_H
 
 
-#include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "image_transport/image_transport.h"
 #include "opencv2/highgui/highgui.hpp"

@@ -11,9 +11,9 @@ namespace Clay
 {
    NetworkedTerrainSLAMLayer::NetworkedTerrainSLAMLayer(int argc, char **argv) : ApplicationLayer(argc, argv)
    {
-      _data = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
-                              "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
-                              "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
+//      _data = new DataManager(appState, "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_0/",
+//                              "/home/quantum/Workspace/Storage/Other/Temp/dataset/sequences/00/image_1/",
+//                              "/home/quantum/Workspace/Storage/Other/Temp/dataset/data_odometry_poses/poses/00.txt");
 
       /* KITTI:  float fx = 718.856, fy = 718.856, cx = 607.193, cy = 185.216; */
       /* L515 Color: fx = 602.25927734375, cx = 321.3750915527344, fy = 603.0400390625, cy = 240.51527404785156; */

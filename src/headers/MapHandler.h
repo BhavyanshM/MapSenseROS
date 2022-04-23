@@ -2,11 +2,18 @@
 #define PLANARREGIONMAPHANDLER_H
 
 #include "PlanarRegionCalculator.h"
-#include "PlanarRegion.h"
 #include "GeomTools.h"
 #include "SLAMModule.h"
+#include "PlanarRegion.h"
 #include "MeshGenerator.h"
 #include "NetworkManager.h"
+
+//#include "Plane3D.h"
+//
+//class SLAMModule;
+//class MeshGenerator;
+//class PlanarRegion;
+//class NetworkManager;
 
 class MapHandler
 {
@@ -33,18 +40,6 @@ class MapHandler
 
       void MergeLatestRegions();
 
-//      void InsertOrientedPlaneFactors(int currentPoseId);
-//
-//      int insertOdometryFactor(RigidBodyTransform odometry);
-//
-//      int insertPosePriorFactor(RigidBodyTransform pose);
-//
-//      void SetOrientedPlaneInitialValues();
-//
-//      void ExtractFactorGraphLandmarks();
-//
-//      void Optimize();
-
       void TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, PlanarRegionSet& dstRegionSet, const RigidBodyTransform& transform);
 
       void TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform);
@@ -56,6 +51,31 @@ class MapHandler
       void UpdateMapLandmarks(const PlaneSet3D& planeSet);
 
       MeshGenerator* GetMesher() const { return _mesher; }
+
+      void DebugPrint()
+      {
+         for(auto region : _latestRegionsZUp)
+         {
+            Eigen::Vector3f center = region->GetCenter();
+            Eigen::Vector3f normal = region->GetNormal().normalized();
+            MS_INFO("Region Params: {} {} {} {}", normal.x(), normal.y(), normal.z(), -center.dot(normal));
+            Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
+                          region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z(), region->getId());
+            MS_INFO("Plane Original: {}", plane.GetString());
+            Plane3D planeInMapFrame = plane.GetTransformed(_sensorToMapTransform);
+            MS_INFO("Original Plane Transformed: {}", planeInMapFrame.GetString());
+         }
+
+         for(auto region : _regionsInMapFrame)
+         {
+            Eigen::Vector3f center = region->GetCenter();
+            Eigen::Vector3f normal = region->GetNormal().normalized();
+            MS_INFO("Transformed Region Params: {} {} {} {}", normal.x(), normal.y(), normal.z(), -center.dot(normal));
+            Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
+                          region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z(), region->getId());
+            MS_INFO("Transformed Plane Original: {}", plane.GetString());
+         }
+      }
 
    public:
 

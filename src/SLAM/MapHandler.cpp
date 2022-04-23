@@ -1,12 +1,9 @@
 #include "MapHandler.h"
 #include "ImGuiTools.h"
-#include "ClayTools.h"
 
 MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app)
 {
    _network = network;
-//   this->fgSLAM = new FactorGraphHandler();
-
 
    _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_Ouster_Convex_ISR_01/";
    AppUtils::getFileNames(_directory, fileNames);
@@ -71,23 +68,26 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
          if(ImGui::BeginTabItem("Map"))
          {
             ImGui::Text("Frame Index: %d", _frameIndex);
-            ImGui::Text("Regions Loaded: %d", _regionCalculator->planarRegionList.size());
-            ImGui::Text("Total Map Regions: %d", _mapRegions.GetRegions().size());
-            ImGui::Text("Latest Regions: %d", latestRegions.size());
+            ImGui::Text("Rapid Regions Loaded: %d", _regionCalculator->planarRegionList.size());
+            ImGui::Text("Previous Regions Z-Up: %d", _previousRegionsZUp.size());
             ImGui::Text("Latest Regions Z-Up: %d", _latestRegionsZUp.size());
+            ImGui::Text("Matches Found: %d", _matches.size());
+            ImGui::Text("Total Map Regions: %d", _mapRegions.GetRegions().size());
             ImGui::NewLine();
 
-            ImGui::Text("Matches Found: %d", _matches.size());
             ImGui::Text("Last Translation: %.3lf, %.3lf, %.3lf", eulerAnglesToReference.x(), eulerAnglesToReference.y(), eulerAnglesToReference.z());
             ImGui::Text("Last Rotation Euler Angles: %.3lf, %.3lf, %.3lf", translationToReference.x(), translationToReference.y(), translationToReference.z());
             ImGui::Text("Landmark Planes: %lu", _network->GetSLAMPlanes().GetPlanes().size());
             ImGui::NewLine();
 
-            ImGui::Text("Next File: %s", fileNames[_frameIndex].c_str());
+            ImGui::Text("Next File: %s", (_directory + fileNames[_frameIndex]).c_str());
             ImGui::NewLine();
 
-            ImGui::SliderFloat("Match Angular Threshold", &app.MATCH_ANGULAR_THRESHOLD, 0.1f, 1.0f);
-            ImGui::SliderFloat("Match Distance Threshold", &app.MATCH_DIST_THRESHOLD, 0.01f, 1.0f);
+
+            ImGui::SliderFloat("Match Angular Threshold", &app.MATCH_ANGULAR_THRESHOLD, 0.01f, 1.0f);
+            ImGui::SliderFloat("Match Distance Threshold", &app.MATCH_DIST_THRESHOLD, 0.01f, 8.0f);
+
+            ImGui::Checkbox("Factor Graph Enabled", &app.FACTOR_GRAPH_ENABLED);
 
             if(ImGui::Button("Register Next Set"))
             {
@@ -102,9 +102,11 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
 //               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
 
-//               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
+               _mesher->GenerateLineMeshForRegions(_previousRegionsZUp, nullptr, true);
+               _mesher->GenerateLineMeshForRegions(_latestRegionsZUp, nullptr);
+               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
 
-               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
+//               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
 
                _previousRegionsZUp = std::move(_latestRegionsZUp);
 
@@ -142,7 +144,6 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
    TransformAndCopyRegions(latestRegions, _latestRegionsZUp, _transformZUp);
 
    MatchPlanarRegionsToMap();
-   ROS_INFO("Regions Matched: (%d).\n", _matches.size());
 
    if (_matches.size() > 0)
    {
@@ -150,40 +151,18 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
 
       Eigen::Quaterniond quaternion = _sensorToMapTransform.GetQuaternion();
       Eigen::Vector3d position = _sensorToMapTransform.GetTranslation();
-      CLAY_LOG_INFO("Sensor To Map Pose ({}): {} {} {} {} {} {} {}", index, position.x(),
+      MS_INFO("Sensor To Map Pose ({}): {} {} {} {} {} {} {}", index, position.x(),
                     position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
 
       std::cout << _sensorToMapTransform.GetMatrix() << std::endl;
 
-      _network->PublishPoseStamped(_sensorPoseRelative, index);
-      _network->PublishPlanes(_latestRegionsZUp, index);
-
-      for(auto region : _latestRegionsZUp)
+      if(_app.FACTOR_GRAPH_ENABLED)
       {
-         Eigen::Vector3f center = region->GetCenter();
-         Eigen::Vector3f normal = region->GetNormal().normalized();
-         CLAY_LOG_INFO("Region Params: {} {} {} {}", normal.x(), normal.y(), normal.z(), -center.dot(normal));
-         Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
-                 region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z(), region->getId());
-         CLAY_LOG_INFO("Plane Original: {}", plane.GetString());
-         Plane3D planeInMapFrame = plane.GetTransformed(_sensorToMapTransform);
-         CLAY_LOG_INFO("Original Plane Transformed: {}", planeInMapFrame.GetString());
+         _network->PublishPoseStamped(_sensorPoseRelative, index);
+         _network->PublishPlanes(_latestRegionsZUp, index);
       }
-
       TransformAndCopyRegions(_latestRegionsZUp, _regionsInMapFrame, _sensorToMapTransform);
-      for(auto region : _regionsInMapFrame)
-      {
-         Eigen::Vector3f center = region->GetCenter();
-         Eigen::Vector3f normal = region->GetNormal().normalized();
-         CLAY_LOG_INFO("Transformed Region Params: {} {} {} {}", normal.x(), normal.y(), normal.z(), -center.dot(normal));
-         Plane3D plane(region->GetCenter().x(), region->GetCenter().y(), region->GetCenter().z(),
-                       region->GetNormal().x(), region->GetNormal().y(), region->GetNormal().z(), region->getId());
-         CLAY_LOG_INFO("Transformed Plane Original: {}", plane.GetString());
-      }
    }
-
-
-
 
    int currentPoseId = 1;
 }
@@ -226,7 +205,7 @@ void MapHandler::MatchPlanarRegionsToMap()
                   {
                      _latestRegionsZUp[j]->setId(_previousRegionsZUp[i]->getId());
                   }
-                  CLAY_LOG_INFO("Copying Region ID: {}", _previousRegionsZUp[i]->getId());
+                  MS_INFO("Copying Region ID: {}", _previousRegionsZUp[i]->getId());
                   _previousRegionsZUp[i]->SetNumOfMeasurements(_previousRegionsZUp[i]->GetNumOfMeasurements() + 1);
                   _latestRegionsZUp[j]->SetNumOfMeasurements(_latestRegionsZUp[j]->GetNumOfMeasurements() + 1);
                   break;
@@ -370,7 +349,7 @@ void MapHandler::UpdateMapLandmarks(const PlaneSet3D& planeSet)
 {
    for (auto plane : planeSet.GetPlanes())
    {
-      CLAY_LOG_INFO("Exists -> ID: {} Plane: {}", plane.first, plane.second.GetString());
+      MS_INFO("Exists -> ID: {} Plane: {}", plane.first, plane.second.GetString());
       if(_mapRegions.Exists(plane.first))
       {
          _mapRegions.GetRegions()[plane.first]->ProjectToPlane(plane.second.GetParams().cast<float>());

@@ -1,6 +1,6 @@
+#include "PlanarRegionCalculator.h"
 #include <map_sense/RawGPUPlanarRegionList.h>
 #include <AppUtils.h>
-#include "PlanarRegionCalculator.h"
 #include "ImGuiTools.h"
 #include "Log.h"
 

@@ -119,6 +119,7 @@ class ApplicationState
       bool HASH_PLANAR_REGIONS_ENABLED = false;
       bool SLAM_ENABLED = false;
       bool DATASET_ENABLED = false;
+      bool FACTOR_GRAPH_ENABLED = false;
 
       std::string TOPIC_CAMERA_NAME = "chest_l515";
 

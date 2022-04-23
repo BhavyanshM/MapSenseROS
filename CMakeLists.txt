@@ -221,11 +221,11 @@ target_link_libraries(slam
         ${OpenCV_LIBS}
         geom-tools)
 
-add_library(visual_odometry STATIC ${VISUAL_ODOMETRY_LIB})
-target_link_libraries(visual_odometry
-        Eigen3::Eigen
-        ${OpenCV_LIBS})
-target_include_directories(visual_odometry PUBLIC ${MAPSENSE_INCLUDE_DIRS})
+#add_library(visual_odometry STATIC ${VISUAL_ODOMETRY_LIB})
+#target_link_libraries(visual_odometry
+#        Eigen3::Eigen
+#        ${OpenCV_LIBS})
+#target_include_directories(visual_odometry PUBLIC ${MAPSENSE_INCLUDE_DIRS})
 
 add_library(mapsense STATIC ${SOURCE} ${HEADERS})
 target_link_libraries(mapsense
@@ -234,8 +234,8 @@ target_link_libraries(mapsense
         Eigen3::Eigen tbb geom-tools ClayEngine imgui)
 target_include_directories(mapsense PUBLIC ${MAPSENSE_INCLUDE_DIRS})
 
-add_library(icp STATIC ${ICP_LIB})
-target_link_libraries(icp Eigen3::Eigen)
+#add_library(icp STATIC ${ICP_LIB})
+#target_link_libraries(icp Eigen3::Eigen)
 
 add_library(implot STATIC Vendor/implot/implot.h Vendor/implot/implot_internal.h Vendor/implot/implot.cpp Vendor/implot/implot_items.cpp Vendor/implot/implot_demo.cpp)
 
