@@ -8,8 +8,8 @@
 #include "ROS1TopicReceiver.h"
 #include "sensor_msgs/point_cloud2_iterator.h"
 #include "Scene/Mesh/PointCloud.h"
-#include "DataManager.h"
 
+class DataManager;
 
 class PointCloudReceiver : public ROS1TopicReceiver
 {

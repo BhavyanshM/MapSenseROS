@@ -163,7 +163,7 @@ set(MAPSENSE_CLAY_HEADERS
         src/headers/MapsenseLayer.h)
 set(MAPSENSE_CLAY_SOURCES
         src/Launcher/ClayApp.cpp
-        src/Launcher/MapsenseLayer.cpp)
+        src/Launcher/MapsenseLayer.cpp test/PlanarRegionTester.cpp)
 
 set(TERRAIN_SLAM_SOURCES
         src/headers/VisualTerrainSLAMApp.h

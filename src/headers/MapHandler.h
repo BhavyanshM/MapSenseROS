@@ -4,7 +4,7 @@
 #include "PlanarRegionCalculator.h"
 #include "GeomTools.h"
 #include "SLAMModule.h"
-#include "PlanarRegion.h"
+//#include "PlanarRegion.h"
 #include "MeshGenerator.h"
 #include "NetworkManager.h"
 
@@ -12,7 +12,7 @@
 //
 //class SLAMModule;
 //class MeshGenerator;
-//class PlanarRegion;
+class PlanarRegion;
 //class NetworkManager;
 
 class MapHandler

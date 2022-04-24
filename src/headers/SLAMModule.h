@@ -5,7 +5,10 @@
 #ifndef SLAMMODULE_H
 #define SLAMMODULE_H
 
-#include "PlanarRegion.h"
+class PlanarRegion;
+
+#include "vector"
+#include "memory"
 
 class SLAMModule
 {

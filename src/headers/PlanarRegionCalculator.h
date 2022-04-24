@@ -10,11 +10,14 @@
 #include <CL/cl.hpp>
 #include <map_sense/RawGPUPlanarRegionList.h>
 
-#include "MapFrame.h"
 #include "MapFrameProcessor.h"
-#include "PlanarRegion.h"
+//#include "MapFrame.h"
+//#include "PlanarRegion.h"
 #include "OpenCLManager.h"
 #include "AppUtils.h"
+
+class MapFrame;
+class PlanarRegion;
 
 #include "Scene/Mesh/PointCloud.h"
 

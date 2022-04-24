@@ -1,5 +1,6 @@
 #include "MapHandler.h"
 #include "ImGuiTools.h"
+#include "Eigen/Core"
 
 MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app)
 {
@@ -27,10 +28,45 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             {
                _regionCalculator->LoadRegions(_directory, fileNames, fileSelected + 100);
             }
-            std::vector<std::shared_ptr<PlanarRegion>> regions = _regionCalculator->planarRegionList;
-            ImGui::Text("Total Planar Regions: %d", _previousRegionsZUp.size());
 
-            ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, _previousRegionsZUp.size());
+            if(ImGui::Button("Create Sample Regions"))
+            {
+               std::shared_ptr<PlanarRegion> testRegion1 = std::make_shared<PlanarRegion>(0);
+               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.0f,0.0f, 0.0f));
+               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.0f,1.0f, 0.0f));
+               testRegion1->insertBoundaryVertex(Eigen::Vector3f(1.0f,1.0f, 0.0f));
+               testRegion1->insertBoundaryVertex(Eigen::Vector3f(1.0f,0.5f, 0.0f));
+               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.5f, 0.0f));
+               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.0f, 0.0f));
+
+               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.0f,0.0f, 0.0f));
+               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.0f,1.0f, 0.0f));
+               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(1.0f,1.0f, 0.0f));
+               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(1.0f,0.5f, 0.0f));
+               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.5f, 0.0f));
+               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.0f, 0.0f));
+
+               std::shared_ptr<PlanarRegion> testRegion2 = std::make_shared<PlanarRegion>(1);
+               testRegion2->insertBoundaryVertex(Eigen::Vector3f(-0.5f,0.4f, 0.0f));
+               testRegion2->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.4f, 0.0f));
+               testRegion2->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.1f, 0.0f));
+               testRegion2->insertBoundaryVertex(Eigen::Vector3f(-0.5f,0.1f, 0.0f));
+
+               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(-0.5f,0.4f, 0.0f));
+               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.4f, 0.0f));
+               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.1f, 0.0f));
+               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(-0.5f,0.1f, 0.0f));
+
+
+
+               latestRegions.emplace_back(std::move(testRegion1));
+               latestRegions.emplace_back(std::move(testRegion2));
+            }
+
+
+            ImGui::Text("Total Planar Regions: %d", latestRegions.size());
+
+            ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, latestRegions.size());
             //      ImGui::SameLine(ImGui::GetWindowWidth() - 30);
             if(ImGui::Button("Plot"))
             {
@@ -42,20 +78,33 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::SliderFloat("Compress Dist Threshold", &app.COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
             ImGui::SliderFloat("Compress Cosine Threshold", &app.COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
-            if(plotter2D && _previousRegionsZUp.size() > 0)
+            if(plotter2D && latestRegions.size() > 0)
             {
 
-               regions[regionSelected]->ComputeBoundaryVerticesPlanar();
-               regions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
-               regions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
+               latestRegions[regionSelected]->ComputeBoundaryVerticesPlanar();
+               const std::vector<Eigen::Vector2f>& boundaryPoints2D = latestRegions[regionSelected]->GetPlanarPatchCentroids();
 
-               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, _previousRegionsZUp.size());
-               const std::vector<Eigen::Vector2f>& points = regions[regionSelected]->GetPlanarPatchCentroids();
-               const std::vector<int>& segmentIndices = regions[regionSelected]->GetSegmentIndices();
-               Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
+               latestRegions[regionSelected + 1]->ComputeBoundaryVerticesPlanar();
+               const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = latestRegions[regionSelected + 1]->GetPlanarPatchCentroids();
 
-               ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
-               ImGui::Text("Winding Number: %.2lf", GeomTools::ComputeWindingNumber(regions[regionSelected]->GetPlanarPatchCentroids(), mousePlotLocation));
+               if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
+               {
+                  ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1");
+                  ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2");
+                  ImGuiTools::EndPlotWindow();
+               }
+
+               //               latestRegions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
+               //               latestRegions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
+
+               //               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, latestRegions.size());
+//               const std::vector<int>& segmentIndices = latestRegions[regionSelected]->GetSegmentIndices();
+//               Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
+
+//               ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
+//               ImGui::Text("Winding Number: %.2lf", GeomTools::ComputeWindingNumber(latestRegions[regionSelected]->GetPlanarPatchCentroids(), mousePlotLocation));
+
+
 
                if(ImGui::Button("Close"))
                {

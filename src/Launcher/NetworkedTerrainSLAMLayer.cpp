@@ -4,8 +4,11 @@
 
 #include "NetworkedTerrainSLAMLayer.h"
 #include "Scene/Mesh/MeshTools.h"
-#include "MeshGenerator.h"
-#include "PlanarRegion.h"
+//#include "MeshGenerator.h"
+
+class MeshGenerator;
+
+class PlanarRegion;
 
 namespace Clay
 {
