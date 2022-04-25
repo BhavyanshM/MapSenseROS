@@ -3,17 +3,12 @@
 
 #include "PlanarRegionCalculator.h"
 #include "GeomTools.h"
+#include "HullTools.h"
 #include "SLAMModule.h"
-//#include "PlanarRegion.h"
 #include "MeshGenerator.h"
 #include "NetworkManager.h"
 
-//#include "Plane3D.h"
-//
-//class SLAMModule;
-//class MeshGenerator;
 class PlanarRegion;
-//class NetworkManager;
 
 class MapHandler
 {

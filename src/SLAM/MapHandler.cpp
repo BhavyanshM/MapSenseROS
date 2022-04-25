@@ -1,6 +1,5 @@
 #include "MapHandler.h"
 #include "ImGuiTools.h"
-#include "Eigen/Core"
 
 MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app)
 {
@@ -58,7 +57,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                latestRegions[regionSelected + 1]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = latestRegions[regionSelected + 1]->GetPlanarPatchCentroids();
 
-               auto intersection = GeomTools::CalculateIntersection(boundaryPoints2D, boundaryPointsSecond2D);
+               auto intersection = HullTools::CalculateIntersection(boundaryPoints2D, boundaryPointsSecond2D);
 
                if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
