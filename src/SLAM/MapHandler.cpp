@@ -6,8 +6,11 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
 {
    _network = network;
 
-   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_Ouster_Convex_ISR_01/";
+   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Tests/Test_Set_01/";
    AppUtils::getFileNames(_directory, fileNames);
+
+   /* TODO: Temporary. */
+   GeomTools::LoadRegions(fileSelected, latestRegions, _directory, fileNames);
 
 //   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
 //   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
@@ -21,53 +24,19 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
    {
       if(ImGui::BeginTabBar("Mapper Tabs"))
       {
-         if(ImGui::BeginTabItem("Plotter"))
+         if(ImGui::BeginTabItem("Plot"))
          {
             ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);
             if(ImGui::Button("Load Regions"))
             {
-               _regionCalculator->LoadRegions(_directory, fileNames, fileSelected + 100);
-            }
-
-            if(ImGui::Button("Create Sample Regions"))
-            {
-               std::shared_ptr<PlanarRegion> testRegion1 = std::make_shared<PlanarRegion>(0);
-               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.0f,0.0f, 0.0f));
-               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.0f,1.0f, 0.0f));
-               testRegion1->insertBoundaryVertex(Eigen::Vector3f(1.0f,1.0f, 0.0f));
-               testRegion1->insertBoundaryVertex(Eigen::Vector3f(1.0f,0.5f, 0.0f));
-               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.5f, 0.0f));
-               testRegion1->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.0f, 0.0f));
-
-               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.0f,0.0f, 0.0f));
-               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.0f,1.0f, 0.0f));
-               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(1.0f,1.0f, 0.0f));
-               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(1.0f,0.5f, 0.0f));
-               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.5f, 0.0f));
-               testRegion1->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.0f, 0.0f));
-
-               std::shared_ptr<PlanarRegion> testRegion2 = std::make_shared<PlanarRegion>(1);
-               testRegion2->insertBoundaryVertex(Eigen::Vector3f(-0.5f,0.4f, 0.0f));
-               testRegion2->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.4f, 0.0f));
-               testRegion2->insertBoundaryVertex(Eigen::Vector3f(0.5f,0.1f, 0.0f));
-               testRegion2->insertBoundaryVertex(Eigen::Vector3f(-0.5f,0.1f, 0.0f));
-
-               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(-0.5f,0.4f, 0.0f));
-               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.4f, 0.0f));
-               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(0.5f,0.1f, 0.0f));
-               testRegion2->AddPatch(Eigen::Vector3f(0,0,1), Eigen::Vector3f(-0.5f,0.1f, 0.0f));
-
-
-
-               latestRegions.emplace_back(std::move(testRegion1));
-               latestRegions.emplace_back(std::move(testRegion2));
+               GeomTools::LoadRegions(fileSelected, latestRegions, _directory, fileNames);
             }
 
 
             ImGui::Text("Total Planar Regions: %d", latestRegions.size());
 
             ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, latestRegions.size());
-            //      ImGui::SameLine(ImGui::GetWindowWidth() - 30);
+            ImGui::SameLine(ImGui::GetWindowWidth() - 40);
             if(ImGui::Button("Plot"))
             {
                plotter2D = true;
@@ -81,11 +50,15 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             if(plotter2D && latestRegions.size() > 0)
             {
 
+               latestRegions[regionSelected]->RetainConvexHull();
                latestRegions[regionSelected]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPoints2D = latestRegions[regionSelected]->GetPlanarPatchCentroids();
 
+               latestRegions[regionSelected + 1]->RetainConvexHull();
                latestRegions[regionSelected + 1]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = latestRegions[regionSelected + 1]->GetPlanarPatchCentroids();
+
+               auto intersection = GeomTools::CalculateIntersection(boundaryPoints2D, boundaryPointsSecond2D);
 
                if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
