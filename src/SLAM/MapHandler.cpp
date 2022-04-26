@@ -9,7 +9,7 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
    AppUtils::getFileNames(_directory, fileNames);
 
    /* TODO: Temporary. */
-   GeomTools::LoadRegions(fileSelected, latestRegions, _directory, fileNames);
+   GeomTools::LoadRegions(1, latestRegions, _directory, fileNames);
 
 //   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
 //   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
@@ -31,7 +31,6 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                GeomTools::LoadRegions(fileSelected, latestRegions, _directory, fileNames);
             }
 
-
             ImGui::Text("Total Planar Regions: %d", latestRegions.size());
 
             ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, latestRegions.size());
@@ -49,32 +48,52 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             if(plotter2D && latestRegions.size() > 0)
             {
 
-               latestRegions[regionSelected]->RetainConvexHull();
                latestRegions[regionSelected]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPoints2D = latestRegions[regionSelected]->GetPlanarPatchCentroids();
 
-               latestRegions[regionSelected + 1]->RetainConvexHull();
                latestRegions[regionSelected + 1]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = latestRegions[regionSelected + 1]->GetPlanarPatchCentroids();
 
-               auto intersection = HullTools::CalculateIntersection(boundaryPoints2D, boundaryPointsSecond2D);
+               latestRegions[regionSelected + 2]->ComputeBoundaryVerticesPlanar();
+               const std::vector<Eigen::Vector2f>& boundaryPointsThird2D = latestRegions[regionSelected + 2]->GetPlanarPatchCentroids();
+
+               auto unionHull = HullTools::CalculateUnion(boundaryPoints2D, boundaryPointsSecond2D);
+               auto combinedUnionHull = HullTools::CalculateUnion(unionHull, boundaryPointsThird2D);
+
+               float IoU = HullTools::ComputeBoundingBoxIoU({boundaryPoints2D}, {boundaryPointsSecond2D});
+
+               ImGui::Text("IoU for Hulls: %.2lf", IoU);
+
+               Eigen::Vector2f mousePlotLocation;
 
                if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
-                  ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1");
-                  ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2");
+                  ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1", true);
+                  ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2", true);
+                  ImGuiTools::ScatterPlotXY(boundaryPointsThird2D, "Region 3", true);
+
+                  ImGuiTools::ScatterPlotXY(unionHull, "Union Hull");
+                  ImGuiTools::ScatterPlotXY(combinedUnionHull, "Combined Union Hull");
+
+                  ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+                  mousePlotLocation << mouse.x, mouse.y;
+
                   ImGuiTools::EndPlotWindow();
                }
+
+               ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
+               ImGui::Text("Winding Number Region 1: %.2lf", HullTools::ComputeWindingNumber(boundaryPoints2D, mousePlotLocation));
+               ImGui::Text("Winding Number Region 2: %.2lf", HullTools::ComputeWindingNumber(boundaryPointsSecond2D, mousePlotLocation));
+               ImGui::Text("Winding Number Union Hull: %.2lf", HullTools::ComputeWindingNumber(unionHull, mousePlotLocation));
 
                //               latestRegions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
                //               latestRegions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
 
                //               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, latestRegions.size());
 //               const std::vector<int>& segmentIndices = latestRegions[regionSelected]->GetSegmentIndices();
-//               Eigen::Vector2f mousePlotLocation = ImGuiTools::ScatterPlotRegionSegments(points, segmentIndices);
 
-//               ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
-//               ImGui::Text("Winding Number: %.2lf", GeomTools::ComputeWindingNumber(latestRegions[regionSelected]->GetPlanarPatchCentroids(), mousePlotLocation));
+
+
 
 
 
@@ -143,6 +162,34 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             if(ImGui::Button("Update Map Poses"))
             {
                _mesher->GeneratePoseMesh(_network->GetSLAMPoses().begin()->second.GetMatrix().cast<float>(), nullptr);
+            }
+
+            if(ImGui::Button("Plot"))
+            {
+               plotter2D = true;
+            }
+
+            if(plotter2D)
+            {
+               _previousRegionsZUp[regionSelected]->ComputeBoundaryVerticesPlanar();
+               const std::vector<Eigen::Vector2f>& boundaryPoints2D = _previousRegionsZUp[regionSelected]->GetPlanarPatchCentroids();
+
+//               _latestRegionsZUp[regionSelected]->ProjectToPlane(_previousRegionsZUp[regionSelected]->GetPlane());
+               _latestRegionsZUp[regionSelected]->ComputeBoundaryVerticesPlanar();
+               const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = _latestRegionsZUp[regionSelected]->GetPlanarPatchCentroids();
+
+               auto intersection = HullTools::CalculateIntersection(boundaryPoints2D, boundaryPointsSecond2D);
+
+               float IoU = HullTools::ComputeBoundingBoxIoU({boundaryPoints2D}, {boundaryPointsSecond2D});
+
+               ImGui::Text("IoU for Hulls: %.2lf", IoU);
+
+               if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
+               {
+                  ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1");
+                  ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2");
+                  ImGuiTools::EndPlotWindow();
+               }
             }
 
             ImGui::EndTabItem();

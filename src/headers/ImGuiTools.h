@@ -13,7 +13,7 @@
 class ImGuiTools
 {
    public:
-      static void ScatterPlotXY(const std::vector<Eigen::Vector2f>& points, const std::string& label);
+      static void ScatterPlotXY(const std::vector<Eigen::Vector2f>& points, const std::string& label, bool lines = false);
 
       static Eigen::Vector2f ScatterPlotRegionSegments(const std::vector<Eigen::Vector2f>& points, const std::vector<int>& segmentIDs);
 
