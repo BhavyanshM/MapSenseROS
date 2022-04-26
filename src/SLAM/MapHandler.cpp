@@ -1,5 +1,6 @@
 #include "MapHandler.h"
 #include "ImGuiTools.h"
+#include "TrajectoryOptimizer.h"
 
 MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app)
 {
@@ -23,6 +24,42 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
    {
       if(ImGui::BeginTabBar("Mapper Tabs"))
       {
+         if(ImGui::BeginTabItem("Trajectory"))
+         {
+
+            if(ImGui::Button("Plot Trajectory"))
+            {
+               plotter2D = true;
+            }
+
+            ImGui::SliderFloat("StartTime", &startTime, -1, 1);
+            ImGui::SliderFloat("EndTime", &endTime, -1, 1);
+            ImGui::SliderFloat("Start", &start, -1, 1);
+            ImGui::SliderFloat("End", &end, -1, 1);
+            ImGui::SliderFloat("StartRate", &startRate, -1, 1);
+            ImGui::SliderFloat("EndRate", &endRate, -1, 1);
+
+            if(plotter2D)
+            {
+
+               if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
+               {
+                  TrajectoryOptimizer traj(startTime, endTime, start, end, startRate, endRate);
+                  traj.Optimize();
+
+                  int totalSamples = 50;
+                  float timeUnit = (endTime - startTime) / (float) totalSamples;
+                  std::vector<Eigen::Vector2f> points;
+                  for (int i = 0; i < totalSamples; i++)
+                  {
+                     points.emplace_back(startTime + timeUnit * (float) i, traj.GetValue(startTime + timeUnit * (float) i));
+                  }
+                  ImGuiTools::ScatterPlotXY(points, "Trajectory 1D", true);
+                  ImGuiTools::EndPlotWindow();
+               }
+            }
+            ImGui::EndTabItem();
+         }
          if(ImGui::BeginTabItem("Plot"))
          {
             ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);

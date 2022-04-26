@@ -119,6 +119,13 @@ class MapHandler
    private:
       ApplicationState& _app;
 
+      float start = 0;
+      float end = 0;
+      float startTime = 0;
+      float endTime = 1;
+      float startRate = 1;
+      float endRate = -1;
+
 };
 
 #endif //PLANARREGIONMAPHANDLER_H
