@@ -2,7 +2,7 @@
 #include "ImGuiTools.h"
 #include "TrajectoryOptimizer.h"
 
-MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app)
+MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI("/home/quantum/Workspace/Volume/CPP/ClayEngine")
 {
    _network = network;
 
@@ -67,6 +67,14 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             {
                GeomTools::LoadRegions(fileSelected, latestRegions, _directory, fileNames);
             }
+
+            ImGui::Text("File Chosen: %s", _directory.c_str());
+            if(ImGui::Button("Browse"))
+            {
+               showFileBrowser = true;
+            }
+            if(showFileBrowser)
+               showFileBrowser = _fileBrowserUI.ImGuiUpdate(_directory);
 
             ImGui::Text("Total Planar Regions: %d", latestRegions.size());
 

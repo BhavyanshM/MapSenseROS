@@ -7,6 +7,8 @@
 #include "SLAMModule.h"
 #include "MeshGenerator.h"
 #include "NetworkManager.h"
+#include "filesystem"
+#include "ImGui/FileBrowserUI.h"
 
 class PlanarRegion;
 
@@ -75,15 +77,16 @@ class MapHandler
    public:
 
       bool SLAM_ENABLED = false;
+      bool showFileBrowser = false;
 
       bool plotter2D = false;
-
 
       bool FACTOR_GRAPH = true;
       bool ISAM2 = true;
       uint8_t ISAM2_NUM_STEPS = 4;
 
       int _frameIndex = 0;
+
 
 //      FactorGraphHandler* fgSLAM;
       std::vector<std::string> files;
@@ -125,6 +128,8 @@ class MapHandler
       float endTime = 1;
       float startRate = 1;
       float endRate = -1;
+
+      Clay::FileBrowserUI _fileBrowserUI;
 
 };
 
