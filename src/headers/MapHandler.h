@@ -122,12 +122,12 @@ class MapHandler
    private:
       ApplicationState& _app;
 
-      float start = 0;
-      float end = 0;
-      float startTime = 0;
-      float endTime = 1;
-      float startRate = 1;
-      float endRate = -1;
+      float endX = 0;
+      float endY = 1;
+      float endZ = 0;
+      float endYaw = 0;
+      float endPitch = 1;
+      float endRoll = -1;
 
       Clay::FileBrowserUI _fileBrowserUI;
 

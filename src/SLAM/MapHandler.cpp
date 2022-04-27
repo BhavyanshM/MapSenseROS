@@ -1,6 +1,6 @@
 #include "MapHandler.h"
 #include "ImGuiTools.h"
-#include "TrajectoryOptimizer.h"
+#include "PoseTrajectory.h"
 
 MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI(ros::package::getPath("map_sense") + "/Extras/Regions/Archive")
 {
@@ -10,7 +10,8 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
    AppUtils::getFileNames(_directory, fileNames);
 
    /* TODO: Temporary. */
-   GeomTools::LoadRegions(1, latestRegions, _directory, fileNames);
+   GeomTools::LoadRegions(0, _previousRegionsZUp, _directory, fileNames);
+   GeomTools::LoadRegions(1, _latestRegionsZUp, _directory, fileNames);
 
 //   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
 //   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
@@ -32,26 +33,36 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                plotter2D = true;
             }
 
-            ImGui::SliderFloat("StartTime", &startTime, -1, 1);
-            ImGui::SliderFloat("EndTime", &endTime, -1, 1);
-            ImGui::SliderFloat("Start", &start, -1, 1);
-            ImGui::SliderFloat("End", &end, -1, 1);
-            ImGui::SliderFloat("StartRate", &startRate, -1, 1);
-            ImGui::SliderFloat("EndRate", &endRate, -1, 1);
+            ImGui::SliderFloat("EndX", &endX, -10, 10);
+            ImGui::SliderFloat("EndY", &endY, -10, 10);
+            ImGui::SliderFloat("EndZ", &endZ, -10, 10);
+            ImGui::SliderFloat("EndRoll", &endRoll, -10, 10);
+            ImGui::SliderFloat("EndPitch", &endPitch, -10, 10);
+            ImGui::SliderFloat("EndYaw", &endYaw, -10, 10);
 
             if(plotter2D)
             {
                if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
-                  TrajectoryOptimizer traj(startTime, endTime, start, end, startRate, endRate);
-                  traj.Optimize();
+                  PoseTrajectory pose;
 
-                  int totalSamples = 50;
-                  float timeUnit = (endTime - startTime) / (float) totalSamples;
+                  pose.SetPitchConditions(0,1,0,endPitch,0,0);
+                  pose.SetRollConditions(0,1,0,endRoll,0,0);
+                  pose.SetYawConditions(0,1,0,endYaw,0,0);
+                  pose.SetXConditions(0,1,0,endX,0,0);
+                  pose.SetYConditions(0,1,0,endY,0,0);
+                  pose.SetZConditions(0,1,0,endZ,0,0);
+                  pose.Optimize();
+
+                  auto position = pose.GetPosition(0.5);
+
+                  int totalSamples = 80;
+                  float timeUnit = 1.0f / (float) totalSamples;
                   std::vector<Eigen::Vector2f> points;
+                  _mesher->ClearPoses();
                   for (int i = 0; i < totalSamples + 1; i++)
                   {
-                     points.emplace_back(startTime + timeUnit * (float) i, traj.GetValue(startTime + timeUnit * (float) i));
+                     _mesher->GeneratePoseMesh(pose.GetPose(timeUnit * (float)i).GetMatrix().cast<float>(), nullptr);
                   }
                   ImGuiTools::ScatterPlotXY(points, "Trajectory 1D", true, false);
                   ImGuiTools::EndPlotWindow();
