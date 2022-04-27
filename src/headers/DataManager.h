@@ -7,8 +7,6 @@
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
-#include <xtensor/xarray.hpp>
-#include <xtensor/xcsv.hpp>
 #include "Log.h"
 #include "ApplicationState.h"
 #include "CameraParams.h"

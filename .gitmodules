@@ -1,15 +1,6 @@
 [submodule "Vendor/spdlog"]
 	path = Vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "Vendor/SemanticSLAM"]
-	path = Vendor/SemanticSLAM
-	url = https://github.com/BhavyanshM/SemanticSLAM.git
-[submodule "Vendor/xtensor"]
-	path = Vendor/xtensor
-	url = https://github.com/xtensor-stack/xtensor.git
-[submodule "Vendor/xtensor-blas"]
-	path = Vendor/xtensor-blas
-	url = https://github.com/xtensor-stack/xtensor-blas.git
 [submodule "Vendor/implot"]
 	path = Vendor/implot
 	url = https://github.com/epezent/implot.git

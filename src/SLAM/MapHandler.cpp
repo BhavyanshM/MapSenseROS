@@ -2,7 +2,7 @@
 #include "ImGuiTools.h"
 #include "TrajectoryOptimizer.h"
 
-MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI("/home/quantum/Workspace/Volume/CPP/ClayEngine")
+MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI(ros::package::getPath("map_sense") + "/Extras")
 {
    _network = network;
 

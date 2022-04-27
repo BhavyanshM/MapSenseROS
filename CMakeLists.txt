@@ -26,8 +26,6 @@ find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 find_package(xtl REQUIRED)
 find_package(BLAS REQUIRED)
 
-add_subdirectory(Vendor/xtensor)
-add_subdirectory(Vendor/xtensor-blas)
 add_subdirectory(Vendor/Geometry/)
 
 #include_directories(${GTSAM_INCLUDE_DIR})
@@ -194,8 +192,6 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         /usr/include/CL/
         Vendor/spdlog/include
-        Vendor/xtensor/include
-        Vendor/xtensor-blas/include
         /usr/local/include/ClayEngine/Vendor/
         Vendor/implot/
         ${Geometry_INCLUDE_DIR}

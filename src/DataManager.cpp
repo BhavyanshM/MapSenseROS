@@ -15,16 +15,6 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
     {
         AppUtils::getFileNames(_directory, _fileNames, false);
         if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
-        if(poseFile != "")
-        {
-            std::ifstream in_file;
-            in_file.open(poseFile);
-            _poses = xt::load_csv<double>(in_file, ' ');
-
-            _poses.reshape({-1, 12});
-
-            MS_INFO("Poses Shape: {} {}", _poses.shape().at(0), _poses.shape().at(1));
-        }
     }
 
 }
