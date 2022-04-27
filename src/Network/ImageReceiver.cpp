@@ -139,6 +139,6 @@ void ImageReceiver::getData(cv::Mat& image, ApplicationState& app, double& times
       app.DEPTH_FY = _cameraInfoMessage->K[4] / app.DIVISION_FACTOR;
       app.DEPTH_CX = _cameraInfoMessage->K[2] / app.DIVISION_FACTOR;
       app.DEPTH_CY = _cameraInfoMessage->K[5] / app.DIVISION_FACTOR;
-      app.update();
+      app.Update();
    }
 }

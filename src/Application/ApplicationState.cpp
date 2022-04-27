@@ -73,6 +73,7 @@ ApplicationState::ApplicationState()
       if(name == "SEGMENT_DIST_THRESHOLD") {SEGMENT_DIST_THRESHOLD = stof(value);}
       if(name == "MATCH_DIST_THRESHOLD") {MATCH_DIST_THRESHOLD = stof(value);}
       if(name == "MATCH_ANGULAR_THRESHOLD") {MATCH_ANGULAR_THRESHOLD = stof(value);}
+      if(name == "MATCH_IOU_THRESHOLD") {MATCH_IOU_THRESHOLD = stof(value);}
 
 
       // Bools
@@ -112,7 +113,7 @@ ApplicationState::ApplicationState()
    HASH_SUB_W = (int) HASH_INPUT_WIDTH / HASH_PATCH_WIDTH;
 }
 
-void ApplicationState::update()
+void ApplicationState::Update()
 {
    if (DEPTH_INPUT_HEIGHT > 0 && DEPTH_INPUT_WIDTH > 0)
    {

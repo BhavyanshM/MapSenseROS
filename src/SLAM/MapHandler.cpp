@@ -7,7 +7,7 @@ MapHandler::MapHandler(NetworkManager *network, ApplicationState& app) : _app(ap
 {
    _network = network;
 
-   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Tests/Test_Set_01/";
+   _directory = ros::package::getPath("map_sense") + "/Extras/Regions/Archive/Set_Ouster_Convex_ISR_01/";
    AppUtils::getFileNames(_directory, fileNames);
 
    /* TODO: Temporary. */
@@ -44,29 +44,29 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::SliderFloat("VelEndY", &velEndY, -10, 10);
             ImGui::SliderFloat("VelEndZ", &velEndZ, -10, 10);
 
-            if (plotter2D)
-            {
-               PoseTrajectory pose;
-
-               pose.SetPitchConditions(0, 1, 0, endPitch, 0, 0);
-               pose.SetRollConditions(0, 1, 0, endRoll, 0, 0);
-               pose.SetYawConditions(0, 1, 0, endYaw, 0, 0);
-               pose.SetXConditions(0, 1, 0, endX, 0, velEndX);
-               pose.SetYConditions(0, 1, 0, endY, 0, velEndY);
-               pose.SetZConditions(0, 1, 0, endZ, 0, velEndZ);
-               pose.Optimize();
-
-               auto position = pose.GetPosition(0.5);
-
-               int totalSamples = 80;
-               float timeUnit = 1.0f / (float) totalSamples;
-               std::vector<Eigen::Vector2f> points;
-               _mesher->ClearPoses();
-               for (int i = 0; i < totalSamples + 1; i++)
-               {
-                  _mesher->GeneratePoseMesh(pose.GetPose(timeUnit * (float) i).GetMatrix().cast<float>(), nullptr);
-               }
-            }
+//            if (plotter2D)
+//            {
+//               PoseTrajectory pose;
+//
+//               pose.SetPitchConditions(0, 1, 0, endPitch, 0, 0);
+//               pose.SetRollConditions(0, 1, 0, endRoll, 0, 0);
+//               pose.SetYawConditions(0, 1, 0, endYaw, 0, 0);
+//               pose.SetXConditions(0, 1, 0, endX, 0, velEndX);
+//               pose.SetYConditions(0, 1, 0, endY, 0, velEndY);
+//               pose.SetZConditions(0, 1, 0, endZ, 0, velEndZ);
+//               pose.Optimize();
+//
+//               auto position = pose.GetPosition(0.5);
+//
+//               int totalSamples = 80;
+//               float timeUnit = 1.0f / (float) totalSamples;
+//               std::vector<Eigen::Vector2f> points;
+//               _mesher->ClearPoses();
+//               for (int i = 0; i < totalSamples + 1; i++)
+//               {
+//                  _mesher->GeneratePoseMesh(pose.GetPose(timeUnit * (float) i).GetMatrix().cast<float>(), nullptr);
+//               }
+//            }
             ImGui::EndTabItem();
          }
 
@@ -104,63 +104,63 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::SliderFloat("Compress Dist Threshold", &app.COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
             ImGui::SliderFloat("Compress Cosine Threshold", &app.COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
-            if (plotter2D && latestRegions.size() > 0)
-            {
-
-               latestRegions[regionSelected]->ComputeBoundaryVerticesPlanar();
-               const std::vector<Eigen::Vector2f>& boundaryPoints2D = latestRegions[regionSelected]->GetPlanarPatchCentroids();
-
-               latestRegions[regionSelected + 1]->ComputeBoundaryVerticesPlanar();
-               const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = latestRegions[regionSelected + 1]->GetPlanarPatchCentroids();
-
-               latestRegions[regionSelected + 2]->ComputeBoundaryVerticesPlanar();
-               const std::vector<Eigen::Vector2f>& boundaryPointsThird2D = latestRegions[regionSelected + 2]->GetPlanarPatchCentroids();
-
-               auto unionHull = HullTools::CalculateUnion(boundaryPoints2D, boundaryPointsSecond2D);
-               auto combinedUnionHull = HullTools::CalculateUnion(unionHull, boundaryPointsThird2D);
-
-               float IoU = HullTools::ComputeBoundingBoxIoU({boundaryPoints2D}, {boundaryPointsSecond2D});
-
-               ImGui::Text("IoU for Hulls: %.2lf", IoU);
-
-               Eigen::Vector2f mousePlotLocation;
-
-               if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
-               {
-                  ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1", true);
-                  ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2", true);
-                  ImGuiTools::ScatterPlotXY(boundaryPointsThird2D, "Region 3", true);
-
-                  ImGuiTools::ScatterPlotXY(unionHull, "Union Hull");
-                  ImGuiTools::ScatterPlotXY(combinedUnionHull, "Combined Union Hull");
-
-                  ImPlotPoint mouse = ImPlot::GetPlotMousePos();
-                  mousePlotLocation << mouse.x, mouse.y;
-
-                  ImGuiTools::EndPlotWindow();
-               }
-
-               ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
-               ImGui::Text("Winding Number Region 1: %.2lf", HullTools::ComputeWindingNumber(boundaryPoints2D, mousePlotLocation));
-               ImGui::Text("Winding Number Region 2: %.2lf", HullTools::ComputeWindingNumber(boundaryPointsSecond2D, mousePlotLocation));
-               ImGui::Text("Winding Number Union Hull: %.2lf", HullTools::ComputeWindingNumber(unionHull, mousePlotLocation));
-
-               //               latestRegions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
-               //               latestRegions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
-
-               //               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, latestRegions.size());
-               //               const std::vector<int>& segmentIndices = latestRegions[regionSelected]->GetSegmentIndices();
-
-
-
-
-
-
-               if (ImGui::Button("Close"))
-               {
-                  plotter2D = false;
-               }
-            }
+//            if (plotter2D && latestRegions.size() > 0)
+//            {
+//
+//               latestRegions[regionSelected]->ComputeBoundaryVerticesPlanar();
+//               const std::vector<Eigen::Vector2f>& boundaryPoints2D = latestRegions[regionSelected]->GetPlanarPatchCentroids();
+//
+//               latestRegions[regionSelected + 1]->ComputeBoundaryVerticesPlanar();
+//               const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = latestRegions[regionSelected + 1]->GetPlanarPatchCentroids();
+//
+//               latestRegions[regionSelected + 2]->ComputeBoundaryVerticesPlanar();
+//               const std::vector<Eigen::Vector2f>& boundaryPointsThird2D = latestRegions[regionSelected + 2]->GetPlanarPatchCentroids();
+//
+//               auto unionHull = HullTools::CalculateUnion(boundaryPoints2D, boundaryPointsSecond2D);
+//               auto combinedUnionHull = HullTools::CalculateUnion(unionHull, boundaryPointsThird2D);
+//
+//               float IoU = HullTools::ComputeBoundingBoxIoU({boundaryPoints2D}, {boundaryPointsSecond2D});
+//
+//               ImGui::Text("IoU for Hulls: %.2lf", IoU);
+//
+//               Eigen::Vector2f mousePlotLocation;
+//
+//               if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
+//               {
+//                  ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1", true);
+//                  ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2", true);
+//                  ImGuiTools::ScatterPlotXY(boundaryPointsThird2D, "Region 3", true);
+//
+//                  ImGuiTools::ScatterPlotXY(unionHull, "Union Hull");
+//                  ImGuiTools::ScatterPlotXY(combinedUnionHull, "Combined Union Hull");
+//
+//                  ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+//                  mousePlotLocation << mouse.x, mouse.y;
+//
+//                  ImGuiTools::EndPlotWindow();
+//               }
+//
+//               ImGui::Text("Mouse Plot: %.2lf, %.2lf", mousePlotLocation.x(), mousePlotLocation.y());
+//               ImGui::Text("Winding Number Region 1: %.2lf", HullTools::ComputeWindingNumber(boundaryPoints2D, mousePlotLocation));
+//               ImGui::Text("Winding Number Region 2: %.2lf", HullTools::ComputeWindingNumber(boundaryPointsSecond2D, mousePlotLocation));
+//               ImGui::Text("Winding Number Union Hull: %.2lf", HullTools::ComputeWindingNumber(unionHull, mousePlotLocation));
+//
+//               //               latestRegions[regionSelected]->ComputeSegmentIndices(app.SEGMENT_DIST_THRESHOLD);
+//               //               latestRegions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
+//
+//               //               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, latestRegions.size());
+//               //               const std::vector<int>& segmentIndices = latestRegions[regionSelected]->GetSegmentIndices();
+//
+//
+//
+//
+//
+//
+//               if (ImGui::Button("Close"))
+//               {
+//                  plotter2D = false;
+//               }
+//            }
             ImGui::EndTabItem();
          }
 
@@ -182,10 +182,24 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::Text("Next File: %s", (_directory + fileNames[_frameIndex]).c_str());
             ImGui::NewLine();
 
+            ImGui::SliderFloat("Match IoU Threshold", &app.MATCH_IOU_THRESHOLD, 0.01f, 1.0f);
             ImGui::SliderFloat("Match Angular Threshold", &app.MATCH_ANGULAR_THRESHOLD, 0.01f, 1.0f);
             ImGui::SliderFloat("Match Distance Threshold", &app.MATCH_DIST_THRESHOLD, 0.01f, 8.0f);
 
             ImGui::Checkbox("Factor Graph Enabled", &app.FACTOR_GRAPH_ENABLED);
+
+            if(ImGui::Button("Enable Matching"))
+            {
+               plotter2D = true;
+            }
+            if(plotter2D)
+            {
+               MatchPlanarRegionsToMap();
+               _mesher->ClearLines();
+               _mesher->GenerateLineMeshForRegions(_previousRegionsZUp, nullptr);
+               _mesher->GenerateLineMeshForRegions(_latestRegionsZUp, nullptr);
+               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
+            }
 
             if (ImGui::Button("Register Next Set"))
             {
@@ -200,26 +214,17 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                //               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
 
-               _mesher->GenerateLineMeshForRegions(_previousRegionsZUp, nullptr, true);
-               _mesher->GenerateLineMeshForRegions(_latestRegionsZUp, nullptr);
-               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
+//               _mesher->GenerateLineMeshForRegions(_previousRegionsZUp, nullptr, true);
+//               _mesher->GenerateLineMeshForRegions(_latestRegionsZUp, nullptr);
+//               _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
 
-               //               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
+               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
 
                _previousRegionsZUp = std::move(_latestRegionsZUp);
 
 
                //               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetInverse().GetMatrix().cast<float>(), nullptr);
                _frameIndex++;
-            }
-            if (ImGui::Button("Update Map Landmarks"))
-            {
-               UpdateMapLandmarks(_network->GetSLAMPlanes());
-            }
-
-            if (ImGui::Button("Update Map Poses"))
-            {
-               _mesher->GeneratePoseMesh(_network->GetSLAMPoses().begin()->second.GetMatrix().cast<float>(), nullptr);
             }
 
             if (ImGui::Button("Plot"))
@@ -310,13 +315,24 @@ void MapHandler::MatchPlanarRegionsToMap()
 
                Eigen::Vector3f prevCenter = _previousRegionsZUp[i]->GetCenter();
                Eigen::Vector3f curCenter = _latestRegionsZUp[j]->GetCenter();
-               float dist = (curCenter - prevCenter).norm();
+               float dist = (curCenter - prevCenter).dot(prevNormal);
                //         float dist = fabs((prevCenter - curCenter).dot(curNormal)) + fabs((curCenter - prevCenter).dot(prevNormal));
 
                int countDiff = abs(_previousRegionsZUp[i]->GetNumOfBoundaryVertices() - _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
                int maxCount = std::max(_previousRegionsZUp[i]->GetNumOfBoundaryVertices(), _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
 
-               if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD
+
+               std::shared_ptr<PlanarRegion> projectedRegion = std::make_shared<PlanarRegion>(_latestRegionsZUp[j]->getId());
+               _latestRegionsZUp[j]->TransformAndFill(projectedRegion, {});
+               projectedRegion->ProjectToPlane(_previousRegionsZUp[i]->GetPlane());
+
+               projectedRegion->ComputeBoundaryVerticesPlanar();
+               _previousRegionsZUp[i]->ComputeBoundaryVerticesPlanar();
+
+               float IoU = HullTools::ComputeBoundingBoxIoU({_previousRegionsZUp[i]->GetPlanarPatchCentroids()},{projectedRegion->GetPlanarPatchCentroids()});
+
+
+               if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD && IoU > _app.MATCH_IOU_THRESHOLD
                   //                     && ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD
                      )
                {
@@ -494,7 +510,7 @@ void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<Plana
    for (int i = 0; i < srcRegions.size(); i++)
    {
       std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(srcRegions[i]->getId());
-      srcRegions[i]->CopyAndTransform(planarRegion, transform);
+      srcRegions[i]->TransformAndFill(planarRegion, transform);
       dstRegions.emplace_back(std::move(planarRegion));
    }
 }
@@ -506,7 +522,7 @@ void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<Plana
    for (int i = 0; i < srcRegions.size(); i++)
    {
       std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(srcRegions[i]->getId());
-      srcRegions[i]->CopyAndTransform(planarRegion, transform);
+      srcRegions[i]->TransformAndFill(planarRegion, transform);
       dstRegionSet.InsertRegion(std::move(planarRegion), planarRegion->getId());
    }
 }

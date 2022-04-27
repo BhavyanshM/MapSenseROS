@@ -329,7 +329,7 @@ void NetworkManager::load_next_frame(cv::Mat& depth, cv::Mat& color, double& tim
          app.DEPTH_FY = depthCameraInfo->K[4] / app.DIVISION_FACTOR;
          app.DEPTH_CX = depthCameraInfo->K[2] / app.DIVISION_FACTOR;
          app.DEPTH_CY = depthCameraInfo->K[5] / app.DIVISION_FACTOR;
-         app.update();
+         app.Update();
          MS_DEBUG("Process Callback: INPUT:({},{}), INFO:({}, {}, {}, {}, {}, {}) KERNEL:({},{}) PATCH:({},{})", app.DEPTH_INPUT_HEIGHT,
                    app.DEPTH_INPUT_WIDTH, app.SUB_W, app.SUB_H, app.DEPTH_FX, app.DEPTH_FY, app.DEPTH_CX, app.DEPTH_CY, app.SUB_H, app.SUB_W,
                    app.DEPTH_PATCH_HEIGHT, app.DEPTH_PATCH_WIDTH);

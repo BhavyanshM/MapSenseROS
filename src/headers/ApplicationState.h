@@ -14,15 +14,7 @@ class ApplicationState
    public:
       ApplicationState();
 
-      const std::string& getDepthFile() const;
-
-      void setDepthFile(const std::string& depthFile);
-
-      const std::string& getColorFile() const;
-
-      void setColorFile(const std::string& colorFile);
-
-      void update();
+      void Update();
 
    public:
       float MERGE_DISTANCE_THRESHOLD = 0.016;
@@ -171,6 +163,7 @@ class ApplicationState
       float SEGMENT_DIST_THRESHOLD = 0.233f;
       float MATCH_DIST_THRESHOLD = 0.1f;
       float MATCH_ANGULAR_THRESHOLD = 0.9f;
+      float MATCH_IOU_THRESHOLD = 0.1f;
       int MATCH_PERCENT_VERTEX_THRESHOLD = 20;
 
 

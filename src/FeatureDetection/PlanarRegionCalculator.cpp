@@ -507,7 +507,7 @@ void PlanarRegionCalculator::GeneratePatchGraphFromPointCloud(ApplicationState& 
    //   for (int i = 0; i < planarRegionList.size(); i++)
    //   {
    //      std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(planarRegionList[i]->getId());
-   //      planarRegionList[i]->CopyAndTransform(planarRegion, _transformZUp);
+   //      planarRegionList[i]->TransformAndFill(planarRegion, _transformZUp);
    //      _hashRegionsZUp.emplace_back(std::move(planarRegion));
    //   }
 
@@ -556,7 +556,7 @@ void PlanarRegionCalculator::generateRegionsFromDepth(ApplicationState& appState
    for (int i = 0; i < planarRegionList.size(); i++)
    {
       std::shared_ptr<PlanarRegion> planarRegion = std::make_shared<PlanarRegion>(planarRegionList[i]->getId());
-      planarRegionList[i]->CopyAndTransform(planarRegion, _transformZUp);
+      planarRegionList[i]->TransformAndFill(planarRegion, _transformZUp);
       _depthRegionsZUp.emplace_back(std::move(planarRegion));
    }
 
