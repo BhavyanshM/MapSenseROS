@@ -2,7 +2,8 @@
 #include "ImGuiTools.h"
 #include "PoseTrajectory.h"
 
-MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI(ros::package::getPath("map_sense") + "/Extras/Regions/Archive")
+MapHandler::MapHandler(NetworkManager *network, ApplicationState& app) : _app(app),
+                                                                         _fileBrowserUI(ros::package::getPath("map_sense") + "/Extras/Regions/Archive")
 {
    _network = network;
 
@@ -13,22 +14,22 @@ MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(ap
    GeomTools::LoadRegions(0, _previousRegionsZUp, _directory, fileNames);
    GeomTools::LoadRegions(1, _latestRegionsZUp, _directory, fileNames);
 
-//   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
-//   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
+   //   _transformZUp.RotateZ(-90.0f / 180.0f * M_PI);
+   //   _transformZUp.RotateY(90.0f / 180.0f * M_PI);
 }
 
 void MapHandler::ImGuiUpdate(ApplicationState& app)
 {
    _app = app;
 
-   if(ImGui::BeginTabItem("Mapper"))
+   if (ImGui::BeginTabItem("Mapper"))
    {
-      if(ImGui::BeginTabBar("Mapper Tabs"))
+      if (ImGui::BeginTabBar("Mapper Tabs"))
       {
-         if(ImGui::BeginTabItem("Trajectory"))
+         if (ImGui::BeginTabItem("Trajectory"))
          {
 
-            if(ImGui::Button("Plot Trajectory"))
+            if (ImGui::Button("Plot Trajectory"))
             {
                plotter2D = true;
             }
@@ -39,58 +40,54 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::SliderFloat("EndRoll", &endRoll, -10, 10);
             ImGui::SliderFloat("EndPitch", &endPitch, -10, 10);
             ImGui::SliderFloat("EndYaw", &endYaw, -10, 10);
+            ImGui::SliderFloat("VelEndX", &velEndX, -10, 10);
+            ImGui::SliderFloat("VelEndY", &velEndY, -10, 10);
+            ImGui::SliderFloat("VelEndZ", &velEndZ, -10, 10);
 
-            if(plotter2D)
+            if (plotter2D)
             {
-               if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
+               PoseTrajectory pose;
+
+               pose.SetPitchConditions(0, 1, 0, endPitch, 0, 0);
+               pose.SetRollConditions(0, 1, 0, endRoll, 0, 0);
+               pose.SetYawConditions(0, 1, 0, endYaw, 0, 0);
+               pose.SetXConditions(0, 1, 0, endX, 0, velEndX);
+               pose.SetYConditions(0, 1, 0, endY, 0, velEndY);
+               pose.SetZConditions(0, 1, 0, endZ, 0, velEndZ);
+               pose.Optimize();
+
+               auto position = pose.GetPosition(0.5);
+
+               int totalSamples = 80;
+               float timeUnit = 1.0f / (float) totalSamples;
+               std::vector<Eigen::Vector2f> points;
+               _mesher->ClearPoses();
+               for (int i = 0; i < totalSamples + 1; i++)
                {
-                  PoseTrajectory pose;
-
-                  pose.SetPitchConditions(0,1,0,endPitch,0,0);
-                  pose.SetRollConditions(0,1,0,endRoll,0,0);
-                  pose.SetYawConditions(0,1,0,endYaw,0,0);
-                  pose.SetXConditions(0,1,0,endX,0,0);
-                  pose.SetYConditions(0,1,0,endY,0,0);
-                  pose.SetZConditions(0,1,0,endZ,0,0);
-                  pose.Optimize();
-
-                  auto position = pose.GetPosition(0.5);
-
-                  int totalSamples = 80;
-                  float timeUnit = 1.0f / (float) totalSamples;
-                  std::vector<Eigen::Vector2f> points;
-                  _mesher->ClearPoses();
-                  for (int i = 0; i < totalSamples + 1; i++)
-                  {
-                     _mesher->GeneratePoseMesh(pose.GetPose(timeUnit * (float)i).GetMatrix().cast<float>(), nullptr);
-                  }
-                  ImGuiTools::ScatterPlotXY(points, "Trajectory 1D", true, false);
-                  ImGuiTools::EndPlotWindow();
+                  _mesher->GeneratePoseMesh(pose.GetPose(timeUnit * (float) i).GetMatrix().cast<float>(), nullptr);
                }
             }
             ImGui::EndTabItem();
          }
 
-
-
-
-         if(ImGui::BeginTabItem("Plot"))
+         if (ImGui::BeginTabItem("Plot"))
          {
             ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);
-            if(ImGui::Button("Load Regions"))
+            if (ImGui::Button("Load Regions"))
             {
                GeomTools::LoadRegions(fileSelected, latestRegions, _directory, fileNames);
             }
 
             ImGui::Text("File Chosen: %s", _directory.c_str());
-            if(ImGui::Button("Browse"))
+            if (ImGui::Button("Browse"))
             {
                showFileBrowser = true;
             }
-            if(showFileBrowser)
+            if (showFileBrowser)
             {
                showFileBrowser = _fileBrowserUI.ImGuiUpdate(_directory);
-               if(!showFileBrowser && _directory.substr(_directory.length() - 4, 4).compare(".txt") == 0) GeomTools::LoadRegions(_directory, _latestRegionsZUp, true);
+               if (!showFileBrowser && _directory.substr(_directory.length() - 4, 4).compare(".txt") == 0)
+                  GeomTools::LoadRegions(_directory, _latestRegionsZUp, true);
                _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr, true);
             }
 
@@ -98,17 +95,16 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
             ImGuiTools::GetDropDownSelection("Region", "Region", regionSelected, latestRegions.size());
             ImGui::SameLine(ImGui::GetWindowWidth() - 40);
-            if(ImGui::Button("Plot"))
+            if (ImGui::Button("Plot"))
             {
                plotter2D = true;
             }
-
 
             ImGui::SliderFloat("Segment Dist Threshold", &app.SEGMENT_DIST_THRESHOLD, 0.01f, 0.5f);
             ImGui::SliderFloat("Compress Dist Threshold", &app.COMPRESS_DIST_THRESHOLD, 0.01f, 0.1f);
             ImGui::SliderFloat("Compress Cosine Threshold", &app.COMPRESS_COSINE_THRESHOLD, 0.01f, 1.0f);
 
-            if(plotter2D && latestRegions.size() > 0)
+            if (plotter2D && latestRegions.size() > 0)
             {
 
                latestRegions[regionSelected]->ComputeBoundaryVerticesPlanar();
@@ -129,7 +125,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                Eigen::Vector2f mousePlotLocation;
 
-               if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
+               if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
                   ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1", true);
                   ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2", true);
@@ -153,14 +149,14 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                //               latestRegions[regionSelected]->CompressRegionSegmentsLinear(app.COMPRESS_DIST_THRESHOLD, app.COMPRESS_COSINE_THRESHOLD);
 
                //               ImGuiTools::GetDropDownSelection("Segment", "Segment", segmentSelected, latestRegions.size());
-//               const std::vector<int>& segmentIndices = latestRegions[regionSelected]->GetSegmentIndices();
+               //               const std::vector<int>& segmentIndices = latestRegions[regionSelected]->GetSegmentIndices();
 
 
 
 
 
 
-               if(ImGui::Button("Close"))
+               if (ImGui::Button("Close"))
                {
                   plotter2D = false;
                }
@@ -168,7 +164,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::EndTabItem();
          }
 
-         if(ImGui::BeginTabItem("Map"))
+         if (ImGui::BeginTabItem("Map"))
          {
             ImGui::Text("Frame Index: %d", _frameIndex);
             ImGui::Text("Rapid Regions Loaded: %d", _regionCalculator->planarRegionList.size());
@@ -186,15 +182,14 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
             ImGui::Text("Next File: %s", (_directory + fileNames[_frameIndex]).c_str());
             ImGui::NewLine();
 
-
             ImGui::SliderFloat("Match Angular Threshold", &app.MATCH_ANGULAR_THRESHOLD, 0.01f, 1.0f);
             ImGui::SliderFloat("Match Distance Threshold", &app.MATCH_DIST_THRESHOLD, 0.01f, 8.0f);
 
             ImGui::Checkbox("Factor Graph Enabled", &app.FACTOR_GRAPH_ENABLED);
 
-            if(ImGui::Button("Register Next Set"))
+            if (ImGui::Button("Register Next Set"))
             {
-               _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex );
+               _regionCalculator->LoadRegions(_directory, fileNames, _frameIndex);
 
                Update(_regionCalculator->planarRegionList, _frameIndex + 1);
 
@@ -203,41 +198,41 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                // _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr);
 
-//               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
+               //               GeomTools::AppendMeasurementsToFile(_sensorToMapTransform.GetMatrix().cast<float>(), _matches, _directory + "matches.txt", _frameIndex, _frameIndex + 1);
 
                _mesher->GenerateLineMeshForRegions(_previousRegionsZUp, nullptr, true);
                _mesher->GenerateLineMeshForRegions(_latestRegionsZUp, nullptr);
                _mesher->GenerateMeshForMatches(_latestRegionsZUp, _previousRegionsZUp, _matches, nullptr);
 
-//               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
+               //               _mesher->GenerateLineMeshForRegions(_mapRegions.GetRegions(), nullptr);
 
                _previousRegionsZUp = std::move(_latestRegionsZUp);
 
 
-//               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetInverse().GetMatrix().cast<float>(), nullptr);
+               //               _mesher->GeneratePoseMesh(_sensorToMapTransform.GetInverse().GetMatrix().cast<float>(), nullptr);
                _frameIndex++;
             }
-            if(ImGui::Button("Update Map Landmarks"))
+            if (ImGui::Button("Update Map Landmarks"))
             {
                UpdateMapLandmarks(_network->GetSLAMPlanes());
             }
 
-            if(ImGui::Button("Update Map Poses"))
+            if (ImGui::Button("Update Map Poses"))
             {
                _mesher->GeneratePoseMesh(_network->GetSLAMPoses().begin()->second.GetMatrix().cast<float>(), nullptr);
             }
 
-            if(ImGui::Button("Plot"))
+            if (ImGui::Button("Plot"))
             {
                plotter2D = true;
             }
 
-            if(plotter2D)
+            if (plotter2D)
             {
                _previousRegionsZUp[regionSelected]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPoints2D = _previousRegionsZUp[regionSelected]->GetPlanarPatchCentroids();
 
-//               _latestRegionsZUp[regionSelected]->ProjectToPlane(_previousRegionsZUp[regionSelected]->GetPlane());
+               //               _latestRegionsZUp[regionSelected]->ProjectToPlane(_previousRegionsZUp[regionSelected]->GetPlane());
                _latestRegionsZUp[regionSelected]->ComputeBoundaryVerticesPlanar();
                const std::vector<Eigen::Vector2f>& boundaryPointsSecond2D = _latestRegionsZUp[regionSelected]->GetPlanarPatchCentroids();
 
@@ -247,7 +242,7 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
                ImGui::Text("IoU for Hulls: %.2lf", IoU);
 
-               if(ImGuiTools::BeginPlotWindow("Plotter 2D"))
+               if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
                   ImGuiTools::ScatterPlotXY(boundaryPoints2D, "Region 1");
                   ImGuiTools::ScatterPlotXY(boundaryPointsSecond2D, "Region 2");
@@ -263,11 +258,11 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
    }
 }
 
-void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, int index)
+void MapHandler::Update(std::vector<std::shared_ptr<PlanarRegion>>& regions, int index)
 {
    latestRegions = regions;
 
-   if(_previousRegionsZUp.size() == 0)
+   if (_previousRegionsZUp.size() == 0)
    {
       TransformAndCopyRegions(latestRegions, _previousRegionsZUp, _transformZUp);
    }
@@ -282,12 +277,12 @@ void MapHandler::Update(std::vector <std::shared_ptr<PlanarRegion>>& regions, in
 
       Eigen::Quaterniond quaternion = _sensorToMapTransform.GetQuaternion();
       Eigen::Vector3d position = _sensorToMapTransform.GetTranslation();
-      MS_INFO("Sensor To Map Pose ({}): {} {} {} {} {} {} {}", index, position.x(),
-                    position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+      MS_INFO("Sensor To Map Pose ({}): {} {} {} {} {} {} {}", index, position.x(), position.y(), position.z(), quaternion.x(), quaternion.y(), quaternion.z(),
+              quaternion.w());
 
       std::cout << _sensorToMapTransform.GetMatrix() << std::endl;
 
-      if(_app.FACTOR_GRAPH_ENABLED)
+      if (_app.FACTOR_GRAPH_ENABLED)
       {
          _network->PublishPoseStamped(_sensorPoseRelative, index);
          _network->PublishPlanes(_latestRegionsZUp, index);
@@ -322,17 +317,16 @@ void MapHandler::MatchPlanarRegionsToMap()
                int maxCount = std::max(_previousRegionsZUp[i]->GetNumOfBoundaryVertices(), _latestRegionsZUp[j]->GetNumOfBoundaryVertices());
 
                if (dist < _app.MATCH_DIST_THRESHOLD && angularDiff > _app.MATCH_ANGULAR_THRESHOLD
-//                     && ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD
-               )
+                  //                     && ((float) countDiff / ((float) maxCount)) * 100.0f < _app.MATCH_PERCENT_VERTEX_THRESHOLD
+                     )
                {
                   _matches.emplace_back(i, j);
-                  if(_previousRegionsZUp[i]->getId() == -1 && _latestRegionsZUp[j]->getId() == -1)
+                  if (_previousRegionsZUp[i]->getId() == -1 && _latestRegionsZUp[j]->getId() == -1)
                   {
                      _latestRegionsZUp[j]->setId(uniqueLandmarkCounter);
                      _previousRegionsZUp[j]->setId(uniqueLandmarkCounter);
                      uniqueLandmarkCounter++;
-                  }
-                  else
+                  } else
                   {
                      _latestRegionsZUp[j]->setId(_previousRegionsZUp[i]->getId());
                   }
@@ -436,7 +430,7 @@ void MapHandler::RegisterRegionsPointToPoint()
 
 void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion>>& regions)
 {
-   for (auto region : regions)
+   for (auto region: regions)
    {
       _mapRegions.InsertRegion(std::move(region), region->getId());
    }
@@ -478,23 +472,23 @@ void MapHandler::InsertMapRegions(const std::vector<std::shared_ptr<PlanarRegion
 
 void MapHandler::UpdateMapLandmarks(const PlaneSet3D& planeSet)
 {
-   for (auto plane : planeSet.GetPlanes())
+   for (auto plane: planeSet.GetPlanes())
    {
       MS_INFO("Exists -> ID: {} Plane: {}", plane.first, plane.second.GetString());
-      if(_mapRegions.Exists(plane.first))
+      if (_mapRegions.Exists(plane.first))
       {
          _mapRegions.GetRegions()[plane.first]->ProjectToPlane(plane.second.GetParams().cast<float>());
       }
    }
 }
 
-
 void MapHandler::setDirectory(const std::string& directory)
 {
    this->_directory = directory;
 }
 
-void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions, const RigidBodyTransform& transform)
+void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, std::vector<std::shared_ptr<PlanarRegion>>& dstRegions,
+                                         const RigidBodyTransform& transform)
 {
    dstRegions.clear();
    for (int i = 0; i < srcRegions.size(); i++)
@@ -505,7 +499,8 @@ void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<Plana
    }
 }
 
-void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, PlanarRegionSet& dstRegionSet, const RigidBodyTransform& transform)
+void MapHandler::TransformAndCopyRegions(const std::vector<std::shared_ptr<PlanarRegion>>& srcRegions, PlanarRegionSet& dstRegionSet,
+                                         const RigidBodyTransform& transform)
 {
    dstRegionSet.GetRegions().clear();
    for (int i = 0; i < srcRegions.size(); i++)

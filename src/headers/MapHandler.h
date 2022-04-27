@@ -129,6 +129,10 @@ class MapHandler
       float endPitch = 1;
       float endRoll = -1;
 
+      float velEndX = 1.5f;
+      float velEndY = 2.1f;
+      float velEndZ = -2.0f;
+
       Clay::FileBrowserUI _fileBrowserUI;
 
 };
