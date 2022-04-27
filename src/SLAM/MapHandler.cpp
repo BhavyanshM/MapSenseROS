@@ -2,7 +2,7 @@
 #include "ImGuiTools.h"
 #include "TrajectoryOptimizer.h"
 
-MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI(ros::package::getPath("map_sense") + "/Extras")
+MapHandler::MapHandler(NetworkManager* network, ApplicationState& app) : _app(app), _fileBrowserUI(ros::package::getPath("map_sense") + "/Extras/Regions/Archive")
 {
    _network = network;
 
@@ -41,7 +41,6 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
 
             if(plotter2D)
             {
-
                if (ImGuiTools::BeginPlotWindow("Plotter 2D"))
                {
                   TrajectoryOptimizer traj(startTime, endTime, start, end, startRate, endRate);
@@ -50,16 +49,20 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                   int totalSamples = 50;
                   float timeUnit = (endTime - startTime) / (float) totalSamples;
                   std::vector<Eigen::Vector2f> points;
-                  for (int i = 0; i < totalSamples; i++)
+                  for (int i = 0; i < totalSamples + 1; i++)
                   {
                      points.emplace_back(startTime + timeUnit * (float) i, traj.GetValue(startTime + timeUnit * (float) i));
                   }
-                  ImGuiTools::ScatterPlotXY(points, "Trajectory 1D", true);
+                  ImGuiTools::ScatterPlotXY(points, "Trajectory 1D", true, false);
                   ImGuiTools::EndPlotWindow();
                }
             }
             ImGui::EndTabItem();
          }
+
+
+
+
          if(ImGui::BeginTabItem("Plot"))
          {
             ImGuiTools::GetDropDownSelection("File", fileNames, fileSelected);
@@ -74,7 +77,11 @@ void MapHandler::ImGuiUpdate(ApplicationState& app)
                showFileBrowser = true;
             }
             if(showFileBrowser)
+            {
                showFileBrowser = _fileBrowserUI.ImGuiUpdate(_directory);
+               if(!showFileBrowser && _directory.substr(_directory.length() - 4, 4).compare(".txt") == 0) GeomTools::LoadRegions(_directory, _latestRegionsZUp, true);
+               _mesher->GenerateMeshForRegions(_latestRegionsZUp, nullptr, true);
+            }
 
             ImGui::Text("Total Planar Regions: %d", latestRegions.size());
 

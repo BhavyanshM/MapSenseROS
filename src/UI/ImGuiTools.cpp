@@ -3,7 +3,7 @@
 //
 #include "ImGuiTools.h"
 
-void ImGuiTools::ScatterPlotXY(const std::vector<Eigen::Vector2f>& points, const std::string& label, bool lines)
+void ImGuiTools::ScatterPlotXY(const std::vector<Eigen::Vector2f>& points, const std::string& label, bool lines, bool loop)
 {
    std::vector<float> x_data, y_data;
    for(int i = 0; i<points.size(); i++)
@@ -11,11 +11,14 @@ void ImGuiTools::ScatterPlotXY(const std::vector<Eigen::Vector2f>& points, const
       x_data.push_back(points[i].x());
       y_data.push_back(points[i].y());
    }
-   x_data.push_back(points[0].x());
-   y_data.push_back(points[0].y());
+   if(loop)
+   {
+      x_data.push_back(points[0].x());
+      y_data.push_back(points[0].y());
+   }
 
    ImPlot::PlotScatter(label.c_str(), x_data.data(), y_data.data(), points.size());
-   if(lines) ImPlot::PlotLine(label.c_str(), x_data.data(), y_data.data(), points.size() + 1);
+   if(lines) ImPlot::PlotLine(label.c_str(), x_data.data(), y_data.data(), points.size() + (loop ? 1 : 0));
 }
 
 Eigen::Vector2f ImGuiTools::ScatterPlotRegionSegments(const std::vector<Eigen::Vector2f>& points, const std::vector<int>& segmentIDs)

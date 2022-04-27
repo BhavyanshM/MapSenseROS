@@ -14,7 +14,6 @@
 class DataManager
 {
    public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
       DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
@@ -56,7 +55,6 @@ class DataManager
       std::vector<std::string> _secondFileNames;
       uint32_t _counter = 600;
       uint32_t _secondCounter = 600;
-      xt::xarray<float> _poses;
       CameraParams _leftCam, _rightCam;
 };
 

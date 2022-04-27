@@ -34,12 +34,12 @@ plt.ylim(-8,8)
 regions = []
 regions.append(generate_circular_region(offset=(-2,1), size=(1,3), noise_scale=0.5))
 regions.append(generate_circular_region(offset=(1,-1), size=(4,2), noise_scale=0.3))
-regions.append(generate_circular_region(offset=(3,-3), size=(2.4,3), noise_scale=0.2))
+regions.append(generate_circular_region(offset=(4,-3), size=(2,6), noise_scale=0.2))
 
 for region in regions:
     plot_region(region)
 
-f = open("../../../Extras/Regions/Tests/Test_Set_01/0011.txt", 'w+')
+f = open("../../Extras/Regions/Tests/Test_Set_01/0011.txt", 'w+')
 f.write("NumRegions:{}\n".format(len(regions)))
 for region in regions:
     save_region(region, f)
