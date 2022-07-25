@@ -4,6 +4,7 @@
 #include "boost/filesystem.hpp"
 #include <random>
 
+
 DataManager::DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory, const std::string& poseFile)
     : _directory(directory), _secondDirectory(secondDirectory)
 {
@@ -11,11 +12,34 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
    _rightCam.SetParams(718.856, 718.856, 607.193, 185.216);
    _baseline =0.54;
 
-    if(boost::filesystem::exists(_directory))
-    {
-        AppUtils::getFileNames(_directory, _fileNames, false);
-        if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
-    }
+//    if(boost::filesystem::exists(_directory))
+//    {
+//        AppUtils::getFileNames(_directory, _fileNames, false);
+//        if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
+//    }
+
+   using namespace HighFive;
+   // we create a new hdf5 file
+   File file("/tmp/new_file.h5", File::ReadWrite | File::Create | File::Truncate);
+
+   std::vector<int> data(50, 1);
+
+   data[0] = 0;
+   data[1] = 1;
+   for(int i = 2; i<50; i++)
+   {
+      data[i] = data[i-1] + data[i-2];
+   }
+
+   // let's create a dataset of native integer with the size of the vector 'data'
+   DataSet dataset = file.createDataSet<int>("/dataset_one",  DataSpace::From(data));
+
+   // let's write our vector of int to the HDF5 dataset
+   dataset.write(data);
+
+   // read back
+   std::vector<int> result;
+   dataset.read(result);
 
 }
 

@@ -5,6 +5,7 @@
 #ifndef FILEIO_H
 #define FILEIO_H
 
+#include <highfive/H5File.hpp>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/core/core.hpp"
 #include "Log.h"

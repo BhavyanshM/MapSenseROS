@@ -10,7 +10,7 @@
 #include "PlanarRegionCalculator.h"
 #include "MapHandler.h"
 //#include "VisualOdometry.h"
-//#include "DataManager.h"
+#include "DataManager.h"
 #include "SLAMModule.h"
 
 namespace Clay {
@@ -26,7 +26,7 @@ namespace Clay {
          PlanarRegionCalculator *_regionCalculator;
 //         VisualOdometry* _visualOdometry;
          SLAMModule *_slamModule;
-//         DataManager* _data;
+         DataManager* _data;
 
          Ref<PointCloud> firstCloud;
          std::vector<std::shared_ptr<PlanarRegion>> _regions;

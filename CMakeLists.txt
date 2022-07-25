@@ -175,14 +175,15 @@ set(TERRAIN_SLAM_SOURCES
 
 
 set(MAPSENSE_INCLUDE_DIRS
-        "/usr/local/include/ClayEngine"
+        "Vendor/HighFive/include/"
+        "/usr/local/include/ClayEngine/"
         "/usr/local/include/ClayEngine/Vendor/"
-        "/usr/local/include/ClayEngine/Vendor/GLAD/include"
-        "/usr/local/include/ClayEngine/Vendor/glfw/include"
-        "/usr/local/include/ClayEngine/Vendor/glm"
-        "/usr/local/include/ClayEngine/Vendor/ImGui"
-        "/usr/local/include/ClayEngine/Vendor/ImGui/imgui"
-        "/usr/local/include/ClayEngine/Vendor/spdlog/include"
+        "/usr/local/include/ClayEngine/Vendor/GLAD/include/"
+        "/usr/local/include/ClayEngine/Vendor/glfw/include/"
+        "/usr/local/include/ClayEngine/Vendor/glm/"
+        "/usr/local/include/ClayEngine/Vendor/ImGui/"
+        "/usr/local/include/ClayEngine/Vendor/ImGui/imgui/"
+        "/usr/local/include/ClayEngine/Vendor/spdlog/include/"
         "/usr/local/include/ClayEngine/Vendor/stb_image/")
 
 message(STATUS "Geometry:${Geometry_INCLUDE_DIR}")
@@ -193,6 +194,8 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         /usr/include/CL/
         Vendor/spdlog/include
+        /usr/include/hdf5/serial/
+        Vendor/HighFive/include/
         /usr/local/include/ClayEngine/Vendor/
         Vendor/implot/
         ${Geometry_INCLUDE_DIR}
@@ -266,7 +269,7 @@ if (VISUAL_TERRAIN_SLAM)
             Eigen3::Eigen tbb
             geom-tools planar-regions slam
             ClayEngine mapsense
-            glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES} HighFive)
+            glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES} HighFive hdf5_serial)
     target_include_directories(VisualTerrainSLAM PUBLIC ${MAPSENSE_INCLUDE_DIRS})
     add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
 #    target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)
