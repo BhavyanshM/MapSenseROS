@@ -150,8 +150,8 @@ class ApplicationState
       std::string KITTI_LIDAR_POINTS = "/kitti/lidar/points";
 
       std::string L515_COLOR = "/camera/color/image_raw/compressed";
-      std::string L515_DEPTH = "/chest_l515/depth/image_rect_raw";
-      std::string L515_DEPTH_INFO = "/chest_l515/depth/camera_info";
+      std::string L515_DEPTH = "/camera/aligned_depth_to_color/image_raw";
+      std::string L515_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";
 
       std::string L515_ALIGNED_DEPTH = "/camera/aligned_depth_to_color/image_raw";
       std::string L515_ALIGNED_DEPTH_INFO = "/camera/aligned_depth_to_color/camera_info";

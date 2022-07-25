@@ -27,6 +27,7 @@ find_package(xtl REQUIRED)
 find_package(BLAS REQUIRED)
 
 add_subdirectory(Vendor/Geometry/)
+add_subdirectory(Vendor/HighFive/)
 
 #include_directories(${GTSAM_INCLUDE_DIR})
 
@@ -265,7 +266,7 @@ if (VISUAL_TERRAIN_SLAM)
             Eigen3::Eigen tbb
             geom-tools planar-regions slam
             ClayEngine mapsense
-            glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES})
+            glad imgui implot glfw3 ${CMAKE_DL_LIBS} ${BLAS_LIBRARIES} HighFive)
     target_include_directories(VisualTerrainSLAM PUBLIC ${MAPSENSE_INCLUDE_DIRS})
     add_dependencies(VisualTerrainSLAM map_sense_generate_messages_cpp)
 #    target_precompile_headers(VisualTerrainSLAM PUBLIC src/headers/MapsenseHeaders.h)

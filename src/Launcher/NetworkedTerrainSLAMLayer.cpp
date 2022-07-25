@@ -48,8 +48,7 @@ namespace Clay
 //      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
 //      _cloud->Load(filename, false);
 
-
-       _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
+//       _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
 
        /* TODO: Do not delete! Refactor these image viewer lines into methods and classes.*/
 //      _texture = Texture2D::Create(std::string(ASSETS_PATH) + std::string("Textures/Checkerboard.png"));
@@ -93,7 +92,7 @@ namespace Clay
 
             //
             //              // TODO: Fix this and publish planarregions msg
-            //              _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
+//            _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
          }
 
          if(appState.HASH_PLANAR_REGIONS_ENABLED)
@@ -110,6 +109,8 @@ namespace Clay
                mesher.ClearLines();
                mesher.GenerateMeshForRegions(_regionCalculator->planarRegionList, nullptr, true);
             }
+
+//            _networkManager->planarRegionPub.publish(_regionCalculator->publishRegions());
          }
 
          if (appState.STEREO_ODOMETRY_ENABLED)

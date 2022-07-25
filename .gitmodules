@@ -7,3 +7,6 @@
 [submodule "Vendor/Geometry"]
 	path = Vendor/Geometry
 	url = https://github.com/BhavyanshM/Geometry.git
+[submodule "Vendor/HighFive"]
+	path = Vendor/HighFive
+	url = https://github.com/BlueBrain/HighFive.git

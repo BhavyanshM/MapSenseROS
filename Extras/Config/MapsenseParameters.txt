@@ -39,7 +39,7 @@ DEPTH_CY:                       0
 DEPTH_DISPLAY_OFFSET:           100
 DEPTH_BRIGHTNESS:               40
 FILTER_DISPARITY_THRESHOLD:     2000
-MERGE_DISTANCE_THRESHOLD:       0.016
+MERGE_DISTANCE_THRESHOLD:       0.26
 MERGE_ANGULAR_THRESHOLD:        0.7
 HASH_MERGE_DISTANCE_THRESHOLD:  0.17
 HASH_MERGE_ANGULAR_THRESHOLD:   0.71
@@ -81,7 +81,7 @@ GENERATE_REGIONS:               true
 HASH_DIFFUSION_ENABLED:         false
 
 # strings
-TOPIC_CAMERA_NAME:              chest_l515
+TOPIC_CAMERA_NAME:              camera
 OUSTER_POINTS:                  /os_cloud_node/points
 ZED_LEFT_IMAGE_RAW:             /zed/color/left/image_raw
 ZED_RIGHT_IMAGE_RAW:            /zed/color/right/image_raw
@@ -89,8 +89,8 @@ KITTI_LEFT_IMG_RECT:            /kitti/left/image_rect/compressed
 KITTI_RIGHT_IMG_RECT:           /kitti/right/image_rect/compressed
 KITTI_LIDAR_POINTS:             /kitti/lidar/points
 L515_COLOR:                     /camera/color/image_raw/compressed
-L515_DEPTH:                     /chest_l515/depth/image_rect_raw
-L515_DEPTH_INFO:                /chest_l515/depth/camera_info
+L515_DEPTH:                     /camera/aligned_depth_to_color/image_rect_raw
+L515_DEPTH_INFO:                /camera/aligned_depth_to_color/camera_info
 L515_ALIGNED_DEPTH:             /camera/aligned_depth_to_color/image_raw
 L515_ALIGNED_DEPTH_INFO:        /camera/aligned_depth_to_color/camera_info
 BLACKFLY_RIGHT_RAW:             /blackfly/right/image_color

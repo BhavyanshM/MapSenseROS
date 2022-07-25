@@ -104,6 +104,18 @@ ApplicationState::ApplicationState()
       if(name == "SHOW_DEPTH_REGION_COMPONENTS") {SHOW_DEPTH_REGION_COMPONENTS = (value == "true");}
       if(name == "SHOW_HASH_REGION_COMPONENTS") {SHOW_HASH_REGION_COMPONENTS = (value == "true");}
 
+      // Bools
+      if(name == "OUSTER_POINTS") {FILTER_SELECTED = (value == "true");}
+      if(name == "L515_COLOR") {SHOW_BOUNDARIES = (value == "true");}
+      if(name == "L515_DEPTH") {SHOW_PATCHES = (value == "true");}
+      if(name == "L515_DEPTH_INFO") { VISUAL_DEPTH_DEBUG = (value == "true");}
+      if(name == "L515_ALIGNED_DEPTH") {SHOW_INPUT_COLOR = (value == "true");}
+      if(name == "L515_ALIGNED_DEPTH_INFO") {SHOW_INPUT_DEPTH = (value == "true");}
+      if(name == "BLACKFLY_RIGHT_RAW") {SHOW_FILTERED_DEPTH = (value == "true");}
+      if(name == "BLACKFLY_RIGHT_RAW") {SHOW_FILTERED_DEPTH = (value == "true");}
+      if(name == "BLACKFLY_RIGHT_RAW") {SHOW_FILTERED_DEPTH = (value == "true");}
+      if(name == "BLACKFLY_RIGHT_RAW") {SHOW_FILTERED_DEPTH = (value == "true");}
+
    }
 
    SUB_H = (int) DEPTH_INPUT_HEIGHT / DEPTH_PATCH_HEIGHT;
