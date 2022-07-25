@@ -17,6 +17,10 @@ class DataManager
    public:
       DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
+      void ReadBlockHDF5(const std::string_view name);
+
+      void WriteBlockHDF5(const std::string_view name);
+
       void get_sample_depth(cv::Mat depth, float mean, float stddev);
 
       void get_sample_color(cv::Mat color);

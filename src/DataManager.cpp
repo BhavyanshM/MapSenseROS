@@ -18,9 +18,34 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
 //        if(secondDirectory != "") AppUtils::getFileNames(secondDirectory, _secondFileNames, false);
 //    }
 
+//   WriteBlockHDF5("/tmp/new_file.h5");
+   ReadBlockHDF5("/tmp/new_file.h5");
+
+
+}
+
+void DataManager::ReadBlockHDF5(const std::string_view name)
+{
+   using namespace HighFive;
+
+   File file(std::string(name), File::ReadOnly);
+
+   DataSet dataset = file.getDataSet("/dataset_one");
+   std::vector<int> result;
+   dataset.read(result);
+
+   for(int i = 0; i<result.size(); i++)
+   {
+      CLAY_LOG_INFO("HDF5 Data Value: {} {}", i, result[i]);
+   }
+
+}
+
+void DataManager::WriteBlockHDF5(const std::string_view name)
+{
    using namespace HighFive;
    // we create a new hdf5 file
-   File file("/tmp/new_file.h5", File::ReadWrite | File::Create | File::Truncate);
+   File file(std::string(name), File::ReadWrite | File::Create | File::Truncate);
 
    std::vector<int> data(50, 1);
 
@@ -36,11 +61,6 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
 
    // let's write our vector of int to the HDF5 dataset
    dataset.write(data);
-
-   // read back
-   std::vector<int> result;
-   dataset.read(result);
-
 }
 
 void DataManager::ShowNext()
