@@ -17,6 +17,8 @@ class DataManager
    public:
       DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
 
+      void ReadVectorHDF5(const std::string_view name);
+
       void ReadBlockHDF5(const std::string_view name);
 
       void WriteBlockHDF5(const std::string_view name);

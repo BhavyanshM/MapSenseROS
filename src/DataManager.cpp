@@ -2,6 +2,7 @@
 #include "AppUtils.h"
 #include "filesystem"
 #include "boost/filesystem.hpp"
+#include "highfive/H5Easy.hpp"
 #include <random>
 
 
@@ -19,7 +20,7 @@ DataManager::DataManager(ApplicationState& appState, const std::string& director
 //    }
 
 //   WriteBlockHDF5("/tmp/new_file.h5");
-   ReadBlockHDF5("/tmp/new_file.h5");
+   ReadBlockHDF5("/home/quantum/Workspace/Storage/Other/Temp/ISR_Logs/atlas_01.h5");
 
 
 }
@@ -29,16 +30,29 @@ void DataManager::ReadBlockHDF5(const std::string_view name)
    using namespace HighFive;
 
    File file(std::string(name), File::ReadOnly);
+   Eigen::MatrixXd D2(64*2048, 3);
+   D2 = H5Easy::load<Eigen::MatrixXd>(file, "/os_cloud_node/points/0");
 
-   DataSet dataset = file.getDataSet("/dataset_one");
-   std::vector<int> result;
-   dataset.read(result);
-
-   for(int i = 0; i<result.size(); i++)
+   int count = 0;
+   for(int i = 0; i<D2.rows(); i++)
    {
-      CLAY_LOG_INFO("HDF5 Data Value: {} {}", i, result[i]);
+      if(D2.block<1,3>(i,0).norm() > 0.1f)
+      {
+         count++;
+         std::cout << "Dataset Datatype: " << D2(i,0) << "\t" << D2(i,1) << "\t" << D2(i,2) << std::endl;
+      }
    }
+   std::cout << "Total Points: " << count << std::endl;
+}
 
+void DataManager::ReadVectorHDF5(const std::string_view name)
+{
+   using namespace HighFive;
+   File file(std::string(name), File::ReadOnly);
+
+   DataSet dataset = file.getDataSet("/os_cloud_node/points/0");
+   std::vector<std::vector<float>> points;
+   dataset.read(points);
 }
 
 void DataManager::WriteBlockHDF5(const std::string_view name)
