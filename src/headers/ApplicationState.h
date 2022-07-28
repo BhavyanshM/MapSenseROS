@@ -158,6 +158,8 @@ class ApplicationState
 
       std::string BLACKFLY_RIGHT_RAW = "/blackfly/right/image_color";
 
+      std::string H5_FILE_NAME = "/home/quantum/Workspace/Storage/Other/Temp/ISR_Logs/atlas_01.h5";
+
       float COMPRESS_COSINE_THRESHOLD = 0.619f;
       float COMPRESS_DIST_THRESHOLD = 0.011f;
       float SEGMENT_DIST_THRESHOLD = 0.233f;

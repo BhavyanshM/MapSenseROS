@@ -11,11 +11,14 @@
 #include "Log.h"
 #include "ApplicationState.h"
 #include "CameraParams.h"
+#include "Scene/Mesh/PointCloud.h"
 
 class DataManager
 {
    public:
       DataManager(ApplicationState& appState, const std::string& directory, const std::string& secondDirectory = "", const std::string& poseFile = "");
+
+      void LoadPointCloud(const Clay::Ref<Clay::PointCloud>& pointcloud, const std::string_view topic_name, uint16_t cloud_id);
 
       void ReadVectorHDF5(const std::string_view name);
 
@@ -56,6 +59,8 @@ class DataManager
       float GetStereoBaseline() const { return _baseline;}
 
    private:
+      ApplicationState& _app;
+
       float _baseline;
       std::string _directory, _secondDirectory;
       std::vector<std::string> _fileNames;

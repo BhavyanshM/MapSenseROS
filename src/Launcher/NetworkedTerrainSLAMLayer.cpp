@@ -44,10 +44,12 @@ namespace Clay
       _cloud = pclReceiver->GetRenderable();
 
       /* Static PointCloud from File. */
-//      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+      _cloud = std::make_shared<PointCloud>(glm::vec4(0.5f, 0.32f, 0.8f, 1.0f), _rootModel);
+      _data->LoadPointCloud(_cloud, appState.OUSTER_POINTS, 0);
+
 //      _cloud->Load(filename, false);
 
-//       _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
+       _models.emplace_back(std::dynamic_pointer_cast<Model>(_cloud));
 
        /* TODO: Do not delete! Refactor these image viewer lines into methods and classes.*/
 //      _texture = Texture2D::Create(std::string(ASSETS_PATH) + std::string("Textures/Checkerboard.png"));

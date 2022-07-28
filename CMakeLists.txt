@@ -160,7 +160,7 @@ set(HEADERS
 
 set(MAPSENSE_CLAY_HEADERS
         src/headers/ClayApp.h
-        src/headers/MapsenseLayer.h)
+        src/headers/MapsenseLayer.h src/vision_messages/pointcloud.h src/vision_messages/pointcloud.h)
 set(MAPSENSE_CLAY_SOURCES
         src/Launcher/ClayApp.cpp
         src/Launcher/MapsenseLayer.cpp test/PlanarRegionTester.cpp)
